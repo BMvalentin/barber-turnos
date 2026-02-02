@@ -1,0 +1,198 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+@import "tailwindcss";
+
+/* =========================
+   CSS VARIABLES BASE
+========================= */
+
+:root {
+  --background:  43, 100%, 97%;
+  --foreground: 210 25% 25%;
+
+  --card: 43 80% 94%;
+  --card-foreground: 210 25% 25%;
+
+  --popover: 43 80% 94%;
+  --popover-foreground: 210 25% 25%;
+
+  --primary: 195 45% 65%;
+  --primary-foreground: 210 30% 20%;
+
+  --secondary: 43 60% 90%;
+  --secondary-foreground: 210 25% 25%;
+
+  --muted: 43 40% 88%;
+  --muted-foreground: 210 15% 45%;
+
+  --accent: 195 50% 55%;
+  --accent-foreground: 210 30% 15%;
+
+  --destructive: 0 65% 55%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 195 30% 80%;
+  --input: 43 40% 90%;
+  --ring: 195 45% 65%;
+
+  --radius: 0.75rem;
+
+  /* Custom tokens */
+  --beige: 43 100% 96%;
+  --beige-dark: 43 60% 88%;
+  --beige-darker: 43 40% 80%;
+  --celeste: 195 45% 65%;
+  --celeste-light: 195 50% 80%;
+  --celeste-dark: 195 50% 45%;
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(
+    135deg,
+    hsl(195 45% 65%),
+    hsl(195 50% 75%)
+  );
+
+  --gradient-beige: linear-gradient(
+    180deg,
+    hsl(43 100% 96%),
+    hsl(43 60% 92%)
+  );
+
+  --gradient-card: linear-gradient(
+    145deg,
+    hsl(43 80% 96%),
+    hsl(43 60% 92%)
+  );
+
+  --gradient-celeste-soft: linear-gradient(
+    135deg,
+    hsl(195 40% 85%),
+    hsl(195 45% 75%)
+  );
+
+  /* Shadows */
+  --shadow-celeste: 0 4px 30px -5px hsl(210 25% 15% / 0.2);
+  --shadow-elevated: 0 20px 60px -20px hsl(210 25% 10% / 0.25);
+  --shadow-card: 0 8px 30px -10px hsl(210 25% 10% / 0.15);
+
+  /* Sidebar (shadcn) */
+  --sidebar-background: 43 80% 94%;
+  --sidebar-foreground: 210 25% 25%;
+  --sidebar-primary: 195 45% 65%;
+  --sidebar-primary-foreground: 210 30% 20%;
+  --sidebar-accent: 195 50% 55%;
+  --sidebar-accent-foreground: 210 30% 15%;
+  --sidebar-border: 195 30% 80%;
+  --sidebar-ring: 195 45% 65%;
+}
+
+/* =========================
+   DARK MODE
+========================= */
+
+.dark {
+  --background: 210 25% 15%;
+  --foreground: 43 80% 95%;
+
+  --card: 210 20% 18%;
+  --card-foreground: 43 80% 95%;
+
+  --popover: 210 20% 18%;
+  --popover-foreground: 43 80% 95%;
+
+  --secondary: 210 20% 22%;
+  --secondary-foreground: 43 80% 95%;
+
+  --muted: 210 15% 25%;
+  --muted-foreground: 210 10% 60%;
+
+  --border: 210 15% 30%;
+  --input: 210 15% 25%;
+}
+
+/* =========================
+   BASE STYLES
+========================= */
+
+* {
+  border-color: hsl(var(--border));
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: 'Outfit', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Headings */
+h1,
+h2,
+h3 {
+  font-family: 'Playfair Display', serif;
+}
+
+/* =========================
+   UTILITIES
+========================= */
+
+@layer utilities {
+  .text-gradient-celeste {
+    background-image: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .bg-gradient-celeste {
+    background-image: var(--gradient-primary);
+  }
+
+  .bg-gradient-beige {
+    background-image: var(--gradient-beige);
+  }
+
+  .shadow-celeste {
+    box-shadow: var(--shadow-celeste);
+  }
+
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .glass {
+    background-color: hsl(var(--card) / 0.8);
+    backdrop-filter: blur(24px);
+    border: 1px solid hsl(var(--border) / 0.5);
+  }
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
+}
+
+.animate-shake {
+  animation: shake 0.2s ease-in-out 0s 2;
+}
+
+/* Scrollbar minimalista */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-thumb {
+  background: #2563eb;
+  border-radius: 10px;
+}
