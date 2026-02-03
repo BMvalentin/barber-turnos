@@ -39,14 +39,22 @@ function cleanImageUrl(url: string | null): string | null {
 
 export const getServicios = async (): Promise<ActionState> => {
     try {
-        const servicio = await prisma.servicio.findMany({
+        const servicios = await prisma.servicio.findMany({
             where: {
                 estado: true
             },
             include: {
-                vehiculo_servicio: {
-                    include: {
-                        servicio: true
+                barbero: {
+                    select: {
+                        id: true,
+                        nombre: true,
+                        srcImage: true,
+                        estado: true,
+                        margenes: {
+                            where: {
+                                estado: true
+                            }
+                        }
                     }
                 }
             },
@@ -57,10 +65,11 @@ export const getServicios = async (): Promise<ActionState> => {
 
         return {
             success: true,
-            data: servicio
+            data: servicios
         };
 
     } catch (error) {
+        console.error("Error al obtener servicios:", error);
         return {
             error: "Error al obtener los servicios",
             success: false
@@ -73,10 +82,20 @@ export const createServicio = async (prevState: ActionState, formData: FormData)
         const nombre = formData.get('nombre') as string;
         const srcImageRaw = formData.get('srcImage') as string;
         const estadoValue = formData.get('estado');
+        const barberoId = formData.get('barbero') as string;
+        const descripcion = formData.get('descripcion') as string;
 
+        // Validaciones
         if (!nombre || nombre.trim() === '') {
             return {
                 error: "El nombre del servicio es requerido",
+                success: false
+            };
+        }
+
+        if (!barberoId || barberoId.trim() === '') {
+            return {
+                error: "El barbero es requerido",
                 success: false
             };
         }
@@ -86,20 +105,23 @@ export const createServicio = async (prevState: ActionState, formData: FormData)
         
         const nuevoServicio = await prisma.servicio.create({
             data: {
-                id: crypto.randomUUID(),
+                barberoId: barberoId,
                 nombre: nombre.trim(),
+                descripcion: descripcion || null,
                 srcImage: srcImage,
-                estado: estado,
-                createdAt: new Date(),
-                updatedAt: new Date()
+                estado: estado
             }
         });
+        
         revalidatePath('/servicio');
+        
         return {
             success: true,
             data: nuevoServicio
         };
+
     } catch (error) {
+        console.error("Error al crear servicio:", error);
         return {
             error: `Error al crear: ${error instanceof Error ? error.message : 'Error desconocido'}`,
             success: false
@@ -112,7 +134,17 @@ export const actualizarServicio = async (prevState: ActionState, formData: FormD
         const id = formData.get('id') as string;
         const nombre = formData.get('nombre') as string;
         const srcImageRaw = formData.get('srcImage') as string;
+        const barberoId = formData.get('barbero') as string;
+        const descripcion = formData.get('descripcion') as string;
         const estadoValue = formData.get('estado');
+
+        // Validaciones
+        if (!id || id.trim() === '') {
+            return {
+                error: "ID del servicio es requerido",
+                success: false
+            };
+        }
 
         if (!nombre || nombre.trim() === '') {
             return {
@@ -121,14 +153,9 @@ export const actualizarServicio = async (prevState: ActionState, formData: FormD
             };
         }
 
-        // Verificar que el servicio existe
-        const existe = await prisma.servicio.findUnique({
-            where: { id }
-        });
-
-        if (!existe) {
+        if (!barberoId || barberoId.trim() === '') {
             return {
-                error: "Servicio no encontrado",
+                error: "El barbero es requerido",
                 success: false
             };
         }
@@ -140,17 +167,23 @@ export const actualizarServicio = async (prevState: ActionState, formData: FormD
             where: { id },
             data: {
                 nombre: nombre.trim(),
+                barberoId: barberoId,
+                descripcion: descripcion || null,
                 srcImage: srcImage,
                 estado: estado,
                 updatedAt: new Date()
             }
         });
+        
         revalidatePath('/servicio');
+        
         return {
             success: true,
             data: servicioActualizado
         };
-    } catch (error) {        
+
+    } catch (error) {
+        console.error("Error al actualizar servicio:", error);
         return {
             error: `Error al actualizar: ${error instanceof Error ? error.message : 'Error desconocido'}`,
             success: false
@@ -161,28 +194,29 @@ export const actualizarServicio = async (prevState: ActionState, formData: FormD
 export const deleteservicio = async (prevState: ActionState, formData: FormData): Promise<ActionState> => {    
     try {
         const id = formData.get('id') as string;
-        console.log("ID a eliminar:", id);
+
+        if (!id || id.trim() === '') {
+            return {
+                error: "ID del servicio es requerido",
+                success: false
+            };
+        }
 
         const servicioExistente = await prisma.servicio.findUnique({
             where: { id },
             include: {
-                vehiculo_servicio: {
+                turnoServicios: {
                     include: {
-                        turno: true
+                        turnos: true
                     }
                 }
             }
         });
 
-        if (!servicioExistente) {
-            return {
-                error: "Servicio no encontrado",
-                success: false
-            };
-        }
 
-        const tieneTurnos = servicioExistente.vehiculo_servicio.some(
-            (vs: { turno: any[] }) => vs.turno.length > 0
+        // Verificar si tiene turnos asociados
+        const tieneTurnos = servicioExistente.turnoServicios.some(
+            (ts) => ts.turnos.length > 0
         );
 
         if (tieneTurnos) {
@@ -192,6 +226,7 @@ export const deleteservicio = async (prevState: ActionState, formData: FormData)
             }
         }
 
+        // Soft delete: cambiar estado a false en lugar de eliminar
         await prisma.servicio.update({
             where: { id },
             data: {
@@ -199,6 +234,7 @@ export const deleteservicio = async (prevState: ActionState, formData: FormData)
                 updatedAt: new Date()
             }
         });
+        
         revalidatePath('/servicio');
         
         return {
@@ -207,8 +243,47 @@ export const deleteservicio = async (prevState: ActionState, formData: FormData)
         };
 
     } catch (error) {
+        console.error("Error al eliminar servicio:", error);
         return {
             error: `Error: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+            success: false
+        };
+    }
+};
+
+//Función para obtener un servicio específico
+export const getServicioById = async (id: string): Promise<ActionState> => {
+    try {
+        const servicio = await prisma.servicio.findUnique({
+            where: { id },
+            include: {
+                barbero: {
+                    select: {
+                        id: true,
+                        nombre: true,
+                        srcImage: true,
+                        estado: true
+                    }
+                }
+            }
+        });
+
+        if (!servicio) {
+            return {
+                error: "Servicio no encontrado",
+                success: false
+            };
+        }
+
+        return {
+            success: true,
+            data: servicio
+        };
+
+    } catch (error) {
+        console.error("Error al obtener servicio:", error);
+        return {
+            error: "Error al obtener el servicio",
             success: false
         };
     }
