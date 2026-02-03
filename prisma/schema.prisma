@@ -28,38 +28,61 @@ model account {
   @@index([userId])
 }
 
+model barbero {
+  id                String             @id @default(cuid())
+  margenLaboralId   String?
+  srcImage          String?
+  nombre            String
+  estado            Boolean
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  margenes          margen_laboral[]
+  servicios         servicio[]
+  turnos            turno[]
+}
+
 model servicio {
-  id                String              @id
+  id                String              @id @default(cuid())
+  barberoId         String
+  descripcion       String?
   nombre            String?
   srcImage          String?
   estado            Boolean
   createdAt         DateTime            @default(now())
-  updatedAt         DateTime
-  vehiculo_servicio vehiculo_servicio[]
+  updatedAt         DateTime            @updatedAt
+  
+  barbero           barbero             @relation(fields: [barberoId], references: [id], onDelete: Cascade)
+  turnoServicios    turno_servicio[]
+  
+  @@index([barberoId])
 }
 
 model turno {
-  id                 String            @id
-  vehiculoServicioId String
+  id                 String            @id @default(cuid())
+  turnoXServicioId   String
   userId             String
+  barberoId          String?
   horarioReservado   DateTime
-  precioCongelado    Decimal
-  seniaCongelada     Decimal
-  patente            String
+  precioCongelado    Decimal           @db.Decimal(10, 2)
+  seniaCongelada     Decimal           @db.Decimal(10, 2)
   estado             Int
   createdAt          DateTime          @default(now())
-  updatedAt          DateTime
-  user               user              @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Turno_userId_fkey")
-  vehiculo_servicio  vehiculo_servicio @relation(fields: [vehiculoServicioId], references: [id], onDelete: Cascade, map: "Turno_vehiculoServicioId_fkey")
+  updatedAt          DateTime          @updatedAt
+  
+  user               user              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barbero            barbero?          @relation(fields: [barberoId], references: [id], onDelete: SetNull)
+  turnoServicio      turno_servicio    @relation(fields: [turnoXServicioId], references: [id], onDelete: Cascade)
 
-  @@index([userId], map: "Turno_userId_fkey")
-  @@index([vehiculoServicioId], map: "Turno_vehiculoServicioId_fkey")
+  @@index([userId])
+  @@index([turnoXServicioId])
+  @@index([barberoId])
 }
 
 model user {
   id            String    @id @default(cuid())
   name          String?
-  email         String    @unique(map: "User_email_key")
+  email         String    @unique
   emailVerified DateTime?
   image         String?
   password      String?
@@ -71,75 +94,59 @@ model user {
   turno         turno[]
 }
 
-model vehiculo {
-  id                String              @id
-  nombre            String?
-  srcImage          String?
-  estado            Boolean
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime
-  vehiculo_servicio vehiculo_servicio[]
-}
-
-model vehiculo_servicio {
-  id         String   @id
-  vehiculoId String
+model turno_servicio {
+  id         String   @id @default(cuid())
   servicioId String
   duracion   Int
-  precio     Decimal
-  descuento  Decimal
-  senia      Decimal
+  precio     Decimal  @db.Decimal(10, 2)
+  descuento  Decimal  @db.Decimal(10, 2)
+  senia      Decimal  @db.Decimal(10, 2)
   estado     Boolean
   createdAt  DateTime @default(now())
-  updatedAt  DateTime
-  turno      turno[]
-  servicio   servicio @relation(fields: [servicioId], references: [id], onDelete: Cascade, map: "Vehiculo_Servicio_servicioId_fkey")
-  vehiculo   vehiculo @relation(fields: [vehiculoId], references: [id], onDelete: Cascade, map: "Vehiculo_Servicio_vehiculoId_fkey")
+  updatedAt  DateTime @updatedAt
+  
+  turnos     turno[]
+  servicio   servicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
 
-  @@index([servicioId], map: "Vehiculo_Servicio_servicioId_fkey")
-  @@index([vehiculoId], map: "Vehiculo_Servicio_vehiculoId_fkey")
+  @@index([servicioId])
 }
 
-model expeciones_laborales {
-  id        String   @id
+model excepcion_laboral {
+  id        String   @id @default(cuid())
   motivo    String
   desde     DateTime
   hasta     DateTime
   estado    Boolean
   createdAt DateTime @default(now())
-  updatedAt DateTime
+  updatedAt DateTime @updatedAt
 }
 
 model dia_laboral {
   id        String               @id @default(cuid())
   estado    Boolean
-  dia       Int
+  dia       Int                  @unique
   createdAt DateTime             @default(now())
   updatedAt DateTime             @updatedAt
-  margenes  margenes_laborales[]
+  margenes  margen_laboral[]
 }
 
-model margenes_laborales {
+model margen_laboral {
   id        String      @id @default(cuid())
   diaId     String
+  barberoId String
   estado    Boolean
   desde     String
   hasta     String
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+  
   dia       dia_laboral @relation(fields: [diaId], references: [id], onDelete: Cascade)
+  barbero   barbero     @relation(fields: [barberoId], references: [id], onDelete: Cascade)
 
   @@index([diaId])
+  @@index([barberoId])
 }
 
-model bicicleta {
-  id       Int      @id @default(autoincrement())
-  marca    String
-  modelo   String
-  rodado   Int
-  color    String?
-  creadaEn DateTime @default(now())
-}
 
 enum user_role {
   USER
