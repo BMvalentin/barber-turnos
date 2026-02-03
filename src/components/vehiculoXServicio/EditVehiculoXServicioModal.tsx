@@ -1,6 +1,6 @@
 "use client";
 
-import { actualizarVehiculoXServicio, obtenerVehiculosXServicios } from "@/actions/vehiculoXServicio-actions";
+import { actualizarVehiculoXServicio, obtenerVehiculosXServicios } from "@/actions/turnoXServicio-actions";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { useEffect, useRef, useState } from "react";
