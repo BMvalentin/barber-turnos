@@ -18,12 +18,12 @@ type Barbero = {
     estado: boolean;
 };
 
-type EditBarberioModalProps = {
+type EditBarberoModalProps = {
     barbero: Barbero;
     onClose: () => void;
 };
 
-export default function EditBarberoModal({ barbero, onClose }: EditBarberioModalProps) {
+export default function EditBarberoModal({ barbero, onClose }: EditBarberoModalProps) {
     const [state, formAction] = useActionState(updateBarbero, initialState);
     const formRef = useRef<HTMLFormElement>(null);
 
@@ -67,7 +67,7 @@ export default function EditBarberoModal({ barbero, onClose }: EditBarberioModal
                                 required
                                 defaultValue={barbero.nombre || ""}
                                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Ej: Auto, Camioneta"
+                                placeholder="Ej: Carlos Pérez"
                             />
                         </div>
 
@@ -81,7 +81,7 @@ export default function EditBarberoModal({ barbero, onClose }: EditBarberioModal
                                 name="srcImage"
                                 defaultValue={barbero.srcImage || ""}
                                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="/images/foto.jpg o https://..."
+                                placeholder="/images/barbero.jpg o https://..."
                             />
                         </div>
 
@@ -95,7 +95,7 @@ export default function EditBarberoModal({ barbero, onClose }: EditBarberioModal
                                 className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                             />
                             <label htmlFor="estado" className="ml-2 text-sm font-medium">
-                                Vehículo activo
+                                Barbero activo
                             </label>
                         </div>
 

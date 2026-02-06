@@ -40,7 +40,7 @@ export default function CreateBarberoForm() {
                         name="nombre"
                         required
                         className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Ej: Auto, Camioneta, Moto"
+                        placeholder="Ej: Carlos Pérez, Martín López"
                     />
                 </div>
 
@@ -53,7 +53,7 @@ export default function CreateBarberoForm() {
                         id="srcImage"
                         name="srcImage"
                         className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="https://ejemplo.com/imagen.jpg o /images/foto.jpg"
+                        placeholder="https://ejemplo.com/barbero.jpg o /images/foto.jpg"
                     />
                     <p className="text-xs text-gray-500 mt-1">
                         Deja vacío si no tienes imagen

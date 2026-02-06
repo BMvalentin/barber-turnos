@@ -3,7 +3,7 @@
 import { deleteBarbero } from "@/actions/barbero.actions";
 import { useActionState } from "react";
 import { useState } from "react";
-import EditbarberoModal from "./EditBarberoModal";
+import EditBarberoModal from "./EditBarberoModal";
 
 const initialState = {
     success: false,
@@ -11,16 +11,21 @@ const initialState = {
     data: undefined,
 };
 
-type barbero = {
+type Barbero = {
     id: string;
     nombre: string | null;
     srcImage: string | null;
     estado: boolean;
     createdAt: Date;
-    servicio: any[];
+    servicios?: {
+        servicio: {
+            id: string;
+            nombre: string;
+        };
+    }[];
 };
 
-export default function BarberoList({ barberos }: { barberos: barbero[] }) {
+export default function BarberoList({ barberos }: { barberos: Barbero[] }) {
     if (barberos.length === 0) {
         return (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
@@ -38,7 +43,7 @@ export default function BarberoList({ barberos }: { barberos: barbero[] }) {
     );
 }
 
-function BarberoCard({ barbero }: { barbero: barbero }) {
+function BarberoCard({ barbero }: { barbero: Barbero }) {
     const [state, formAction] = useActionState(deleteBarbero, initialState);
     const [showEditModal, setShowEditModal] = useState(false);
 
@@ -50,6 +55,7 @@ function BarberoCard({ barbero }: { barbero: barbero }) {
     };
 
     const hasValidImage = isValidImageUrl(barbero.srcImage);
+    const serviciosCount = barbero.servicios?.length || 0;
 
     return (
         <>
@@ -68,7 +74,7 @@ function BarberoCard({ barbero }: { barbero: barbero }) {
                         <div className="w-full h-full flex items-center justify-center">
                             <div className="text-center">
                                 <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7h12M8 12h12m-12 5h12M4 7h.01M4 12h.01M4 17h.01" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
                                 <p className="mt-2 text-sm text-gray-500">Sin imagen</p>
                             </div>
@@ -83,7 +89,7 @@ function BarberoCard({ barbero }: { barbero: barbero }) {
                     
                     <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
                         <span>
-                            {barbero.servicio.length} servicio(s)
+                            {serviciosCount} servicio(s)
                         </span>
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
                             barbero.estado 
@@ -130,7 +136,7 @@ function BarberoCard({ barbero }: { barbero: barbero }) {
             </div>
 
             {showEditModal && (
-                <EditbarberoModal
+                <EditBarberoModal
                     barbero={barbero}
                     onClose={() => setShowEditModal(false)}
                 />

@@ -85,12 +85,26 @@ export async function updateBarbero(
 export async function getBarberos(): Promise<ActionState> {
   try {
     const barberos = await prisma.barbero.findMany({
+      where: { estado: true },
+      include: {
+        servicios: {
+          include: {
+            servicio: true
+          }
+        },
+        margenes: {
+          include: {
+            dia: true
+          }
+        }
+      },
       orderBy: { nombre: "asc" }
     });
 
     return { success: true, data: barberos };
 
   } catch (error) {
+    console.error(error);
     return { success: false, error: "Error al obtener barberos" };
   }
 }
@@ -104,7 +118,11 @@ export async function getBarberoById(id: string): Promise<ActionState> {
     const barbero = await prisma.barbero.findUnique({
       where: { id },
       include: {
-        servicios: true,
+        servicios: {
+          include: {
+            servicio: true
+          }
+        },
         margenes: {
           include: {
             dia: true
@@ -120,6 +138,7 @@ export async function getBarberoById(id: string): Promise<ActionState> {
     return { success: true, data: barbero };
 
   } catch (error) {
+    console.error(error);
     return { success: false, error: "Error al obtener barbero" };
   }
 }
@@ -182,5 +201,131 @@ export async function toggleEstadoBarbero(
   } catch (error) {
     console.error(error);
     return { success: false, error: "Error al cambiar estado" };
+  }
+}
+
+/* =========================
+   ASIGNAR SERVICIO A BARBERO
+========================= */
+
+export async function asignarServicioABarbero(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  try {
+    const barberoId = formData.get("barberoId") as string;
+    const servicioId = formData.get("servicioId") as string;
+
+    if (!barberoId || !servicioId) {
+      return { success: false, error: "Datos incompletos" };
+    }
+
+    // Verificar que no exista ya la relación
+    const existe = await prisma.servicioXBarbero.findFirst({
+      where: {
+        barberoId,
+        servicioId
+      }
+    });
+
+    if (existe) {
+      return { success: false, error: "Este servicio ya está asignado al barbero" };
+    }
+
+    await prisma.servicioXBarbero.create({
+      data: {
+        barberoId,
+        servicioId
+      }
+    });
+
+    revalidatePath("/barberos");
+
+    return { success: true };
+
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Error al asignar servicio" };
+  }
+}
+
+/* =========================
+   REMOVER SERVICIO DE BARBERO
+========================= */
+
+export async function removerServicioDeBarbero(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  try {
+    const barberoId = formData.get("barberoId") as string;
+    const servicioId = formData.get("servicioId") as string;
+
+    if (!barberoId || !servicioId) {
+      return { success: false, error: "Datos incompletos" };
+    }
+
+    await prisma.servicioXBarbero.deleteMany({
+      where: {
+        barberoId,
+        servicioId
+      }
+    });
+
+    revalidatePath("/barberos");
+
+    return { success: true };
+
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Error al remover servicio" };
+  }
+}
+
+
+/* =========================
+   GET HORARIOS DE UN BARBERO
+========================= */
+
+export async function getHorariosBarbero(barberoId: string): Promise<ActionState> {
+  try {
+    const horarios = await prisma.margen_laboral.findMany({
+      where: { barberoId },
+      include: {
+        dia: true
+      },
+      orderBy: {
+        dia: {
+          dia: 'asc'
+        }
+      }
+    });
+
+    return { success: true, data: horarios };
+
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Error al obtener horarios" };
+  }
+}
+
+/* =========================
+   GET SERVICIOS DE UN BARBERO
+========================= */
+
+export async function getServiciosBarbero(barberoId: string): Promise<ActionState> {
+  try {
+    const servicios = await prisma.servicioXBarbero.findMany({
+      where: { barberoId },
+      include: {
+        servicio: true
+      }
+    });
+
+    return { success: true, data: servicios };
+
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Error al obtener servicios" };
   }
 }
