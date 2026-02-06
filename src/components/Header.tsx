@@ -21,9 +21,6 @@ export function Header({ session }: HeaderProps) {
       <div className="container flex items-center justify-between h-16 mx-auto px-4 select-none">
         <Link href="/#home" className="flex items-center gap-2">
           <Image src="/images/logopng.png" alt="" width={'64'} height={'64'}/>
-          <span className="hidden md:block text-xl font-semibold text-foreground">
-            Chapa{" "}<span className="text-primary">Detail</span>
-          </span>
         </Link>
         
         <nav className="hidden md:flex items-center gap-8">

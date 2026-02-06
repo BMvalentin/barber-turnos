@@ -29,54 +29,71 @@ model account {
 }
 
 model barbero {
-  id                String             @id @default(cuid())
-  margenLaboralId   String?
+  id                String                @id @default(cuid())
   srcImage          String?
   nombre            String
-  estado            Boolean
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  estado            Boolean               @default(true)
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
   
   margenes          margen_laboral[]
-  servicios         servicio[]
+  servicios         servicioXBarbero[]    // Relación many-to-many con servicios
   turnos            turno[]
 }
 
 model servicio {
   id                String              @id @default(cuid())
-  barberoId         String
   descripcion       String?
-  nombre            String?
+  nombre            String
   srcImage          String?
-  estado            Boolean
+  estado            Boolean             @default(true)
+  duracion          Int                 // Duración en minutos
+  precio            Decimal             @db.Decimal(10, 2)
+  descuento         Decimal             @default(0) @db.Decimal(10, 2)
+  senia             Decimal             @default(0) @db.Decimal(10, 2)
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   
+  barberos          servicioXBarbero[]  // Relación many-to-many con barberos
+  turnos            turno[]
+}
+
+// Tabla intermedia para la relación many-to-many entre barbero y servicio
+model servicioXBarbero {
+  id                String              @id @default(cuid())
+  barberoId         String
+  servicioId        String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
   barbero           barbero             @relation(fields: [barberoId], references: [id], onDelete: Cascade)
-  turnoServicios    turno_servicio[]
+  servicio          servicio            @relation(fields: [servicioId], references: [id], onDelete: Cascade)
   
+  @@unique([barberoId, servicioId])  // Un barbero no puede tener el mismo servicio duplicado
   @@index([barberoId])
+  @@index([servicioId])
 }
 
 model turno {
   id                 String            @id @default(cuid())
-  turnoXServicioId   String
-  userId             String
-  barberoId          String?
-  horarioReservado   DateTime
-  precioCongelado    Decimal           @db.Decimal(10, 2)
-  seniaCongelada     Decimal           @db.Decimal(10, 2)
-  estado             Int
+  userId             String            // Quién reserva
+  barberoId          String            // Quién atiende
+  servicioId         String            // Qué servicio
+  horarioReservado   DateTime          // Cuándo
+  precioCongelado    Decimal           @db.Decimal(10, 2)  // Precio al momento de reservar
+  seniaCongelada     Decimal           @db.Decimal(10, 2)  // Seña al momento de reservar
+  estado             turno_estado      @default(PENDIENTE)
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
   
+  // Relaciones
   user               user              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  barbero            barbero?          @relation(fields: [barberoId], references: [id], onDelete: SetNull)
-  turnoServicio      turno_servicio    @relation(fields: [turnoXServicioId], references: [id], onDelete: Cascade)
+  barbero            barbero           @relation(fields: [barberoId], references: [id], onDelete: Cascade)
+  servicio           servicio          @relation(fields: [servicioId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([turnoXServicioId])
   @@index([barberoId])
+  @@index([servicioId])
 }
 
 model user {
@@ -90,25 +107,9 @@ model user {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   telefono      String?
+  
   account       account[]
   turno         turno[]
-}
-
-model turno_servicio {
-  id         String   @id @default(cuid())
-  servicioId String
-  duracion   Int
-  precio     Decimal  @db.Decimal(10, 2)
-  descuento  Decimal  @db.Decimal(10, 2)
-  senia      Decimal  @db.Decimal(10, 2)
-  estado     Boolean
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  
-  turnos     turno[]
-  servicio   servicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
-
-  @@index([servicioId])
 }
 
 model excepcion_laboral {
@@ -116,17 +117,18 @@ model excepcion_laboral {
   motivo    String
   desde     DateTime
   hasta     DateTime
-  estado    Boolean
+  estado    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model dia_laboral {
   id        String               @id @default(cuid())
-  estado    Boolean
-  dia       Int                  @unique
+  estado    Boolean              @default(true)
+  dia       Int                  @unique  // 0=Domingo, 1=Lunes, ..., 6=Sábado
   createdAt DateTime             @default(now())
   updatedAt DateTime             @updatedAt
+  
   margenes  margen_laboral[]
 }
 
@@ -134,9 +136,9 @@ model margen_laboral {
   id        String      @id @default(cuid())
   diaId     String
   barberoId String
-  estado    Boolean
-  desde     String
-  hasta     String
+  estado    Boolean     @default(true)
+  desde     String      // Formato "HH:MM" ejemplo: "09:00"
+  hasta     String      // Formato "HH:MM" ejemplo: "18:00"
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   
@@ -147,8 +149,14 @@ model margen_laboral {
   @@index([barberoId])
 }
 
-
 enum user_role {
   USER
   ADMIN
+}
+
+enum turno_estado {
+  PENDIENTE
+  CONFIRMADO
+  CANCELADO
+  COMPLETADO
 }

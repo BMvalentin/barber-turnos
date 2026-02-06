@@ -1,6 +1,6 @@
 "use client";
 
-import { createTurno, obtenerDatosParaTurno } from "@/actions/turno.actions";
+import { createTurno, getTurnos } from "@/actions/turno.actions";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { useEffect, useRef, useState } from "react";
@@ -44,7 +44,7 @@ export default function CreateTurnoForm({ session }: { session: any }) {
     useEffect(() => {
         let isMounted = true;
         async function load() {
-            const res = await obtenerDatosParaTurno();
+            const res = await getTurnos();
             if (isMounted) {
                 if (res.success && res.data) {
                     setConfiguraciones(res.data.configuraciones as any);

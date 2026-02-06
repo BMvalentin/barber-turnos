@@ -44,15 +44,19 @@ export const getServicios = async (): Promise<ActionState> => {
                 estado: true
             },
             include: {
-                barbero: {
-                    select: {
-                        id: true,
-                        nombre: true,
-                        srcImage: true,
-                        estado: true,
-                        margenes: {
-                            where: {
-                                estado: true
+                barberos: {
+                    include: {
+                        barbero: {
+                            select: {
+                                id: true,
+                                nombre: true,
+                                srcImage: true,
+                                estado: true,
+                                margenes: {
+                                    where: {
+                                        estado: true
+                                    }
+                                }
                             }
                         }
                     }
@@ -82,8 +86,11 @@ export const createServicio = async (prevState: ActionState, formData: FormData)
         const nombre = formData.get('nombre') as string;
         const srcImageRaw = formData.get('srcImage') as string;
         const estadoValue = formData.get('estado');
-        const barberoId = formData.get('barbero') as string;
         const descripcion = formData.get('descripcion') as string;
+        const duracion = parseInt(formData.get('duracion') as string);
+        const precio = parseFloat(formData.get('precio') as string);
+        const descuento = parseFloat(formData.get('descuento') as string) || 0;
+        const senia = parseFloat(formData.get('senia') as string) || 0;
 
         // Validaciones
         if (!nombre || nombre.trim() === '') {
@@ -93,9 +100,16 @@ export const createServicio = async (prevState: ActionState, formData: FormData)
             };
         }
 
-        if (!barberoId || barberoId.trim() === '') {
+        if (!duracion || duracion <= 0) {
             return {
-                error: "El barbero es requerido",
+                error: "La duración es requerida y debe ser mayor a 0",
+                success: false
+            };
+        }
+
+        if (!precio || precio <= 0) {
+            return {
+                error: "El precio es requerido y debe ser mayor a 0",
                 success: false
             };
         }
@@ -105,11 +119,14 @@ export const createServicio = async (prevState: ActionState, formData: FormData)
         
         const nuevoServicio = await prisma.servicio.create({
             data: {
-                barberoId: barberoId,
                 nombre: nombre.trim(),
                 descripcion: descripcion || null,
                 srcImage: srcImage,
-                estado: estado
+                estado: estado,
+                duracion: duracion,
+                precio: precio,
+                descuento: descuento,
+                senia: senia
             }
         });
         
@@ -134,9 +151,12 @@ export const actualizarServicio = async (prevState: ActionState, formData: FormD
         const id = formData.get('id') as string;
         const nombre = formData.get('nombre') as string;
         const srcImageRaw = formData.get('srcImage') as string;
-        const barberoId = formData.get('barbero') as string;
         const descripcion = formData.get('descripcion') as string;
         const estadoValue = formData.get('estado');
+        const duracion = parseInt(formData.get('duracion') as string);
+        const precio = parseFloat(formData.get('precio') as string);
+        const descuento = parseFloat(formData.get('descuento') as string) || 0;
+        const senia = parseFloat(formData.get('senia') as string) || 0;
 
         // Validaciones
         if (!id || id.trim() === '') {
@@ -153,9 +173,16 @@ export const actualizarServicio = async (prevState: ActionState, formData: FormD
             };
         }
 
-        if (!barberoId || barberoId.trim() === '') {
+        if (!duracion || duracion <= 0) {
             return {
-                error: "El barbero es requerido",
+                error: "La duración es requerida y debe ser mayor a 0",
+                success: false
+            };
+        }
+
+        if (!precio || precio <= 0) {
+            return {
+                error: "El precio es requerido y debe ser mayor a 0",
                 success: false
             };
         }
@@ -167,10 +194,13 @@ export const actualizarServicio = async (prevState: ActionState, formData: FormD
             where: { id },
             data: {
                 nombre: nombre.trim(),
-                barberoId: barberoId,
                 descripcion: descripcion || null,
                 srcImage: srcImage,
                 estado: estado,
+                duracion: duracion,
+                precio: precio,
+                descuento: descuento,
+                senia: senia,
                 updatedAt: new Date()
             }
         });
@@ -202,24 +232,22 @@ export const deleteservicio = async (prevState: ActionState, formData: FormData)
             };
         }
 
-        const servicioExistente = await prisma.servicio.findUnique({
+        // Verificar si tiene turnos asociados
+        const servicioConTurnos = await prisma.servicio.findUnique({
             where: { id },
             include: {
-                turnoServicios: {
-                    include: {
-                        turnos: true
-                    }
-                }
+                turnos: true
             }
         });
 
+        if (!servicioConTurnos) {
+            return {
+                error: "Servicio no encontrado",
+                success: false
+            };
+        }
 
-        // Verificar si tiene turnos asociados
-        const tieneTurnos = servicioExistente.turnoServicios.some(
-            (ts) => ts.turnos.length > 0
-        );
-
-        if (tieneTurnos) {
+        if (servicioConTurnos.turnos.length > 0) {
             return {
                 error: "No se puede eliminar: tiene turnos asociados",
                 success: false
@@ -251,18 +279,22 @@ export const deleteservicio = async (prevState: ActionState, formData: FormData)
     }
 };
 
-//Función para obtener un servicio específico
+// Función para obtener un servicio específico
 export const getServicioById = async (id: string): Promise<ActionState> => {
     try {
         const servicio = await prisma.servicio.findUnique({
             where: { id },
             include: {
-                barbero: {
-                    select: {
-                        id: true,
-                        nombre: true,
-                        srcImage: true,
-                        estado: true
+                barberos: {
+                    include: {
+                        barbero: {
+                            select: {
+                                id: true,
+                                nombre: true,
+                                srcImage: true,
+                                estado: true
+                            }
+                        }
                     }
                 }
             }

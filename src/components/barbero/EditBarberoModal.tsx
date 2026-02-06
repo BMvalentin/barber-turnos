@@ -1,6 +1,6 @@
 "use client";
 
-import { actualizarVehiculo } from "@/actions/vehiculo-actions";
+import { updateBarbero } from "@/actions/barbero.actions";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { useEffect, useRef } from "react";
@@ -11,25 +11,25 @@ const initialState = {
     data: undefined,
 };
 
-type Vehiculo = {
+type Barbero = {
     id: string;
     nombre: string | null;
     srcImage: string | null;
     estado: boolean;
 };
 
-type EditVehiculoModalProps = {
-    vehiculo: Vehiculo;
+type EditBarberioModalProps = {
+    barbero: Barbero;
     onClose: () => void;
 };
 
-export default function EditVehiculoModal({ vehiculo, onClose }: EditVehiculoModalProps) {
-    const [state, formAction] = useActionState(actualizarVehiculo, initialState);
+export default function EditBarberoModal({ barbero, onClose }: EditBarberioModalProps) {
+    const [state, formAction] = useActionState(updateBarbero, initialState);
     const formRef = useRef<HTMLFormElement>(null);
 
     useEffect(() => {
         if (state.success) {
-            alert("✅ Vehículo actualizado exitosamente!");
+            alert("✅ Barbero actualizado exitosamente!");
             onClose();
         }
         if (state.error) {
@@ -42,7 +42,7 @@ export default function EditVehiculoModal({ vehiculo, onClose }: EditVehiculoMod
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
                 <div className="p-6">
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-semibold">Editar Vehículo</h2>
+                        <h2 className="text-xl font-semibold">Editar Barbero</h2>
                         <button
                             onClick={onClose}
                             className="text-gray-400 hover:text-gray-600"
@@ -54,18 +54,18 @@ export default function EditVehiculoModal({ vehiculo, onClose }: EditVehiculoMod
                     </div>
 
                     <form ref={formRef} action={formAction} className="space-y-4">
-                        <input type="hidden" name="id" value={vehiculo.id} />
+                        <input type="hidden" name="id" value={barbero.id} />
 
                         <div>
                             <label htmlFor="nombre" className="block text-sm font-medium mb-1">
-                                Nombre del Vehículo *
+                                Nombre del Barbero *
                             </label>
                             <input
                                 type="text"
                                 id="nombre"
                                 name="nombre"
                                 required
-                                defaultValue={vehiculo.nombre || ""}
+                                defaultValue={barbero.nombre || ""}
                                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Ej: Auto, Camioneta"
                             />
@@ -79,7 +79,7 @@ export default function EditVehiculoModal({ vehiculo, onClose }: EditVehiculoMod
                                 type="text"
                                 id="srcImage"
                                 name="srcImage"
-                                defaultValue={vehiculo.srcImage || ""}
+                                defaultValue={barbero.srcImage || ""}
                                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="/images/foto.jpg o https://..."
                             />
@@ -91,7 +91,7 @@ export default function EditVehiculoModal({ vehiculo, onClose }: EditVehiculoMod
                                 id="estado"
                                 name="estado"
                                 value="true"
-                                defaultChecked={vehiculo.estado}
+                                defaultChecked={barbero.estado}
                                 className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                             />
                             <label htmlFor="estado" className="ml-2 text-sm font-medium">
