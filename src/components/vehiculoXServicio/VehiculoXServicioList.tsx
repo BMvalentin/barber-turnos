@@ -1,6 +1,6 @@
 "use client";
 
-import { deleteVehiculoXServicio } from "@/actions/vehiculoXServicio-actions";
+import { deleteVehiculoXServicio } from "@/actions/turnoXServicio-actions";
 import { useActionState } from "react";
 import { useState } from "react";
 import EditVehiculoXServicioModal from "./EditVehiculoXServicioModal";

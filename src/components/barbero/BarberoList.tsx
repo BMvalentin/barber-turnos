@@ -1,9 +1,9 @@
 "use client";
 
-import { deleteVehiculo } from "@/actions/vehiculo-actions";
+import { deleteBarbero } from "@/actions/barbero.actions";
 import { useActionState } from "react";
 import { useState } from "react";
-import EditVehiculoModal from "./EditVehiculoModal";
+import EditBarberoModal from "./EditBarberoModal";
 
 const initialState = {
     success: false,
@@ -11,35 +11,40 @@ const initialState = {
     data: undefined,
 };
 
-type Vehiculo = {
+type Barbero = {
     id: string;
     nombre: string | null;
     srcImage: string | null;
     estado: boolean;
     createdAt: Date;
-    vehiculo_servicio: any[];
+    servicios?: {
+        servicio: {
+            id: string;
+            nombre: string;
+        };
+    }[];
 };
 
-export default function VehiculoList({ vehiculos }: { vehiculos: Vehiculo[] }) {
-    if (vehiculos.length === 0) {
+export default function BarberoList({ barberos }: { barberos: Barbero[] }) {
+    if (barberos.length === 0) {
         return (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-                <p className="text-gray-600">No hay vehículos disponibles</p>
+                <p className="text-gray-600">No hay barberos disponibles</p>
             </div>
         );
     }
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {vehiculos.map((vehiculo) => (
-                <VehiculoCard key={vehiculo.id} vehiculo={vehiculo} />
+            {barberos.map((barbero) => (
+                <BarberoCard key={barbero.id} barbero={barbero} />
             ))}
         </div>
     );
 }
 
-function VehiculoCard({ vehiculo }: { vehiculo: Vehiculo }) {
-    const [state, formAction] = useActionState(deleteVehiculo, initialState);
+function BarberoCard({ barbero }: { barbero: Barbero }) {
+    const [state, formAction] = useActionState(deleteBarbero, initialState);
     const [showEditModal, setShowEditModal] = useState(false);
 
     const isValidImageUrl = (url: string | null): boolean => {
@@ -49,7 +54,8 @@ function VehiculoCard({ vehiculo }: { vehiculo: Vehiculo }) {
         return false;
     };
 
-    const hasValidImage = isValidImageUrl(vehiculo.srcImage);
+    const hasValidImage = isValidImageUrl(barbero.srcImage);
+    const serviciosCount = barbero.servicios?.length || 0;
 
     return (
         <>
@@ -57,8 +63,8 @@ function VehiculoCard({ vehiculo }: { vehiculo: Vehiculo }) {
                 <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200">
                     {hasValidImage ? (
                         <img
-                            src={vehiculo.srcImage!}
-                            alt={vehiculo.nombre || "Vehículo"}
+                            src={barbero.srcImage!}
+                            alt={barbero.nombre || "Barbero"}
                             className="w-full h-full object-cover"
                             onError={(e) => {
                                 e.currentTarget.style.display = 'none';
@@ -68,7 +74,7 @@ function VehiculoCard({ vehiculo }: { vehiculo: Vehiculo }) {
                         <div className="w-full h-full flex items-center justify-center">
                             <div className="text-center">
                                 <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7h12M8 12h12m-12 5h12M4 7h.01M4 12h.01M4 17h.01" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
                                 <p className="mt-2 text-sm text-gray-500">Sin imagen</p>
                             </div>
@@ -78,19 +84,19 @@ function VehiculoCard({ vehiculo }: { vehiculo: Vehiculo }) {
 
                 <div className="p-4">
                     <h3 className="text-lg font-semibold mb-2 text-gray-800">
-                        {vehiculo.nombre || "Sin nombre"}
+                        {barbero.nombre || "Sin nombre"}
                     </h3>
                     
                     <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
                         <span>
-                            {vehiculo.vehiculo_servicio.length} servicio(s)
+                            {serviciosCount} servicio(s)
                         </span>
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            vehiculo.estado 
+                            barbero.estado 
                                 ? "bg-green-100 text-green-700" 
                                 : "bg-red-100 text-red-700"
                         }`}>
-                            {vehiculo.estado ? "Activo" : "Inactivo"}
+                            {barbero.estado ? "Activo" : "Inactivo"}
                         </span>
                     </div>
 
@@ -103,11 +109,11 @@ function VehiculoCard({ vehiculo }: { vehiculo: Vehiculo }) {
                         </button>
                         
                         <form action={formAction}>
-                            <input type="hidden" name="id" value={vehiculo.id} />
+                            <input type="hidden" name="id" value={barbero.id} />
                             <button
                                 type="submit"
                                 onClick={(e) => {
-                                    if (!confirm('¿Estás seguro de dar de baja este vehículo?')) {
+                                    if (!confirm('¿Estás seguro de dar de baja este barbero?')) {
                                         e.preventDefault();
                                     }
                                 }}
@@ -123,15 +129,15 @@ function VehiculoCard({ vehiculo }: { vehiculo: Vehiculo }) {
                     )}
                     {state.success && (
                         <p className="text-green-600 text-xs mt-2">
-                            ✅ Vehículo dado de baja
+                            ✅ Barbero dado de baja
                         </p>
                     )}
                 </div>
             </div>
 
             {showEditModal && (
-                <EditVehiculoModal
-                    vehiculo={vehiculo}
+                <EditBarberoModal
+                    barbero={barbero}
                     onClose={() => setShowEditModal(false)}
                 />
             )}

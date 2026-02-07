@@ -1,4 +1,4 @@
-import { obtenerVehiculosXServicios } from "@/actions/vehiculoXServicio-actions";
+import { obtenerVehiculosXServicios } from "@/actions/turnoXServicio-actions";
 import VehiculoXServicioList from "@/components/vehiculoXServicio/VehiculoXServicioList";
 import CreateVehiculoXServicioForm from "@/components/vehiculoXServicio/CreateVehiculoXServicioForm";
 import { Suspense } from "react";

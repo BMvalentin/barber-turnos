@@ -1,6 +1,6 @@
 "use client";
 
-import { createVehiculoXServicio, obtenerVehiculosYServicios } from "@/actions/vehiculoXServicio-actions";
+import { createVehiculoXServicio, obtenerVehiculosYServicios } from "@/actions/turnoXServicio-actions";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { useEffect, useRef, useState } from "react";
