@@ -37,9 +37,12 @@ export async function createBarbero(
 
     return { success: true, data: barbero };
 
-  } catch (error) {
+  } catch (error : any ) {
     console.error(error);
-    return { success: false, error: "Error al crear barbero" };
+    return {
+      success: false,
+      error: error?.message ?? "Error desconocido al crear barbero",
+    };
   }
 }
 
