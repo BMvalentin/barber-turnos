@@ -13,6 +13,18 @@ const initialState = {
 
 type Servicio = {
     id: string;
+    nombre: string;
+    descripcion: string | null;
+    srcImage: string | null;
+    estado: boolean;
+    duracion: number;
+    precio: number;
+    descuento: number;
+    senia: number;
+};
+
+type Barbero = {
+    id: string;
     nombre: string | null;
     srcImage: string | null;
     estado: boolean;
@@ -20,10 +32,11 @@ type Servicio = {
 
 type EditServicioModalProps = {
     servicio: Servicio;
+    barberos: Barbero[];
     onClose: () => void;
 };
 
-export default function EditServicioModal({ servicio, onClose }: EditServicioModalProps) {
+export default function EditServicioModal({ servicio, barberos, onClose }: EditServicioModalProps) {
     const [state, formAction] = useActionState(actualizarServicio, initialState);
     const formRef = useRef<HTMLFormElement>(null);
 
@@ -38,8 +51,8 @@ export default function EditServicioModal({ servicio, onClose }: EditServicioMod
     }, [state.success, state.error, onClose]);
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full my-8">
                 <div className="p-6">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-semibold">Editar Servicio</h2>
@@ -65,10 +78,89 @@ export default function EditServicioModal({ servicio, onClose }: EditServicioMod
                                 id="nombre"
                                 name="nombre"
                                 required
-                                defaultValue={servicio.nombre || ""}
+                                defaultValue={servicio.nombre}
                                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Ej: Lavado completo"
+                                placeholder="Ej: Corte Clásico"
                             />
+                        </div>
+
+                        <div>
+                            <label htmlFor="descripcion" className="block text-sm font-medium mb-1">
+                                Descripción
+                            </label>
+                            <textarea
+                                id="descripcion"
+                                name="descripcion"
+                                rows={3}
+                                defaultValue={servicio.descripcion || ""}
+                                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Descripción del servicio"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label htmlFor="duracion" className="block text-sm font-medium mb-1">
+                                    Duración (min) *
+                                </label>
+                                <input
+                                    type="number"
+                                    id="duracion"
+                                    name="duracion"
+                                    required
+                                    min="1"
+                                    defaultValue={servicio.duracion}
+                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="precio" className="block text-sm font-medium mb-1">
+                                    Precio ($) *
+                                </label>
+                                <input
+                                    type="number"
+                                    id="precio"
+                                    name="precio"
+                                    required
+                                    min="0"
+                                    step="0.01"
+                                    defaultValue={servicio.precio}
+                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label htmlFor="descuento" className="block text-sm font-medium mb-1">
+                                    Descuento ($)
+                                </label>
+                                <input
+                                    type="number"
+                                    id="descuento"
+                                    name="descuento"
+                                    min="0"
+                                    step="0.01"
+                                    defaultValue={servicio.descuento}
+                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="senia" className="block text-sm font-medium mb-1">
+                                    Seña ($)
+                                </label>
+                                <input
+                                    type="number"
+                                    id="senia"
+                                    name="senia"
+                                    min="0"
+                                    step="0.01"
+                                    defaultValue={servicio.senia}
+                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
                         </div>
 
                         <div>
@@ -81,7 +173,7 @@ export default function EditServicioModal({ servicio, onClose }: EditServicioMod
                                 name="srcImage"
                                 defaultValue={servicio.srcImage || ""}
                                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="/images/foto.jpg o https://..."
+                                placeholder="/images/servicio.jpg o https://..."
                             />
                         </div>
 

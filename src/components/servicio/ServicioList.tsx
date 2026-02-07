@@ -13,14 +13,37 @@ const initialState = {
 
 type Servicio = {
     id: string;
+    nombre: string;
+    descripcion: string | null;
+    srcImage: string | null;
+    estado: boolean;
+    duracion: number;
+    precio: number;
+    descuento: number;
+    senia: number;
+    createdAt: Date;
+    barberos?: {
+        barbero: {
+            id: string;
+            nombre: string;
+        };
+    }[];
+};
+
+type Barbero = {
+    id: string;
     nombre: string | null;
     srcImage: string | null;
     estado: boolean;
-    createdAt: Date;
-    vehiculo_servicio: any[];
 };
 
-export default function ServicioList({ servicios }: { servicios: Servicio[] }) {
+export default function ServicioList({ 
+    servicios, 
+    barberos 
+}: { 
+    servicios: Servicio[];
+    barberos: Barbero[];
+}) {
     if (servicios.length === 0) {
         return (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
@@ -30,57 +53,56 @@ export default function ServicioList({ servicios }: { servicios: Servicio[] }) {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {servicios.map((servicio) => (
-                <ServicioCard key={servicio.id} servicio={servicio} />
+                <ServicioCard 
+                    key={servicio.id} 
+                    servicio={servicio}
+                    barberos={barberos}
+                />
             ))}
         </div>
     );
 }
 
-function ServicioCard({ servicio }: { servicio: Servicio }) {
+function ServicioCard({ 
+    servicio, 
+    barberos 
+}: { 
+    servicio: Servicio;
+    barberos: Barbero[];
+}) {
     const [state, formAction] = useActionState(deleteservicio, initialState);
     const [showEditModal, setShowEditModal] = useState(false);
 
-    // Validar si la imagen es válida
     const isValidImageUrl = (url: string | null): boolean => {
         if (!url) return false;
-        
-        // Aceptar URLs HTTP/HTTPS
-        if (url.startsWith('http://') || url.startsWith('https://')) {
-            return true;
-        }
-        
-        // Aceptar rutas locales que empiezan con /
-        if (url.startsWith('/')) {
-            return true;
-        }
-        
+        if (url.startsWith('http://') || url.startsWith('https://')) return true;
+        if (url.startsWith('/')) return true;
         return false;
     };
 
     const hasValidImage = isValidImageUrl(servicio.srcImage);
+    const barberosCount = servicio.barberos?.length || 0;
 
     return (
         <>
             <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden">
-                {/* Imagen */}
-                <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200">
+                <div className="relative h-48 bg-gradient-to-br from-blue-100 to-blue-200">
                     {hasValidImage ? (
                         <img
                             src={servicio.srcImage!}
-                            alt={servicio.nombre || "Servicio"}
+                            alt={servicio.nombre}
                             className="w-full h-full object-cover"
                             onError={(e) => {
-                                // Si la imagen falla al cargar, ocultar
                                 e.currentTarget.style.display = 'none';
                             }}
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center">
                             <div className="text-center">
-                                <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                <svg className="mx-auto h-16 w-16 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" />
                                 </svg>
                                 <p className="mt-2 text-sm text-gray-500">Sin imagen</p>
                             </div>
@@ -88,15 +110,49 @@ function ServicioCard({ servicio }: { servicio: Servicio }) {
                     )}
                 </div>
 
-                {/* Contenido */}
                 <div className="p-4">
                     <h3 className="text-lg font-semibold mb-2 text-gray-800">
-                        {servicio.nombre || "Sin nombre"}
+                        {servicio.nombre}
                     </h3>
                     
-                    <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                    {servicio.descripcion && (
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                            {servicio.descripcion}
+                        </p>
+                    )}
+
+                    <div className="space-y-2 mb-4">
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Duración:</span>
+                            <span className="font-medium">{servicio.duracion} min</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Precio:</span>
+                            <span className="font-medium text-green-600">
+                                ${servicio.precio.toLocaleString()}
+                            </span>
+                        </div>
+                        {servicio.descuento > 0 && (
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">Descuento:</span>
+                                <span className="font-medium text-orange-600">
+                                    ${servicio.descuento.toLocaleString()}
+                                </span>
+                            </div>
+                        )}
+                        {servicio.senia > 0 && (
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">Seña:</span>
+                                <span className="font-medium">
+                                    ${servicio.senia.toLocaleString()}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                    
+                    <div className="flex items-center justify-between text-sm text-gray-600 mb-4 pb-4 border-b">
                         <span>
-                            {servicio.vehiculo_servicio.length} vehículo(s)
+                            {barberosCount} barbero(s)
                         </span>
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
                             servicio.estado 
@@ -107,7 +163,6 @@ function ServicioCard({ servicio }: { servicio: Servicio }) {
                         </span>
                     </div>
 
-                    {/* Acciones */}
                     <div className="flex gap-2">
                         <button
                             onClick={() => setShowEditModal(true)}
@@ -143,10 +198,10 @@ function ServicioCard({ servicio }: { servicio: Servicio }) {
                 </div>
             </div>
 
-            {/* Modal de edición */}
             {showEditModal && (
                 <EditServicioModal
                     servicio={servicio}
+                    barberos={barberos}
                     onClose={() => setShowEditModal(false)}
                 />
             )}
