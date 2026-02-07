@@ -1,6 +1,6 @@
 "use client";
 
-import { createVehiculo } from "@/actions/vehiculo-actions";
+import { createBarbero } from "@/actions/barbero.actions";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { useEffect, useRef } from "react";
@@ -11,14 +11,14 @@ const initialState = {
     data: undefined,
 };
 
-export default function CreateVehiculoForm() {
-    const [state, formAction] = useActionState(createVehiculo, initialState);
+export default function CreateBarberoForm() {
+    const [state, formAction] = useActionState(createBarbero, initialState);
     const formRef = useRef<HTMLFormElement>(null);
 
     useEffect(() => {
         if (state.success) {
             formRef.current?.reset();
-            alert("✅ Vehículo creado exitosamente!");
+            alert("✅ Barbero creado exitosamente!");
         }
         if (state.error) {
             alert(`❌ Error: ${state.error}`);
@@ -27,12 +27,12 @@ export default function CreateVehiculoForm() {
 
     return (
         <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Crear Nuevo Tipo de Vehículo</h2>
+            <h2 className="text-xl font-semibold mb-4">Crear Barbero</h2>
             
             <form ref={formRef} action={formAction} className="space-y-4">
                 <div>
                     <label htmlFor="nombre" className="block text-sm font-medium mb-1">
-                        Nombre del Vehículo *
+                        Nombre del Barbero *
                     </label>
                     <input
                         type="text"
@@ -40,7 +40,7 @@ export default function CreateVehiculoForm() {
                         name="nombre"
                         required
                         className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Ej: Auto, Camioneta, Moto"
+                        placeholder="Ej: Carlos Pérez, Martín López"
                     />
                 </div>
 
@@ -53,7 +53,7 @@ export default function CreateVehiculoForm() {
                         id="srcImage"
                         name="srcImage"
                         className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="https://ejemplo.com/imagen.jpg o /images/foto.jpg"
+                        placeholder="https://ejemplo.com/barbero.jpg o /images/foto.jpg"
                     />
                     <p className="text-xs text-gray-500 mt-1">
                         Deja vacío si no tienes imagen
@@ -70,7 +70,7 @@ export default function CreateVehiculoForm() {
                         className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                     />
                     <label htmlFor="estado" className="ml-2 text-sm font-medium">
-                        Vehículo activo
+                        Barbero activo
                     </label>
                 </div>
 
@@ -83,7 +83,7 @@ export default function CreateVehiculoForm() {
                 {state.success && (
                     <div className="bg-green-50 border border-green-200 rounded p-3">
                         <p className="text-green-600 text-sm">
-                            ✅ Vehículo creado correctamente
+                            ✅ Barbero creado correctamente
                         </p>
                     </div>
                 )}
@@ -103,7 +103,7 @@ function SubmitButton() {
             disabled={pending}
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
-            {pending ? "Creando..." : "Crear Vehículo"}
+            {pending ? "Creando..." : "Crear Barbero"}
         </button>
     );
 }
