@@ -37,22 +37,25 @@ model barbero {
   updatedAt DateTime         @updatedAt
   margenes  margen_laboral[]
   turnos    turno[]
+  servicios servicioxbarbero[]
 }
 
-model servicio {
-  id          String   @id @default(cuid())
+model servicio { 
+  id String @id @default(cuid())
   descripcion String?
-  nombre      String
-  srcImage    String?
-  estado      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  descuento   Decimal  @default(0.00) @db.Decimal(10, 2)
-  duracion    Int
-  precio      Decimal  @db.Decimal(10, 2)
-  senia       Decimal  @default(0.00) @db.Decimal(10, 2)
-  turnos      turno[]
+  nombre String 
+  srcImage String?
+  estado Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  descuento Decimal @default(0.00) @db.Decimal(10, 2)
+  duracion Int
+  precio Decimal @db.Decimal(10, 2)
+  senia Decimal @default(0.00) @db.Decimal(10, 2) 
+  turnos turno[] 
+  servicios servicioxbarbero[]
 }
+
 
 model turno {
   id               String       @id @default(cuid())
@@ -125,16 +128,21 @@ model margen_laboral {
 }
 
 model servicioxbarbero {
-  id         String   @id
+  id         String   @id @default(cuid())
   barberoId  String
   servicioId String
   createdAt  DateTime @default(now())
-  updatedAt  DateTime
+  updatedAt  DateTime @updatedAt
 
-  @@unique([barberoId, servicioId], map: "servicioXBarbero_barberoId_servicioId_key")
-  @@index([barberoId], map: "servicioXBarbero_barberoId_idx")
-  @@index([servicioId], map: "servicioXBarbero_servicioId_idx")
+  barbero  barbero  @relation(fields: [barberoId], references: [id], onDelete: Cascade)
+  servicio servicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
+
+  @@unique([barberoId, servicioId], name: "barbero_servicio_unique")
+  @@index([barberoId])
+  @@index([servicioId])
 }
+
+
 
 enum user_role {
   USER

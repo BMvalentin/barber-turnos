@@ -224,7 +224,7 @@ export async function asignarServicioABarbero(
     }
 
     // Verificar que no exista ya la relación
-    const existe = await prisma.servicioXBarbero.findFirst({
+    const existe = await prisma.servicioxbarbero.findFirst({
       where: {
         barberoId,
         servicioId
@@ -235,7 +235,7 @@ export async function asignarServicioABarbero(
       return { success: false, error: "Este servicio ya está asignado al barbero" };
     }
 
-    await prisma.servicioXBarbero.create({
+    await prisma.servicioxbarbero.create({
       data: {
         barberoId,
         servicioId
@@ -268,7 +268,7 @@ export async function removerServicioDeBarbero(
       return { success: false, error: "Datos incompletos" };
     }
 
-    await prisma.servicioXBarbero.deleteMany({
+    await prisma.servicioxbarbero.deleteMany({
       where: {
         barberoId,
         servicioId
@@ -318,7 +318,7 @@ export async function getHorariosBarbero(barberoId: string): Promise<ActionState
 
 export async function getServiciosBarbero(barberoId: string): Promise<ActionState> {
   try {
-    const servicios = await prisma.servicioXBarbero.findMany({
+    const servicios = await prisma.servicioxbarbero.findMany({
       where: { barberoId },
       include: {
         servicio: true
@@ -332,3 +332,4 @@ export async function getServiciosBarbero(barberoId: string): Promise<ActionStat
     return { success: false, error: "Error al obtener servicios" };
   }
 }
+

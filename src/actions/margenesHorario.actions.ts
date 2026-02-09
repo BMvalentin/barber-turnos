@@ -62,6 +62,7 @@ export async function createMargenLaboral(
 ): Promise<ActionState> {
   try {
     const diaId = formData.get("diaId") as string;
+    const barberoId = formData.get("barberoId") as string;
     const estado = formData.get("estado") === "true";
     const desde = formData.get("desde") as string;
     const hasta = formData.get("hasta") as string;
@@ -80,7 +81,7 @@ export async function createMargenLaboral(
     });
 
     // Obtener todos los márgenes del día para verificar solapamientos
-    const margenesExistentes = await prisma.margenes_laborales.findMany({
+    const margenesExistentes = await prisma.margen_laboral.findMany({
       where: { diaId },
     });
 
@@ -95,9 +96,10 @@ export async function createMargenLaboral(
     }
 
     // Crear el margen laboral (ahora con strings)
-    const margen = await prisma.margenes_laborales.create({
+    const margen = await prisma.margen_laboral.create({
       data: {
         diaId,
+        barberoId,
         estado,
         desde,
         hasta,
@@ -140,7 +142,7 @@ export async function updateMargenLaboral(
     }
 
     // Verificar que existe
-    const existing = await prisma.margenes_laborales.findUnique({
+    const existing = await prisma.margen_laboral.findUnique({
       where: { id },
     });
 
@@ -152,7 +154,7 @@ export async function updateMargenLaboral(
     }
 
     // Obtener todos los márgenes del día (excluyendo el actual)
-    const margenesExistentes = await prisma.margenes_laborales.findMany({
+    const margenesExistentes = await prisma.margen_laboral.findMany({
       where: {
         diaId,
         id: { not: id },
@@ -170,7 +172,7 @@ export async function updateMargenLaboral(
     }
 
     // Actualizar el margen laboral
-    const margen = await prisma.margenes_laborales.update({
+    const margen = await prisma.margen_laboral.update({
       where: { id },
       data: {
         estado,
@@ -199,7 +201,7 @@ export async function updateMargenLaboral(
 export async function deleteMargenLaboral(id: string): Promise<ActionState> {
   try {
 
-    await prisma.margenes_laborales.delete({
+    await prisma.margen_laboral.delete({
       where: { id },
     });
 
@@ -221,7 +223,7 @@ export async function deleteMargenLaboral(id: string): Promise<ActionState> {
 // Obtener márgenes de un día laboral
 export async function getMargenesLaborales(diaId: string) {
   try {
-    const margenes = await prisma.margenes_laborales.findMany({
+    const margenes = await prisma.margen_laboral.findMany({
       where: { diaId },
       orderBy: { desde: "asc" },
     });
