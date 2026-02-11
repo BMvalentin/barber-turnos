@@ -62,7 +62,6 @@ export async function createMargenLaboral(
 ): Promise<ActionState> {
   try {
     const diaId = formData.get("diaId") as string;
-    const barberoId = formData.get("barberoId") as string;
     const estado = formData.get("estado") === "true";
     const desde = formData.get("desde") as string;
     const hasta = formData.get("hasta") as string;
@@ -99,7 +98,6 @@ export async function createMargenLaboral(
     const margen = await prisma.margen_laboral.create({
       data: {
         diaId,
-        barberoId,
         estado,
         desde,
         hasta,

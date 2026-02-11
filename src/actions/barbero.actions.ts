@@ -95,7 +95,7 @@ export async function getBarberos(): Promise<ActionState> {
             servicio: true
           }
         },
-        margenes: {
+        horarios: {
           include: {
             dia: true
           }
@@ -126,7 +126,7 @@ export async function getBarberoById(id: string): Promise<ActionState> {
             servicio: true
           }
         },
-        margenes: {
+        horarios: {
           include: {
             dia: true
           }
@@ -292,7 +292,7 @@ export async function removerServicioDeBarbero(
 
 export async function getHorariosBarbero(barberoId: string): Promise<ActionState> {
   try {
-    const horarios = await prisma.margen_laboral.findMany({
+    const horarios = await prisma.margen_laboral_barbero.findMany({
       where: { barberoId },
       include: {
         dia: true
