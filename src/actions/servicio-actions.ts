@@ -39,47 +39,52 @@ function cleanImageUrl(url: string | null): string | null {
 
 export const getServicios = async (): Promise<ActionState> => {
     try {
-        const servicios = await prisma.servicio.findMany({
-            where: {
-                estado: true
-            },
+      const servicios = await prisma.servicio.findMany({
+        where: {
+          estado: true,
+        },
+        include: {
+          servicios: {
             include: {
-                barberos: {
+              barbero: {
+                select: {
+                  id: true,
+                  nombre: true,
+                  srcImage: true,
+                  estado: true,
+                  horarios: {
+                    where: {
+                      estado: true,
+                    },
                     include: {
-                        barbero: {
-                            select: {
-                                id: true,
-                                nombre: true,
-                                srcImage: true,
-                                estado: true,
-                                margenes: {
-                                    where: {
-                                        estado: true
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                      dia: true, // si tenés relación con dia
+                    },
+                  },
+                },
+              },
             },
-            orderBy: {
-                createdAt: 'desc'
-            }
-        });
-
-        return {
-            success: true,
-            data: servicios
-        };
-
-    } catch (error) {
-        console.error("Error al obtener servicios:", error);
-        return {
-            error: "Error al obtener los servicios",
-            success: false
-        }
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+  
+      return {
+        success: true,
+        data: servicios ?? [], // 🔥 blindaje
+      };
+    } catch (error: any) {
+      console.error("Error al obtener servicios:", error);
+  
+      return {
+        success: false,
+        error:
+          error?.message ?? "Error inesperado al obtener los servicios",
+        data: [], // 🔥 nunca devuelvas undefined
+      };
     }
-};
+  };
 
 export const createServicio = async (prevState: ActionState, formData: FormData): Promise<ActionState> => {
     try {
@@ -285,7 +290,7 @@ export const getServicioById = async (id: string): Promise<ActionState> => {
         const servicio = await prisma.servicio.findUnique({
             where: { id },
             include: {
-                barberos: {
+                servicios: {
                     include: {
                         barbero: {
                             select: {
