@@ -10,8 +10,7 @@ import { Button } from "../ui/button";
 type ServicioData = {
   id: string;
   nombre: string;
-  precio: number;
-  duracion: number;
+  descripcion: string | null;
 };
 
 type BarberoData = {
@@ -47,19 +46,26 @@ export default function CreateTurnoForm({ session }: { session: any }) {
     let isMounted = true;
 
     async function load() {
-      const res = await fetch("/api/configuracion-turno"); // Endpoint simple que devuelva servicios, barberos y usuarios
-      const data = await res.json();
+      try {
+        const res = await fetch("/api/configuracion-turno");
+        const data = await res.json();
 
-      if (isMounted) {
-        setServicios(data.servicios || []);
-        setBarberos(data.barberos || []);
-        setUsuarios(data.usuarios || []);
+        if (isMounted) {
+          setServicios(data.servicios || []);
+          setBarberos(data.barberos || []);
+          setUsuarios(data.usuarios || []);
+          setLoadingData(false);
+        }
+      } catch (error) {
+        console.error("Error cargando datos:", error);
         setLoadingData(false);
       }
     }
 
     load();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -74,35 +80,40 @@ export default function CreateTurnoForm({ session }: { session: any }) {
   }, [state]);
 
   if (loadingData)
-    return <div className="p-8 text-center text-gray-500">Cargando datos...</div>;
+    return (
+      <div className="p-8 text-center text-gray-500">Cargando datos...</div>
+    );
 
   return (
     <div className="bg-white rounded-xl shadow-sm border p-6 max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Nuevo Turno</h2>
 
       <form ref={formRef} action={formAction} className="space-y-6">
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
           {/* CLIENTE */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Cliente</label>
+            <label className="text-sm font-medium text-gray-700">
+              Cliente <span className="text-red-500">*</span>
+            </label>
             <select
               name="userId"
               required
-              className="w-full p-2.5 border rounded-lg bg-gray-50"
-              defaultValue={session?.user?.role === "USER" ? session?.user?.id : ""}
+              className="w-full p-2.5 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              defaultValue={
+                session?.user?.role === "USER" ? session?.user?.id : ""
+              }
+              disabled={session?.user?.role === "USER"}
             >
               {session?.user?.role === "USER" ? (
                 <option value={session?.user?.id}>
-                  {session?.user?.name || "Usuario"}
+                  {session?.user?.name || "Usuario"} ({session?.user?.email})
                 </option>
               ) : (
                 <>
                   <option value="">-- Seleccionar Cliente --</option>
                   {usuarios.map((u) => (
                     <option key={u.id} value={u.id}>
-                      {u.name} ({u.email})
+                      {u.name || "Sin nombre"} ({u.email})
                     </option>
                   ))}
                 </>
@@ -112,13 +123,15 @@ export default function CreateTurnoForm({ session }: { session: any }) {
 
           {/* BARBERO */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Barbero</label>
+            <label className="text-sm font-medium text-gray-700">
+              Barbero <span className="text-red-500">*</span>
+            </label>
             <select
               name="barberoId"
               required
               value={selectedBarberoId}
               onChange={(e) => setSelectedBarberoId(e.target.value)}
-              className="w-full p-2.5 border rounded-lg bg-gray-50"
+              className="w-full p-2.5 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">-- Seleccionar Barbero --</option>
               {barberos.map((b) => (
@@ -130,26 +143,29 @@ export default function CreateTurnoForm({ session }: { session: any }) {
           </div>
 
           {/* SERVICIO */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Servicio</label>
+          <div className="space-y-2 md:col-span-2">
+            <label className="text-sm font-medium text-gray-700">
+              Servicio <span className="text-red-500">*</span>
+            </label>
             <select
-              name="servicioId"
+              name="turnoXServicioId"
               required
               value={selectedServicioId}
               onChange={(e) => setSelectedServicioId(e.target.value)}
-              className="w-full p-2.5 border rounded-lg bg-gray-50"
+              className="w-full p-2.5 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">-- Seleccionar Servicio --</option>
               {servicios.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.nombre} — ${s.precio} ({s.duracion} min)
+                  {s.nombre}
+                  {s.descripcion && ` - ${s.descripcion}`}
                 </option>
               ))}
             </select>
           </div>
-
         </div>
 
+        {/* FECHA Y HORA */}
         <SeleccionadorHorario
           name="horarioReservado"
           servicioId={selectedServicioId}
@@ -157,7 +173,7 @@ export default function CreateTurnoForm({ session }: { session: any }) {
         />
 
         {state.error && (
-          <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm border">
+          <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm border border-red-200">
             {state.error}
           </div>
         )}
@@ -175,7 +191,7 @@ function SubmitButton() {
     <Button
       type="submit"
       disabled={pending}
-      className="w-full md:w-auto md:min-w-50"
+      className="w-full md:w-auto md:min-w-[200px] bg-blue-600 hover:bg-blue-700"
     >
       {pending ? "Procesando..." : "Confirmar Reserva"}
     </Button>
