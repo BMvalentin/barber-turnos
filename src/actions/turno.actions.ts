@@ -319,3 +319,98 @@ export async function completedTurno(
   revalidatePath("/turno");
   return { success: true };
 }
+
+export async function obtenerHorariosDisponibles(
+  fecha: string,
+  servicioId: string,
+  barberoId: string,
+  turnoIdAExcluir?: string
+) {
+  try {
+    if (!fecha || !servicioId || !barberoId) {
+      return { success: false, error: "Datos incompletos" };
+    }
+
+    // Obtener duración del servicio
+    const servicio = await prisma.servicio.findUnique({
+      where: { id: servicioId },
+      select: { duracion: true },
+    });
+
+    if (!servicio) {
+      return { success: false, error: "Servicio no encontrado" };
+    }
+
+    const duracion = servicio.duracion;
+
+    // Horario laboral fijo (puedes mover esto a config después)
+    const HORA_INICIO = 9;
+    const HORA_FIN = 20;
+    const INTERVALO = 30; // minutos entre slots
+
+    const fechaInicio = new Date(`${fecha}T00:00:00`);
+    const fechaFin = new Date(`${fecha}T23:59:59`);
+
+    // Traer turnos del día para ese barbero
+    const turnosDelDia = await prisma.turno.findMany({
+      where: {
+        barberoId,
+        horarioReservado: {
+          gte: fechaInicio,
+          lte: fechaFin,
+        },
+        estado: {
+          not: "CANCELADO",
+        },
+        ...(turnoIdAExcluir && {
+          NOT: { id: turnoIdAExcluir },
+        }),
+      },
+      select: {
+        horarioReservado: true,
+        servicio: {
+          select: { duracion: true },
+        },
+      },
+    });
+
+    const slots: string[] = [];
+
+    for (
+      let hora = HORA_INICIO * 60;
+      hora + duracion <= HORA_FIN * 60;
+      hora += INTERVALO
+    ) {
+      const horas = Math.floor(hora / 60);
+      const minutos = hora % 60;
+
+      const inicioSlot = new Date(fechaInicio);
+      inicioSlot.setHours(horas, minutos, 0, 0);
+
+      const finSlot = new Date(inicioSlot);
+      finSlot.setMinutes(finSlot.getMinutes() + duracion);
+
+      const haySuperposicion = turnosDelDia.some((turno) => {
+        const inicioExistente = new Date(turno.horarioReservado);
+        const finExistente = new Date(inicioExistente);
+        finExistente.setMinutes(
+          finExistente.getMinutes() + turno.servicio.duracion
+        );
+
+        return (
+          inicioSlot < finExistente &&
+          finSlot > inicioExistente
+        );
+      });
+
+      if (!haySuperposicion) {
+        slots.push(inicioSlot.toISOString());
+      }
+    }
+
+    return { success: true, data: slots };
+  } catch (error) {
+    console.error("Error en obtenerHorariosDisponibles:", error);
+    return { success: false, error: "Error del servidor" };
+  }
+}

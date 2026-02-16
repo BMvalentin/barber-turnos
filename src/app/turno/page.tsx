@@ -7,7 +7,9 @@ import { auth } from "@/auth";
 export default async function TurnoPage() {
     const session = await auth();
 
-    const result = (session?.user.role === "ADMIN") ? await getTurnos() : await getTurnos({userId:session?.user.id});
+    //const result = (session?.user.role === "ADMIN") ? await getTurnos() : await getTurnos({userId:session?.user.id});
+    const result = await getTurnos();
+
 
     return (
         <div className="container mx-auto p-6 max-w-7xl mt-20">
