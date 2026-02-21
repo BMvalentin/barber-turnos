@@ -5,8 +5,7 @@ import Link from "next/link";
 import { useActionState, useEffect } from "react"; 
 import { useRouter } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
-import { Mail, Lock, ChevronRight} from "lucide-react";
-import Image from "next/image";
+import { Mail, Lock, ChevronRight, Scissors } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,88 +16,138 @@ export default function LoginPage() {
       router.push("/dashboard");
       router.refresh();
     }
-  }, [state.success, router]);
+  },);
 
   return (
     <AuthLayout>
-      <div className="min-w-[300px] md:min-w-[400px] backdrop-blur-lg bg-linear-to-br from-gray-950/60 to-gray-850/20 border border-white/10 rounded-3xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden group">
+      {/* CONTENEDOR PRINCIPAL - Ocupa toda la pantalla */}
+      <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-zinc-950">
         
-        {/* Glow en el borde superior */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50" />
-
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/90 mb-4 border border-blue-500/30">
-            <Image src="/images/logopng.png" alt="" width={'64'} height={'64'}/>
-          </div>
-          <h1 className="text-3xl font-black text-white tracking-tighter uppercase italic">
-            Chapa <span className="text-blue-500">Detail</span>
-          </h1>
-          <p className="text-gray-400 text-sm mt-2">Ingresa a tu cuenta</p>
+        {/* ===================*/}
+        {/*   IMAGEN DE FONDO  */}
+        {/* Esta es provisional*/}
+        {/* ===================*/}
+        <div 
+          className="absolute inset-0 z-0 opacity-30 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=2070&auto=format&fit=crop')" }}
+        />
+        {/* Overlay para oscurecer el fondo */}
+        <div className="absolute inset-0 z-0 bg-gradient-to-b from-zinc-950/80 via-zinc-950/90 to-zinc-950" />
+        {/* Luces de neón de fondo (Efecto velocidad)*/}
+        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-amber-600/20 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-red-600/10 rounded-full blur-[120px]" />
+        
+        {/*Líneas abstractas*/} 
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-1/2 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-amber-500 to-transparent" />
         </div>
 
-        <div className="space-y-3 mb-6">
-          <GoogleButton />
-        </div>
+        {/* TARJETA DE LOGIN (SPLIT DESIGN) */}
+        <div className="relative z-10 w-full max-w-5xl flex rounded- overflow-hidden shadow- border border-white/5 bg-zinc-950/60 backdrop-blur-xl">
+          {/* LADO IZQUIERDO - IMAGEN (Solo Desktop) */}
+          <div className="hidden lg:block lg:w-1/2 relative">
+            {/* =======*/}
+            {/* IMAGEN */}
+            {/* =======*/}
+            <div 
+              className="absolute inset-0 bg-cover bg-center grayscale- contrast-125"
+              style={{ backgroundImage: "url('https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=2074&auto=format&fit=crop')" }}
+            />
+            {/* Capas de degradado para fusionar la imagen con el formulario */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-zinc-950/40 to-zinc-950" />
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-80" />
+            
+            <div className="absolute bottom-12 left-12 right-12 text-left">
+              <h2 className="text-4xl font-black text-white uppercase tracking-tighter mb-2">
+                Domina tu <span className="text-amber-500">Estilo</span>
+              </h2>
+              <p className="text-zinc-400 font-medium">El corte perfecto es solo el principio. Bienvenido al club.</p>
+            </div>
+          </div>
 
-        <div className="relative mb-6">
-          <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/10" /></div>
-          <div className="relative flex justify-center text-xs uppercase tracking-widest font-bold">
-            <span className="bg-white px-3 text-gray-950 rounded-4xl">O mediante Email</span>
+          {/* LADO DERECHO - FORMULARIO (100% en móvil, 50% en Desktop) */}
+          <div className="w-full lg:w-1/2 p-8 sm:p-12 md:p-16 relative">
+            {/* Brillo sutil superior */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+
+            <div className="text-center lg:text-left mb-10">
+              <div className="inline-flex lg:hidden items-center justify-center w-16 h-16 rounded-full bg-zinc-900 mb-6 border border-amber-500/30 shadow-">
+                <Scissors className="w-8 h-8 text-amber-500" />
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tighter uppercase">
+                Urban <span className="text-amber-500">Barber</span>
+              </h1>
+              <p className="text-zinc-400 text-sm mt-2 font-medium tracking-wide">INGRESA A TU CUENTA</p>
+            </div>
+
+            <div className="space-y-4 mb-8">
+              <GoogleButton />
+            </div>
+
+            <div className="relative mb-8">
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/5" /></div>
+              <div className="relative flex justify-center lg:justify-start text-xs uppercase tracking-widest font-bold">
+                <span className="bg-zinc-950 px-4 text-zinc-500">O ingresa con Email</span>
+              </div>
+            </div>
+
+            <form action={action} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text- font-black text-amber-500 uppercase tracking- ml-1">Email</label>
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-amber-500 transition-colors" />
+                  <input 
+                    name="email" 
+                    type="email" 
+                    placeholder="cliente@correo.com"
+                    required 
+                    className="w-full bg-zinc-900/50 border border-white/5 rounded-xl py-4 pl-12 pr-4 text-white outline-none focus:border-amber-500/50 focus:bg-zinc-900 focus:ring-1 focus:ring-amber-500/50 transition-all placeholder:text-zinc-600 font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text- font-black text-amber-500 uppercase tracking- ml-1">Contraseña</label>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-amber-500 transition-colors" />
+                  <input 
+                    name="password" 
+                    type="password" 
+                    placeholder="••••••••"
+                    required 
+                    className="w-full bg-zinc-900/50 border border-white/5 rounded-xl py-4 pl-12 pr-4 text-white outline-none focus:border-amber-500/50 focus:bg-zinc-900 focus:ring-1 focus:ring-amber-500/50 transition-all placeholder:text-zinc-600 font-medium"
+                  />
+                </div>
+              </div>
+
+              {state.error && (
+                <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium rounded-xl text-center animate-pulse">
+                  {state.error}
+                </div>
+              )}
+
+              <button 
+                type="submit" 
+                disabled={isPending}
+                className="w-full group relative bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black py-4 rounded-xl transition-all overflow-hidden active:scale- disabled:opacity-50 shadow- hover:shadow-"
+              >
+                <div className="relative z-10 flex items-center justify-center gap-2 uppercase tracking-widest text-sm sm:text-base">
+                  {isPending ? "INGRESANDO..." : "INICIAR SESIÓN"}
+                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </div>
+                {/* Brillo dinámico en hover */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-" />
+              </button>
+            </form>
+
+            <p className="text-center lg:text-left text-sm text-zinc-500 mt-8 font-medium">
+              ¿No eres miembro aún?{" "}
+              <Link href="/register" className="text-amber-500 hover:text-amber-400 font-bold underline-offset-4 hover:underline transition-colors">
+                Regístrate aquí
+              </Link>
+            </p>
           </div>
         </div>
-
-        <form action={action} className="space-y-5">
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-blue-400 uppercase ml-1 tracking-widest">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <input 
-                name="email" 
-                type="email" 
-                placeholder="piloto@auto.com"
-                required 
-                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-gray-600"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-blue-400 uppercase ml-1 tracking-widest">Contraseña</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <input 
-                name="password" 
-                type="password" 
-                placeholder="••••••••"
-                required 
-                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-gray-600"
-              />
-            </div>
-          </div>
-
-          {state.error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl text-center animate-shake">
-              {state.error}
-            </div>
-          )}
-
-          <button 
-            type="submit" 
-            disabled={isPending}
-            className="w-full group relative bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl transition-all overflow-hidden active:scale-[0.98] disabled:opacity-50"
-          >
-            <div className="relative z-10 flex items-center justify-center gap-2 uppercase tracking-tighter text-lg">
-              {isPending ? "Iniciando..." : "Iniciar Sesión"}
-              <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </div>
-            {/* Efecto de brillo al pasar el mouse */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-gray-500 mt-8">
-          ¿No tienes cuenta? <Link href="/register" className="text-blue-400 hover:text-blue-300 font-bold underline-offset-4 hover:underline">Registrarse</Link>
-        </p>
       </div>
     </AuthLayout>
   );
