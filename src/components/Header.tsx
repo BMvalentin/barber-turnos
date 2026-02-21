@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { DoorOpen } from "lucide-react";
+import { DoorOpen, Scissors } from "lucide-react";
 import Link from "next/link";
 import { handleSignOut } from "@/actions/auth-actions";
 import Image from "next/image";
@@ -15,12 +15,12 @@ export function Header({ session }: HeaderProps) {
     <motion.header
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-linear-to-br from-white to-white/60
-                shadow-md w-full"
+      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-linear-to-br from-black to-amber-950/30
+                shadow-md w-full drop-shadow-2xl text-white"
     >
       <div className="container flex items-center justify-between h-16 mx-auto px-4 select-none">
         <Link href="/#home" className="flex items-center gap-2">
-          <Image src="/images/logopng.png" alt="" width={'64'} height={'64'}/>
+          <Scissors className="w-6 h-6 text-amber-500" /><span>{' URBAN '}</span><span className="text-amber-500">{'BARBER'}</span>
         </Link>
         
         <nav className="hidden md:flex items-center gap-8">
@@ -43,7 +43,7 @@ export function Header({ session }: HeaderProps) {
           </Link>
 
           <Link href={session ? "/turno" : "/login"} className=" cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <Button variant="celeste" size="sm">
+            <Button variant="amarillo" size="sm">
                 Turnos
             </Button>
           </Link>
