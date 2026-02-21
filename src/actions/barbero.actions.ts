@@ -9,39 +9,66 @@ export type ActionState = {
   data?: any;
 };
 
+type CreateBarberoInput = {
+  nombre: string;
+  srcImage?: string | null;
+  serviciosIds: string[];
+  margenesIds: string[];
+};
+
 /* =========================
-   CREATE BARBERO
+   CREATE BARBERO (CON SERVICIOS + HORARIOS)
 ========================= */
 
-export async function createBarbero(
-  prevState: ActionState,
-  formData: FormData
-): Promise<ActionState> {
+export async function createBarbero(data: CreateBarberoInput): Promise<ActionState> {
   try {
-    const nombre = formData.get("nombre") as string;
-    const srcImage = formData.get("srcImage") as string | null;
+    const { nombre, srcImage, serviciosIds, margenesIds } = data;
 
-    if (!nombre) {
-      return { success: false, error: "El nombre es obligatorio" };
-    }
-
-    const barbero = await prisma.barbero.create({
+    // Crear el barbero
+    const nuevoBarbero = await prisma.barbero.create({
       data: {
         nombre,
         srcImage: srcImage || null,
-        estado: true
-      }
+        estado: true,
+      },
     });
 
-    revalidatePath("/barberos");
+    // Asignar servicios (crear registros en tabla intermedia)
+    if (serviciosIds && serviciosIds.length > 0) {
+      await prisma.servicioxbarbero.createMany({
+        data: serviciosIds.map((servicioId) => ({
+          barberoId: nuevoBarbero.id,
+          servicioId,
+        })),
+      });
+    }
 
-    return { success: true, data: barbero };
+    // Asignar horarios (crear registros en tabla intermedia)
+    if (margenesIds && margenesIds.length > 0) {
+      // Obtener los márgenes para saber a qué día pertenecen
+      const margenes = await prisma.margen_laboral.findMany({
+        where: {
+          id: { in: margenesIds },
+        },
+      });
 
-  } catch (error : any ) {
-    console.error(error);
-    return {
-      success: false,
-      error: error?.message ?? "Error desconocido al crear barbero",
+      await prisma.margen_laboral_barbero.createMany({
+        data: margenes.map((margen) => ({
+          barberoId: nuevoBarbero.id,
+          margenLaboralId: margen.id,
+          diaId: margen.diaId,
+        })),
+      });
+    }
+
+    revalidatePath("/barbero");
+
+    return { success: true, data: nuevoBarbero };
+  } catch (error) {
+    console.error("Error al crear barbero:", error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Error al crear barbero" 
     };
   }
 }
@@ -67,16 +94,16 @@ export async function updateBarbero(
       where: { id },
       data: {
         nombre,
-        srcImage: srcImage || null
-      }
+        srcImage: srcImage || null,
+        updatedAt: new Date(),
+      },
     });
 
-    revalidatePath("/barberos");
+    revalidatePath("/barbero");
 
     return { success: true, data: barbero };
-
   } catch (error) {
-    console.error(error);
+    console.error("Error al actualizar barbero:", error);
     return { success: false, error: "Error al actualizar barbero" };
   }
 }
@@ -92,22 +119,22 @@ export async function getBarberos(): Promise<ActionState> {
       include: {
         servicios: {
           include: {
-            servicio: true
-          }
+            servicio: true,
+          },
         },
-        margenes: {
+        horarios: {
           include: {
-            dia: true
-          }
-        }
+            dia: true,
+            margenLaboral: true,
+          },
+        },
       },
-      orderBy: { nombre: "asc" }
+      orderBy: { nombre: "asc" },
     });
 
     return { success: true, data: barberos };
-
   } catch (error) {
-    console.error(error);
+    console.error("Error al obtener barberos:", error);
     return { success: false, error: "Error al obtener barberos" };
   }
 }
@@ -123,15 +150,16 @@ export async function getBarberoById(id: string): Promise<ActionState> {
       include: {
         servicios: {
           include: {
-            servicio: true
-          }
+            servicio: true,
+          },
         },
-        margenes: {
+        horarios: {
           include: {
-            dia: true
-          }
-        }
-      }
+            dia: true,
+            margenLaboral: true,
+          },
+        },
+      },
     });
 
     if (!barbero) {
@@ -139,9 +167,8 @@ export async function getBarberoById(id: string): Promise<ActionState> {
     }
 
     return { success: true, data: barbero };
-
   } catch (error) {
-    console.error(error);
+    console.error("Error al obtener barbero:", error);
     return { success: false, error: "Error al obtener barbero" };
   }
 }
@@ -163,52 +190,23 @@ export async function deleteBarbero(
 
     await prisma.barbero.update({
       where: { id },
-      data: { estado: false }
+      data: { 
+        estado: false,
+        updatedAt: new Date(),
+      },
     });
 
-    revalidatePath("/barberos");
+    revalidatePath("/barbero");
 
     return { success: true };
-
   } catch (error) {
-    console.error(error);
+    console.error("Error al eliminar barbero:", error);
     return { success: false, error: "Error al eliminar barbero" };
   }
 }
 
 /* =========================
-   TOGGLE ESTADO
-========================= */
-
-export async function toggleEstadoBarbero(
-  prevState: ActionState,
-  formData: FormData
-): Promise<ActionState> {
-  try {
-    const id = formData.get("id") as string;
-    const estado = formData.get("estado") === "true";
-
-    if (!id) {
-      return { success: false, error: "ID no proporcionado" };
-    }
-
-    const barbero = await prisma.barbero.update({
-      where: { id },
-      data: { estado }
-    });
-
-    revalidatePath("/barberos");
-
-    return { success: true, data: barbero };
-
-  } catch (error) {
-    console.error(error);
-    return { success: false, error: "Error al cambiar estado" };
-  }
-}
-
-/* =========================
-   ASIGNAR SERVICIO A BARBERO
+   ASIGNAR SERVICIO
 ========================= */
 
 export async function asignarServicioABarbero(
@@ -223,37 +221,24 @@ export async function asignarServicioABarbero(
       return { success: false, error: "Datos incompletos" };
     }
 
-    // Verificar que no exista ya la relación
-    const existe = await prisma.servicioXBarbero.findFirst({
-      where: {
-        barberoId,
-        servicioId
-      }
-    });
-
-    if (existe) {
-      return { success: false, error: "Este servicio ya está asignado al barbero" };
-    }
-
-    await prisma.servicioXBarbero.create({
+    await prisma.servicioxbarbero.create({
       data: {
         barberoId,
-        servicioId
-      }
+        servicioId,
+      },
     });
 
-    revalidatePath("/barberos");
+    revalidatePath("/barbero");
 
     return { success: true };
-
   } catch (error) {
-    console.error(error);
+    console.error("Error al asignar servicio:", error);
     return { success: false, error: "Error al asignar servicio" };
   }
 }
 
 /* =========================
-   REMOVER SERVICIO DE BARBERO
+   REMOVER SERVICIO
 ========================= */
 
 export async function removerServicioDeBarbero(
@@ -264,71 +249,79 @@ export async function removerServicioDeBarbero(
     const barberoId = formData.get("barberoId") as string;
     const servicioId = formData.get("servicioId") as string;
 
-    if (!barberoId || !servicioId) {
-      return { success: false, error: "Datos incompletos" };
-    }
-
-    await prisma.servicioXBarbero.deleteMany({
+    await prisma.servicioxbarbero.deleteMany({
       where: {
         barberoId,
-        servicioId
-      }
+        servicioId,
+      },
     });
 
-    revalidatePath("/barberos");
+    revalidatePath("/barbero");
 
     return { success: true };
-
   } catch (error) {
-    console.error(error);
+    console.error("Error al remover servicio:", error);
     return { success: false, error: "Error al remover servicio" };
   }
 }
 
-
 /* =========================
-   GET HORARIOS DE UN BARBERO
+   ASIGNAR HORARIO
 ========================= */
 
-export async function getHorariosBarbero(barberoId: string): Promise<ActionState> {
+export async function asignarHorarioABarbero(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
   try {
-    const horarios = await prisma.margen_laboral.findMany({
-      where: { barberoId },
-      include: {
-        dia: true
-      },
-      orderBy: {
-        dia: {
-          dia: 'asc'
-        }
-      }
+    const barberoId = formData.get("barberoId") as string;
+    const margenLaboralId = formData.get("margenLaboralId") as string;
+
+    const margen = await prisma.margen_laboral.findUnique({
+      where: { id: margenLaboralId },
     });
 
-    return { success: true, data: horarios };
+    if (!margen) {
+      return { success: false, error: "Horario no encontrado" };
+    }
 
+    await prisma.margen_laboral_barbero.create({
+      data: {
+        barberoId,
+        margenLaboralId,
+        diaId: margen.diaId,
+      },
+    });
+
+    revalidatePath("/barbero");
+
+    return { success: true };
   } catch (error) {
-    console.error(error);
-    return { success: false, error: "Error al obtener horarios" };
+    console.error("Error al asignar horario:", error);
+    return { success: false, error: "Error al asignar horario" };
   }
 }
 
 /* =========================
-   GET SERVICIOS DE UN BARBERO
+   REMOVER HORARIO
 ========================= */
 
-export async function getServiciosBarbero(barberoId: string): Promise<ActionState> {
+export async function removerHorarioDeBarbero(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
   try {
-    const servicios = await prisma.servicioXBarbero.findMany({
-      where: { barberoId },
-      include: {
-        servicio: true
-      }
+    const id = formData.get("id") as string;
+
+    await prisma.margen_laboral_barbero.delete({
+      where: { id },
     });
 
-    return { success: true, data: servicios };
+    revalidatePath("/barbero");
 
+    return { success: true };
   } catch (error) {
-    console.error(error);
-    return { success: false, error: "Error al obtener servicios" };
+    console.error("Error al remover horario:", error);
+    return { success: false, error: "Error al remover horario" };
   }
 }

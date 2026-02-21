@@ -14,7 +14,7 @@ export async function create(
     formData: FormData
 ): Promise<ActionState> {
     try {
-        const excepcion = await prisma.expeciones_laborales.create({
+        const excepcion = await prisma.excepcion_laboral.create({
             data: {
                 id: crypto.randomUUID(),
                 motivo: formData.get("motivo") as string,
@@ -42,7 +42,7 @@ export async function create(
 
 export async function getExcepciones(): Promise<ActionState> {
     try {
-        const excepciones = await prisma.expeciones_laborales.findMany({
+        const excepciones = await prisma.excepcion_laboral.findMany({
             orderBy: {
                 createdAt: 'desc'
             }
@@ -68,7 +68,7 @@ export async function update(
     try {
         const id = formData.get("id") as string;
 
-        const excepcion = await prisma.expeciones_laborales.update({
+        const excepcion = await prisma.excepcion_laboral.update({
             where: { id },
             data: {
                 motivo: formData.get("motivo") as string,
@@ -95,7 +95,7 @@ export async function update(
 export async function softDeleteExcepcion(id: string): Promise<ActionState> {
     try {
        
-        const excepcion = await prisma.expeciones_laborales.update({
+        const excepcion = await prisma.excepcion_laboral.update({
             where: { id },
             data: {
                 estado: false,
@@ -126,7 +126,7 @@ export async function deleteExcepcion(id: string): Promise<ActionState> {
             };
         }
 
-        await prisma.expeciones_laborales.delete({
+        await prisma.excepcion_laboral.delete({
             where: { id }
         });
 
