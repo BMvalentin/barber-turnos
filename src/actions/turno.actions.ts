@@ -36,11 +36,12 @@ export async function createTurno(
   formData: FormData
 ): Promise<ActionState> {
   try {
-    const turnoServicioId = formData.get("turnoServicioId") as string;
+    const servicioId = formData.get("servicioId") as string;
     const userId = formData.get("userId") as string;
+    const barberoId = formData.get("barberoId") as string;
     const horarioStr = formData.get("horarioReservado") as string;
 
-    if (!turnoServicioId || !userId || !horarioStr) {
+    if (!servicioId || !userId || !barberoId || !horarioStr) {
       return { success: false, error: "Datos incompletos" };
     }
 
@@ -51,15 +52,15 @@ export async function createTurno(
       return { success: false, error: "Reservá con 10 minutos de anticipación" };
     }
 
-    const turnoServicio = await prisma.turno_servicio.findUnique({
-      where: { id: turnoServicioId }
+    const servicio = await prisma.servicio.findUnique({
+      where: { id: servicioId }
     });
 
-    if (!turnoServicio) {
+    if (!servicio) {
       return { success: false, error: "Servicio no encontrado" };
     }
 
-    const fin = addMinutes(inicio, turnoServicio.duracion);
+    const fin = addMinutes(inicio, servicio.duracion);
 
     const fechaLocal = toZonedTime(inicio, TIMEZONE);
     const fechaISO = fechaLocal.toISOString().split("T")[0];
@@ -82,11 +83,11 @@ export async function createTurno(
       }),
       prisma.turno.findMany({
         where: {
-          estado: 1,
+          estado: "PENDIENTE",
           horarioReservado: { gte: inicioDia, lte: finDia }
         },
         include: {
-          turnoServicio: { select: { duracion: true } }
+          servicio: { select: { duracion: true } }
         }
       })
     ]);
@@ -100,7 +101,7 @@ export async function createTurno(
     }
 
     const minInicio = getMinutesFromZonedDate(inicio);
-    const minFin = minInicio + turnoServicio.duracion;
+    const minFin = minInicio + servicio.duracion;
 
     const entraEnMargen = diaLaboral.margenes.some((m) =>
       minInicio >= timeToMinutes(m.desde) &&
@@ -112,9 +113,8 @@ export async function createTurno(
     }
 
     const hayChoque = turnosDelDia.some((t) => {
-      const tInicio = t.horarioReservado;
-      const tFin = addMinutes(tInicio, t.turnoServicio.duracion);
-      return inicio < tFin && fin > tInicio;
+      const tFin = addMinutes(t.horarioReservado, t.servicio.duracion);
+      return inicio < tFin && fin > t.horarioReservado;
     });
 
     if (hayChoque) {
@@ -123,12 +123,13 @@ export async function createTurno(
 
     const turno = await prisma.turno.create({
       data: {
-        turnoXServicioId: turnoServicioId,
+        servicioId,
         userId,
+        barberoId,
         horarioReservado: inicio,
-        precioCongelado: turnoServicio.precio,
-        seniaCongelada: turnoServicio.senia,
-        estado: 1
+        precioCongelado: servicio.precio,
+        seniaCongelada: servicio.senia,
+        estado: "PENDIENTE"
       }
     });
 
@@ -151,7 +152,10 @@ export async function getTurnos(params?: {
   fecha?: string;
 }): Promise<ActionState> {
   try {
-    const where: any = { estado: 1 };
+    const where: any = {
+      estado: "PENDIENTE"
+
+    };
 
     if (params?.userId) where.userId = params.userId;
 
@@ -165,11 +169,8 @@ export async function getTurnos(params?: {
       where,
       include: {
         user: { select: { id: true, name: true, email: true } },
-        turnoServicio: {
-          include: {
-            servicio: { select: { nombre: true } }
-          }
-        }
+        servicio: { select: { nombre: true, duracion: true } },
+        barbero: { select: { nombre: true } }
       },
       orderBy: { horarioReservado: "asc" }
     });
@@ -204,7 +205,7 @@ export async function actualizarTurno(
 
     const turnoActual = await prisma.turno.findUnique({
       where: { id },
-      include: { turnoServicio: true }
+      include: { servicio: true }
     });
 
     if (!turnoActual) {
@@ -215,7 +216,7 @@ export async function actualizarTurno(
       ? fromZonedTime(horarioStr, TIMEZONE)
       : turnoActual.horarioReservado;
 
-    const fin = addMinutes(inicio, turnoActual.turnoServicio.duracion);
+    const fin = addMinutes(inicio, turnoActual.servicio.duracion);
 
     const fechaLocal = toZonedTime(inicio, TIMEZONE);
     const fechaISO = fechaLocal.toISOString().split("T")[0];
@@ -224,34 +225,27 @@ export async function actualizarTurno(
     const finDia = fromZonedTime(`${fechaISO} 23:59:59`, TIMEZONE);
     const diaSemana = fechaLocal.getDay();
 
-    const [diaLaboral, excepciones, turnosDelDia] = await Promise.all([
+    const [diaLaboral, turnosDelDia] = await Promise.all([
       prisma.dia_laboral.findFirst({
         where: { dia: diaSemana, estado: true },
         include: { margenes: { where: { estado: true } } }
       }),
-      prisma.excepcion_laboral.findMany({
-        where: {
-          estado: true,
-          desde: { lte: fin },
-          hasta: { gte: inicio }
-        }
-      }),
       prisma.turno.findMany({
         where: {
-          estado: 1,
+          estado: "PENDIENTE",
           horarioReservado: { gte: inicioDia, lte: finDia },
           id: { not: id }
         },
-        include: { turnoServicio: { select: { duracion: true } } }
+        include: { servicio: { select: { duracion: true } } }
       })
     ]);
 
-    if (!diaLaboral || excepciones.length > 0) {
+    if (!diaLaboral) {
       return { success: false, error: "Horario no disponible" };
     }
 
     const minInicio = getMinutesFromZonedDate(inicio);
-    const minFin = minInicio + turnoActual.turnoServicio.duracion;
+    const minFin = minInicio + turnoActual.servicio.duracion;
 
     const entra = diaLaboral.margenes.some(m =>
       minInicio >= timeToMinutes(m.desde) &&
@@ -263,7 +257,7 @@ export async function actualizarTurno(
     }
 
     const hayChoque = turnosDelDia.some(t => {
-      const tFin = addMinutes(t.horarioReservado, t.turnoServicio.duracion);
+      const tFin = addMinutes(t.horarioReservado, t.servicio.duracion);
       return inicio < tFin && fin > t.horarioReservado;
     });
 
@@ -287,7 +281,7 @@ export async function actualizarTurno(
 }
 
 /* =========================
-   DELETE / COMPLETE
+   CANCELAR TURNO
 ========================= */
 
 export async function deleteTurno(
@@ -299,12 +293,16 @@ export async function deleteTurno(
 
   await prisma.turno.update({
     where: { id },
-    data: { estado: 0 }
+    data: { estado: "CANCELADO" }
   });
 
   revalidatePath("/turno");
   return { success: true };
 }
+
+/* =========================
+   COMPLETAR TURNO
+========================= */
 
 export async function completedTurno(
   prevState: ActionState,
@@ -315,9 +313,104 @@ export async function completedTurno(
 
   await prisma.turno.update({
     where: { id },
-    data: { estado: 2 }
+    data: { estado: "COMPLETADO" }
   });
 
   revalidatePath("/turno");
   return { success: true };
+}
+
+export async function obtenerHorariosDisponibles(
+  fecha: string,
+  servicioId: string,
+  barberoId: string,
+  turnoIdAExcluir?: string
+) {
+  try {
+    if (!fecha || !servicioId || !barberoId) {
+      return { success: false, error: "Datos incompletos" };
+    }
+
+    // Obtener duración del servicio
+    const servicio = await prisma.servicio.findUnique({
+      where: { id: servicioId },
+      select: { duracion: true },
+    });
+
+    if (!servicio) {
+      return { success: false, error: "Servicio no encontrado" };
+    }
+
+    const duracion = servicio.duracion;
+
+    // Horario laboral fijo (puedes mover esto a config después)
+    const HORA_INICIO = 9;
+    const HORA_FIN = 20;
+    const INTERVALO = 30; // minutos entre slots
+
+    const fechaInicio = new Date(`${fecha}T00:00:00`);
+    const fechaFin = new Date(`${fecha}T23:59:59`);
+
+    // Traer turnos del día para ese barbero
+    const turnosDelDia = await prisma.turno.findMany({
+      where: {
+        barberoId,
+        horarioReservado: {
+          gte: fechaInicio,
+          lte: fechaFin,
+        },
+        estado: {
+          not: "CANCELADO",
+        },
+        ...(turnoIdAExcluir && {
+          NOT: { id: turnoIdAExcluir },
+        }),
+      },
+      select: {
+        horarioReservado: true,
+        servicio: {
+          select: { duracion: true },
+        },
+      },
+    });
+
+    const slots: string[] = [];
+
+    for (
+      let hora = HORA_INICIO * 60;
+      hora + duracion <= HORA_FIN * 60;
+      hora += INTERVALO
+    ) {
+      const horas = Math.floor(hora / 60);
+      const minutos = hora % 60;
+
+      const inicioSlot = new Date(fechaInicio);
+      inicioSlot.setHours(horas, minutos, 0, 0);
+
+      const finSlot = new Date(inicioSlot);
+      finSlot.setMinutes(finSlot.getMinutes() + duracion);
+
+      const haySuperposicion = turnosDelDia.some((turno) => {
+        const inicioExistente = new Date(turno.horarioReservado);
+        const finExistente = new Date(inicioExistente);
+        finExistente.setMinutes(
+          finExistente.getMinutes() + turno.servicio.duracion
+        );
+
+        return (
+          inicioSlot < finExistente &&
+          finSlot > inicioExistente
+        );
+      });
+
+      if (!haySuperposicion) {
+        slots.push(inicioSlot.toISOString());
+      }
+    }
+
+    return { success: true, data: slots };
+  } catch (error) {
+    console.error("Error en obtenerHorariosDisponibles:", error);
+    return { success: false, error: "Error del servidor" };
+  }
 }

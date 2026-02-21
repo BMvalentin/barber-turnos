@@ -1,109 +1,168 @@
 "use client";
 
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { createBarbero } from "@/actions/barbero.actions";
-import { useActionState } from "react";
-import { useFormStatus } from "react-dom";
-import { useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
-const initialState = {
-    success: false,
-    error: undefined,
-    data: undefined,
+type Servicio = {
+  id: string;
+  nombre: string;
 };
 
-export default function CreateBarberoForm() {
-    const [state, formAction] = useActionState(createBarbero, initialState);
-    const formRef = useRef<HTMLFormElement>(null);
+type MargenLaboral = {
+  id: string;
+  desde: string;
+  hasta: string;
+  diaId: string;
+};
 
-    useEffect(() => {
-        if (state.success) {
-            formRef.current?.reset();
-            alert("✅ Barbero creado exitosamente!");
-        }
-        if (state.error) {
-            alert(`❌ Error: ${state.error}`);
-        }
-    }, [state.success, state.error]);
+type DiaLaboral = {
+  id: string;
+  dia: number;
+  margenes: MargenLaboral[];
+};
 
-    return (
-        <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Crear Barbero</h2>
-            
-            <form ref={formRef} action={formAction} className="space-y-4">
-                <div>
-                    <label htmlFor="nombre" className="block text-sm font-medium mb-1">
-                        Nombre del Barbero *
-                    </label>
-                    <input
-                        type="text"
-                        id="nombre"
-                        name="nombre"
-                        required
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Ej: Carlos Pérez, Martín López"
-                    />
-                </div>
+type Props = {
+  servicios: Servicio[];
+  diasLaborales: DiaLaboral[];
+};
 
-                <div>
-                    <label htmlFor="srcImage" className="block text-sm font-medium mb-1">
-                        URL de Imagen
-                    </label>
-                    <input
-                        type="text"
-                        id="srcImage"
-                        name="srcImage"
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="https://ejemplo.com/barbero.jpg o /images/foto.jpg"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                        Deja vacío si no tienes imagen
-                    </p>
-                </div>
+const DIAS_SEMANA = [
+  "Domingo",
+  "Lunes",
+  "Martes",
+  "Miércoles",
+  "Jueves",
+  "Viernes",
+  "Sábado",
+];
 
-                <div className="flex items-center">
-                    <input
-                        type="checkbox"
-                        id="estado"
-                        name="estado"
-                        value="true"
-                        defaultChecked
-                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                    />
-                    <label htmlFor="estado" className="ml-2 text-sm font-medium">
-                        Barbero activo
-                    </label>
-                </div>
+export default function CreateBarberoForm({ servicios, diasLaborales }: Props) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
-                {state.error && (
-                    <div className="bg-red-50 border border-red-200 rounded p-3">
-                        <p className="text-red-600 text-sm">{state.error}</p>
-                    </div>
-                )}
+  const [nombre, setNombre] = useState("");
+  const [srcImage, setSrcImage] = useState("");
+  const [selectedServicios, setSelectedServicios] = useState<string[]>([]);
+  const [selectedHorarios, setSelectedHorarios] = useState<string[]>([]);
 
-                {state.success && (
-                    <div className="bg-green-50 border border-green-200 rounded p-3">
-                        <p className="text-green-600 text-sm">
-                            ✅ Barbero creado correctamente
-                        </p>
-                    </div>
-                )}
-
-                <SubmitButton />
-            </form>
-        </div>
+  const toggleServicio = (id: string) => {
+    setSelectedServicios((prev) =>
+      prev.includes(id)
+        ? prev.filter((s) => s !== id)
+        : [...prev, id]
     );
-}
+  };
 
-function SubmitButton() {
-    const { pending } = useFormStatus();
-    
-    return (
-        <button
-            type="submit"
-            disabled={pending}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-        >
-            {pending ? "Creando..." : "Crear Barbero"}
-        </button>
+  const toggleHorario = (id: string) => {
+    setSelectedHorarios((prev) =>
+      prev.includes(id)
+        ? prev.filter((h) => h !== id)
+        : [...prev, id]
     );
+  };
+
+  const handleSubmit = () => {
+    if (!nombre.trim()) {
+      toast.error("El nombre es obligatorio");
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await createBarbero({
+        nombre: nombre.trim(),
+        srcImage: srcImage.trim() || null,
+        serviciosIds: selectedServicios,
+        margenesIds: selectedHorarios,
+      });
+
+      if (result.success) {
+        toast.success("Barbero creado correctamente");
+        router.refresh();
+      } else {
+        toast.error(result.error || "Error al crear barbero");
+      }
+    });
+  };
+
+  return (
+    <div className="bg-white shadow-md rounded-xl p-6 space-y-6">
+      <h2 className="text-xl font-bold">Nuevo Barbero</h2>
+
+      {/* Nombre */}
+      <div className="space-y-2">
+        <label className="font-semibold">Nombre</label>
+        <input
+          type="text"
+          className="w-full border rounded-md px-3 py-2"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+        />
+      </div>
+
+      {/* Imagen (Opcional) */}
+      <div className="space-y-2">
+        <label className="font-semibold">Imagen (Opcional)</label>
+        <input
+          type="text"
+          className="w-full border rounded-md px-3 py-2"
+          placeholder="URL de la imagen"
+          value={srcImage}
+          onChange={(e) => setSrcImage(e.target.value)}
+        />
+      </div>
+
+      {/* Servicios */}
+      <div className="space-y-3">
+        <label className="font-semibold">Servicios</label>
+
+        {servicios?.map((servicio) => (
+          <div key={servicio.id} className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={selectedServicios.includes(servicio.id)}
+              onChange={() => toggleServicio(servicio.id)}
+            />
+            <span>{servicio.nombre}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Días + Horarios */}
+      <div className="space-y-4">
+        <label className="font-semibold">Horarios por Día</label>
+
+        {diasLaborales.map((dia) => (
+          <div key={dia.id} className="border rounded-lg p-4">
+            <p className="font-semibold mb-2">
+              {DIAS_SEMANA[dia.dia]}
+            </p>
+
+            {dia.margenes?.map((margen) => (
+              <div key={margen.id} className="flex items-center gap-2 ml-4">
+                <input
+                  type="checkbox"
+                  checked={selectedHorarios.includes(margen.id)}
+                  onChange={() => toggleHorario(margen.id)}
+                />
+                <span>
+                  {margen.desde} - {margen.hasta}
+                </span>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      <Button
+        onClick={handleSubmit}
+        disabled={isPending}
+        className="w-full"
+      >
+        {isPending ? "Guardando..." : "Crear Barbero"}
+      </Button>
+    </div>
+  );
 }
