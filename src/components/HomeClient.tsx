@@ -5,15 +5,13 @@ import { ImageCarousel } from "@/components/ImageCarousel";
 import { AboutSection } from "@/components/AboutSection";
 import { LocationSection } from "@/components/LocationSection";
 import { Footer } from "@/components/Footer";
-import { useBooking } from "@/app/context/Booking";
 
 export default function HomeClient() {
-  const { onOpen } = useBooking();
 
   return (
-      <div className="min-h-screenjustify-center items-center mx-auto">
+      <div className="min-h-screen justify-center items-center mx-auto">
         <main>
-          <Hero onBookingClick={onOpen} />
+          <Hero onBookingClick={() => {}} />
           <ImageCarousel />
           <AboutSection />
           <LocationSection />
