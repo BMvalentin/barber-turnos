@@ -11,11 +11,16 @@ type ServicioData = {
   id: string;
   nombre: string;
   descripcion: string | null;
+  precio?: any;
+  duracion?: number;
+  descuento?: any;
+  senia?: any;
 };
 
 type BarberoData = {
   id: string;
   nombre: string;
+  srcImage?: string | null;
 };
 
 type UsuarioData = {
@@ -24,25 +29,43 @@ type UsuarioData = {
   email: string | null;
 };
 
+type Props = {
+  session: any;
+  initialServicios?: ServicioData[];
+  initialBarberos?: BarberoData[];
+  initialUsuarios?: UsuarioData[];
+};
+
 const initialState = {
   success: false,
   error: undefined,
   data: undefined,
 };
 
-export default function CreateTurnoForm({ session }: { session: any }) {
+export default function CreateTurnoForm({
+  session,
+  initialServicios = [],
+  initialBarberos = [],
+  initialUsuarios = [],
+}: Props) {
   const [state, formAction] = useActionState(createTurno, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
-  const [servicios, setServicios] = useState<ServicioData[]>([]);
-  const [barberos, setBarberos] = useState<BarberoData[]>([]);
-  const [usuarios, setUsuarios] = useState<UsuarioData[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const [servicios, setServicios] = useState<ServicioData[]>(initialServicios);
+  const [barberos, setBarberos] = useState<BarberoData[]>(initialBarberos);
+  const [usuarios, setUsuarios] = useState<UsuarioData[]>(initialUsuarios);
+  const [loadingData, setLoadingData] = useState(!initialServicios.length);
 
   const [selectedServicioId, setSelectedServicioId] = useState("");
   const [selectedBarberoId, setSelectedBarberoId] = useState("");
 
   useEffect(() => {
+    // Si ya hay datos iniciales, no hacer fetch
+    if (initialServicios.length > 0) {
+      setLoadingData(false);
+      return;
+    }
+
     let isMounted = true;
 
     async function load() {
@@ -66,7 +89,7 @@ export default function CreateTurnoForm({ session }: { session: any }) {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [initialServicios.length]);
 
   useEffect(() => {
     if (state.success) {
@@ -140,6 +163,11 @@ export default function CreateTurnoForm({ session }: { session: any }) {
                 </option>
               ))}
             </select>
+            {barberos.length === 0 && (
+              <p className="text-xs text-red-500">
+                No hay barberos disponibles. Crea barberos primero.
+              </p>
+            )}
           </div>
 
           {/* SERVICIO */}
@@ -148,7 +176,7 @@ export default function CreateTurnoForm({ session }: { session: any }) {
               Servicio <span className="text-red-500">*</span>
             </label>
             <select
-              name="turnoXServicioId"
+              name="servicioId"
               required
               value={selectedServicioId}
               onChange={(e) => setSelectedServicioId(e.target.value)}
@@ -158,10 +186,17 @@ export default function CreateTurnoForm({ session }: { session: any }) {
               {servicios.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.nombre}
+                  {s.precio && ` - $${s.precio.toString()}`}
+                  {s.duracion && ` (${s.duracion} min)`}
                   {s.descripcion && ` - ${s.descripcion}`}
                 </option>
               ))}
             </select>
+            {servicios.length === 0 && (
+              <p className="text-xs text-red-500">
+                No hay servicios disponibles. Crea servicios primero.
+              </p>
+            )}
           </div>
         </div>
 
