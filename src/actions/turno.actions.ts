@@ -325,92 +325,121 @@ export async function obtenerHorariosDisponibles(
   servicioId: string,
   barberoId: string,
   turnoIdAExcluir?: string
-) {
+): Promise<ActionState> {
   try {
-    if (!fecha || !servicioId || !barberoId) {
-      return { success: false, error: "Datos incompletos" };
-    }
-
-    // Obtener duración del servicio
+    // Obtener el servicio para saber la duración
     const servicio = await prisma.servicio.findUnique({
       where: { id: servicioId },
       select: { duracion: true },
     });
 
     if (!servicio) {
-      return { success: false, error: "Servicio no encontrado" };
+      return {
+        success: false,
+        error: "Servicio no encontrado",
+      };
     }
 
-    const duracion = servicio.duracion;
+    // Obtener horarios del barbero para ese día
+    const diaSemana = new Date(fecha).getDay();
 
-    // Horario laboral fijo (puedes mover esto a config después)
-    const HORA_INICIO = 9;
-    const HORA_FIN = 20;
-    const INTERVALO = 30; // minutos entre slots
+    const horariosBarbero = await prisma.margen_laboral_barbero.findMany({
+      where: {
+        barberoId,
+        estado: true,
+        dia: {
+          dia: diaSemana,
+          estado: true,
+        },
+      },
+      include: {
+        margenLaboral: true,
+      },
+    });
 
-    const fechaInicio = new Date(`${fecha}T00:00:00`);
-    const fechaFin = new Date(`${fecha}T23:59:59`);
+    if (horariosBarbero.length === 0) {
+      return {
+        success: false,
+        error: "El barbero no trabaja este día",
+      };
+    }
 
-    // Traer turnos del día para ese barbero
-    const turnosDelDia = await prisma.turno.findMany({
+    // Obtener turnos ya reservados para esa fecha y barbero
+    const inicioDelDia = new Date(fecha);
+    inicioDelDia.setHours(0, 0, 0, 0);
+
+    const finDelDia = new Date(fecha);
+    finDelDia.setHours(23, 59, 59, 999);
+
+    const turnosReservados = await prisma.turno.findMany({
       where: {
         barberoId,
         horarioReservado: {
-          gte: fechaInicio,
-          lte: fechaFin,
+          gte: inicioDelDia,
+          lte: finDelDia,
         },
         estado: {
-          not: "CANCELADO",
+          notIn: ["CANCELADO"],
         },
-        ...(turnoIdAExcluir && {
-          NOT: { id: turnoIdAExcluir },
-        }),
+        ...(turnoIdAExcluir && { id: { not: turnoIdAExcluir } }),
       },
-      select: {
-        horarioReservado: true,
+      include: {
         servicio: {
           select: { duracion: true },
         },
       },
     });
 
-    const slots: string[] = [];
+    // Generar slots disponibles
+    const slotsDisponibles: string[] = [];
 
-    for (
-      let hora = HORA_INICIO * 60;
-      hora + duracion <= HORA_FIN * 60;
-      hora += INTERVALO
-    ) {
-      const horas = Math.floor(hora / 60);
-      const minutos = hora % 60;
+    for (const horario of horariosBarbero) {
+      const [horaInicio, minInicio] = horario.margenLaboral.desde.split(":").map(Number);
+      const [horaFin, minFin] = horario.margenLaboral.hasta.split(":").map(Number);
 
-      const inicioSlot = new Date(fechaInicio);
-      inicioSlot.setHours(horas, minutos, 0, 0);
+      let horaActual = horaInicio * 60 + minInicio;
+      const horaLimite = horaFin * 60 + minFin;
 
-      const finSlot = new Date(inicioSlot);
-      finSlot.setMinutes(finSlot.getMinutes() + duracion);
+      while (horaActual + servicio.duracion <= horaLimite) {
+        const hora = Math.floor(horaActual / 60);
+        const min = horaActual % 60;
 
-      const haySuperposicion = turnosDelDia.some((turno) => {
-        const inicioExistente = new Date(turno.horarioReservado);
-        const finExistente = new Date(inicioExistente);
-        finExistente.setMinutes(
-          finExistente.getMinutes() + turno.servicio.duracion
-        );
+        const slotDateTime = new Date(fecha);
+        slotDateTime.setHours(hora, min, 0, 0);
 
-        return (
-          inicioSlot < finExistente &&
-          finSlot > inicioExistente
-        );
-      });
+        // Verificar si el slot está ocupado
+        const estaOcupado = turnosReservados.some((turno) => {
+          const inicioTurno = new Date(turno.horarioReservado);
+          const finTurno = new Date(inicioTurno.getTime() + turno.servicio.duracion * 60000);
 
-      if (!haySuperposicion) {
-        slots.push(inicioSlot.toISOString());
+          const inicioSlot = slotDateTime;
+          const finSlot = new Date(slotDateTime.getTime() + servicio.duracion * 60000);
+
+          // Verificar superposición
+          return (
+            (inicioSlot >= inicioTurno && inicioSlot < finTurno) ||
+            (finSlot > inicioTurno && finSlot <= finTurno) ||
+            (inicioSlot <= inicioTurno && finSlot >= finTurno)
+          );
+        });
+
+        if (!estaOcupado) {
+          slotsDisponibles.push(slotDateTime.toISOString());
+        }
+
+        horaActual += 30; // Incrementar cada 30 minutos
       }
     }
 
-    return { success: true, data: slots };
+    return {
+      success: true,
+      data: slotsDisponibles,
+    };
   } catch (error) {
-    console.error("Error en obtenerHorariosDisponibles:", error);
-    return { success: false, error: "Error del servidor" };
+    console.error("Error obteniendo horarios:", error);
+    return {
+      success: false,
+      error: "Error al obtener horarios disponibles",
+    };
   }
 }
