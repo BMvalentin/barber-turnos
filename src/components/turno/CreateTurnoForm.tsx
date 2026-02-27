@@ -113,36 +113,48 @@ export default function CreateTurnoForm({
 
       <form ref={formRef} action={formAction} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
           {/* CLIENTE */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">
               Cliente <span className="text-red-500">*</span>
             </label>
-            <select
-              name="userId"
-              required
-              className="w-full p-2.5 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              defaultValue={
-                session?.user?.role === "USER" ? session?.user?.id : ""
-              }
-              disabled={session?.user?.role === "USER"}
-            >
-              {session?.user?.role === "USER" ? (
-                <option value={session?.user?.id}>
-                  {session?.user?.name || "Usuario"} ({session?.user?.email})
-                </option>
-              ) : (
-                <>
-                  <option value="">-- Seleccionar Cliente --</option>
-                  {usuarios.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name || "Sin nombre"} ({u.email})
-                    </option>
-                  ))}
-                </>
-              )}
-            </select>
+
+            {session?.user?.role === "USER" ? (
+              <>
+                <select
+                  disabled
+                  className="w-full p-2.5 border rounded-lg bg-gray-100"
+                >
+                  <option>
+                    {session?.user?.name || "Usuario"} ({session?.user?.email})
+                  </option>
+                </select>
+
+                {/* 👇 ESTE ES EL FIX */}
+                <input
+                  type="hidden"
+                  name="userId"
+                  value={session?.user?.id}
+                />
+              </>
+            ) : (
+              <select
+                name="userId"
+                required
+                className="w-full p-2.5 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                defaultValue=""
+              >
+                <option value="">-- Seleccionar Cliente --</option>
+                {usuarios.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name || "Sin nombre"} ({u.email})
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
+
 
           {/* BARBERO */}
           <div className="space-y-2">
