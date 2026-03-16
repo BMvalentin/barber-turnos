@@ -4,6 +4,11 @@ import { Users, Scissors, Calendar, DollarSign, Clock, ChevronRight } from "luci
 import Link from "next/link";
 
 async function getStats() {
+  // Fecha de hoy
+  const hoy = new Date();
+  const inicioDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0);
+  const finDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59);
+
   const [
     totalBarberos, 
     totalServicios, 
@@ -11,7 +16,8 @@ async function getStats() {
     turnosPendientes,
     barberos,
     proximosTurnos,
-    serviciosPopulares
+    serviciosPopulares,
+    turnosHoyPorBarbero
   ] = await Promise.all([
     prisma.barbero.count({ where: { estado: true } }),
     prisma.servicio.count({ where: { estado: true } }),
@@ -79,6 +85,32 @@ async function getStats() {
         }
       },
       take: 5
+    }),
+
+    // Turnos de hoy por barbero
+    prisma.barbero.findMany({
+      where: { estado: true },
+      include: {
+        turnos: {
+          where: {
+            horarioReservado: {
+              gte: inicioDia,
+              lte: finDia
+            },
+            estado: "PENDIENTE"
+          },
+          include: {
+            user: {
+              select: { name: true, email: true }
+            },
+            servicio: {
+              select: { nombre: true, duracion: true }
+            }
+          },
+          orderBy: { horarioReservado: "asc" }
+        }
+      },
+      orderBy: { nombre: "asc" }
     })
   ]);
 
@@ -89,7 +121,8 @@ async function getStats() {
     turnosPendientes,
     barberos,
     proximosTurnos,
-    serviciosPopulares
+    serviciosPopulares,
+    turnosHoyPorBarbero
   };
 }
 
@@ -233,6 +266,91 @@ export default async function AdminDashboard() {
             </div>
           )}
         </DetailCard>
+      </div>
+
+      {/* Agenda de Hoy por Barbero */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+          <Clock className="h-6 w-6 text-orange-500" />
+          <h2 className="text-2xl font-bold text-white">Agenda de Hoy</h2>
+        </div>
+
+        {stats.turnosHoyPorBarbero.filter(b => b.turnos.length > 0).length === 0 ? (
+          <div className="bg-gray-900 rounded-xl shadow-lg border border-gray-800 p-8 text-center">
+            <p className="text-gray-400">No hay turnos programados para hoy</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {stats.turnosHoyPorBarbero
+              .filter(barbero => barbero.turnos.length > 0)
+              .map((barbero) => (
+                <div key={barbero.id} className="bg-gray-900 rounded-xl shadow-lg border border-gray-800 p-6">
+                  {/* Header del Barbero */}
+                  <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-800">
+                    <div className="h-12 w-12 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-lg">
+                      {barbero.nombre.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-white">{barbero.nombre}</h3>
+                      <p className="text-sm text-gray-400">
+                        {barbero.turnos.length} {barbero.turnos.length === 1 ? 'corte' : 'cortes'} hoy
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500">Total tiempo</p>
+                      <p className="text-sm font-semibold text-orange-500">
+                        {barbero.turnos.reduce((acc, t) => acc + t.servicio.duracion, 0)} min
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Lista de Turnos */}
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {barbero.turnos.map((turno, index) => (
+                      <div 
+                        key={turno.id} 
+                        className="p-3 bg-gray-800 rounded-lg border border-gray-700 hover:border-orange-500/50 transition-colors"
+                      >
+                        <div className="flex items-start gap-3">
+                          {/* Número de orden */}
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center">
+                            <span className="text-sm font-bold text-orange-500">
+                              {index + 1}
+                            </span>
+                          </div>
+
+                          {/* Info del turno */}
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <p className="font-medium text-sm text-white">
+                                  {turno.user.name || turno.user.email}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-1">
+                                  {turno.servicio.nombre}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-semibold text-orange-500">
+                                  {new Date(turno.horarioReservado).toLocaleTimeString('es-AR', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {turno.servicio.duracion} min
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
       </div>
     </div>
   );
