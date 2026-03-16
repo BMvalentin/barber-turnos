@@ -10,7 +10,6 @@ import {
   Calendar, 
   ClipboardList,
   Clock,
-  Settings,
   LogOut
 } from "lucide-react";
 
@@ -22,7 +21,7 @@ const menuItems = [
   },
   {
     title: "Barberos",
-    href: "/barberos",
+    href: "/barbero",
     icon: Users,
   },
   {
@@ -37,12 +36,12 @@ const menuItems = [
   },
   {
     title: "Días Laborales",
-    href: "/dias-laborales",
+    href: "/diaLaboral",
     icon: Clock,
   },
   {
     title: "Excepciones",
-    href: "/excepciones",
+    href: "/excepcionesLaborales",
     icon: ClipboardList,
   },
 ];
@@ -51,15 +50,15 @@ export default function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+    <aside className="w-56 bg-gray-900 border-r border-gray-800 flex flex-col fixed left-0 top-0 h-screen pt-20 shadow-lg">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200">
-        <h1 className="text-2xl font-bold text-gray-800">Admin Panel</h1>
-        <p className="text-sm text-gray-500 mt-1">Gestión de barbería</p>
+      <div className="p-4 border-b border-gray-800">
+        <h1 className="text-xl font-bold text-white">Admin Panel</h1>
+        <p className="text-xs text-gray-400 mt-1">Gestión de barbería</p>
       </div>
 
       {/* Menu Items */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-3 space-y-2 overflow-y-auto">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
@@ -69,16 +68,23 @@ export default function AdminSidebar() {
               key={item.href}
               href={item.href}
               className={`
-                flex items-center gap-3 px-4 py-3 rounded-lg
-                transition-colors duration-150
+                flex items-center gap-3 px-3 py-2.5 rounded-full
+                font-semibold text-sm transition-all ease-linear
+                group
                 ${
                   isActive
-                    ? "bg-blue-50 text-blue-700 font-medium"
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-inner"
+                    : "text-gray-300 hover:bg-orange-500/10 hover:shadow-inner"
                 }
               `}
             >
-              <Icon className="h-5 w-5" />
+              <Icon 
+                className={`h-5 w-5 ${
+                  isActive 
+                    ? "stroke-white" 
+                    : "stroke-gray-300 group-hover:stroke-orange-500"
+                }`} 
+              />
               <span>{item.title}</span>
             </Link>
           );
@@ -86,12 +92,12 @@ export default function AdminSidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-3 border-t border-gray-800">
         <Link
           href="/api/auth/signout"
-          className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-full text-red-400 hover:bg-red-500/10 hover:shadow-inner transition-all font-semibold text-sm group"
         >
-          <LogOut className="h-5 w-5" />
+          <LogOut className="h-5 w-5 stroke-red-400 group-hover:stroke-red-500" />
           <span>Cerrar Sesión</span>
         </Link>
       </div>
