@@ -4,10 +4,11 @@ import CreateTurnoForm from "@/components/turno/CreateTurnoForm";
 import { Suspense } from "react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 async function getTurnoData() {
   const [servicios, barberos, usuarios] = await Promise.all([
-    // Directamente servicios, no turno_servicio
     prisma.servicio.findMany({
       where: { estado: true },
       select: {
@@ -52,34 +53,51 @@ export default async function TurnoPage() {
   const { servicios, barberos, usuarios } = await getTurnoData();
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl mt-20">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Gestión de Turnos</h1>
-        <p className="text-gray-600">
-          Administra las reservas de turnos para tus servicios
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-black to-amber-950/30 p-6">
+      <div className="container mx-auto max-w-7xl mt-20">
+        
+        <div className="mb-8 flex items-center gap-4">
+          {/* Flecha de regreso - solo para ADMIN */}
+          {session?.user?.role === "ADMIN" && (
+            <Link
+              href="/admin"
+              className="p-2 hover:bg-amber-600/20 rounded-lg transition-all group"
+              title="Volver al Dashboard"
+            >
+              <ArrowLeft className="h-6 w-6 text-amber-500 group-hover:text-amber-400 group-hover:-translate-x-1 transition-all" />
+            </Link>
+          )}
 
-      <div className="mb-8">
-        <CreateTurnoForm
-          session={session}
-          initialServicios={servicios}
-          initialBarberos={barberos}
-          initialUsuarios={usuarios}
-        />
-      </div>
-
-      <Suspense fallback={<LoadingSkeleton />}>
-        {result.success && result.data && Array.isArray(result.data) ? (
-          <TurnoList session={session} turnos={result.data} />
-        ) : (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-600">
-              {result.error || "Error al cargar los turnos"}
+          {/* Título */}
+          <div>
+            <h1 className="text-3xl font-bold text-white">Gestión de Turnos</h1>
+            <p className="text-amber-200/70">
+              Administra las reservas de turnos para tus servicios
             </p>
           </div>
-        )}
-      </Suspense>
+        </div>
+
+        <div className="mb-8">
+          <CreateTurnoForm
+            session={session}
+            initialServicios={servicios}
+            initialBarberos={barberos}
+            initialUsuarios={usuarios}
+          />
+        </div>
+
+        <Suspense fallback={<LoadingSkeleton />}>
+          {result.success && result.data && Array.isArray(result.data) ? (
+            <TurnoList session={session} turnos={result.data} />
+          ) : (
+            <div className="bg-amber-500/10 border border-amber-500/50 rounded-lg p-4 backdrop-blur-sm">
+              <p className="text-amber-400">
+                {result.error || "Error al cargar los turnos"}
+              </p>
+            </div>
+          )}
+        </Suspense>
+      </div>
     </div>
   );
 }
@@ -88,10 +106,10 @@ function LoadingSkeleton() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {[1, 2, 3].map((i) => (
-        <div key={i} className="border rounded-lg p-4 animate-pulse">
-          <div className="h-40 bg-gray-200 rounded mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        <div key={i} className="border border-amber-900/30 bg-black/40 backdrop-blur-sm rounded-lg p-4 animate-pulse">
+          <div className="h-40 bg-amber-950/20 rounded mb-4"></div>
+          <div className="h-4 bg-amber-950/20 rounded w-3/4 mb-2"></div>
+          <div className="h-4 bg-amber-950/20 rounded w-1/2"></div>
         </div>
       ))}
     </div>

@@ -60,7 +60,6 @@ export default function CreateTurnoForm({
   const [selectedBarberoId, setSelectedBarberoId] = useState("");
 
   useEffect(() => {
-    // Si ya hay datos iniciales, no hacer fetch
     if (initialServicios.length > 0) {
       setLoadingData(false);
       return;
@@ -104,34 +103,35 @@ export default function CreateTurnoForm({
 
   if (loadingData)
     return (
-      <div className="p-8 text-center text-gray-500">Cargando datos...</div>
+      <div className="p-8 text-center text-amber-200/70 bg-black/40 backdrop-blur-lg rounded-xl border border-amber-900/30">
+        Cargando datos...
+      </div>
     );
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border p-6 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Nuevo Turno</h2>
+    <div className="bg-black/40 backdrop-blur-lg rounded-xl shadow-lg border border-amber-900/30 p-6 max-w-4xl mx-auto">
+      <h2 className="text-2xl font-bold text-white mb-6">Nuevo Turno</h2>
 
       <form ref={formRef} action={formAction} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           {/* CLIENTE */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">
-              Cliente <span className="text-red-500">*</span>
+            <label className="text-sm font-medium text-amber-200/70">
+              Cliente <span className="text-amber-500">*</span>
             </label>
 
             {session?.user?.role === "USER" ? (
               <>
                 <select
                   disabled
-                  className="w-full p-2.5 border rounded-lg bg-gray-100"
+                  className="w-full p-2.5 border border-amber-900/30 rounded-lg bg-black/60 text-amber-200/50"
                 >
                   <option>
                     {session?.user?.name || "Usuario"} ({session?.user?.email})
                   </option>
                 </select>
 
-                {/* 👇 ESTE ES EL FIX */}
                 <input
                   type="hidden"
                   name="userId"
@@ -142,7 +142,7 @@ export default function CreateTurnoForm({
               <select
                 name="userId"
                 required
-                className="w-full p-2.5 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2.5 border border-amber-900/30 rounded-lg bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 defaultValue=""
               >
                 <option value="">-- Seleccionar Cliente --</option>
@@ -155,18 +155,17 @@ export default function CreateTurnoForm({
             )}
           </div>
 
-
           {/* BARBERO */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">
-              Barbero <span className="text-red-500">*</span>
+            <label className="text-sm font-medium text-amber-200/70">
+              Barbero <span className="text-amber-500">*</span>
             </label>
             <select
               name="barberoId"
               required
               value={selectedBarberoId}
               onChange={(e) => setSelectedBarberoId(e.target.value)}
-              className="w-full p-2.5 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-2.5 border border-amber-900/30 rounded-lg bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
             >
               <option value="">-- Seleccionar Barbero --</option>
               {barberos.map((b) => (
@@ -176,7 +175,7 @@ export default function CreateTurnoForm({
               ))}
             </select>
             {barberos.length === 0 && (
-              <p className="text-xs text-red-500">
+              <p className="text-xs text-amber-400">
                 No hay barberos disponibles. Crea barberos primero.
               </p>
             )}
@@ -184,15 +183,15 @@ export default function CreateTurnoForm({
 
           {/* SERVICIO */}
           <div className="space-y-2 md:col-span-2">
-            <label className="text-sm font-medium text-gray-700">
-              Servicio <span className="text-red-500">*</span>
+            <label className="text-sm font-medium text-amber-200/70">
+              Servicio <span className="text-amber-500">*</span>
             </label>
             <select
               name="servicioId"
               required
               value={selectedServicioId}
               onChange={(e) => setSelectedServicioId(e.target.value)}
-              className="w-full p-2.5 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-2.5 border border-amber-900/30 rounded-lg bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
             >
               <option value="">-- Seleccionar Servicio --</option>
               {servicios.map((s) => (
@@ -205,7 +204,7 @@ export default function CreateTurnoForm({
               ))}
             </select>
             {servicios.length === 0 && (
-              <p className="text-xs text-red-500">
+              <p className="text-xs text-amber-400">
                 No hay servicios disponibles. Crea servicios primero.
               </p>
             )}
@@ -220,7 +219,7 @@ export default function CreateTurnoForm({
         />
 
         {state.error && (
-          <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm border border-red-200">
+          <div className="p-3 bg-amber-500/10 text-amber-400 rounded-lg text-sm border border-amber-500/50">
             {state.error}
           </div>
         )}
@@ -238,7 +237,7 @@ function SubmitButton() {
     <Button
       type="submit"
       disabled={pending}
-      className="w-full md:w-auto md:min-w-[200px] bg-blue-600 hover:bg-blue-700"
+      className="w-full md:w-auto md:min-w-[200px] bg-amber-600 hover:bg-amber-700 text-white"
     >
       {pending ? "Procesando..." : "Confirmar Reserva"}
     </Button>
