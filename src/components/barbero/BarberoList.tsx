@@ -40,9 +40,9 @@ const DIAS_SEMANA = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 export default function BarberoList({ barberos }: { barberos: Barbero[] }) {
     if (barberos.length === 0) {
         return (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-                <User className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-600">No hay barberos disponibles</p>
+            <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-lg p-8 text-center">
+                <User className="h-16 w-16 text-amber-500/30 mx-auto mb-4" />
+                <p className="text-amber-200/70">No hay barberos disponibles</p>
             </div>
         );
     }
@@ -85,9 +85,9 @@ function BarberoCard({ barbero }: { barbero: Barbero }) {
 
     return (
         <>
-            <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden">
+            <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl shadow-lg overflow-hidden hover:border-amber-500/50 transition-all">
                 {/* Imagen */}
-                <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200">
+                <div className="relative h-48 bg-gradient-to-br from-black to-amber-950/30">
                     {hasValidImage ? (
                         <img
                             src={barbero.srcImage!}
@@ -100,23 +100,23 @@ function BarberoCard({ barbero }: { barbero: Barbero }) {
                     ) : (
                         <div className="w-full h-full flex items-center justify-center">
                             <div className="text-center">
-                                <User className="mx-auto h-16 w-16 text-gray-400" />
-                                <p className="mt-2 text-sm text-gray-500">Sin imagen</p>
+                                <User className="mx-auto h-16 w-16 text-amber-500/30" />
+                                <p className="mt-2 text-sm text-amber-200/50">Sin imagen</p>
                             </div>
                         </div>
                     )}
                 </div>
 
-                <div className="p-4 space-y-3">
+                <div className="p-5 space-y-4">
                     {/* Nombre y Estado */}
                     <div className="flex items-start justify-between">
-                        <h3 className="text-lg font-semibold text-gray-800 flex-1">
+                        <h3 className="text-lg font-semibold text-white flex-1">
                             {barbero.nombre || "Sin nombre"}
                         </h3>
-                        <span className={`px-2 py-1 rounded text-xs font-medium flex-shrink-0 ${
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold flex-shrink-0 border ${
                             barbero.estado 
-                                ? "bg-green-100 text-green-700" 
-                                : "bg-red-100 text-red-700"
+                                ? "bg-green-500/20 text-green-400 border-green-500/50" 
+                                : "bg-red-500/20 text-red-400 border-red-500/50"
                         }`}>
                             {barbero.estado ? "Activo" : "Inactivo"}
                         </span>
@@ -124,8 +124,8 @@ function BarberoCard({ barbero }: { barbero: Barbero }) {
 
                     {/* Servicios */}
                     <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                            <Scissors className="h-4 w-4 text-blue-600" />
+                        <div className="flex items-center gap-2 text-sm font-semibold text-amber-200/70">
+                            <Scissors className="h-4 w-4 text-amber-500" />
                             <span>Servicios ({serviciosCount})</span>
                         </div>
                         
@@ -134,19 +134,19 @@ function BarberoCard({ barbero }: { barbero: Barbero }) {
                                 {barbero.servicios.slice(0, 4).map((s, idx) => (
                                     <span
                                         key={idx}
-                                        className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full"
+                                        className="text-xs bg-amber-500/20 text-amber-400 px-2 py-1 rounded-full border border-amber-500/30"
                                     >
                                         {s.servicio.nombre}
                                     </span>
                                 ))}
                                 {barbero.servicios.length > 4 && (
-                                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                                    <span className="text-xs bg-black/60 text-amber-200/50 px-2 py-1 rounded-full border border-amber-900/30">
                                         +{barbero.servicios.length - 4} más
                                     </span>
                                 )}
                             </div>
                         ) : (
-                            <p className="text-xs text-gray-400 italic ml-6">
+                            <p className="text-xs text-amber-200/50 italic ml-6">
                                 Sin servicios asignados
                             </p>
                         )}
@@ -154,17 +154,17 @@ function BarberoCard({ barbero }: { barbero: Barbero }) {
 
                     {/* Horarios por Día */}
                     <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                            <Calendar className="h-4 w-4 text-purple-600" />
+                        <div className="flex items-center gap-2 text-sm font-semibold text-amber-200/70">
+                            <Calendar className="h-4 w-4 text-amber-500" />
                             <span>Horarios ({horariosCount})</span>
                         </div>
                         
                         {diasConHorarios.length > 0 ? (
-                            <div className="space-y-1.5 max-h-32 overflow-y-auto border border-gray-100 rounded-lg p-2">
+                            <div className="space-y-1.5 max-h-32 overflow-y-auto border border-amber-900/30 rounded-lg p-2 bg-black/40">
                                 {diasConHorarios.slice(0, 4).map((dia) => (
                                     <div key={dia} className="space-y-1">
                                         <div className="flex items-center gap-2">
-                                            <span className="text-xs font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded">
+                                            <span className="text-xs font-semibold text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/30">
                                                 {DIAS_SEMANA[dia]}
                                             </span>
                                         </div>
@@ -172,9 +172,9 @@ function BarberoCard({ barbero }: { barbero: Barbero }) {
                                             {horariosPorDia[dia].map((h, idx) => (
                                                 <div
                                                     key={idx}
-                                                    className="text-xs text-gray-600 flex items-center gap-1"
+                                                    className="text-xs text-amber-200/70 flex items-center gap-1"
                                                 >
-                                                    <Clock className="h-3 w-3 text-green-600" />
+                                                    <Clock className="h-3 w-3 text-green-400" />
                                                     <span className="font-mono">
                                                         {h.desde} - {h.hasta}
                                                     </span>
@@ -184,23 +184,23 @@ function BarberoCard({ barbero }: { barbero: Barbero }) {
                                     </div>
                                 ))}
                                 {diasConHorarios.length > 4 && (
-                                    <p className="text-xs text-gray-500 text-center pt-1 border-t border-gray-100">
+                                    <p className="text-xs text-amber-200/50 text-center pt-1 border-t border-amber-900/30">
                                         +{diasConHorarios.length - 4} días más
                                     </p>
                                 )}
                             </div>
                         ) : (
-                            <p className="text-xs text-gray-400 italic ml-6">
+                            <p className="text-xs text-amber-200/50 italic ml-6">
                                 Sin horarios asignados
                             </p>
                         )}
                     </div>
 
                     {/* Botones */}
-                    <div className="flex gap-2 pt-2 border-t border-gray-100">
+                    <div className="flex gap-2 pt-3 border-t border-amber-900/30">
                         <button
                             onClick={() => setShowEditModal(true)}
-                            className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors text-sm font-medium"
+                            className="flex-1 bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 transition-colors text-sm font-semibold"
                         >
                             Editar
                         </button>
@@ -214,7 +214,7 @@ function BarberoCard({ barbero }: { barbero: Barbero }) {
                                         e.preventDefault();
                                     }
                                 }}
-                                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm font-medium"
+                                className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/30 transition-colors text-sm font-semibold"
                             >
                                 Dar de baja
                             </button>
@@ -223,10 +223,12 @@ function BarberoCard({ barbero }: { barbero: Barbero }) {
 
                     {/* Mensajes */}
                     {state.error && (
-                        <p className="text-red-600 text-xs mt-2">{state.error}</p>
+                        <p className="text-red-400 text-xs mt-2 bg-red-500/10 border border-red-500/50 rounded p-2">
+                            {state.error}
+                        </p>
                     )}
                     {state.success && (
-                        <p className="text-green-600 text-xs mt-2">
+                        <p className="text-green-400 text-xs mt-2 bg-green-500/10 border border-green-500/50 rounded p-2">
                             ✅ Barbero dado de baja
                         </p>
                     )}
