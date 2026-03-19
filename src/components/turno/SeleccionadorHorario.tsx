@@ -59,53 +59,65 @@ export default function SeleccionadorHorario({
     <div className="space-y-4">
       {/* FECHA */}
       <div>
-        <label className="block text-sm font-medium mb-1">
-          Fecha <span className="text-red-500">*</span>
+        <label className="block text-sm font-medium mb-1 text-amber-200/70">
+          Fecha <span className="text-amber-500">*</span>
         </label>
         <input
           type="date"
-          className="w-full border rounded-lg px-3 py-2"
+          className="w-full border border-amber-900/30 rounded-lg px-3 py-2 bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
           value={fecha}
           onChange={(e) => setFecha(e.target.value)}
+          min={new Date().toISOString().split("T")[0]}
         />
       </div>
 
       {/* HORARIOS */}
       <div>
-        <label className="block text-sm font-medium mb-1">
-          Horarios disponibles <span className="text-red-500">*</span>
+        <label className="block text-sm font-medium mb-1 text-amber-200/70">
+          Horarios disponibles <span className="text-amber-500">*</span>
         </label>
 
-        {/* Si faltan datos */}
         {!fecha || !servicioId || !barberoId ? (
-          <p className="text-sm text-gray-500">
-            Seleccione servicio, barbero y fecha
-          </p>
+          <div className="p-4 bg-black/60 border border-amber-900/30 rounded-lg backdrop-blur-sm">
+            <p className="text-sm text-amber-200/50">
+              ℹ️ Seleccione servicio, barbero y fecha
+            </p>
+          </div>
         ) : loading ? (
-          <p className="text-sm text-gray-500">
-            Cargando horarios...
-          </p>
+          <div className="p-4 bg-black/60 border border-amber-900/30 rounded-lg flex items-center gap-2 backdrop-blur-sm">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-500"></div>
+            <p className="text-sm text-amber-200/50">
+              Cargando horarios...
+            </p>
+          </div>
         ) : slots.length === 0 ? (
-          <p className="text-sm text-gray-500">
-            No hay horarios disponibles para esta fecha
-          </p>
+          <div className="p-4 bg-amber-500/10 border border-amber-500/50 rounded-lg backdrop-blur-sm">
+            <p className="text-sm text-amber-400">
+              😔 No hay horarios disponibles para esta fecha
+            </p>
+          </div>
         ) : (
-          <select
-            name={name}
-            defaultValue={defaultValue}
-            required
-            className="w-full border rounded-lg px-3 py-2"
-          >
-            <option value="">-- Seleccionar horario --</option>
-            {slots.map((slot) => (
-              <option key={slot} value={slot}>
-                {new Date(slot).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </option>
-            ))}
-          </select>
+          <>
+            <select
+              name={name}
+              defaultValue={defaultValue}
+              required
+              className="w-full border border-amber-900/30 rounded-lg px-3 py-2 bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+            >
+              <option value="">-- Seleccionar horario --</option>
+              {slots.map((slot) => (
+                <option key={slot} value={slot}>
+                  {new Date(slot).toLocaleTimeString("es-AR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-green-400 mt-2">
+              ✅ {slots.length} horarios disponibles
+            </p>
+          </>
         )}
       </div>
     </div>
