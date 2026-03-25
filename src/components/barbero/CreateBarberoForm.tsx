@@ -28,6 +28,7 @@ type DiaLaboral = {
 type Props = {
   servicios: Servicio[];
   diasLaborales: DiaLaboral[];
+  onSuccess?: () => void; 
 };
 
 const DIAS_SEMANA = [
