@@ -1,6 +1,6 @@
 import { getTurnos } from "@/actions/turno.actions";
 import TurnoList from "@/components/turno/TurnoList";
-import CreateTurnoForm from "@/components/turno/CreateTurnoForm";
+import CreateTurnoModal from "@/components/turno/CreateTrunoModal";
 import { Suspense } from "react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -56,29 +56,31 @@ export default async function TurnoPage() {
     <div className="min-h-screen bg-gradient-to-br from-black to-amber-950/30 p-6">
       <div className="container mx-auto max-w-7xl mt-20">
         
-        <div className="mb-8 flex items-center gap-4">
-          {/* Flecha de regreso - solo para ADMIN */}
-          {session?.user?.role === "ADMIN" && (
-            <Link
-              href="/admin"
-              className="p-2 hover:bg-amber-600/20 rounded-lg transition-all group"
-              title="Volver al Dashboard"
-            >
-              <ArrowLeft className="h-6 w-6 text-amber-500 group-hover:text-amber-400 group-hover:-translate-x-1 transition-all" />
-            </Link>
-          )}
+        {/* Header con flecha y botón */}
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {/* Flecha de regreso - solo para ADMIN */}
+            {session?.user?.role === "ADMIN" && (
+              <Link
+                href="/admin"
+                className="p-2 hover:bg-amber-600/20 rounded-lg transition-all group"
+                title="Volver al Dashboard"
+              >
+                <ArrowLeft className="h-6 w-6 text-amber-500 group-hover:text-amber-400 group-hover:-translate-x-1 transition-all" />
+              </Link>
+            )}
 
-          {/* Título */}
-          <div>
-            <h1 className="text-3xl font-bold text-white">Gestión de Turnos</h1>
-            <p className="text-amber-200/70">
-              Administra las reservas de turnos para tus servicios
-            </p>
+            {/* Título */}
+            <div>
+              <h1 className="text-3xl font-bold text-white">Gestión de Turnos</h1>
+              <p className="text-amber-200/70">
+                Administra las reservas de turnos para tus servicios
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="mb-8">
-          <CreateTurnoForm
+          {/* Botón Nuevo Turno */}
+          <CreateTurnoModal
             session={session}
             initialServicios={servicios}
             initialBarberos={barberos}
@@ -86,6 +88,7 @@ export default async function TurnoPage() {
           />
         </div>
 
+        {/* Lista de turnos */}
         <Suspense fallback={<LoadingSkeleton />}>
           {result.success && result.data && Array.isArray(result.data) ? (
             <TurnoList session={session} turnos={result.data} />
