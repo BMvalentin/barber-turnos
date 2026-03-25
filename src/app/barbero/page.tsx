@@ -1,7 +1,7 @@
 // app/barbero/page.tsx
 
 import { prisma } from "@/lib/prisma";
-import CreateBarberoModal from "@/components/barbero/CreateBarberoModal";
+import CreateBarberoModal from "@/components/barbero/CreateBarberoForm";
 import BarberoListWithSearch from "@/components/barbero/BarberoListWithSearch";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
