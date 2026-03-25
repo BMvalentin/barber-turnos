@@ -1,229 +1,258 @@
 "use client";
 
-import { actualizarServicio } from "@/actions/servicio-actions";
-import { useActionState } from "react";
+import { actualizarServicio } from "@/actions/servicio-actions"; // Asumimos que esta acción maneja la actualización
+import { useActionState, useState, useRef, useEffect } from "react";
 import { useFormStatus } from "react-dom";
-import { useEffect, useRef } from "react";
+import {
+  ArrowLeft,
+  LayoutGrid,
+  DollarSign,
+  Percent,
+  Clock,
+} from "lucide-react";
 
 const initialState = {
-    success: false,
-    error: undefined,
-    data: undefined,
+  success: false,
+  error: undefined,
+  data: undefined,
 };
 
+// Definición local de Servicio para evitar dependencias
 type Servicio = {
-    id: string;
-    nombre: string;
-    descripcion: string | null;
-    srcImage: string | null;
-    estado: boolean;
-    duracion: number;
-    precio: number;
-    descuento: number;
-    senia: number;
+  id: string;
+  nombre: string;
+  descripcion: string | null;
+  srcImage: string | null;
+  estado: boolean;
+  duracion: number;
+  precio: number;
+  descuento: number;
+  senia: number;
 };
 
-type Barbero = {
-    id: string;
-    nombre: string | null;
-    srcImage: string | null;
-    estado: boolean;
-};
-
-type EditServicioModalProps = {
-    servicio: Servicio;
-    barberos: Barbero[];
-    onClose: () => void;
-};
-
-export default function EditServicioModal({ servicio, barberos, onClose }: EditServicioModalProps) {
-    const [state, formAction] = useActionState(actualizarServicio, initialState);
-    const formRef = useRef<HTMLFormElement>(null);
-
-    useEffect(() => {
-        if (state.success) {
-            alert("✅ Servicio actualizado exitosamente!");
-            onClose();
-        }
-        if (state.error) {
-            alert(`❌ Error: ${state.error}`);
-        }
-    }, [state.success, state.error, onClose]);
-
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full my-8">
-                <div className="p-6">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-semibold">Editar Servicio</h2>
-                        <button
-                            onClick={onClose}
-                            className="text-gray-400 hover:text-gray-600"
-                        >
-                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <form ref={formRef} action={formAction} className="space-y-4">
-                        <input type="hidden" name="id" value={servicio.id} />
-
-                        <div>
-                            <label htmlFor="nombre" className="block text-sm font-medium mb-1">
-                                Nombre del Servicio *
-                            </label>
-                            <input
-                                type="text"
-                                id="nombre"
-                                name="nombre"
-                                required
-                                defaultValue={servicio.nombre}
-                                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Ej: Corte Clásico"
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="descripcion" className="block text-sm font-medium mb-1">
-                                Descripción
-                            </label>
-                            <textarea
-                                id="descripcion"
-                                name="descripcion"
-                                rows={3}
-                                defaultValue={servicio.descripcion || ""}
-                                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Descripción del servicio"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label htmlFor="duracion" className="block text-sm font-medium mb-1">
-                                    Duración (min) *
-                                </label>
-                                <input
-                                    type="number"
-                                    id="duracion"
-                                    name="duracion"
-                                    required
-                                    min="1"
-                                    defaultValue={servicio.duracion}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-
-                            <div>
-                                <label htmlFor="precio" className="block text-sm font-medium mb-1">
-                                    Precio ($) *
-                                </label>
-                                <input
-                                    type="number"
-                                    id="precio"
-                                    name="precio"
-                                    required
-                                    min="0"
-                                    step="0.01"
-                                    defaultValue={servicio.precio}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label htmlFor="descuento" className="block text-sm font-medium mb-1">
-                                    Descuento ($)
-                                </label>
-                                <input
-                                    type="number"
-                                    id="descuento"
-                                    name="descuento"
-                                    min="0"
-                                    step="0.01"
-                                    defaultValue={servicio.descuento}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-
-                            <div>
-                                <label htmlFor="senia" className="block text-sm font-medium mb-1">
-                                    Seña ($)
-                                </label>
-                                <input
-                                    type="number"
-                                    id="senia"
-                                    name="senia"
-                                    min="0"
-                                    step="0.01"
-                                    defaultValue={servicio.senia}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label htmlFor="srcImage" className="block text-sm font-medium mb-1">
-                                URL de Imagen
-                            </label>
-                            <input
-                                type="text"
-                                id="srcImage"
-                                name="srcImage"
-                                defaultValue={servicio.srcImage || ""}
-                                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="/images/servicio.jpg o https://..."
-                            />
-                        </div>
-
-                        <div className="flex items-center">
-                            <input
-                                type="checkbox"
-                                id="estado"
-                                name="estado"
-                                value="true"
-                                defaultChecked={servicio.estado}
-                                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                            />
-                            <label htmlFor="estado" className="ml-2 text-sm font-medium">
-                                Servicio activo
-                            </label>
-                        </div>
-
-                        {state.error && (
-                            <div className="bg-red-50 border border-red-200 rounded p-3">
-                                <p className="text-red-600 text-sm">{state.error}</p>
-                            </div>
-                        )}
-
-                        <div className="flex gap-2 pt-4">
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                                Cancelar
-                            </button>
-                            <SubmitButton />
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    );
+interface EditServicioModalProps {
+  servicio: Servicio;
+  onClose: () => void;
 }
 
-function SubmitButton() {
-    const { pending } = useFormStatus();
-    
-    return (
-        <button
-            type="submit"
-            disabled={pending}
-            className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+export default function EditServicioModal({
+  servicio,
+  onClose,
+}: EditServicioModalProps) {
+  // Estado para la acción del servidor
+  const [state, formAction] = useActionState(actualizarServicio, initialState);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Estados locales para controlar los inputs (opcional, pero útil para validaciones inmediatas si las tuvieras)
+  const [nombre, setNombre] = useState(servicio.nombre);
+  const [srcImage, setSrcImage] = useState(servicio.srcImage || "");
+  const [precio, setPrecio] = useState(servicio.precio);
+  const [duracion, setDuracion] = useState(servicio.duracion);
+  const [descuento, setDescuento] = useState(servicio.descuento);
+  const [senia, setSenia] = useState(servicio.senia);
+
+  // Efecto para cerrar el modal si la actualización fue exitosa
+  useEffect(() => {
+    if (state.success) {
+      alert("✅ Servicio actualizado exitosamente!");
+      onClose();
+    }
+  }, [state.success, onClose]);
+
+  return (
+    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto">
+      {/* Contenedor Principal del Modal */}
+      <div className="bg-[#14110C] border border-[#2C261D] rounded-xl w-full max-w-7xl shadow-2xl relative flex flex-col max-h-[95vh]">
+        {/* Formulario envolvente para capturar la acción del botón en el header */}
+        <form
+          ref={formRef}
+          action={formAction}
+          className="flex flex-col flex-1 overflow-hidden"
         >
-            {pending ? "Guardando..." : "Guardar Cambios"}
-        </button>
-    );
+          {/* Inputs Ocultos necesarios para la acción */}
+          <input type="hidden" name="id" value={servicio.id} />
+          <input type="hidden" name="estado" value={String(servicio.estado)} />
+
+          {/* --- HEADER DEL MODAL (Estilo imagen) --- */}
+          <div className="flex items-center justify-between p-6 border-b border-[#2C261D]">
+            <div className="flex items-center gap-6">
+              <button
+                onClick={onClose}
+                type="button"
+                className="flex items-center gap-2 text-[10px] font-bold text-[#8E8675] uppercase tracking-wider hover:text-[#E4E0D9] transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" /> Regresar
+              </button>
+              <h2 className="text-2xl font-bold text-[#E4E0D9]">
+                Editar Servicio:{" "}
+                <span className="font-normal text-[#8E8675]">
+                  {servicio.nombre}
+                </span>
+              </h2>
+            </div>
+
+            {/* Acciones del Header */}
+            <div className="flex items-center gap-4">
+              {/* VISTA PREVIA ELIMINADA */}
+              <SubmitButton />
+            </div>
+          </div>
+
+          {/* --- CUERPO DEL FORMULARIO (Scrollable) --- */}
+          <div className="overflow-y-auto p-8 grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
+            {/* Columna Izquierda: INFORMACIÓN GENERAL */}
+            <div className="space-y-6">
+              <h3 className="text-xs font-bold text-[#E8B031] uppercase tracking-wider">
+                INFORMACIÓN GENERAL
+              </h3>
+
+              <div className="space-y-4">
+                {/* Nombre del Servicio */}
+                <InputField
+                  label="Nombre del Servicio"
+                  name="nombre"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  placeholder="Ej: Corte Clásico y Barba"
+                  required
+                />
+
+
+                {/* URL de Imagen */}
+                <InputField
+                  label="URL de Imagen"
+                  name="srcImage"
+                  value={srcImage}
+                  onChange={(e) => setSrcImage(e.target.value)}
+                  placeholder="https://tu-imagen.com/foto.jpg"
+                />
+              </div>
+            </div>
+
+            {/* Columna Derecha: PRICING & DETAILS */}
+            <div className="space-y-6">
+              <h3 className="text-xs font-bold text-[#E8B031] uppercase tracking-wider">
+                PRECIOS & DETALLES
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Duración Estimada */}
+                <InputField
+                  label="Duración Estimada"
+                  name="duracion"
+                  type="number"
+                  value={duracion}
+                  onChange={(e) => setDuracion(Number(e.target.value))}
+                  icon={Clock}
+                  unit="MIN"
+                  required
+                />
+
+                {/* Precio Base */}
+                <InputField
+                  label="Precio Base"
+                  name="precio"
+                  type="number"
+                  step="0.01"
+                  value={precio}
+                  onChange={(e) => setPrecio(Number(e.target.value))}
+                  icon={DollarSign}
+                  required
+                />
+
+                {/* Descuento */}
+                <InputField
+                  label="Descuento"
+                  name="descuento"
+                  type="number"
+                  step="0.01"
+                  value={descuento}
+                  onChange={(e) => setDescuento(Number(e.target.value))}
+                  icon={Percent}
+                />
+
+                {/* Seña (Down Payment) */}
+                <InputField
+                  label="Seña"
+                  name="senia"
+                  type="number"
+                  step="0.01"
+                  value={senia}
+                  onChange={(e) => setSenia(Number(e.target.value))}
+                  icon={DollarSign}
+                />
+              </div>
+            </div>
+
+            {/* Mensaje de Error si existe */}
+            {state.error && (
+              <div className="col-span-1 md:col-span-2 bg-red-900/20 border border-red-900/50 rounded-lg p-4 text-red-400 text-sm text-center">
+                {state.error}
+              </div>
+            )}
+          </div>
+
+          {/* SECCIÓN DE BARBEROS Y BOTÓN ELIMINAR QUITADOS DEL FINAL */}
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// --- COMPONENTES AUXILIARES ---
+
+// Botón de Submit ubicado en el Header
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="bg-[#E8B031] hover:bg-[#d49f2c] text-black font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+    >
+      {pending ? "Actualizando..." : "Actualizar"}
+    </button>
+  );
+}
+
+// Componente reutilizable para los campos de input (Estilo imagen)
+interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label: string;
+  icon?: React.ElementType;
+  unit?: string;
+}
+
+function InputField({
+  label,
+  icon: Icon,
+  unit,
+  required,
+  ...props
+}: InputFieldProps) {
+  return (
+    <div>
+      <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
+        {label} {required && <span className="text-[#E8B031]">*</span>}
+      </label>
+      <div className="relative">
+        {Icon && (
+          <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8675]" />
+        )}
+        <input
+          {...props}
+          className={`w-full bg-[#1C1812] border border-[#2C261D] rounded-lg ${
+            Icon ? "pl-11" : "pl-4"
+          } ${
+            unit ? "pr-14" : "pr-4"
+          } py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-colors`}
+        />
+        {unit && (
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#8E8675] uppercase">
+            {unit}
+          </span>
+        )}
+      </div>
+    </div>
+  );
 }
