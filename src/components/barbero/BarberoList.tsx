@@ -3,7 +3,7 @@
 import { deleteBarbero } from "@/actions/barbero.actions";
 import { useState } from "react";
 import EditBarberoModal from "./EditBarberoModal";
-import { User } from "lucide-react";
+import { User, Scissors } from "lucide-react";
 
 type Barbero = {
   id: string;
@@ -11,6 +11,13 @@ type Barbero = {
   srcImage: string | null;
   estado: boolean;
   createdAt: Date;
+
+  servicios?: {
+    servicio: {
+      id: string;
+      nombre: string;
+    };
+  }[];
 };
 
 export default function BarberoList({ barberos = [] }: { barberos?: Barbero[] }) {
@@ -35,6 +42,8 @@ export default function BarberoList({ barberos = [] }: { barberos?: Barbero[] })
 function BarberoCard({ barbero }: { barbero: Barbero }) {
   const [showEditModal, setShowEditModal] = useState(false);
 
+  const servicios = barbero.servicios || [];
+
   return (
     <>
       <div className="bg-black/40 border border-amber-900/30 rounded-xl overflow-hidden shadow-lg hover:border-amber-500/50 transition-all">
@@ -56,9 +65,42 @@ function BarberoCard({ barbero }: { barbero: Barbero }) {
 
         {/* CONTENIDO */}
         <div className="p-5 space-y-4">
+          
+          {/* NOMBRE */}
           <h3 className="text-lg font-semibold text-white">
             {barbero.nombre || "Sin nombre"}
           </h3>
+
+          {/* SERVICIOS */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-amber-400 text-sm">
+              <Scissors className="h-4 w-4" />
+              <span>Servicios ({servicios.length})</span>
+            </div>
+
+            {servicios.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {servicios.slice(0, 4).map((s) => (
+                  <span
+                    key={s.servicio.id}
+                    className="px-2 py-1 text-xs bg-amber-500/20 text-amber-300 rounded-full border border-amber-500/30"
+                  >
+                    {s.servicio.nombre}
+                  </span>
+                ))}
+
+                {servicios.length > 4 && (
+                  <span className="text-xs text-amber-400">
+                    +{servicios.length - 4} más
+                  </span>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-amber-200/50">
+                Sin servicios asignados
+              </p>
+            )}
+          </div>
 
           {/* BOTONES */}
           <div className="flex gap-2 pt-3 border-t border-amber-900/30">
