@@ -1,11 +1,10 @@
-// app/barbero/page.tsx
-
 import { prisma } from "@/lib/prisma";
-import CreateBarberoModal from "@/components/barbero/CreateBarberoForm";
-import BarberoListWithSearch from "@/components/barbero/BarberoListWithSearch";
+import { auth } from "@/auth";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { auth } from "@/auth";
+
+import BarberoList from "@/components/barbero/BarberoList";
+import CreateBarberoModal from "@/components/barbero/CreateBarberoModal";
 
 async function getData() {
   const [servicios, diasLaborales, barberos] = await Promise.all([
@@ -28,7 +27,7 @@ async function getData() {
       orderBy: { dia: "asc" },
     }),
     prisma.barbero.findMany({
-      where: { estado: true },
+      where: { estado: true }, // 🔥 SOLO ACTIVOS
       include: {
         servicios: {
           include: {
@@ -63,7 +62,7 @@ export default async function BarberosPage() {
 
         {/* HEADER */}
         <div className="mb-8 flex items-center justify-between">
-
+          
           {/* IZQUIERDA */}
           <div className="flex items-center gap-4">
             {session?.user?.role === "ADMIN" && (
@@ -94,7 +93,8 @@ export default async function BarberosPage() {
         </div>
 
         {/* LISTA */}
-        <BarberoListWithSearch barberos={barberos} />
+        <BarberoList barberos={barberos} />
+
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { BarberoV,UpdateBarberoV } from "@/validate/barbero.validate";
 
 export type ActionState = {
   success?: boolean;
@@ -9,22 +10,25 @@ export type ActionState = {
   data?: any;
 };
 
-type CreateBarberoInput = {
-  nombre: string;
-  srcImage?: string | null;
-  serviciosIds: string[];
-  margenesIds: string[];
-};
-
 /* =========================
-   CREATE BARBERO (CON SERVICIOS + HORARIOS)
+   CREATE BARBERO
 ========================= */
-
-export async function createBarbero(data: CreateBarberoInput): Promise<ActionState> {
+export async function createBarbero(
+  data: unknown
+): Promise<ActionState> {
   try {
-    const { nombre, srcImage, serviciosIds, margenesIds } = data;
+    const parsed = BarberoV.safeParse(data);
 
-    // Crear el barbero
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues.map(e => e.message).join(", "),
+      };
+    }
+
+    const { nombre, srcImage, serviciosIds, margenesIds } = parsed.data;
+
+    // Crear barbero
     const nuevoBarbero = await prisma.barbero.create({
       data: {
         nombre,
@@ -33,8 +37,8 @@ export async function createBarbero(data: CreateBarberoInput): Promise<ActionSta
       },
     });
 
-    // Asignar servicios (crear registros en tabla intermedia)
-    if (serviciosIds && serviciosIds.length > 0) {
+    // Servicios
+    if (serviciosIds?.length) {
       await prisma.servicioxbarbero.createMany({
         data: serviciosIds.map((servicioId) => ({
           barberoId: nuevoBarbero.id,
@@ -43,20 +47,17 @@ export async function createBarbero(data: CreateBarberoInput): Promise<ActionSta
       });
     }
 
-    // Asignar horarios (crear registros en tabla intermedia)
-    if (margenesIds && margenesIds.length > 0) {
-      // Obtener los márgenes para saber a qué día pertenecen
+    // Horarios
+    if (margenesIds?.length) {
       const margenes = await prisma.margen_laboral.findMany({
-        where: {
-          id: { in: margenesIds },
-        },
+        where: { id: { in: margenesIds } },
       });
 
       await prisma.margen_laboral_barbero.createMany({
-        data: margenes.map((margen) => ({
+        data: margenes.map((m) => ({
           barberoId: nuevoBarbero.id,
-          margenLaboralId: margen.id,
-          diaId: margen.diaId,
+          margenLaboralId: m.id,
+          diaId: m.diaId,
         })),
       });
     }
@@ -64,11 +65,12 @@ export async function createBarbero(data: CreateBarberoInput): Promise<ActionSta
     revalidatePath("/barbero");
 
     return { success: true, data: nuevoBarbero };
+
   } catch (error) {
     console.error("Error al crear barbero:", error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Error al crear barbero" 
+    return {
+      success: false,
+      error: "Error al crear barbero",
     };
   }
 }
@@ -76,19 +78,28 @@ export async function createBarbero(data: CreateBarberoInput): Promise<ActionSta
 /* =========================
    UPDATE BARBERO
 ========================= */
-
 export async function updateBarbero(
   prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   try {
-    const id = formData.get("id") as string;
-    const nombre = formData.get("nombre") as string;
-    const srcImage = formData.get("srcImage") as string | null;
+    const data = {
+      id: formData.get("id"),
+      nombre: formData.get("nombre"),
+      srcImage: formData.get("srcImage"),
+      estado: formData.get("estado") === "true",
+    };
 
-    if (!id || !nombre) {
-      return { success: false, error: "Datos incompletos" };
+    const parsed = UpdateBarberoV.safeParse(data);
+
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues.map(e => e.message).join(", "),
+      };
     }
+
+    const { id, nombre, srcImage } = parsed.data;
 
     const barbero = await prisma.barbero.update({
       where: { id },
@@ -102,6 +113,7 @@ export async function updateBarbero(
     revalidatePath("/barbero");
 
     return { success: true, data: barbero };
+
   } catch (error) {
     console.error("Error al actualizar barbero:", error);
     return { success: false, error: "Error al actualizar barbero" };
@@ -111,17 +123,12 @@ export async function updateBarbero(
 /* =========================
    GET BARBEROS
 ========================= */
-
 export async function getBarberos(): Promise<ActionState> {
   try {
     const barberos = await prisma.barbero.findMany({
       where: { estado: true },
       include: {
-        servicios: {
-          include: {
-            servicio: true,
-          },
-        },
+        servicios: { include: { servicio: true } },
         horarios: {
           include: {
             dia: true,
@@ -133,6 +140,7 @@ export async function getBarberos(): Promise<ActionState> {
     });
 
     return { success: true, data: barberos };
+
   } catch (error) {
     console.error("Error al obtener barberos:", error);
     return { success: false, error: "Error al obtener barberos" };
@@ -142,17 +150,16 @@ export async function getBarberos(): Promise<ActionState> {
 /* =========================
    GET BARBERO BY ID
 ========================= */
-
 export async function getBarberoById(id: string): Promise<ActionState> {
   try {
+    if (!id) {
+      return { success: false, error: "ID requerido" };
+    }
+
     const barbero = await prisma.barbero.findUnique({
       where: { id },
       include: {
-        servicios: {
-          include: {
-            servicio: true,
-          },
-        },
+        servicios: { include: { servicio: true } },
         horarios: {
           include: {
             dia: true,
@@ -167,6 +174,7 @@ export async function getBarberoById(id: string): Promise<ActionState> {
     }
 
     return { success: true, data: barbero };
+
   } catch (error) {
     console.error("Error al obtener barbero:", error);
     return { success: false, error: "Error al obtener barbero" };
@@ -176,21 +184,19 @@ export async function getBarberoById(id: string): Promise<ActionState> {
 /* =========================
    DELETE (SOFT)
 ========================= */
-
 export async function deleteBarbero(
-  prevState: ActionState,
   formData: FormData
-): Promise<ActionState> {
+): Promise<void> {
   try {
-    const id = formData.get("id") as string;
+    const id = formData.get("id");
 
-    if (!id) {
-      return { success: false, error: "ID no proporcionado" };
+    if (!id || typeof id !== "string") {
+      throw new Error("ID inválido");
     }
 
     await prisma.barbero.update({
       where: { id },
-      data: { 
+      data: {
         estado: false,
         updatedAt: new Date(),
       },
@@ -198,24 +204,21 @@ export async function deleteBarbero(
 
     revalidatePath("/barbero");
 
-    return { success: true };
   } catch (error) {
     console.error("Error al eliminar barbero:", error);
-    return { success: false, error: "Error al eliminar barbero" };
   }
 }
 
 /* =========================
    ASIGNAR SERVICIO
 ========================= */
-
 export async function asignarServicioABarbero(
   prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   try {
-    const barberoId = formData.get("barberoId") as string;
-    const servicioId = formData.get("servicioId") as string;
+    const barberoId = formData.get("barberoId");
+    const servicioId = formData.get("servicioId");
 
     if (!barberoId || !servicioId) {
       return { success: false, error: "Datos incompletos" };
@@ -223,14 +226,15 @@ export async function asignarServicioABarbero(
 
     await prisma.servicioxbarbero.create({
       data: {
-        barberoId,
-        servicioId,
+        barberoId: String(barberoId),
+        servicioId: String(servicioId),
       },
     });
 
     revalidatePath("/barbero");
 
     return { success: true };
+
   } catch (error) {
     console.error("Error al asignar servicio:", error);
     return { success: false, error: "Error al asignar servicio" };
@@ -240,25 +244,25 @@ export async function asignarServicioABarbero(
 /* =========================
    REMOVER SERVICIO
 ========================= */
-
 export async function removerServicioDeBarbero(
   prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   try {
-    const barberoId = formData.get("barberoId") as string;
-    const servicioId = formData.get("servicioId") as string;
+    const barberoId = formData.get("barberoId");
+    const servicioId = formData.get("servicioId");
 
     await prisma.servicioxbarbero.deleteMany({
       where: {
-        barberoId,
-        servicioId,
+        barberoId: String(barberoId),
+        servicioId: String(servicioId),
       },
     });
 
     revalidatePath("/barbero");
 
     return { success: true };
+
   } catch (error) {
     console.error("Error al remover servicio:", error);
     return { success: false, error: "Error al remover servicio" };
@@ -268,17 +272,20 @@ export async function removerServicioDeBarbero(
 /* =========================
    ASIGNAR HORARIO
 ========================= */
-
 export async function asignarHorarioABarbero(
   prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   try {
-    const barberoId = formData.get("barberoId") as string;
-    const margenLaboralId = formData.get("margenLaboralId") as string;
+    const barberoId = formData.get("barberoId");
+    const margenLaboralId = formData.get("margenLaboralId");
+
+    if (!barberoId || !margenLaboralId) {
+      return { success: false, error: "Datos incompletos" };
+    }
 
     const margen = await prisma.margen_laboral.findUnique({
-      where: { id: margenLaboralId },
+      where: { id: String(margenLaboralId) },
     });
 
     if (!margen) {
@@ -287,8 +294,8 @@ export async function asignarHorarioABarbero(
 
     await prisma.margen_laboral_barbero.create({
       data: {
-        barberoId,
-        margenLaboralId,
+        barberoId: String(barberoId),
+        margenLaboralId: margen.id,
         diaId: margen.diaId,
       },
     });
@@ -296,6 +303,7 @@ export async function asignarHorarioABarbero(
     revalidatePath("/barbero");
 
     return { success: true };
+
   } catch (error) {
     console.error("Error al asignar horario:", error);
     return { success: false, error: "Error al asignar horario" };
@@ -305,21 +313,25 @@ export async function asignarHorarioABarbero(
 /* =========================
    REMOVER HORARIO
 ========================= */
-
 export async function removerHorarioDeBarbero(
   prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   try {
-    const id = formData.get("id") as string;
+    const id = formData.get("id");
+
+    if (!id) {
+      return { success: false, error: "ID requerido" };
+    }
 
     await prisma.margen_laboral_barbero.delete({
-      where: { id },
+      where: { id: String(id) },
     });
 
     revalidatePath("/barbero");
 
     return { success: true };
+
   } catch (error) {
     console.error("Error al remover horario:", error);
     return { success: false, error: "Error al remover horario" };
