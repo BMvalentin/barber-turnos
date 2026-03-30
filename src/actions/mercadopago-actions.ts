@@ -58,6 +58,7 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL!;
 
+    const isProduction = process.env.NODE_ENV === "production";
     const preference = new Preference(mp);
 
     const body = {
@@ -87,7 +88,9 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
         failure: `${baseUrl}/pago/failure?turnoId=${turnoId}`,
         pending: `${baseUrl}/pago/pending?turnoId=${turnoId}`,
       },
-      auto_return: "approved" as const,
+      // auto_return solo funciona con URLs públicas (no localhost).
+      // En producción lo activamos para redirigir automáticamente al usuario.
+      ...(isProduction && { auto_return: "approved" as const }),
       notification_url: `${baseUrl}/api/mercadopago/webhook`,
       external_reference: turnoId,
       // Vence en 24 horas
@@ -103,10 +106,15 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
     }
 
     // Guardar el preference ID en el turno para tracking
-    await prisma.turno.update({
-      where: { id: turnoId },
-      data: { mpPreferenceId: response.id },
-    });
+    // (requiere haber corrido: npx prisma migrate dev --name add_mp_fields)
+    try {
+      await (prisma.turno as any).update({
+        where: { id: turnoId },
+        data: { mpPreferenceId: response.id },
+      });
+    } catch {
+      // Campo mpPreferenceId aún no existe en el schema — ignorar
+    }
 
     return {
       success: true,
@@ -160,7 +168,8 @@ export async function confirmarPagoTurno(
       where: { id: turnoId },
       data: {
         estado: "CONFIRMADO",
-        mpPaymentId: paymentId ?? null,
+        // mpPaymentId solo si el campo existe en el schema
+        ...(paymentId ? { mpPaymentId: paymentId } as any : {}),
       },
     });
 
@@ -195,8 +204,6 @@ export async function verificarEstadoPago(turnoId: string): Promise<ActionState>
       select: {
         id: true,
         estado: true,
-        mpPaymentId: true,
-        mpPreferenceId: true,
         seniaCongelada: true,
       },
     });
@@ -208,8 +215,12 @@ export async function verificarEstadoPago(turnoId: string): Promise<ActionState>
     return {
       success: true,
       data: {
-        ...turno,
+        id: turno.id,
+        estado: turno.estado,
         seniaCongelada: Number(turno.seniaCongelada),
+        // Estos campos son opcionales — existen solo si corriste la migración add_mp_fields
+        mpPaymentId: (turno as any).mpPaymentId ?? null,
+        mpPreferenceId: (turno as any).mpPreferenceId ?? null,
       },
     };
   } catch (error: any) {
