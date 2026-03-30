@@ -1,6 +1,7 @@
-// app/barbero/page.tsx (o nuevo/page.tsx)
+// app/barbero/page.tsx
+
 import { prisma } from "@/lib/prisma";
-import CreateBarberoForm from "@/components/barbero/CreateBarberoForm";
+import CreateBarberoModal from "@/components/barbero/CreateBarberoModal";
 import BarberoListWithSearch from "@/components/barbero/BarberoListWithSearch";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -59,36 +60,40 @@ export default async function BarberosPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black to-amber-950/30 p-6">
       <div className="container mx-auto max-w-7xl mt-20">
-        
-        {/* Header con flecha de regreso */}
-        <div className="mb-8 flex items-center gap-4">
-          {session?.user?.role === "ADMIN" && (
-            <Link
-              href="/admin"
-              className="p-2 hover:bg-amber-600/20 rounded-lg transition-all group"
-              title="Volver al Dashboard"
-            >
-              <ArrowLeft className="h-6 w-6 text-amber-500 group-hover:text-amber-400 group-hover:-translate-x-1 transition-all" />
-            </Link>
-          )}
 
-          <div>
-            <h1 className="text-3xl font-bold text-white">Gestión de Barberos</h1>
-            <p className="text-amber-200/70">
-              Administra los barberos y sus horarios
-            </p>
+        {/* HEADER */}
+        <div className="mb-8 flex items-center justify-between">
+
+          {/* IZQUIERDA */}
+          <div className="flex items-center gap-4">
+            {session?.user?.role === "ADMIN" && (
+              <Link
+                href="/admin"
+                className="p-2 hover:bg-amber-600/20 rounded-lg transition-all group"
+                title="Volver al Dashboard"
+              >
+                <ArrowLeft className="h-6 w-6 text-amber-500 group-hover:text-amber-400 group-hover:-translate-x-1 transition-all" />
+              </Link>
+            )}
+
+            <div>
+              <h1 className="text-3xl font-bold text-white">
+                Gestión de Barberos
+              </h1>
+              <p className="text-amber-200/70">
+                Administra los barberos y sus horarios
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* Formulario - Arriba */}
-        <div className="mb-8">
-          <CreateBarberoForm 
-            servicios={servicios} 
-            diasLaborales={diasLaborales} 
+          {/* DERECHA → BOTÓN MODAL */}
+          <CreateBarberoModal
+            servicios={servicios}
+            diasLaborales={diasLaborales}
           />
         </div>
 
-        {/* Lista con buscador - Abajo */}
+        {/* LISTA */}
         <BarberoListWithSearch barberos={barberos} />
       </div>
     </div>
