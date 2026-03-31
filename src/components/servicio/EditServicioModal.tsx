@@ -47,6 +47,7 @@ export default function EditServicioModal({
   const [nombre, setNombre] = useState(servicio.nombre);
   const [srcImage, setSrcImage] = useState(servicio.srcImage || "");
   const [precio, setPrecio] = useState(servicio.precio);
+  const [descripcion, setDescripcion] = useState(servicio.descripcion || "");
   const [duracion, setDuracion] = useState(servicio.duracion);
   const [descuento, setDescuento] = useState(servicio.descuento);
   const [senia, setSenia] = useState(servicio.senia);
@@ -114,9 +115,31 @@ export default function EditServicioModal({
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
                   placeholder="Ej: Corte Clásico y Barba"
+                  errors={state.errors?.nombre}
                   required
                 />
 
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider">
+                      Descripción del Servicio
+                    </label>
+                    <span className={`text-[9px] font-bold uppercase ${descripcion.length > 450 ? 'text-[#E8B031]' : 'text-[#8E8675]'}`}>
+                      {descripcion.length} / 500
+                    </span>
+                  </div>
+                  <textarea
+                    name="descripcion"
+                    value={descripcion}
+                    onChange={(e) => setDescripcion(e.target.value.slice(0, 500))}
+                    rows={3}
+                    className={`w-full bg-[#1C1812] border ${state.errors?.descripcion ? "border-red-500" : "border-[#2C261D]"} rounded-lg px-4 py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-colors resize-none`}
+                    placeholder="Detalla qué incluye el servicio..."
+                  />
+                  {state.errors?.descripcion && (
+                    <p className="mt-1 text-[10px] text-red-500 font-medium">{state.errors.descripcion[0]}</p>
+                  )}
+                </div>
 
                 {/* URL de Imagen */}
                 <InputField
@@ -125,6 +148,7 @@ export default function EditServicioModal({
                   value={srcImage}
                   onChange={(e) => setSrcImage(e.target.value)}
                   placeholder="https://tu-imagen.com/foto.jpg"
+                  errors={state.errors?.srcImage}
                 />
               </div>
             </div>
@@ -145,6 +169,7 @@ export default function EditServicioModal({
                   onChange={(e) => setDuracion(Number(e.target.value))}
                   icon={Clock}
                   unit="MIN"
+                  errors={state.errors?.duracion}
                   required
                 />
 
@@ -157,6 +182,7 @@ export default function EditServicioModal({
                   value={precio}
                   onChange={(e) => setPrecio(Number(e.target.value))}
                   icon={DollarSign}
+                  errors={state.errors?.precio}
                   required
                 />
 
@@ -169,6 +195,7 @@ export default function EditServicioModal({
                   value={descuento}
                   onChange={(e) => setDescuento(Number(e.target.value))}
                   icon={Percent}
+                  errors={state.errors?.descuento}
                 />
 
                 {/* Seña (Down Payment) */}
@@ -180,6 +207,7 @@ export default function EditServicioModal({
                   value={senia}
                   onChange={(e) => setSenia(Number(e.target.value))}
                   icon={DollarSign}
+                  errors={state.errors?.senia}
                 />
               </div>
             </div>
@@ -220,6 +248,7 @@ function SubmitButton() {
 interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
   icon?: React.ElementType;
+  errors?: string[];
   unit?: string;
 }
 
@@ -227,6 +256,7 @@ function InputField({
   label,
   icon: Icon,
   unit,
+  errors,
   required,
   ...props
 }: InputFieldProps) {
@@ -241,11 +271,9 @@ function InputField({
         )}
         <input
           {...props}
-          className={`w-full bg-[#1C1812] border border-[#2C261D] rounded-lg ${
-            Icon ? "pl-11" : "pl-4"
-          } ${
-            unit ? "pr-14" : "pr-4"
-          } py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-colors`}
+          className={`w-full bg-[#1C1812] border ${errors ? "border-red-500" : "border-[#2C261D]"
+            } rounded-lg ${Icon ? "pl-11" : "pl-4"} ${unit ? "pr-14" : "pr-4"
+            } py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-colors`}
         />
         {unit && (
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#8E8675] uppercase">
@@ -253,6 +281,11 @@ function InputField({
           </span>
         )}
       </div>
+      {errors && (
+        <p className="mt-1 text-[10px] text-red-500 font-medium">
+          {errors[0]}
+        </p>
+      )}
     </div>
   );
 }

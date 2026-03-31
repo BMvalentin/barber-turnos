@@ -1,13 +1,14 @@
 "use client";
 
-import { createServicio } from "@/actions/servicio-actions";
-import { useActionState, useEffect, useRef } from "react";
+import { createServicio, ActionState } from "@/actions/servicio-actions";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Clock, DollarSign, Percent } from "lucide-react";
 
-const initialState = {
+const initialState: ActionState = {
   success: false,
   error: undefined,
+  errors: undefined,
   data: undefined,
 };
 
@@ -29,6 +30,7 @@ export default function CreateServicioForm({
 }: CreateServicioFormProps) {
   const [state, formAction] = useActionState(createServicio, initialState);
   const formRef = useRef<HTMLFormElement>(null);
+  const [descripcion, setDescripcion] = useState("");
 
   useEffect(() => {
     if (state.success) {
@@ -82,43 +84,42 @@ export default function CreateServicioForm({
               </div>
 
               <div className="space-y-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
-                    Nombre del Servicio{" "}
-                    <span className="text-[#E8B031]">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="nombre"
-                    required
-                    className="w-full bg-[#14110C] border border-[#2C261D] rounded-lg px-4 py-3 text-[#E4E0D9] outline-none focus:border-[#E8B031] transition-colors"
-                    placeholder="Ej: Corte Clásico"
-                  />
-                </div>
+                <InputField
+                  label="Nombre del Servicio"
+                  name="nombre"
+                  placeholder="Ej: Corte Clásico"
+                  errors={state.errors?.nombre}
+                  required
+                />
 
-                <div>
-                  <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
-                    Descripción
-                  </label>
+                <div className="space-y-2 relative">
+                  <div className="flex justify-between items-center">
+                    <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider">
+                      Descripción
+                    </label>
+                    <span className={`text-[9px] font-bold uppercase ${descripcion.length > 450 ? 'text-[#E8B031]' : 'text-[#8E8675]'}`}>
+                      {descripcion.length} / 500
+                    </span>
+                  </div>
                   <textarea
                     name="descripcion"
+                    value={descripcion}
+                    onChange={(e) => setDescripcion(e.target.value.slice(0, 500))}
                     rows={3}
-                    className="w-full bg-[#14110C] border border-[#2C261D] rounded-lg px-4 py-3 text-[#E4E0D9] outline-none focus:border-[#E8B031] transition-colors resize-none"
+                    className={`w-full bg-[#14110C] border ${state.errors?.descripcion ? 'border-red-500' : 'border-[#2C261D]'} rounded-lg px-4 py-3 text-[#E4E0D9] outline-none focus:border-[#E8B031] transition-colors resize-none`}
                     placeholder="Detalla qué incluye el servicio..."
                   />
+                  {state.errors?.descripcion && (
+                    <p className="text-[10px] text-red-500 font-medium">{state.errors.descripcion[0]}</p>
+                  )}
                 </div>
 
-                <div>
-                  <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
-                    URL de Imagen (Opcional)
-                  </label>
-                  <input
-                    type="text"
-                    name="srcImage"
-                    className="w-full bg-[#14110C] border border-[#2C261D] rounded-lg px-4 py-3 text-[#E4E0D9] outline-none focus:border-[#E8B031] transition-colors"
-                    placeholder="https://ejemplo.com/imagen.jpg"
-                  />
-                </div>
+                <InputField
+                  label="URL de Imagen (Opcional)"
+                  name="srcImage"
+                  placeholder="https://ejemplo.com/imagen.jpg"
+                  errors={state.errors?.srcImage}
+                />
               </div>
             </div>
 
@@ -129,82 +130,43 @@ export default function CreateServicioForm({
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
-                    Duración Estimada <span className="text-[#E8B031]">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      name="duracion"
-                      required
-                      min="1"
-                      defaultValue="30"
-                      className="w-full bg-[#14110C] border border-[#2C261D] rounded-lg px-4 py-3 text-[#E4E0D9] outline-none focus:border-[#E8B031] transition-colors"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#8E8675]">
-                      MIN
-                    </span>
-                  </div>
-                </div>
+                <InputField
+                  label="Duración Estimada"
+                  name="duracion"
+                  type="number"
+                  defaultValue="30"
+                  unit="MIN"
+                  errors={state.errors?.duracion}
+                  required
+                />
 
-                <div>
-                  <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
-                    Precio Base <span className="text-[#E8B031]">*</span>
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8E8675] font-semibold">
-                      $
-                    </span>
-                    <input
-                      type="number"
-                      name="precio"
-                      required
-                      min="0"
-                      step="0.01"
-                      className="w-full bg-[#14110C] border border-[#2C261D] rounded-lg pl-8 pr-4 py-3 text-[#E4E0D9] outline-none focus:border-[#E8B031] transition-colors"
-                      placeholder="0.00"
-                    />
-                  </div>
-                </div>
+                <InputField
+                  label="Precio Base"
+                  name="precio"
+                  type="number"
+                  step="0.01"
+                  icon={DollarSign}
+                  errors={state.errors?.precio}
+                  required
+                />
 
-                <div>
-                  <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
-                    Descuento
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      name="descuento"
-                      min="0"
-                      step="0.01"
-                      defaultValue="0"
-                      className="w-full bg-[#14110C] border border-[#2C261D] rounded-lg pl-4 pr-8 py-3 text-[#E4E0D9] outline-none focus:border-[#E8B031] transition-colors"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8E8675] font-semibold">
-                      %
-                    </span>
-                  </div>
-                </div>
+                <InputField
+                  label="Descuento"
+                  name="descuento"
+                  type="number"
+                  defaultValue="0"
+                  unit="%"
+                  errors={state.errors?.descuento}
+                />
 
-                <div>
-                  <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
-                    Seña
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8E8675] font-semibold">
-                      $
-                    </span>
-                    <input
-                      type="number"
-                      name="senia"
-                      min="0"
-                      step="0.01"
-                      defaultValue="0"
-                      className="w-full bg-[#14110C] border border-[#2C261D] rounded-lg pl-8 pr-4 py-3 text-[#E4E0D9] outline-none focus:border-[#E8B031] transition-colors"
-                    />
-                  </div>
-                </div>
+                <InputField
+                  label="Seña"
+                  name="senia"
+                  type="number"
+                  defaultValue="0"
+                  icon={DollarSign}
+                  errors={state.errors?.senia}
+                />
               </div>
             </div>
 
@@ -242,5 +204,52 @@ function SubmitButton() {
     >
       {pending ? "Creando..." : "Crear Servicio"}
     </button>
+  );
+}
+
+interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label: string;
+  icon?: React.ElementType;
+  errors?: string[];
+  unit?: string;
+}
+
+function InputField({
+  label,
+  icon: Icon,
+  unit,
+  errors,
+  required,
+  ...props
+}: InputFieldProps) {
+  return (
+    <div className="space-y-2">
+      <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider">
+        {label} {required && <span className="text-[#E8B031]">*</span>}
+      </label>
+      <div className="relative">
+        {Icon && (
+          <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8675]" />
+        )}
+        <input
+          {...props}
+          className={`w-full bg-[#14110C] border ${
+            errors ? "border-red-500" : "border-[#2C261D]"
+          } rounded-lg ${Icon ? "pl-11" : "pl-4"} ${
+            unit ? "pr-14" : "pr-4"
+          } py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-colors`}
+        />
+        {unit && (
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#8E8675] uppercase">
+            {unit}
+          </span>
+        )}
+      </div>
+      {errors && (
+        <p className="text-[10px] text-red-500 font-medium">
+          {errors[0]}
+        </p>
+      )}
+    </div>
   );
 }
