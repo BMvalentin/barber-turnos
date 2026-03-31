@@ -76,9 +76,11 @@ export default function ServicioList({
   servicios: Servicio[];
   barberos: Barbero[];
 }) {
+  const ITEMS_PER_PAGE = 8; // Cantidad de servicios por página
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
+  const [currentPage, setCurrentPage] = useState(1);
   const filterPanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -142,6 +144,12 @@ export default function ServicioList({
       }
     });
 
+  // Lógica de Paginación
+  const totalPages = Math.max(1, Math.ceil(serviciosFiltrados.length / ITEMS_PER_PAGE));
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedServicios = serviciosFiltrados.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const displayCount = paginatedServicios.length;
+
   const activeFilterCount = [
     filters.search.trim(),
     filters.estado,
@@ -152,6 +160,7 @@ export default function ServicioList({
 
   function resetFilters() {
     setFilters(defaultFilters);
+    setCurrentPage(1);
   }
 
   function updateFilter<K extends keyof FilterState>(
@@ -159,20 +168,21 @@ export default function ServicioList({
     value: FilterState[K],
   ) {
     setFilters((prev) => ({ ...prev, [key]: value }));
+    setCurrentPage(1); // Volver a la página 1 al filtrar
   }
 
   const activeServicesCount = servicios.filter((s) => s.estado).length;
   const avgPrice =
     servicios.length > 0
       ? (
-          servicios.reduce((acc, s) => acc + s.precio, 0) / servicios.length
-        ).toFixed(2)
+        servicios.reduce((acc, s) => acc + s.precio, 0) / servicios.length
+      ).toFixed(2)
       : "0.00";
   const avgTime =
     servicios.length > 0
       ? Math.round(
-          servicios.reduce((acc, s) => acc + s.duracion, 0) / servicios.length,
-        )
+        servicios.reduce((acc, s) => acc + s.duracion, 0) / servicios.length,
+      )
       : 0;
 
   return (
@@ -187,7 +197,7 @@ export default function ServicioList({
       </div>
 
       {/* Top Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4" >
         <div className="bg-[#1C1812] border border-[#2C261D] rounded-xl p-5">
           <p className="text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
             Servicios Activos
@@ -208,12 +218,6 @@ export default function ServicioList({
           </p>
           <p className="text-3xl font-semibold text-[#E4E0D9]">{avgTime} min</p>
         </div>
-        <div className="bg-[#1C1812] border border-[#2C261D] rounded-xl p-5">
-          <p className="text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
-            Ingreso Proyectado
-          </p>
-          <p className="text-3xl font-semibold text-[#E4E0D9]">$1.2k</p>
-        </div>
       </div>
 
       {/* Main Table Section */}
@@ -232,11 +236,10 @@ export default function ServicioList({
             <div className="relative" ref={filterPanelRef}>
               <button
                 onClick={() => setShowFilterPanel((v) => !v)}
-                className={`flex items-center gap-2 px-4 py-2 border text-[10px] font-bold uppercase tracking-wider rounded transition-colors ${
-                  showFilterPanel || activeFilterCount > 0
-                    ? "border-[#E8B031] text-[#E8B031] bg-[#E8B031]/10"
-                    : "border-[#2C261D] text-[#E4E0D9] bg-[#1C1812] hover:bg-[#2C261D]"
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 border text-[10px] font-bold uppercase tracking-wider rounded transition-colors ${showFilterPanel || activeFilterCount > 0
+                  ? "border-[#E8B031] text-[#E8B031] bg-[#E8B031]/10"
+                  : "border-[#2C261D] text-[#E4E0D9] bg-[#1C1812] hover:bg-[#2C261D]"
+                  }`}
               >
                 <SlidersHorizontal className="w-4 h-4" />
                 Filtrar
@@ -308,11 +311,10 @@ export default function ServicioList({
                           <button
                             key={opt.value || "todos"}
                             onClick={() => updateFilter("estado", opt.value)}
-                            className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${
-                              filters.estado === opt.value
-                                ? "bg-[#E8B031] text-black"
-                                : "bg-[#1C1812] border border-[#2C261D] text-[#8E8675] hover:border-[#E8B031] hover:text-[#E4E0D9]"
-                            }`}
+                            className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${filters.estado === opt.value
+                              ? "bg-[#E8B031] text-black"
+                              : "bg-[#1C1812] border border-[#2C261D] text-[#8E8675] hover:border-[#E8B031] hover:text-[#E4E0D9]"
+                              }`}
                           >
                             {opt.label}
                           </button>
@@ -501,7 +503,7 @@ export default function ServicioList({
             </div>
 
             <div className="divide-y divide-[#2C261D]">
-              {serviciosFiltrados.map((servicio) => (
+              {paginatedServicios.map((servicio) => (
                 <ServicioRow
                   key={servicio.id}
                   servicio={servicio}
@@ -512,20 +514,32 @@ export default function ServicioList({
 
             <div className="p-4 border-t border-[#2C261D] flex justify-between items-center text-sm text-[#8E8675]">
               <p>
-                Mostrando {serviciosFiltrados.length} de {servicios.length}{" "}
-                servicios
+                Mostrando {displayCount > 0 ? startIndex + 1 : 0} - {startIndex + displayCount} de {serviciosFiltrados.length} resultados
               </p>
-              <div className="flex gap-1">
-                <button className="px-3 py-1 border border-[#2C261D] rounded hover:bg-[#2C261D]">
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border border-[#2C261D] rounded hover:bg-[#2C261D] disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                >
                   &lt;
                 </button>
-                <button className="px-3 py-1 bg-[#E8B031] text-black font-semibold rounded">
-                  1
-                </button>
-                <button className="px-3 py-1 border border-[#2C261D] rounded hover:bg-[#2C261D]">
-                  2
-                </button>
-                <button className="px-3 py-1 border border-[#2C261D] rounded hover:bg-[#2C261D]">
+                
+                <div className="flex items-center gap-1">
+                  <span className="text-[#E8B031] font-bold px-2">
+                    {currentPage}
+                  </span>
+                  <span className="text-[#8E8675]">/</span>
+                  <span className="text-[#8E8675] px-2">
+                    {totalPages}
+                  </span>
+                </div>
+
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border border-[#2C261D] rounded hover:bg-[#2C261D] disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                >
                   &gt;
                 </button>
               </div>
@@ -598,7 +612,7 @@ function ServicioRow({
               {servicio.nombre}
             </h3>
             {servicio.descripcion && (
-              <p className="text-[#8E8675] text-xs truncate max-w-[280px]">
+              <p className="text-[#8E8675] text-xs line-clamp-2 max-w-[350px] mt-0.5">
                 {servicio.descripcion}
               </p>
             )}

@@ -2,9 +2,11 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { servicioSchema } from "@/lib/servicios-zod";
 
 export type ActionState = {
   error?: string;
+  errors?: Record<string, string[]>;
   success?: boolean;
   data?: any;
 };
@@ -93,40 +95,29 @@ export const createServicio = async (
   formData: FormData,
 ): Promise<ActionState> => {
   try {
-    const nombre = formData.get("nombre") as string;
-    const srcImageRaw = formData.get("srcImage") as string;
-    const estadoValue = formData.get("estado");
-    const descripcion = formData.get("descripcion") as string;
-    const duracion = parseInt(formData.get("duracion") as string);
-    const precio = parseFloat(formData.get("precio") as string);
-    const descuento = parseFloat(formData.get("descuento") as string) || 0;
-    const senia = parseFloat(formData.get("senia") as string) || 0;
+    const rawData = Object.fromEntries(formData.entries());
+    
+    // Validar con Zod
+    const validated = servicioSchema.safeParse(rawData);
 
-    if (!nombre || nombre.trim() === "") {
-      return { error: "El nombre del servicio es requerido", success: false };
-    }
-    if (!duracion || duracion <= 0) {
+    if (!validated.success) {
       return {
-        error: "La duración es requerida y debe ser mayor a 0",
         success: false,
-      };
-    }
-    if (!precio || precio <= 0) {
-      return {
-        error: "El precio es requerido y debe ser mayor a 0",
-        success: false,
+        errors: validated.error.flatten().fieldErrors,
+        error: "Error de validación en los datos del servicio.",
       };
     }
 
-    const srcImage = cleanImageUrl(srcImageRaw);
-    const estado = estadoValue === "true";
+    const { nombre, descripcion, srcImage: srcImageRaw, estado, duracion, precio, descuento, senia } = validated.data;
+
+    const srcImage = cleanImageUrl(srcImageRaw || null);
 
     const nuevoServicio = await prisma.servicio.create({
       data: {
         nombre: nombre.trim(),
         descripcion: descripcion || null,
         srcImage: srcImage,
-        estado: estado,
+        estado: estado ?? true,
         duracion: duracion,
         precio: precio,
         descuento: descuento,
@@ -160,37 +151,23 @@ export const actualizarServicio = async (
   formData: FormData,
 ): Promise<ActionState> => {
   try {
+    const rawData = Object.fromEntries(formData.entries());
     const id = formData.get("id") as string;
-    const nombre = formData.get("nombre") as string;
-    const srcImageRaw = formData.get("srcImage") as string;
-    const descripcion = formData.get("descripcion") as string;
-    const estadoValue = formData.get("estado");
-    const duracion = parseInt(formData.get("duracion") as string);
-    const precio = parseFloat(formData.get("precio") as string);
-    const descuento = parseFloat(formData.get("descuento") as string) || 0;
-    const senia = parseFloat(formData.get("senia") as string) || 0;
 
-    if (!id || id.trim() === "") {
-      return { error: "ID del servicio es requerido", success: false };
-    }
-    if (!nombre || nombre.trim() === "") {
-      return { error: "El nombre del servicio es requerido", success: false };
-    }
-    if (!duracion || duracion <= 0) {
+    if (!id) return { success: false, error: "ID no proporcionado" };
+
+    const validated = servicioSchema.safeParse(rawData);
+
+    if (!validated.success) {
       return {
-        error: "La duración es requerida y debe ser mayor a 0",
         success: false,
-      };
-    }
-    if (!precio || precio <= 0) {
-      return {
-        error: "El precio es requerido y debe ser mayor a 0",
-        success: false,
+        errors: validated.error.flatten().fieldErrors,
+        error: "Error de validación al actualizar.",
       };
     }
 
-    const srcImage = cleanImageUrl(srcImageRaw);
-    const estado = estadoValue === "true";
+    const { nombre, descripcion, srcImage: srcImageRaw, estado, duracion, precio, descuento, senia } = validated.data;
+    const srcImage = cleanImageUrl(srcImageRaw || null);
 
     const servicioActualizado = await prisma.servicio.update({
       where: { id },
@@ -198,7 +175,7 @@ export const actualizarServicio = async (
         nombre: nombre.trim(),
         descripcion: descripcion || null,
         srcImage: srcImage,
-        estado: estado,
+        estado: estado ?? true,
         duracion: duracion,
         precio: precio,
         descuento: descuento,
