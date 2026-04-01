@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -17,8 +16,8 @@ type MargenLaboral = {
   id: string;
   diaId: string;
   estado: boolean;
-  desde: string;  // ← Ahora es string "08:00"
-  hasta: string;  // ← Ahora es string "17:00"
+  desde: string;
+  hasta: string;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -57,84 +56,75 @@ export function HorariosList({
     onSuccess();
   };
 
-  // Ya no necesita formatear, solo retorna el string directamente
-  const formatTime = (hora: string) => {
-    return hora; // "08:00" ya está en formato correcto
-  };
-
   return (
     <div className="space-y-4">
+      
+      {/* HEADER */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Clock className="h-5 w-5 text-cyan-600" />
-          <h3 className="text-lg font-semibold text-cyan-700">
+          <Clock className="h-5 w-5 text-amber-500" />
+          <h3 className="text-lg font-semibold text-amber-200">
             Horarios - {diaNombre}
           </h3>
+
           {margenes.length > 0 && (
-            <Badge variant="secondary" className="ml-2">
-              {margenes.length} {margenes.length === 1 ? "horario" : "horarios"}
+            <Badge className="bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              {margenes.length}
             </Badge>
           )}
         </div>
+
         <Button
           onClick={handleCreate}
           size="sm"
-          className="bg-cyan-500 hover:bg-cyan-600 text-white"
+          className="bg-amber-600 hover:bg-amber-700 text-white"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Agregar Horario
+          Agregar
         </Button>
       </div>
 
+      {/* EMPTY */}
       {margenes.length === 0 ? (
-        <div className="border-2 border-dashed border-cyan-200 rounded-lg p-8 text-center">
-          <Clock className="h-12 w-12 text-cyan-300 mx-auto mb-3" />
-          <p className="text-cyan-600 font-medium mb-1">
-            No hay horarios definidos
-          </p>
-          <p className="text-sm text-cyan-500">
-            Agrega horarios para este día laboral
-          </p>
+        <div className="border border-amber-900/30 rounded-xl p-8 text-center bg-black/40 backdrop-blur-lg">
+          <Clock className="h-12 w-12 text-amber-500/30 mx-auto mb-3" />
+          <p className="text-amber-200/70">No hay horarios</p>
         </div>
       ) : (
         <div className="space-y-3">
           {margenes.map((margen) => (
             <div
               key={margen.id}
-              className={`flex items-center justify-between p-4 border-2 rounded-lg transition-all ${
+              className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
                 margen.estado
-                  ? "border-cyan-300 bg-gradient-to-r from-cyan-50/50 to-white"
-                  : "border-gray-300 bg-gray-50/50 opacity-60"
+                  ? "bg-black/40 border-amber-900/30"
+                  : "bg-black/20 border-gray-700 opacity-60"
               }`}
             >
               <div className="flex items-center gap-4">
-                <div
-                  className={`p-2 rounded-lg ${
-                    margen.estado
-                      ? "bg-cyan-100 text-cyan-600"
-                      : "bg-gray-200 text-gray-500"
-                  }`}
-                >
+                <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
                   <Clock className="h-5 w-5" />
                 </div>
+
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-lg font-semibold text-cyan-700">
-                      {formatTime(margen.desde)}
+                    <span className="font-mono text-lg text-white">
+                      {margen.desde}
                     </span>
-                    <span className="text-cyan-500">→</span>
-                    <span className="font-mono text-lg font-semibold text-cyan-700">
-                      {formatTime(margen.hasta)}
+                    <span className="text-amber-500">→</span>
+                    <span className="font-mono text-lg text-white">
+                      {margen.hasta}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 mt-1">
+
+                  <div className="mt-1">
                     {margen.estado ? (
-                      <Badge className="bg-cyan-500 hover:bg-cyan-600">
+                      <Badge className="bg-green-500/20 text-green-400 border border-green-500/30">
                         <CheckCircle2 className="h-3 w-3 mr-1" />
                         Activo
                       </Badge>
                     ) : (
-                      <Badge variant="secondary">
+                      <Badge className="bg-red-500/20 text-red-400 border border-red-500/30">
                         <XCircle className="h-3 w-3 mr-1" />
                         Inactivo
                       </Badge>
@@ -145,16 +135,16 @@ export function HorariosList({
 
               <div className="flex gap-2">
                 <Button
-                  variant="outline"
                   size="sm"
-                  className="border-2 border-cyan-300 text-cyan-700 hover:bg-cyan-50"
+                  className="bg-amber-600 hover:bg-amber-700 text-white"
                   onClick={() => handleEdit(margen)}
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
+
                 <Button
-                  variant="destructive"
                   size="sm"
+                  className="bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30"
                   onClick={() => onDelete(margen.id)}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -165,36 +155,29 @@ export function HorariosList({
         </div>
       )}
 
+      {/* MODAL */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] border-4 border-cyan-400 shadow-2xl bg-[#FFF8DC]">
-          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-cyan-500 via-cyan-400 to-cyan-300 rounded-t-2xl" />
+        
+        {/* 🔥 ACA ESTA EL CAMBIO DE LA X */}
+        <DialogContent className="max-w-md p-0 bg-transparent border-none [&>button]:text-white [&>button]:hover:text-amber-400">
 
-          <DialogHeader className="space-y-4 pt-2">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-cyan-100 to-cyan-50 rounded-xl border-2 border-cyan-300">
-                <Clock className="h-6 w-6 text-cyan-600" />
-              </div>
-              <div className="flex-1">
-                <DialogTitle className="text-2xl font-bold text-cyan-600">
-                  {editingMargen ? "Editar Horario" : "Nuevo Horario"}
-                </DialogTitle>
-                <DialogDescription className="text-base mt-1.5 text-cyan-700/80">
-                  {diaNombre} - {editingMargen ? "Modifica el horario" : "Define un nuevo horario"}
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
+          <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl p-6 space-y-6 shadow-2xl shadow-amber-900/20">
+            
+            <DialogHeader>
+              <DialogTitle className="text-xl text-white">
+                {editingMargen ? "Editar Horario" : "Nuevo Horario"}
+              </DialogTitle>
+            </DialogHeader>
 
-          <div className="h-px bg-gradient-to-r from-transparent via-cyan-300 to-transparent" />
-
-          <div className="py-2">
             <HorariosForm
               diaId={diaId}
               initialData={editingMargen}
               onSuccess={handleSuccess}
               onCancel={() => setIsDialogOpen(false)}
             />
+
           </div>
+
         </DialogContent>
       </Dialog>
     </div>

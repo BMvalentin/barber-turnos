@@ -14,50 +14,29 @@ import {
 } from "lucide-react";
 
 const menuItems = [
-  {
-    title: "Dashboard",
-    href: "/admin",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Barberos",
-    href: "/barbero",
-    icon: Users,
-  },
-  {
-    title: "Servicios",
-    href: "/servicio",
-    icon: Scissors,
-  },
-  {
-    title: "Turnos",
-    href: "/turno",
-    icon: Calendar,
-  },
-  {
-    title: "Días Laborales",
-    href: "/diaLaboral",
-    icon: Clock,
-  },
-  {
-    title: "Excepciones",
-    href: "/excepcionesLaborales",
-    icon: ClipboardList,
-  },
+  { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { title: "Barberos", href: "/barbero", icon: Users },
+  { title: "Servicios", href: "/servicio", icon: Scissors },
+  { title: "Turnos", href: "/turno", icon: Calendar },
+  { title: "Días Laborales", href: "/diaLaboral", icon: Clock },
+  { title: "Excepciones", href: "/excepcionesLaborales", icon: ClipboardList },
 ];
 
 export default function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-56 bg-gray-900 border-r border-gray-800 flex flex-col fixed left-0 top-0 h-screen pt-20 shadow-lg">
+    <aside className="w-60 bg-black/40 backdrop-blur-lg border-r border-amber-900/30 flex flex-col fixed left-0 top-0 h-screen pt-20 shadow-xl">
+      
       {/* Header */}
-      <div className="p-4 border-b border-gray-800">
+      <div className="p-4 border-b border-amber-900/30">
         <h1 className="text-xl font-bold text-white">Admin Panel</h1>
-        <p className="text-xs text-gray-400 mt-1">Gestión de barbería</p>
+        <p className="text-xs text-amber-200/60 mt-1">
+          Gestión de barbería
+        </p>
       </div>
 
-      {/* Menu Items */}
+      {/* Menu */}
       <nav className="flex-1 p-3 space-y-2 overflow-y-auto">
         {menuItems.map((item) => {
           const Icon = item.icon;
@@ -68,22 +47,21 @@ export default function AdminSidebar() {
               key={item.href}
               href={item.href}
               className={`
-                flex items-center gap-3 px-3 py-2.5 rounded-full
-                font-semibold text-sm transition-all ease-linear
-                group
+                flex items-center gap-3 px-3 py-2.5 rounded-lg
+                text-sm font-semibold transition-all duration-200 group
                 ${
                   isActive
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-inner"
-                    : "text-gray-300 hover:bg-orange-500/10 hover:shadow-inner"
+                    ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-inner"
+                    : "text-amber-200/70 hover:bg-amber-500/10 hover:text-amber-400"
                 }
               `}
             >
-              <Icon 
-                className={`h-5 w-5 ${
-                  isActive 
-                    ? "stroke-white" 
-                    : "stroke-gray-300 group-hover:stroke-orange-500"
-                }`} 
+              <Icon
+                className={`h-5 w-5 transition-colors ${
+                  isActive
+                    ? "text-amber-400"
+                    : "text-amber-200/70 group-hover:text-amber-400"
+                }`}
               />
               <span>{item.title}</span>
             </Link>
@@ -92,12 +70,12 @@ export default function AdminSidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="p-3 border-t border-gray-800">
+      <div className="p-3 border-t border-amber-900/30">
         <Link
           href="/api/auth/signout"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-full text-red-400 hover:bg-red-500/10 hover:shadow-inner transition-all font-semibold text-sm group"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-all font-semibold text-sm group"
         >
-          <LogOut className="h-5 w-5 stroke-red-400 group-hover:stroke-red-500" />
+          <LogOut className="h-5 w-5 text-red-400 group-hover:text-red-500" />
           <span>Cerrar Sesión</span>
         </Link>
       </div>
