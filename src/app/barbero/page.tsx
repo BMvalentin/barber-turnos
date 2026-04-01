@@ -93,7 +93,11 @@ export default async function BarberosPage() {
         </div>
 
         {/* LISTA */}
-        <BarberoList barberos={barberos} />
+        <BarberoList 
+          barberos={barberos} 
+          servicios={servicios} 
+          diasLaborales={diasLaborales} 
+        />
 
       </div>
     </div>

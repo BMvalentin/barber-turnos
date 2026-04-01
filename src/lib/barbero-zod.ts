@@ -46,7 +46,12 @@ export const updateBarberoSchema = z.object({
     .string()
     .url("La URL de la imagen no es válida")
     .optional()
+    .nullable()
     .or(z.literal("")),
 
   estado: z.boolean().optional(),
+
+  serviciosIds: z.array(z.string()).optional(),
+
+  margenesIds: z.array(z.string()).optional(),
 });
