@@ -1,16 +1,15 @@
 "use client";
 
-import { deleteBarbero } from "@/actions/barbero.actions";
 import { useState } from "react";
 import EditBarberoModal from "./EditBarberoModal";
-import { User, Scissors } from "lucide-react";
+import { deleteBarbero } from "@/actions/barbero.actions";
+import { User } from "lucide-react";
 
 type Barbero = {
   id: string;
   nombre: string | null;
   srcImage: string | null;
-  estado: boolean;
-  createdAt: Date;
+  estado:boolean;
 
   servicios?: {
     servicio: {
@@ -21,9 +20,9 @@ type Barbero = {
 };
 
 export default function BarberoList({ barberos = [] }: { barberos?: Barbero[] }) {
-  if (!barberos || barberos.length === 0) {
+  if (!barberos.length) {
     return (
-      <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-lg p-8 text-center">
+      <div className="bg-black/40 p-8 text-center rounded-lg">
         <User className="h-16 w-16 text-amber-500/30 mx-auto mb-4" />
         <p className="text-amber-200/70">No hay barberos disponibles</p>
       </div>
@@ -31,89 +30,73 @@ export default function BarberoList({ barberos = [] }: { barberos?: Barbero[] })
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {barberos.map((barbero) => (
-        <BarberoCard key={barbero.id} barbero={barbero} />
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {barberos.map((b) => (
+        <BarberoCard key={b.id} barbero={b} />
       ))}
     </div>
   );
 }
 
 function BarberoCard({ barbero }: { barbero: Barbero }) {
-  const [showEditModal, setShowEditModal] = useState(false);
-
-  const servicios = barbero.servicios || [];
+  const [open, setOpen] = useState(false);
 
   return (
     <>
-      <div className="bg-black/40 border border-amber-900/30 rounded-xl overflow-hidden shadow-lg hover:border-amber-500/50 transition-all">
-        
-        {/* 🖼️ IMAGEN */}
-        <div className="relative h-48 bg-gradient-to-br from-black to-amber-950/30">
+      <div className="bg-black/40 border border-amber-900/30 rounded-xl overflow-hidden">
+
+        {/* IMAGEN */}
+        <div className="h-48">
           {barbero.srcImage ? (
             <img
               src={barbero.srcImage}
-              alt={barbero.nombre || "Barbero"}
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <User className="h-16 w-16 text-amber-500/30" />
+            <div className="flex items-center justify-center h-full">
+              <User className="h-12 w-12 text-amber-500/30" />
             </div>
           )}
         </div>
 
-        {/* CONTENIDO */}
-        <div className="p-5 space-y-4">
-          
-          {/* NOMBRE */}
-          <h3 className="text-lg font-semibold text-white">
-            {barbero.nombre || "Sin nombre"}
+        <div className="p-4 space-y-3">
+          <h3 className="text-white font-bold">
+            {barbero.nombre}
           </h3>
 
-          {/* SERVICIOS */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-amber-400 text-sm">
-              <Scissors className="h-4 w-4" />
-              <span>Servicios ({servicios.length})</span>
-            </div>
-
-            {servicios.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {servicios.slice(0, 4).map((s) => (
+          {/* ✅ SERVICIOS */}
+          <div>
+            <p className="text-xs text-amber-400 mb-1">Servicios:</p>
+            <div className="flex flex-wrap gap-1">
+              {barbero.servicios?.length ? (
+                barbero.servicios.map((s) => (
                   <span
                     key={s.servicio.id}
-                    className="px-2 py-1 text-xs bg-amber-500/20 text-amber-300 rounded-full border border-amber-500/30"
+                    className="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded"
                   >
                     {s.servicio.nombre}
                   </span>
-                ))}
-
-                {servicios.length > 4 && (
-                  <span className="text-xs text-amber-400">
-                    +{servicios.length - 4} más
-                  </span>
-                )}
-              </div>
-            ) : (
-              <p className="text-xs text-amber-200/50">
-                Sin servicios asignados
-              </p>
-            )}
+                ))
+              ) : (
+                <span className="text-xs text-gray-400">
+                  Sin servicios
+                </span>
+              )}
+            </div>
           </div>
 
           {/* BOTONES */}
           <div className="flex gap-2 pt-3 border-t border-amber-900/30">
             <button
-              onClick={() => setShowEditModal(true)}
-              className="flex-1 bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 transition"
+              onClick={() => setOpen(true)}
+              className="flex-1 bg-amber-600 text-white py-2 rounded"
             >
               Editar
             </button>
 
             <form action={deleteBarbero}>
               <input type="hidden" name="id" value={barbero.id} />
-              <button className="px-3 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition">
+              <button className="px-3 py-2 bg-red-500/20 text-red-400 rounded">
                 Baja
               </button>
             </form>
@@ -121,11 +104,10 @@ function BarberoCard({ barbero }: { barbero: Barbero }) {
         </div>
       </div>
 
-      {/* MODAL EDIT */}
-      {showEditModal && (
+      {open && (
         <EditBarberoModal
           barbero={barbero}
-          onClose={() => setShowEditModal(false)}
+          onClose={() => setOpen(false)}
         />
       )}
     </>

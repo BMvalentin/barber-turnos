@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { BarberoV,UpdateBarberoV } from "@/validate/barbero.validate";
+import { barberoSchema, updateBarberoSchema} from "@/lib/barbero-zod";
 
 export type ActionState = {
   success?: boolean;
@@ -13,11 +13,9 @@ export type ActionState = {
 /* =========================
    CREATE BARBERO
 ========================= */
-export async function createBarbero(
-  data: unknown
-): Promise<ActionState> {
+export async function createBarbero(data: unknown): Promise<ActionState> {
   try {
-    const parsed = BarberoV.safeParse(data);
+    const parsed = barberoSchema.safeParse(data);
 
     if (!parsed.success) {
       return {
@@ -28,7 +26,6 @@ export async function createBarbero(
 
     const { nombre, srcImage, serviciosIds, margenesIds } = parsed.data;
 
-    // Crear barbero
     const nuevoBarbero = await prisma.barbero.create({
       data: {
         nombre,
@@ -37,17 +34,15 @@ export async function createBarbero(
       },
     });
 
-    // Servicios
     if (serviciosIds?.length) {
       await prisma.servicioxbarbero.createMany({
-        data: serviciosIds.map((servicioId) => ({
+        data: serviciosIds.map((id) => ({
           barberoId: nuevoBarbero.id,
-          servicioId,
+          servicioId: id,
         })),
       });
     }
 
-    // Horarios
     if (margenesIds?.length) {
       const margenes = await prisma.margen_laboral.findMany({
         where: { id: { in: margenesIds } },
@@ -64,14 +59,11 @@ export async function createBarbero(
 
     revalidatePath("/barbero");
 
-    return { success: true, data: nuevoBarbero };
+    // ✅ NO devolver Prisma crudo
+    return { success: true };
 
   } catch (error) {
-    console.error("Error al crear barbero:", error);
-    return {
-      success: false,
-      error: "Error al crear barbero",
-    };
+    return { success: false, error: "Error al crear barbero" };
   }
 }
 
@@ -90,7 +82,7 @@ export async function updateBarbero(
       estado: formData.get("estado") === "true",
     };
 
-    const parsed = UpdateBarberoV.safeParse(data);
+    const parsed = updateBarberoSchema.safeParse(data);
 
     if (!parsed.success) {
       return {
@@ -120,15 +112,16 @@ export async function updateBarbero(
   }
 }
 
-/* =========================
-   GET BARBEROS
-========================= */
 export async function getBarberos(): Promise<ActionState> {
   try {
     const barberos = await prisma.barbero.findMany({
       where: { estado: true },
       include: {
-        servicios: { include: { servicio: true } },
+        servicios: {
+          include: {
+            servicio: true,
+          },
+        },
         horarios: {
           include: {
             dia: true,
@@ -139,7 +132,32 @@ export async function getBarberos(): Promise<ActionState> {
       orderBy: { nombre: "asc" },
     });
 
-    return { success: true, data: barberos };
+    // 🔥 SERIALIZAR TODO lo que sea Decimal
+    const data = barberos.map((b) => ({
+      ...b,
+
+      servicios: b.servicios.map((s) => ({
+        ...s,
+        servicio: {
+          ...s.servicio,
+
+          // 🔥 IMPORTANTE: todos los Decimal
+          precio: s.servicio.precio
+            ? Number(s.servicio.precio)
+            : null,
+
+          senia: s.servicio.senia
+            ? Number(s.servicio.senia)
+            : null,
+
+          descuento: s.servicio.descuento
+            ? Number(s.servicio.descuento)
+            : null,
+        },
+      })),
+    }));
+
+    return { success: true, data };
 
   } catch (error) {
     console.error("Error al obtener barberos:", error);
