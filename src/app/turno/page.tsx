@@ -23,7 +23,7 @@ async function getTurnoData() {
       orderBy: { nombre: "asc" },
     }),
 
-    prisma.barbero.findMany({
+    prisma.barbero.findMany({ // No es necesario serializar aquí, ya que no hay campos Decimal
       where: { estado: true },
       select: {
         id: true,
@@ -33,7 +33,7 @@ async function getTurnoData() {
       orderBy: { nombre: "asc" },
     }),
 
-    prisma.user.findMany({
+    prisma.user.findMany({ // No es necesario serializar aquí, ya que no hay campos Decimal
       where: { role: "USER" },
       select: {
         id: true,
@@ -44,7 +44,18 @@ async function getTurnoData() {
     }),
   ]);
 
-  return { servicios, barberos, usuarios };
+  // Serializar los campos Decimal a Number antes de pasarlos a los componentes cliente
+  const serializedServicios = servicios.map(s => ({
+    id: s.id,
+    nombre: s.nombre,
+    descripcion: s.descripcion,
+    duracion: s.duracion,
+    precio: Number(s.precio),
+    descuento: s.descuento !== null ? Number(s.descuento) : null,
+    senia: s.senia !== null ? Number(s.senia) : null,
+  }));
+
+  return { servicios: serializedServicios, barberos, usuarios };
 }
 
 export default async function TurnoPage() {

@@ -32,7 +32,7 @@ type Servicio = {
   nombre: string;
   descripcion: string | null;
   duracion: number;
-  precio: any;
+  precio: number;
 };
 
 type Barbero = {
@@ -72,8 +72,16 @@ export default function EditTurnoModal({ turno }: Props) {
       setLoadingData(true);
       const res = await fetch("/api/configuracion-turno");
       const data = await res.json();
-      
-      setServicios(data.servicios || []);
+
+      // Serializar los campos Decimal a Number
+      const serializedServicios = (data.servicios || []).map((s: any) => ({
+        ...s,
+        precio: Number(s.precio),
+        // Asumiendo que descuento y senia también podrían venir como Decimal
+        descuento: s.descuento ? Number(s.descuento) : null,
+        senia: s.senia ? Number(s.senia) : null,
+      }));
+      setServicios(serializedServicios);
       setBarberos(data.barberos || []);
     } catch (error) {
       console.error("Error cargando datos:", error);

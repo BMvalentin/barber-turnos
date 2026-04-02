@@ -33,7 +33,7 @@ function timeToMinutes(time: string): number {
 
 export async function createTurno(
   prevState: ActionState,
-  formData: FormData
+  formData: FormData,
 ): Promise<ActionState> {
   try {
     const servicioId = formData.get("servicioId") as string;
@@ -75,14 +75,18 @@ export async function createTurno(
       fechaLocal.getFullYear(),
       fechaLocal.getMonth(),
       fechaLocal.getDate(),
-      0, 0, 0
+      0,
+      0,
+      0,
     );
 
     const finDia = new Date(
       fechaLocal.getFullYear(),
       fechaLocal.getMonth(),
       fechaLocal.getDate(),
-      23, 59, 59
+      23,
+      59,
+      59,
     );
 
     const diaSemana = fechaLocal.getDay();
@@ -120,8 +124,7 @@ export async function createTurno(
       return { success: false, error: "El negocio está cerrado ese día" };
     }
 
-    const minInicio =
-      fechaLocal.getHours() * 60 + fechaLocal.getMinutes();
+    const minInicio = fechaLocal.getHours() * 60 + fechaLocal.getMinutes();
     const minFin = minInicio + servicio.duracion;
 
     const entraEnMargen = diaLaboral.margenes.some((m) => {
@@ -141,7 +144,7 @@ export async function createTurno(
     const hayChoque = turnosDelDia.some((t) => {
       const tFin = addMinutes(
         new Date(t.horarioReservado),
-        t.servicio.duracion
+        t.servicio.duracion,
       );
       return inicio < tFin && fin > t.horarioReservado;
     });
@@ -213,14 +216,18 @@ export async function getTurnos(): Promise<ActionState> {
 
 export async function actualizarTurno(
   prevState: ActionState,
-  formData: FormData
+  formData: FormData,
 ): Promise<ActionState> {
   try {
     const id = formData.get("id") as string;
     const servicioId = formData.get("servicioId") as string;
     const barberoId = formData.get("barberoId") as string;
     const horarioStr = formData.get("horarioReservado") as string;
-    const estado = formData.get("estado") as "PENDIENTE" | "CONFIRMADO" | "CANCELADO" | "COMPLETADO";
+    const estado = formData.get("estado") as
+      | "PENDIENTE"
+      | "CONFIRMADO"
+      | "CANCELADO"
+      | "COMPLETADO";
 
     if (!id || !servicioId || !barberoId || !horarioStr || !estado) {
       return { success: false, error: "Datos incompletos" };
@@ -238,16 +245,22 @@ export async function actualizarTurno(
     }
 
     // Verificar disponibilidad del nuevo horario
-    const fecha = horario.toISOString().split('T')[0];
+    const fecha = horario.toISOString().split("T")[0];
     const horariosDisponibles = await obtenerHorariosDisponibles(
       fecha,
       servicioId,
       barberoId,
-      id // Excluir el turno actual
+      id, // Excluir el turno actual
     );
 
-    if (!horariosDisponibles.success || !horariosDisponibles.data?.includes(horarioStr)) {
-      return { success: false, error: "El horario seleccionado no está disponible" };
+    if (
+      !horariosDisponibles.success ||
+      !horariosDisponibles.data?.includes(horarioStr)
+    ) {
+      return {
+        success: false,
+        error: "El horario seleccionado no está disponible",
+      };
     }
 
     const turnoActualizado = await prisma.turno.update({
@@ -267,7 +280,11 @@ export async function actualizarTurno(
 
     return {
       success: true,
-      data: turnoActualizado,
+      data: {
+        ...turnoActualizado,
+        precioCongelado: Number(turnoActualizado.precioCongelado),
+        seniaCongelada: Number(turnoActualizado.seniaCongelada),
+      },
     };
   } catch (error) {
     console.error("Error al actualizar turno:", error);
@@ -290,7 +307,7 @@ export async function obtenerHorariosDisponibles(
   fecha: string,
   servicioId: string,
   barberoId: string,
-  turnoIdAExcluir?: string
+  turnoIdAExcluir?: string,
 ): Promise<ActionState> {
   try {
     console.log("==========================================");
@@ -331,7 +348,11 @@ export async function obtenerHorariosDisponibles(
     const diaSemana = fechaBase.getDay();
 
     console.log("📆 Fecha parseada:", fechaBase);
-    console.log("📆 Día de la semana:", diaSemana, ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"][diaSemana]);
+    console.log(
+      "📆 Día de la semana:",
+      diaSemana,
+      ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"][diaSemana],
+    );
 
     // 3. Buscar horarios del barbero para ese día
     const horariosBarbero = await prisma.margen_laboral_barbero.findMany({
@@ -352,7 +373,9 @@ export async function obtenerHorariosDisponibles(
 
     // Filtrar por día
     const horariosDia = horariosBarbero.filter(
-      (h) => h.margenLaboral.dia.dia === diaSemana && h.margenLaboral.estado === true
+      (h) =>
+        h.margenLaboral.dia.dia === diaSemana &&
+        h.margenLaboral.estado === true,
     );
 
     console.log("📋 Horarios para este día:", horariosDia.length);
@@ -369,14 +392,18 @@ export async function obtenerHorariosDisponibles(
       fechaBase.getFullYear(),
       fechaBase.getMonth(),
       fechaBase.getDate(),
-      0, 0, 0
+      0,
+      0,
+      0,
     );
 
     const finDia = new Date(
       fechaBase.getFullYear(),
       fechaBase.getMonth(),
       fechaBase.getDate(),
-      23, 59, 59
+      23,
+      59,
+      59,
     );
 
     const turnosReservados = await prisma.turno.findMany({
@@ -424,7 +451,7 @@ export async function obtenerHorariosDisponibles(
           fechaBase.getDate(),
           hora,
           min,
-          0
+          0,
         );
 
         // Verificar si está ocupado
@@ -452,7 +479,10 @@ export async function obtenerHorariosDisponibles(
 
     console.log("==========================================");
     console.log("✅ TOTAL SLOTS DISPONIBLES:", slotsDisponibles.length);
-    console.log("📋 Slots:", slotsDisponibles.map((s) => new Date(s).toLocaleTimeString("es-AR")));
+    console.log(
+      "📋 Slots:",
+      slotsDisponibles.map((s) => new Date(s).toLocaleTimeString("es-AR")),
+    );
     console.log("==========================================");
 
     return {
@@ -473,7 +503,7 @@ export async function obtenerHorariosDisponibles(
 
 export async function completedTurno(
   prevState: ActionState,
-  formData: FormData
+  formData: FormData,
 ): Promise<ActionState> {
   try {
     const id = formData.get("id") as string;
@@ -507,10 +537,7 @@ export async function completedTurno(
 /* =========================
    ELIMINAR TURNO
 ========================= */
-export async function deleteTurno(
-  prevState: any,
-  formData: FormData
-) {
+export async function deleteTurno(prevState: any, formData: FormData) {
   try {
     const id = formData.get("id") as string;
 

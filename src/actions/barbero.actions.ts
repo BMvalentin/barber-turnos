@@ -212,7 +212,25 @@ export async function getBarberoById(id: string): Promise<ActionState> {
       return { success: false, error: "Barbero no encontrado" };
     }
 
-    return { success: true, data: barbero };
+    // 🔥 SERIALIZAR campos Decimal para evitar errores en Client Components
+    const serializedData = {
+      ...barbero,
+      servicios: barbero.servicios.map((s) => ({
+        ...s,
+        servicio: {
+          ...s.servicio,
+          precio: s.servicio.precio ? Number(s.servicio.precio) : null,
+          senia: s.servicio.senia ? Number(s.servicio.senia) : null,
+          descuento: s.servicio.descuento ? Number(s.servicio.descuento) : null,
+        },
+      })),
+      // Convertir fechas a strings ISO o números si es necesario, 
+      // aunque Date suele ser aceptado, ser explícito previene errores de Turbopack
+      createdAt: barbero.createdAt.toISOString(),
+      updatedAt: barbero.updatedAt.toISOString(),
+    };
+
+    return { success: true, data: serializedData };
 
   } catch (error) {
     console.error("Error al obtener barbero:", error);
