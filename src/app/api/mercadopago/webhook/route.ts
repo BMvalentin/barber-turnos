@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
           where: { id: turnoId },
           data: {
             estado: "CONFIRMADO",
-            mpPaymentId: String(paymentData.id),
+            ...(paymentData.id ? { mpPaymentId: String(paymentData.id) } as any : {}),
           },
         });
         console.log(`✅ Turno ${turnoId} CONFIRMADO por pago ${paymentData.id}`);
@@ -61,13 +61,13 @@ export async function POST(req: NextRequest) {
 
       case "pending":
       case "in_process": {
-        // Pago pendiente → turno sigue PENDIENTE, guardar el paymentId
-        await prisma.turno.update({
-          where: { id: turnoId },
-          data: {
-            mpPaymentId: String(paymentData.id),
-          },
-        });
+        // Pago pendiente → turno sigue PENDIENTE, guardar el paymentId si el campo existe
+        try {
+          await (prisma.turno as any).update({
+            where: { id: turnoId },
+            data: { mpPaymentId: String(paymentData.id) },
+          });
+        } catch { /* campo aún no migrado */ }
         console.log(`⏳ Pago ${paymentData.id} pendiente para turno ${turnoId}`);
         break;
       }
