@@ -1,145 +1,71 @@
-"use server"
+"use server";
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 export type ActionState = {
-    error?: string;
-    success?: boolean;
-    data?: any;
+  success: boolean;
+  error?: string;
+  data?: any;
 };
 
-export async function create(
-    prevState: ActionState,
-    formData: FormData
+export async function createExcepcion(
+  prevState: ActionState,
+  formData: FormData
 ): Promise<ActionState> {
-    try {
-        const excepcion = await prisma.excepcion_laboral.create({
-            data: {
-                id: crypto.randomUUID(),
-                motivo: formData.get("motivo") as string,
-                desde: new Date(formData.get("desde") as string),
-                hasta: new Date(formData.get("hasta") as string),
-                estado: true,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            }
-        });
+  try {
+    const motivo = formData.get("motivo") as string;
+    const desde = formData.get("desde") as string;
+    const hasta = formData.get("hasta") as string;
 
-        revalidatePath("/excepciones");
-        return {
-            success: true,
-            data: excepcion
-        };
-    } catch (error) {
-        console.error("Error al crear excepción:", error);
-        return {
-            error: "Error al crear la excepción laboral",
-            success: false
-        };
+    if (!motivo || !desde || !hasta) {
+      return {
+        success: false,
+        error: "Todos los campos son requeridos",
+      };
     }
+
+    const fechaDesde = new Date(desde);
+    const fechaHasta = new Date(hasta);
+
+    if (fechaHasta < fechaDesde) {
+      return {
+        success: false,
+        error: "La fecha 'hasta' debe ser posterior a la fecha 'desde'",
+      };
+    }
+
+    await prisma.excepcion_laboral.create({
+      data: {
+        motivo,
+        desde: fechaDesde,
+        hasta: fechaHasta,
+        estado: true,
+      },
+    });
+
+    revalidatePath("/excepcionesLaborales");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error al crear excepción:", error);
+    return {
+      success: false,
+      error: "Error al crear la excepción",
+    };
+  }
 }
 
-export async function getExcepciones(): Promise<ActionState> {
-    try {
-        const excepciones = await prisma.excepcion_laboral.findMany({
-            orderBy: {
-                createdAt: 'desc'
-            }
-        });
+export async function softDeleteExcepcion(id: string): Promise<void> {
+  try {
+    await prisma.excepcion_laboral.update({
+      where: { id },
+      data: { estado: false },
+    });
 
-        return {
-            success: true,
-            data: excepciones
-        }
-    } catch (error) {
-        console.error("Error al obtener excepciones:", error);
-        return {
-            error: "Error al obtener las excepciones laborales",
-            success: false
-        }
-    }
-}
-
-export async function update(
-    prevState: ActionState,
-    formData: FormData
-): Promise<ActionState> {
-    try {
-        const id = formData.get("id") as string;
-
-        const excepcion = await prisma.excepcion_laboral.update({
-            where: { id },
-            data: {
-                motivo: formData.get("motivo") as string,
-                desde: new Date(formData.get("desde") as string),
-                hasta: new Date(formData.get("hasta") as string),
-                updatedAt: new Date()
-            }
-        });
-
-        revalidatePath("/excepciones");
-        return {
-            success: true,
-            data: excepcion};
-    } catch (error) {
-        console.error("Error al actualizar excepción:", error);
-        return {
-            error: "Error al actualizar la excepción laboral",
-            success: false
-        };
-    }
-}
-
-// cambiar estado a false en lugar de eliminar
-export async function softDeleteExcepcion(id: string): Promise<ActionState> {
-    try {
-       
-        const excepcion = await prisma.excepcion_laboral.update({
-            where: { id },
-            data: {
-                estado: false,
-                updatedAt: new Date()
-            }
-        });
-
-        revalidatePath("/excepciones");
-        return {
-            success: true,
-            data: excepcion
-        };
-    } catch (error) {
-        console.error("Error al desactivar excepción:", error);
-        return {
-            error: "Error al desactivar la excepción laboral",
-            success: false
-        };
-    }
-}
-
-export async function deleteExcepcion(id: string): Promise<ActionState> {
-    try {
-        if (!id) {
-            return {
-                error: "ID de excepción no proporcionado",
-                success: false
-            };
-        }
-
-        await prisma.excepcion_laboral.delete({
-            where: { id }
-        });
-
-        revalidatePath("/excepcionesLaborales");
-        return {
-            success: true,
-            data: { id }
-        };
-    } catch (error) {
-        console.error("Error al eliminar excepción:", error);
-        return {
-            error: "Error al eliminar la excepción laboral",
-            success: false
-        };
-    }
+    revalidatePath("/excepcionesLaborales");
+  } catch (error) {
+    console.error("Error al desactivar excepción:", error);
+    throw new Error("Error al desactivar la excepción");
+  }
 }

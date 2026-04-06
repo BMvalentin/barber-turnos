@@ -1,44 +1,50 @@
-import { getExcepciones } from "@/actions/excepcionesLaborales.actions";
+import { prisma } from "@/lib/prisma";
 import ExcepcionesClient from "@/components/excepcionesLaborales/ExcepcionesClient";
-import { Button } from "@/components/ui/button";
+import { Calendar, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { auth } from "@/auth";
+
+async function getExcepciones() {
+  return await prisma.excepcion_laboral.findMany({
+    where: { estado: true },
+    orderBy: { desde: "desc" },
+  });
+}
 
 export default async function ExcepcionesLaboralesPage() {
-  const result = await getExcepciones();
-
-  // Si hay error, mostrar mensaje
-  if (!result.success) {
-    return (
-      <div className="min-h-screen from-primary to-primary/60 bg-clip-text text-primary py-8 mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {result.error}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const excepciones = result.data || [];
+  const session = await auth();
+  const excepciones = await getExcepciones();
 
   return (
-    <div className="min-h-screen from-primary to-primary/60 bg-clip-text text-primary py-8 mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          
-          <div className="flex flex-row flex-wrap justify-between">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Excepciones Laborales
-            </h1>
-            <Link href="/diaLaboral"><Button variant={"celeste"}>Volver a dias laborales</Button></Link>
+    <div className="min-h-screen bg-gradient-to-br from-black to-amber-950/30 p-6">
+      <div className="container mx-auto max-w-7xl mt-20">
+        {/* Header con flecha de regreso */}
+        <div className="mb-8 flex items-center gap-4">
+          {session?.user?.role === "ADMIN" && (
+            <Link
+              href="/admin"
+              className="p-2 hover:bg-amber-600/20 rounded-lg transition-all group"
+              title="Volver al Dashboard"
+            >
+              <ArrowLeft className="h-6 w-6 text-amber-500 group-hover:text-amber-400 group-hover:-translate-x-1 transition-all" />
+            </Link>
+          )}
+
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-amber-500/20 rounded-xl border-2 border-amber-500/30">
+              <Calendar className="h-8 w-8 text-amber-500" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white">
+                Excepciones Laborales
+              </h1>
+              <p className="text-amber-200/70">
+                Gestiona feriados y días no laborables
+              </p>
+            </div>
           </div>
-          <p className="text-gray-600 mt-2">
-            Gestiona los días y horarios en los que no se trabaja
-          </p>
         </div>
 
-        {/* Client Component que maneja la interactividad */}
         <ExcepcionesClient excepciones={excepciones} />
       </div>
     </div>
