@@ -80,9 +80,10 @@ export default function EditServicioModal({
               <button
                 onClick={onClose}
                 type="button"
-                className="flex items-center gap-2 text-[10px] font-bold text-[#8E8675] uppercase tracking-wider hover:text-[#E4E0D9] transition-colors"
+                className="p-2 hover:bg-amber-600/20 rounded-lg transition-all group"
+                title="Regresar"
               >
-                <ArrowLeft className="w-4 h-4" /> Regresar
+                <ArrowLeft className="h-6 w-6 text-amber-500 group-hover:text-amber-400 group-hover:-translate-x-1 transition-all" />
               </button>
               <h2 className="text-2xl font-bold text-[#E4E0D9]">
                 Editar Servicio:{" "}
