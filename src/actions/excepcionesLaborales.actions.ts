@@ -2,11 +2,11 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { excepcionSchema } from "@/lib/excepcion-zod";
 
 export type ActionState = {
   success: boolean;
   error?: string;
-  data?: any;
 };
 
 export async function createExcepcion(
@@ -14,16 +14,22 @@ export async function createExcepcion(
   formData: FormData
 ): Promise<ActionState> {
   try {
-    const motivo = formData.get("motivo") as string;
-    const desde = formData.get("desde") as string;
-    const hasta = formData.get("hasta") as string;
+    const rawData = {
+      motivo: formData.get("motivo"),
+      desde: formData.get("desde"),
+      hasta: formData.get("hasta"),
+    };
 
-    if (!motivo || !desde || !hasta) {
+    const parsed = excepcionSchema.safeParse(rawData);
+
+    if (!parsed.success) {
       return {
         success: false,
-        error: "Todos los campos son requeridos",
+        error: parsed.error.issues.map(e => e.message).join(", "),
       };
     }
+
+    const { motivo, desde, hasta } = parsed.data;
 
     const fechaDesde = new Date(desde);
     const fechaHasta = new Date(hasta);
@@ -47,6 +53,7 @@ export async function createExcepcion(
     revalidatePath("/excepcionesLaborales");
 
     return { success: true };
+
   } catch (error) {
     console.error("Error al crear excepción:", error);
     return {
@@ -56,16 +63,27 @@ export async function createExcepcion(
   }
 }
 
-export async function softDeleteExcepcion(id: string): Promise<void> {
+export async function softDeleteExcepcion(
+  formData: FormData
+): Promise<void> {
   try {
+    const id = formData.get("id") as string;
+
+    if (!id) {
+      throw new Error("ID requerido");
+    }
+
     await prisma.excepcion_laboral.update({
       where: { id },
-      data: { estado: false },
+      data: {
+        estado: false,
+        updatedAt: new Date(),
+      },
     });
 
     revalidatePath("/excepcionesLaborales");
+
   } catch (error) {
     console.error("Error al desactivar excepción:", error);
-    throw new Error("Error al desactivar la excepción");
   }
 }
