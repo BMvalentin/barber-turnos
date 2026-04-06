@@ -19,10 +19,16 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-950"> {/* ← CAMBIO AQUÍ: bg-gray-950 */}
+    <div className="flex min-h-screen bg-gradient-to-br from-black to-amber-950/30">
+      
+      {/* Sidebar */}
       <AdminSidebar />
-      <main className="flex-1 ml-56 p-8 pt-24">
-        {children}
+
+      {/* Contenido */}
+      <main className="flex-1 ml-60 p-6 sm:p-8 pt-24 overflow-y-auto">
+        <div className="max-w-7xl mx-auto w-full">
+          {children}
+        </div>
       </main>
     </div>
   );

@@ -4,7 +4,6 @@ import { Users, Scissors, Calendar, DollarSign, Clock, ChevronRight } from "luci
 import Link from "next/link";
 
 async function getStats() {
-  // Fecha de hoy
   const hoy = new Date();
   const inicioDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0);
   const finDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59);
@@ -24,7 +23,6 @@ async function getStats() {
     prisma.turno.count(),
     prisma.turno.count({ where: { estado: "PENDIENTE" } }),
     
-    // Barberos con más info
     prisma.barbero.findMany({
       where: { estado: true },
       select: {
@@ -33,9 +31,7 @@ async function getStats() {
         srcImage: true,
         _count: {
           select: {
-            turnos: {
-              where: { estado: "PENDIENTE" }
-            }
+            turnos: { where: { estado: "PENDIENTE" } }
           }
         }
       },
@@ -43,69 +39,43 @@ async function getStats() {
       take: 5
     }),
 
-    // Próximos turnos
     prisma.turno.findMany({
       where: {
         estado: "PENDIENTE",
-        horarioReservado: {
-          gte: new Date()
-        }
+        horarioReservado: { gte: new Date() }
       },
       include: {
-        user: {
-          select: { name: true, email: true }
-        },
-        barbero: {
-          select: { nombre: true }
-        },
-        servicio: {
-          select: { nombre: true }
-        }
+        user: { select: { name: true, email: true } },
+        barbero: { select: { nombre: true } },
+        servicio: { select: { nombre: true } }
       },
       orderBy: { horarioReservado: "asc" },
       take: 5
     }),
 
-    // Servicios más solicitados
     prisma.servicio.findMany({
       where: { estado: true },
       select: {
         id: true,
         nombre: true,
         precio: true,
-        _count: {
-          select: {
-            turnos: true
-          }
-        }
+        _count: { select: { turnos: true } }
       },
-      orderBy: {
-        turnos: {
-          _count: "desc"
-        }
-      },
+      orderBy: { turnos: { _count: "desc" } },
       take: 5
     }),
 
-    // Turnos de hoy por barbero
     prisma.barbero.findMany({
       where: { estado: true },
       include: {
         turnos: {
           where: {
-            horarioReservado: {
-              gte: inicioDia,
-              lte: finDia
-            },
+            horarioReservado: { gte: inicioDia, lte: finDia },
             estado: "PENDIENTE"
           },
           include: {
-            user: {
-              select: { name: true, email: true }
-            },
-            servicio: {
-              select: { nombre: true, duracion: true }
-            }
+            user: { select: { name: true, email: true } },
+            servicio: { select: { nombre: true, duracion: true } }
           },
           orderBy: { horarioReservado: "asc" }
         }
@@ -130,301 +100,134 @@ export default async function AdminDashboard() {
   const stats = await getStats();
 
   return (
-    <div className="space-y-8">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="Barberos"
-          value={stats.totalBarberos}
-          icon={Users}
-          color="blue"
-          href="/barbero"
-        />
-        <StatCard
-          title="Servicios"
-          value={stats.totalServicios}
-          icon={Scissors}
-          color="green"
-          href="/servicio"
-        />
-        <StatCard
-          title="Total Turnos"
-          value={stats.totalTurnos}
-          icon={Calendar}
-          color="purple"
-          href="/turno"
-        />
-        <StatCard
-          title="Turnos Pendientes"
-          value={stats.turnosPendientes}
-          icon={DollarSign}
-          color="amber"
-          href="/turno"
-        />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-black to-amber-950/30 p-6">
+      <div className="max-w-7xl mx-auto space-y-10 mt-10">
 
-      {/* Información Detallada */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Próximos Turnos */}
-        <DetailCard
-          title="Próximos Turnos"
-          icon={Calendar}
-          color="blue"
-        >
-          {stats.proximosTurnos.length === 0 ? (
-            <p className="text-sm text-gray-400 py-4 text-center">No hay turnos próximos</p>
-          ) : (
-            <div className="space-y-3">
-              {stats.proximosTurnos.map((turno) => (
-                <div key={turno.id} className="p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="font-medium text-sm text-white">
-                        {turno.user.name || turno.user.email}
-                      </p>
-                      <p className="text-xs text-gray-300 mt-1">
-                        {turno.servicio.nombre}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Barbero: {turno.barbero.nombre}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs font-medium text-orange-500">
-                        {new Date(turno.horarioReservado).toLocaleDateString('es-AR', {
-                          day: '2-digit',
-                          month: 'short'
-                        })}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {new Date(turno.horarioReservado).toLocaleTimeString('es-AR', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </DetailCard>
-
-        {/* Barberos */}
-        <DetailCard
-          title="Barberos Activos"
-          icon={Users}
-          color="green"
-        >
-          {stats.barberos.length === 0 ? (
-            <p className="text-sm text-gray-400 py-4 text-center">No hay barberos</p>
-          ) : (
-            <div className="space-y-3">
-              {stats.barberos.map((barbero) => (
-                <div key={barbero.id} className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700">
-                  <div className="h-10 w-10 rounded-full bg-orange-500 flex items-center justify-center text-white font-semibold">
-                    {barbero.nombre.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-sm text-white">{barbero.nombre}</p>
-                    <p className="text-xs text-gray-400">
-                      {barbero._count.turnos} turnos pendientes
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </DetailCard>
-
-        {/* Servicios Populares */}
-        <DetailCard
-          title="Servicios Populares"
-          icon={Scissors}
-          color="purple"
-        >
-          {stats.serviciosPopulares.length === 0 ? (
-            <p className="text-sm text-gray-400 py-4 text-center">No hay servicios</p>
-          ) : (
-            <div className="space-y-3">
-              {stats.serviciosPopulares.map((servicio) => (
-                <div key={servicio.id} className="p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-sm text-white">{servicio.nombre}</p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {servicio._count.turnos} reservas
-                      </p>
-                    </div>
-                    <p className="text-sm font-semibold text-orange-500">
-                      ${servicio.precio.toString()}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </DetailCard>
-      </div>
-
-      {/* Agenda de Hoy por Barbero */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <Clock className="h-6 w-6 text-orange-500" />
-          <h2 className="text-2xl font-bold text-white">Agenda de Hoy</h2>
+        {/* STATS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard title="Barberos" value={stats.totalBarberos} icon={Users} href="/barbero" />
+          <StatCard title="Servicios" value={stats.totalServicios} icon={Scissors} href="/servicio" />
+          <StatCard title="Total Turnos" value={stats.totalTurnos} icon={Calendar} href="/turno" />
+          <StatCard title="Pendientes" value={stats.turnosPendientes} icon={DollarSign} href="/turno" />
         </div>
 
-        {stats.turnosHoyPorBarbero.filter(b => b.turnos.length > 0).length === 0 ? (
-          <div className="bg-gray-900 rounded-xl shadow-lg border border-gray-800 p-8 text-center">
-            <p className="text-gray-400">No hay turnos programados para hoy</p>
+        {/* DETALLE */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          <DetailCard title="Próximos Turnos" icon={Calendar}>
+            {stats.proximosTurnos.length === 0 ? (
+              <Empty text="No hay turnos próximos" />
+            ) : (
+              stats.proximosTurnos.map((t) => (
+                <Item key={t.id}>
+                  <p className="text-white text-sm">{t.user.name || t.user.email}</p>
+                  <p className="text-amber-200/60 text-xs">{t.servicio.nombre}</p>
+                  <p className="text-amber-200/50 text-xs">{t.barbero.nombre}</p>
+                </Item>
+              ))
+            )}
+          </DetailCard>
+
+          <DetailCard title="Barberos" icon={Users}>
+            {stats.barberos.length === 0 ? (
+              <Empty text="No hay barberos" />
+            ) : (
+              stats.barberos.map((b) => (
+                <Item key={b.id}>
+                  <p className="text-white text-sm">{b.nombre}</p>
+                  <p className="text-amber-200/60 text-xs">{b._count.turnos} pendientes</p>
+                </Item>
+              ))
+            )}
+          </DetailCard>
+
+          <DetailCard title="Servicios" icon={Scissors}>
+            {stats.serviciosPopulares.length === 0 ? (
+              <Empty text="No hay servicios" />
+            ) : (
+              stats.serviciosPopulares.map((s) => (
+                <Item key={s.id}>
+                  <p className="text-white text-sm">{s.nombre}</p>
+                  <p className="text-amber-200/60 text-xs">{s._count.turnos} usos</p>
+                </Item>
+              ))
+            )}
+          </DetailCard>
+
+        </div>
+
+        {/* AGENDA */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-2">
+            <Clock className="text-amber-500" />
+            <h2 className="text-2xl font-bold text-white">Agenda de Hoy</h2>
           </div>
-        ) : (
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {stats.turnosHoyPorBarbero
-              .filter(barbero => barbero.turnos.length > 0)
-              .map((barbero) => (
-                <div key={barbero.id} className="bg-gray-900 rounded-xl shadow-lg border border-gray-800 p-6">
-                  {/* Header del Barbero */}
-                  <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-800">
-                    <div className="h-12 w-12 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-lg">
-                      {barbero.nombre.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-white">{barbero.nombre}</h3>
-                      <p className="text-sm text-gray-400">
-                        {barbero.turnos.length} {barbero.turnos.length === 1 ? 'corte' : 'cortes'} hoy
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-500">Total tiempo</p>
-                      <p className="text-sm font-semibold text-orange-500">
-                        {barbero.turnos.reduce((acc, t) => acc + t.servicio.duracion, 0)} min
-                      </p>
-                    </div>
-                  </div>
+              .filter(b => b.turnos.length > 0)
+              .map((b) => (
+                <div key={b.id} className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl p-5">
+                  <h3 className="text-white font-bold mb-3">{b.nombre}</h3>
 
-                  {/* Lista de Turnos */}
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {barbero.turnos.map((turno, index) => (
-                      <div 
-                        key={turno.id} 
-                        className="p-3 bg-gray-800 rounded-lg border border-gray-700 hover:border-orange-500/50 transition-colors"
-                      >
-                        <div className="flex items-start gap-3">
-                          {/* Número de orden */}
-                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center">
-                            <span className="text-sm font-bold text-orange-500">
-                              {index + 1}
-                            </span>
-                          </div>
-
-                          {/* Info del turno */}
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <p className="font-medium text-sm text-white">
-                                  {turno.user.name || turno.user.email}
-                                </p>
-                                <p className="text-xs text-gray-400 mt-1">
-                                  {turno.servicio.nombre}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-sm font-semibold text-orange-500">
-                                  {new Date(turno.horarioReservado).toLocaleTimeString('es-AR', {
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  {turno.servicio.duracion} min
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                  <div className="space-y-2 max-h-72 overflow-y-auto">
+                    {b.turnos.map((t) => (
+                      <div key={t.id} className="bg-black/60 border border-amber-900/30 p-3 rounded-lg">
+                        <p className="text-white text-sm">{t.user.name}</p>
+                        <p className="text-amber-200/60 text-xs">{t.servicio.nombre}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               ))}
           </div>
-        )}
+        </div>
+
       </div>
     </div>
   );
 }
 
-function StatCard({ 
-  title, 
-  value, 
-  icon: Icon, 
-  color,
-  href 
-}: { 
-  title: string; 
-  value: number; 
-  icon: any; 
-  color: "blue" | "green" | "purple" | "amber";
-  href: string;
-}) {
-  const colorClasses = {
-    blue: "bg-orange-500/20 text-orange-500 group-hover:bg-orange-500/30",
-    green: "bg-orange-500/20 text-orange-500 group-hover:bg-orange-500/30",
-    purple: "bg-orange-500/20 text-orange-500 group-hover:bg-orange-500/30",
-    amber: "bg-orange-500/20 text-orange-500 group-hover:bg-orange-500/30",
-  };
+/* COMPONENTES */
 
+function StatCard({ title, value, icon: Icon, href }: any) {
   return (
     <Link href={href}>
-      <div className="bg-gray-900 rounded-xl shadow-lg border border-gray-800 p-6 hover:shadow-xl hover:border-orange-500/50 transition-all cursor-pointer group">
-        <div className="flex items-center justify-between">
+      <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl p-6 hover:border-amber-500/50 transition group">
+        <div className="flex justify-between">
           <div>
-            <p className="text-sm text-gray-400 font-medium">{title}</p>
-            <p className="text-3xl font-bold mt-2 text-white">{value}</p>
+            <p className="text-amber-200/70 text-sm">{title}</p>
+            <p className="text-3xl text-white font-bold">{value}</p>
           </div>
-          <div className={`p-3 rounded-lg transition-colors ${colorClasses[color]}`}>
-            <Icon className="h-6 w-6" />
-          </div>
-        </div>
-        <div className="mt-4 flex items-center text-xs text-gray-500 group-hover:text-orange-500 transition-colors">
-          Ver detalles
-          <ChevronRight className="h-4 w-4 ml-1" />
+          <Icon className="text-amber-500" />
         </div>
       </div>
     </Link>
   );
 }
 
-function DetailCard({ 
-  title, 
-  icon: Icon, 
-  color,
-  children 
-}: { 
-  title: string; 
-  icon: any; 
-  color: "blue" | "green" | "purple";
-  children: React.ReactNode;
-}) {
-  const colorClasses = {
-    blue: "text-orange-500",
-    green: "text-orange-500",
-    purple: "text-orange-500",
-  };
-
+function DetailCard({ title, icon: Icon, children }: any) {
   return (
-    <div className="bg-gray-900 rounded-xl shadow-lg border border-gray-800 p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Icon className={`h-5 w-5 ${colorClasses[color]}`} />
-          <h2 className="text-lg font-bold text-white">{title}</h2>
-        </div>
+    <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <Icon className="text-amber-500" />
+        <h2 className="text-white font-bold">{title}</h2>
       </div>
-      <div className="max-h-80 overflow-y-auto">
-        {children}
-      </div>
+      <div className="space-y-2">{children}</div>
     </div>
+  );
+}
+
+function Item({ children }: any) {
+  return (
+    <div className="p-3 bg-black/60 border border-amber-900/30 rounded-lg hover:border-amber-500/50 transition">
+      {children}
+    </div>
+  );
+}
+
+function Empty({ text }: { text: string }) {
+  return (
+    <p className="text-center text-amber-200/50 py-6 text-sm">{text}</p>
   );
 }
