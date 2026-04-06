@@ -48,9 +48,10 @@ export default function CreateServicioForm({
           <button
             onClick={onClose}
             type="button"
-            className="text-[#8E8675] hover:text-[#E4E0D9] transition-colors"
+            className="p-2 hover:bg-amber-600/20 rounded-lg transition-all group"
+            title="Regresar"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="h-6 w-6 text-amber-500 group-hover:text-amber-400 group-hover:-translate-x-1 transition-all" />
           </button>
           <div>
             <h2 className="text-xl font-bold text-[#E4E0D9]">Nuevo Servicio</h2>

@@ -70,41 +70,62 @@ export async function createBarbero(data: unknown): Promise<ActionState> {
 /* =========================
    UPDATE BARBERO
 ========================= */
-export async function updateBarbero(
-  prevState: ActionState,
-  formData: FormData
-): Promise<ActionState> {
+export async function updateBarbero(data: any): Promise<ActionState> {
   try {
-    const data = {
-      id: formData.get("id"),
-      nombre: formData.get("nombre"),
-      srcImage: formData.get("srcImage"),
-      estado: formData.get("estado") === "true",
-    };
-
     const parsed = updateBarberoSchema.safeParse(data);
 
     if (!parsed.success) {
+      console.error("Zod Validation Error:", parsed.error.flatten().fieldErrors);
       return {
         success: false,
-        error: parsed.error.issues.map(e => e.message).join(", "),
+        error: "Error de validación: Revisa los campos ingresados.",
       };
     }
 
-    const { id, nombre, srcImage } = parsed.data;
+    const { id, nombre, srcImage, estado, serviciosIds, margenesIds } = parsed.data;
 
-    const barbero = await prisma.barbero.update({
-      where: { id },
-      data: {
-        nombre,
-        srcImage: srcImage || null,
-        updatedAt: new Date(),
-      },
+    await prisma.$transaction(async (tx) => {
+      // 1. Actualizar datos básicos
+      await tx.barbero.update({
+        where: { id },
+        data: {
+          nombre,
+          srcImage: srcImage || null,
+          estado: estado ?? true,
+          updatedAt: new Date(),
+        },
+      });
+
+      // 2. Sincronizar Servicios
+      await tx.servicioxbarbero.deleteMany({ where: { barberoId: id } });
+      if (serviciosIds?.length) {
+        await tx.servicioxbarbero.createMany({
+          data: serviciosIds.map((sId: string) => ({
+            barberoId: id,
+            servicioId: sId,
+          })),
+        });
+      }
+
+      // 3. Sincronizar Horarios
+      await tx.margen_laboral_barbero.deleteMany({ where: { barberoId: id } });
+      if (margenesIds?.length) {
+        const margenes = await tx.margen_laboral.findMany({
+          where: { id: { in: margenesIds } },
+        });
+
+        await tx.margen_laboral_barbero.createMany({
+          data: margenes.map((m) => ({
+            barberoId: id,
+            margenLaboralId: m.id,
+            diaId: m.diaId,
+          })),
+        });
+      }
     });
 
     revalidatePath("/barbero");
-
-    return { success: true, data: barbero };
+    return { success: true };
 
   } catch (error) {
     console.error("Error al actualizar barbero:", error);
@@ -191,7 +212,25 @@ export async function getBarberoById(id: string): Promise<ActionState> {
       return { success: false, error: "Barbero no encontrado" };
     }
 
-    return { success: true, data: barbero };
+    // 🔥 SERIALIZAR campos Decimal para evitar errores en Client Components
+    const serializedData = {
+      ...barbero,
+      servicios: barbero.servicios.map((s) => ({
+        ...s,
+        servicio: {
+          ...s.servicio,
+          precio: s.servicio.precio ? Number(s.servicio.precio) : null,
+          senia: s.servicio.senia ? Number(s.servicio.senia) : null,
+          descuento: s.servicio.descuento ? Number(s.servicio.descuento) : null,
+        },
+      })),
+      // Convertir fechas a strings ISO o números si es necesario, 
+      // aunque Date suele ser aceptado, ser explícito previene errores de Turbopack
+      createdAt: barbero.createdAt.toISOString(),
+      updatedAt: barbero.updatedAt.toISOString(),
+    };
+
+    return { success: true, data: serializedData };
 
   } catch (error) {
     console.error("Error al obtener barbero:", error);

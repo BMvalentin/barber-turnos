@@ -49,7 +49,21 @@ async function getData() {
     }),
   ]);
 
-  return { servicios, diasLaborales, barberos };
+  // 🔥 SERIALIZAR barberos: Convertir campos Decimal a Number
+  const serializedBarberos = barberos.map(barbero => ({
+    ...barbero,
+    servicios: barbero.servicios.map(sb => ({
+      ...sb,
+      servicio: {
+        ...sb.servicio,
+        precio: Number(sb.servicio.precio),
+        senia: sb.servicio.senia ? Number(sb.servicio.senia) : null,
+        descuento: sb.servicio.descuento ? Number(sb.servicio.descuento) : null,
+      }
+    }))
+  }));
+
+  return { servicios, diasLaborales, barberos: serializedBarberos };
 }
 
 export default async function BarberosPage() {
@@ -93,7 +107,11 @@ export default async function BarberosPage() {
         </div>
 
         {/* LISTA */}
-        <BarberoList barberos={barberos} />
+        <BarberoList 
+          barberos={barberos} 
+          servicios={servicios} 
+          diasLaborales={diasLaborales} 
+        />
 
       </div>
     </div>

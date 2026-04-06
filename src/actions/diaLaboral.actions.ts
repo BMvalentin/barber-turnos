@@ -155,7 +155,7 @@ export async function deleteDiaLaboral(id: string): Promise<ActionState> {
 // Obtener todos los días laborales
 export async function getDiasLaborales() {
   try {
-    const diasLaborales = await prisma.dia_laboral.findMany({
+    const diasEnDb = await prisma.dia_laboral.findMany({
       include: {
         margenes: true,
       },
@@ -164,12 +164,34 @@ export async function getDiasLaborales() {
       },
     });
 
-    return diasLaborales;
+    // Si faltan días, los creamos como activos por defecto
+    if (diasEnDb.length < 7) {
+      const idsExistentes = diasEnDb.map((d) => d.dia);
+      const diasFaltantes = [0, 1, 2, 3, 4, 5, 6].filter((id) => !idsExistentes.includes(id));
+
+      if (diasFaltantes.length > 0) {
+        await prisma.dia_laboral.createMany({
+          data: diasFaltantes.map((dia) => ({
+            dia,
+            estado: true, // Activos por defecto como pediste
+          })),
+        });
+
+        // Retornamos la lista completa actualizada
+        return await prisma.dia_laboral.findMany({
+          include: { margenes: true },
+          orderBy: { dia: "asc" },
+        });
+      }
+    }
+
+    return diasEnDb;
   } catch (error) {
     console.error("Error al obtener días laborales:", error);
     throw new Error("Error al obtener los días laborales");
   }
 }
+
 
 // Obtener un día laboral por ID
 export async function getDiaLaboralById(id: string) {
