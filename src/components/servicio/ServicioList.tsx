@@ -145,9 +145,15 @@ export default function ServicioList({
     });
 
   // Lógica de Paginación
-  const totalPages = Math.max(1, Math.ceil(serviciosFiltrados.length / ITEMS_PER_PAGE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(serviciosFiltrados.length / ITEMS_PER_PAGE),
+  );
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedServicios = serviciosFiltrados.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const paginatedServicios = serviciosFiltrados.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE,
+  );
   const displayCount = paginatedServicios.length;
 
   const activeFilterCount = [
@@ -175,29 +181,20 @@ export default function ServicioList({
   const avgPrice =
     servicios.length > 0
       ? (
-        servicios.reduce((acc, s) => acc + s.precio, 0) / servicios.length
-      ).toFixed(2)
+          servicios.reduce((acc, s) => acc + s.precio, 0) / servicios.length
+        ).toFixed(2)
       : "0.00";
   const avgTime =
     servicios.length > 0
       ? Math.round(
-        servicios.reduce((acc, s) => acc + s.duracion, 0) / servicios.length,
-      )
+          servicios.reduce((acc, s) => acc + s.duracion, 0) / servicios.length,
+        )
       : 0;
 
   return (
     <div className="space-y-8">
-      <div>
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-2 text-[10px] font-bold text-[#8E8675] uppercase tracking-wider hover:text-[#E4E0D9] transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Volver al Dashboard
-        </Link>
-      </div>
-
       {/* Top Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4" >
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-[#1C1812] border border-[#2C261D] rounded-xl p-5">
           <p className="text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
             Servicios Activos
@@ -236,10 +233,11 @@ export default function ServicioList({
             <div className="relative" ref={filterPanelRef}>
               <button
                 onClick={() => setShowFilterPanel((v) => !v)}
-                className={`flex items-center gap-2 px-4 py-2 border text-[10px] font-bold uppercase tracking-wider rounded transition-colors ${showFilterPanel || activeFilterCount > 0
-                  ? "border-[#E8B031] text-[#E8B031] bg-[#E8B031]/10"
-                  : "border-[#2C261D] text-[#E4E0D9] bg-[#1C1812] hover:bg-[#2C261D]"
-                  }`}
+                className={`flex items-center gap-2 px-4 py-2 border text-[10px] font-bold uppercase tracking-wider rounded transition-colors ${
+                  showFilterPanel || activeFilterCount > 0
+                    ? "border-[#E8B031] text-[#E8B031] bg-[#E8B031]/10"
+                    : "border-[#2C261D] text-[#E4E0D9] bg-[#1C1812] hover:bg-[#2C261D]"
+                }`}
               >
                 <SlidersHorizontal className="w-4 h-4" />
                 Filtrar
@@ -311,10 +309,11 @@ export default function ServicioList({
                           <button
                             key={opt.value || "todos"}
                             onClick={() => updateFilter("estado", opt.value)}
-                            className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${filters.estado === opt.value
-                              ? "bg-[#E8B031] text-black"
-                              : "bg-[#1C1812] border border-[#2C261D] text-[#8E8675] hover:border-[#E8B031] hover:text-[#E4E0D9]"
-                              }`}
+                            className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                              filters.estado === opt.value
+                                ? "bg-[#E8B031] text-black"
+                                : "bg-[#1C1812] border border-[#2C261D] text-[#8E8675] hover:border-[#E8B031] hover:text-[#E4E0D9]"
+                            }`}
                           >
                             {opt.label}
                           </button>
@@ -514,29 +513,31 @@ export default function ServicioList({
 
             <div className="p-4 border-t border-[#2C261D] flex justify-between items-center text-sm text-[#8E8675]">
               <p>
-                Mostrando {displayCount > 0 ? startIndex + 1 : 0} - {startIndex + displayCount} de {serviciosFiltrados.length} resultados
+                Mostrando {displayCount > 0 ? startIndex + 1 : 0} -{" "}
+                {startIndex + displayCount} de {serviciosFiltrados.length}{" "}
+                resultados
               </p>
               <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                   className="px-3 py-1 border border-[#2C261D] rounded hover:bg-[#2C261D] disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
                 >
                   &lt;
                 </button>
-                
+
                 <div className="flex items-center gap-1">
                   <span className="text-[#E8B031] font-bold px-2">
                     {currentPage}
                   </span>
                   <span className="text-[#8E8675]">/</span>
-                  <span className="text-[#8E8675] px-2">
-                    {totalPages}
-                  </span>
+                  <span className="text-[#8E8675] px-2">{totalPages}</span>
                 </div>
 
-                <button 
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                <button
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
                   disabled={currentPage === totalPages}
                   className="px-3 py-1 border border-[#2C261D] rounded hover:bg-[#2C261D] disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
                 >

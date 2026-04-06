@@ -12,10 +12,10 @@ type ServicioData = {
   id: string;
   nombre: string;
   descripcion: string | null;
-  precio?: any;
-  duracion?: number;
-  descuento?: any;
-  senia?: any;
+  precio: number;
+  duracion: number;
+  descuento: number | null;
+  senia: number | null;
 };
 
 type BarberoData = {
