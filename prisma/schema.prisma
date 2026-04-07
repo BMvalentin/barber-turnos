@@ -39,6 +39,7 @@ model barbero {
   turnos    turno[]
   servicios servicioxbarbero[]
   horarios  margen_laboral_barbero[]
+  excepciones excepcion_laboral[]
 }
 
 model servicio { 
@@ -100,12 +101,16 @@ model user {
 
 model excepcion_laboral {
   id        String   @id @default(cuid())
-  motivo    String
+  motivo    String   // Registro del porqué de la excepción (ej: "Capacitación", "Enfermedad", "Feriado")
   desde     DateTime
   hasta     DateTime
   estado    Boolean  @default(true)
+  barberoId String?
+  barbero   barbero? @relation(fields: [barberoId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([barberoId])
 }
 
 model dia_laboral {

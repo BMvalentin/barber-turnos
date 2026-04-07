@@ -3,6 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { excepcionSchema } from "@/lib/excepcion-zod";
+import { fromZonedTime } from "date-fns-tz";
+
+const TIMEZONE = "America/Argentina/Buenos_Aires";
 
 export type ActionState = {
   success: boolean;
@@ -18,6 +21,7 @@ export async function createExcepcion(
       motivo: formData.get("motivo"),
       desde: formData.get("desde"),
       hasta: formData.get("hasta"),
+      barberoId: formData.get("barberoId") || null,
     };
 
     const parsed = excepcionSchema.safeParse(rawData);
@@ -29,10 +33,11 @@ export async function createExcepcion(
       };
     }
 
-    const { motivo, desde, hasta } = parsed.data;
+    const { motivo, desde, hasta, barberoId } = parsed.data;
 
-    const fechaDesde = new Date(desde);
-    const fechaHasta = new Date(hasta);
+    // Convertir entrada local a UTC para la base de datos
+    const fechaDesde = fromZonedTime(desde, TIMEZONE);
+    const fechaHasta = fromZonedTime(hasta, TIMEZONE);
 
     if (fechaHasta < fechaDesde) {
       return {
@@ -46,6 +51,7 @@ export async function createExcepcion(
         motivo,
         desde: fechaDesde,
         hasta: fechaHasta,
+        barberoId: barberoId || null,
         estado: true,
       },
     });
