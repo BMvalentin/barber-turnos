@@ -3,17 +3,31 @@ import ExcepcionesClient from "@/components/excepcionesLaborales/ExcepcionesClie
 import { Calendar, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { auth } from "@/auth";
+import { getBarberos } from "@/actions/barbero.actions";
 
 async function getExcepciones() {
   return await prisma.excepcion_laboral.findMany({
-    where: { estado: true },
-    orderBy: { desde: "desc" },
+    where: { 
+      estado: true 
+    },
+    include: { 
+      barbero: {
+        select: {
+          id: true,
+          nombre: true
+        }
+      }
+    },
+    orderBy: { 
+      desde: "desc" 
+    },
   });
 }
 
 export default async function ExcepcionesLaboralesPage() {
   const session = await auth();
-  const excepciones = await getExcepciones();
+  const [excepciones, responseBarberos] = await Promise.all([getExcepciones(), getBarberos()]);
+  const barberos = responseBarberos.success ? responseBarberos.data : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black to-amber-950/30 p-6">
@@ -45,7 +59,7 @@ export default async function ExcepcionesLaboralesPage() {
           </div>
         </div>
 
-        <ExcepcionesClient excepciones={excepciones} />
+        <ExcepcionesClient excepciones={excepciones} barberos={barberos} />
       </div>
     </div>
   );
