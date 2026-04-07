@@ -26,7 +26,12 @@ function SubmitButton() {
   );
 }
 
-export default function ExcepcionForm() {
+type Barbero = {
+  id: string;
+  nombre: string;
+};
+
+export default function ExcepcionForm({ barberos }: { barberos: Barbero[] }) {
   const router = useRouter();
   const [state, formAction] = useActionState(createExcepcion, initialState);
 
@@ -55,13 +60,31 @@ export default function ExcepcionForm() {
         />
       </div>
 
+      {/* Adjudicar a Barbero */}
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-amber-200/70">
+          ¿A quién afecta?
+        </label>
+        <select
+          name="barberoId"
+          className="w-full border border-amber-900/30 rounded-lg px-3 py-2 bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+        >
+          <option value="">🌎 Toda la barbería (Global)</option>
+          {barberos.map((b) => (
+            <option key={b.id} value={b.id}>
+              💈 Barbero: {b.nombre}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* Fecha Desde */}
       <div className="space-y-2">
         <label className="text-sm font-semibold text-amber-200/70">
           Desde <span className="text-amber-500">*</span>
         </label>
         <input
-          type="date"
+          type="datetime-local"
           name="desde"
           required
           className="w-full border border-amber-900/30 rounded-lg px-3 py-2 bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
@@ -74,7 +97,7 @@ export default function ExcepcionForm() {
           Hasta <span className="text-amber-500">*</span>
         </label>
         <input
-          type="date"
+          type="datetime-local"
           name="hasta"
           required
           className="w-full border border-amber-900/30 rounded-lg px-3 py-2 bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
