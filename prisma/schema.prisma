@@ -116,7 +116,7 @@ model excepcion_laboral {
 model dia_laboral {
   id        String                    @id @default(cuid())
   estado    Boolean                   @default(true)
-  dia       Int                       @unique
+  dia           dias_laborales
   createdAt DateTime                  @default(now())
   updatedAt DateTime                  @updatedAt
   
@@ -183,4 +183,14 @@ enum turno_estado {
   CONFIRMADO
   CANCELADO
   COMPLETADO
+}
+
+enum dias_laborales {
+  Lunes
+  Martes
+  Mieracoles
+  Jueves
+  Viernes
+  Sabado
+  Domingo
 }
