@@ -14,8 +14,9 @@ export type SlotHorario = {
 
 export async function obtenerHorariosDisponibles(
   fechaString: string,
-  vehiculoServicioId: string,
-  turnoIdAExcluir?: string
+  servicioId: string,
+  turnoIdAExcluir?: string,
+  barberoId?: string // <--- Nuevo parámetro para filtrar excepciones del barbero
 ) {
   try {
     // 1. Configurar fecha base (00:00 del día solicitado en Argentina)
@@ -24,8 +25,8 @@ export async function obtenerHorariosDisponibles(
     const diaSemana = diaZonificado.getDay();
 
     // 2. Obtener configuración del servicio
-    const configServicio = await prisma.vehiculo_servicio.findUnique({
-      where: { id: vehiculoServicioId },
+    const configServicio = await prisma.servicio.findUnique({
+      where: { id: servicioId },
       select: { duracion: true }
     });
 
@@ -47,26 +48,35 @@ export async function obtenerHorariosDisponibles(
     const finBusqueda = addMinutes(fechaBaseArg, 1440);
 
     const [excepcionesRaw, turnosRaw] = await Promise.all([
-      prisma.expeciones_laborales.findMany({
+      prisma.excepcion_laboral.findMany({
         where: {
           estado: true,
-          AND: [{ desde: { lt: finBusqueda } }, { hasta: { gt: inicioBusqueda } }]
+          AND: [
+            { desde: { lt: finBusqueda } },
+            { hasta: { gt: inicioBusqueda } },
+            { // Filtramos por la relación 'barbero' para manejar las excepciones
+              OR: [
+                { barbero: { is: null } }, // Excepciones globales (cuando barberoId es null)
+                ...(barberoId ? [{ barbero: { id: barberoId } }] : []) // Excepciones del barbero específico
+              ],
+            },
+          ]
         }
       }),
       prisma.turno.findMany({
         where: {
-          estado: 1,
+          estado: { not: "CANCELADO" }, // Consideramos todos los turnos que no han sido cancelados
           horarioReservado: { gte: inicioBusqueda, lt: finBusqueda },
           ...(turnoIdAExcluir && { id: { not: turnoIdAExcluir } })
         },
-        include: { vehiculo_servicio: { select: { duracion: true } } }
+        include: { servicio: { select: { duracion: true } } }
       })
     ]);
 
     // NORMALIZACIÓN: Convertimos todo lo que viene de la DB (UTC) a Hora Argentina
     const turnosExistentes = turnosRaw.map(t => ({
       inicio: toZonedTime(t.horarioReservado, TIMEZONE),
-      fin: addMinutes(toZonedTime(t.horarioReservado, TIMEZONE), t.vehiculo_servicio.duracion)
+      fin: addMinutes(toZonedTime(t.horarioReservado, TIMEZONE), t.servicio.duracion)
     }));
 
     const excepciones = excepcionesRaw.map(e => ({

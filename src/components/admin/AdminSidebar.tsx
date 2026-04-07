@@ -69,16 +69,6 @@ export default function AdminSidebar() {
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="p-3 border-t border-amber-900/30">
-        <Link
-          href="/api/auth/signout"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-all font-semibold text-sm group"
-        >
-          <LogOut className="h-5 w-5 text-red-400 group-hover:text-red-500" />
-          <span>Cerrar Sesión</span>
-        </Link>
-      </div>
     </aside>
   );
 }

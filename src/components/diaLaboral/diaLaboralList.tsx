@@ -16,7 +16,7 @@ type MargenLaboral = {
 type DiaLaboral = {
   id: string;
   estado: boolean;
-  dia: number;
+  dia: string;
   createdAt: Date;
   updatedAt: Date;
   margenes?: MargenLaboral[];
@@ -28,15 +28,15 @@ type DiaLaboralListProps = {
   onAsignarHorarios: (dia: DiaLaboral) => void;
 };
 
-const DIAS_SEMANA = [
-  { nombre: "Domingo", color: "bg-purple-500", emoji: "🟣" },
-  { nombre: "Lunes", color: "bg-blue-500", emoji: "🔵" },
-  { nombre: "Martes", color: "bg-green-500", emoji: "🟢" },
-  { nombre: "Miércoles", color: "bg-yellow-500", emoji: "🟡" },
-  { nombre: "Jueves", color: "bg-orange-500", emoji: "🟠" },
-  { nombre: "Viernes", color: "bg-red-500", emoji: "🔴" },
-  { nombre: "Sábado", color: "bg-pink-500", emoji: "🟣" },
-];
+const DIAS_SEMANA: Record<string, { nombre: string; color: string; emoji: string }> = {
+  Lunes:      { nombre: "Lunes",      color: "bg-blue-500",   emoji: "🔵" },
+  Martes:     { nombre: "Martes",     color: "bg-green-500",  emoji: "🟢" },
+  Mieracoles: { nombre: "Miércoles",  color: "bg-yellow-500", emoji: "🟡" },
+  Jueves:     { nombre: "Jueves",     color: "bg-orange-500", emoji: "🟠" },
+  Viernes:    { nombre: "Viernes",    color: "bg-red-500",    emoji: "🔴" },
+  Sabado:     { nombre: "Sábado",     color: "bg-pink-500",   emoji: "🟣" },
+  Domingo:    { nombre: "Domingo",    color: "bg-purple-500", emoji: "🟣" },
+}
 
 export function DiaLaboralList({
   diasLaborales,
