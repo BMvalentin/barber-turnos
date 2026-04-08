@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "🚗 Lavadero Reservas",
-  description: "Lavadero de autos - Reserva tu turno en línea de manera fácil y rápida. Santa clara, Buenos Aires.",
+  title: "Reservas",
+  description: "Barberia - Reserva tu turno en línea de manera fácil y rápida. Santa clara, Buenos Aires.",
 };
 
 export default async function RootLayout({
