@@ -4,7 +4,7 @@ import { MapPin, Phone, Clock, Scissors } from "lucide-react";
 
 export function LocationSection() {
   return (
-    <section id="ubicacion" className="py-20 md:py-32 bg-black/40 backdrop-blur-sm justify-center items-center mx-auto border-y border-amber-900/20">
+    <section id="ubicacion" className="py-20 md:py-32 bg-linear-to-b from-black/90 to-black  justify-center items-center mx-auto border-y border-amber-900/20">
       <div className="container justify-around items-center mx-auto px-4">
         
         {/* HEADER DE LA SECCIÓN */}
