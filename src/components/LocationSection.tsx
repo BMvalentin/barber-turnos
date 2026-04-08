@@ -21,9 +21,6 @@ export function LocationSection() {
           <h2 className="font-display text-3xl md:text-5xl font-bold mb-4 text-white">
             Nuestra <span className="text-amber-500 text-shadow-amber">Ubicación</span>
           </h2>
-          <p className="text-amber-100/60 max-w-md mx-auto">
-            Vení a visitarnos y llevá tu estilo al siguiente nivel en un ambiente de primera.
-          </p>
         </motion.div>
 
         <div className="grid lg:grid-cols-2 gap-12 items-center justify-center px-2 md:px-12">
