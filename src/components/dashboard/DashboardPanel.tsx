@@ -62,15 +62,16 @@ export default function DashboardPanel({ user }: { user: any }) {
         setMsg("Perfil actualizado correctamente.");
         if (res.user) await update({ name: res.user.name, telefono: res.user.telefono });
         setTimeout(() => setStatus('idle'), 3000);
+      } else {
+        setStatus('error');
+        setMsg(res.message || "Error al actualizar");
       }
     });
   };
 
   return (
-    /* Contenedor principal sin límites de ancho para que el fondo y footer expandan */
-    <div className="flex flex-col min-h-screen bg-neutral-950 w-full">
+    <div className="flex flex-col min-h-screen bg-neutral-950 w-full font-sans">
       
-      {/* Contenedor del contenido del Perfil (Este sí tiene ancho máximo) */}
       <main className="flex-grow w-full max-w-4xl mx-auto px-4 md:px-8 pt-24 pb-12">
         
         <div className="mb-10 border-b border-amber-900/20 pb-8">
@@ -96,15 +97,17 @@ export default function DashboardPanel({ user }: { user: any }) {
 
           <form onSubmit={handleFormSubmit} className="p-6 md:p-10 grid gap-8 md:grid-cols-2">
             
+            {/* Email */}
             <div className="space-y-3">
               <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5" /> Correo Electrónico
               </label>
-              <div className="p-4 bg-black/40 border border-amber-900/10 rounded-2xl text-amber-100/20 text-sm font-mono">
+              <div className="p-4 bg-black/40 border border-amber-900/10 rounded-2xl text-amber-100/20 text-sm font-mono italic">
                 {user.email}
               </div>
             </div>
 
+            {/* Nombre */}
             <div className="space-y-3">
               <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] flex items-center gap-2">
                 <User className="w-3.5 h-3.5" /> Nombre y Apellido
@@ -115,6 +118,20 @@ export default function DashboardPanel({ user }: { user: any }) {
                 type="text"
                 required
                 className="w-full p-4 bg-black/40 border border-amber-900/30 rounded-2xl text-white focus:ring-1 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+              />
+            </div>
+
+            {/* TELÉFONO (WhatsApp) */}
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                <Phone className="w-3.5 h-3.5" /> WhatsApp / Teléfono
+              </label>
+              <input
+                name="telefono"
+                defaultValue={user.telefono || ''}
+                type="text" 
+                placeholder="+54 9..."
+                className="w-full p-4 bg-black/40 border border-amber-900/30 rounded-2xl text-white focus:ring-1 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all placeholder:text-neutral-800"
               />
             </div>
 
@@ -130,13 +147,19 @@ export default function DashboardPanel({ user }: { user: any }) {
                     ✓ Cambios Guardados
                   </span>
                 )}
+
+                {status === 'error' && (
+                  <span className="text-red-500 text-xs font-bold uppercase tracking-tighter">
+                    ⚠ {msg}
+                  </span>
+                )}
                 
                 <Button 
                   disabled={isPending} 
                   type="submit" 
-                  className="bg-amber-500 hover:bg-amber-400 text-black font-black uppercase tracking-widest px-10 rounded-2xl h-14 w-full md:w-auto transition-all shadow-lg shadow-amber-500/10"
+                  className="bg-amber-500 hover:bg-amber-400 text-black font-black uppercase tracking-widest px-10 rounded-2xl h-14 w-full md:w-auto transition-all shadow-lg shadow-amber-500/10 active:scale-95"
                 >
-                  {isPending ? "Guardando..." : "Actualizar Datos"}
+                  {isPending ? "Guardando..." : "Actualizar Perfil"}
                 </Button>
               </div>
             </div>
