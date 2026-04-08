@@ -52,6 +52,7 @@ export async function getUserTurnos(userId: string) {
       include: {
         servicio: true,
         barbero: true,
+        user: true,
       },
     });
 
@@ -59,6 +60,12 @@ export async function getUserTurnos(userId: string) {
       ...t,
       precioCongelado: Number(t.precioCongelado),
       seniaCongelada: Number(t.seniaCongelada),
+      servicio: t.servicio ? {
+        ...t.servicio,
+        precio: Number(t.servicio.precio),
+        senia: Number(t.servicio.senia),
+        descuento: Number(t.servicio.descuento),
+      } : t.servicio,
     }));
   } catch (error) {
     console.error("Error fetching user turnos:", error);
