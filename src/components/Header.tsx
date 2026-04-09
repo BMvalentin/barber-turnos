@@ -42,6 +42,14 @@ export function Header({ session }: HeaderProps) {
             </Button>
           </Link>
 
+          {session?.user?.role === "ADMIN" && (
+            <Link href="/admin" className=" cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Button variant="link" size="sm">
+                Administrador
+              </Button>
+            </Link>
+          )}
+
           <Link href={session ? "/turno" : "/login"} className=" cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
             <Button variant="amarillo" size="sm">
                 Turnos
