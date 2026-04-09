@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { MAP_DIA_SEMANA, REVERSE_MAP_DIA_SEMANA } from "@/lib/constants";
 
 export type ActionState = {
   success: boolean;
@@ -16,11 +17,12 @@ export async function create(
 ): Promise<ActionState> {
   try {
     const dia = parseInt(formData.get("dia") as string);
+    const diaEnum = MAP_DIA_SEMANA[dia];
     const estado = formData.get("estado") === "true";
 
     // Verificar si ya existe
     const existing = await prisma.dia_laboral.findFirst({
-      where: { dia },
+      where: { dia: diaEnum as any },
     });
 
     if (existing) {
@@ -32,7 +34,7 @@ export async function create(
 
     const diaLaboral = await prisma.dia_laboral.create({
       data: {
-        dia,
+        dia: diaEnum as any,
         estado,
       },
     });
@@ -41,7 +43,10 @@ export async function create(
 
     return {
       success: true,
-      data: diaLaboral,
+      data: {
+        ...diaLaboral,
+        dia: REVERSE_MAP_DIA_SEMANA[diaLaboral.dia]
+      },
     };
   } catch (error) {
     console.error("Error al crear día laboral:", error);
@@ -60,6 +65,7 @@ export async function update(
   try {
     const id = formData.get("id") as string;
     const dia = parseInt(formData.get("dia") as string);
+    const diaEnum = MAP_DIA_SEMANA[dia];
     const estado = formData.get("estado") === "true";
 
     // Verificar si existe
@@ -71,7 +77,7 @@ export async function update(
     // Verificar conflictos con otros días
     const conflict = await prisma.dia_laboral.findFirst({
       where: {
-        dia,
+        dia: diaEnum as any,
         id: { not: id },
       },
     });
@@ -86,7 +92,7 @@ export async function update(
     const diaLaboral = await prisma.dia_laboral.update({
       where: { id },
       data: {
-        dia,
+        dia: diaEnum as any,
         estado,
         updatedAt: new Date(),
       },
@@ -96,7 +102,10 @@ export async function update(
 
     return {
       success: true,
-      data: diaLaboral,
+      data: {
+        ...diaLaboral,
+        dia: REVERSE_MAP_DIA_SEMANA[diaLaboral.dia]
+      },
     };
   } catch (error) {
     console.error("Error al actualizar día laboral:", error);
@@ -164,28 +173,34 @@ export async function getDiasLaborales() {
       },
     });
 
+    const formatDia = (d: any) => ({
+      ...d,
+      dia: REVERSE_MAP_DIA_SEMANA[d.dia]
+    });
+
     // Si faltan días, los creamos como activos por defecto
     if (diasEnDb.length < 7) {
-      const idsExistentes = diasEnDb.map((d) => d.dia);
+      const idsExistentes = diasEnDb.map((d) => REVERSE_MAP_DIA_SEMANA[d.dia]);
       const diasFaltantes = [0, 1, 2, 3, 4, 5, 6].filter((id) => !idsExistentes.includes(id));
 
       if (diasFaltantes.length > 0) {
         await prisma.dia_laboral.createMany({
-          data: diasFaltantes.map((dia) => ({
-            dia,
-            estado: true, // Activos por defecto como pediste
+          data: diasFaltantes.map((diaIndex) => ({
+            dia: MAP_DIA_SEMANA[diaIndex] as any,
+            estado: true,
           })),
         });
 
         // Retornamos la lista completa actualizada
-        return await prisma.dia_laboral.findMany({
+        const updatedDias = await prisma.dia_laboral.findMany({
           include: { margenes: true },
-          orderBy: { dia: "asc" },
         });
+        
+        return updatedDias.map(formatDia).sort((a, b) => a.dia - b.dia);
       }
     }
 
-    return diasEnDb;
+    return diasEnDb.map(formatDia).sort((a, b) => a.dia - b.dia);
   } catch (error) {
     console.error("Error al obtener días laborales:", error);
     throw new Error("Error al obtener los días laborales");
@@ -203,7 +218,12 @@ export async function getDiaLaboralById(id: string) {
       },
     });
 
-    return diaLaboral;
+    if (!diaLaboral) return null;
+
+    return {
+      ...diaLaboral,
+      dia: REVERSE_MAP_DIA_SEMANA[diaLaboral.dia]
+    };
   } catch (error) {
     console.error("Error al obtener día laboral:", error);
     throw new Error("Error al obtener el día laboral");
