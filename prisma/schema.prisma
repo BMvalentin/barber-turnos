@@ -188,7 +188,7 @@ enum turno_estado {
 enum dias_laborales {
   Lunes
   Martes
-  Mieracoles
+  Miercoles
   Jueves
   Viernes
   Sabado
