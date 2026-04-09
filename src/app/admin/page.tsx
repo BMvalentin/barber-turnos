@@ -16,12 +16,13 @@ async function getStats() {
     barberos,
     proximosTurnos,
     serviciosPopulares,
-    turnosHoyPorBarbero
+    turnosHoyPorBarbero,
+    rendimientoHoyPorBarbero
   ] = await Promise.all([
     prisma.barbero.count({ where: { estado: true } }),
     prisma.servicio.count({ where: { estado: true } }),
     prisma.turno.count(),
-    prisma.turno.count({ where: { estado: "PENDIENTE" } }),
+    prisma.turno.count({ where: { estado: { in: ["PENDIENTE", "CONFIRMADO"] } } }),
     
     prisma.barbero.findMany({
       where: { estado: true },
@@ -31,7 +32,7 @@ async function getStats() {
         srcImage: true,
         _count: {
           select: {
-            turnos: { where: { estado: "PENDIENTE" } }
+            turnos: { where: { estado: { in: ["PENDIENTE", "CONFIRMADO"] } } }
           }
         }
       },
@@ -41,7 +42,7 @@ async function getStats() {
 
     prisma.turno.findMany({
       where: {
-        estado: "PENDIENTE",
+        estado: { in: ["PENDIENTE", "CONFIRMADO"] },
         horarioReservado: { gte: new Date() }
       },
       include: {
@@ -71,13 +72,29 @@ async function getStats() {
         turnos: {
           where: {
             horarioReservado: { gte: inicioDia, lte: finDia },
-            estado: "PENDIENTE"
+            estado: { in: ["PENDIENTE", "CONFIRMADO"] }
           },
           include: {
             user: { select: { name: true, email: true } },
             servicio: { select: { nombre: true, duracion: true } }
           },
           orderBy: { horarioReservado: "asc" }
+        }
+      },
+      orderBy: { nombre: "asc" }
+    }),
+
+    prisma.barbero.findMany({
+      where: { estado: true },
+      select: {
+        id: true,
+        nombre: true,
+        turnos: {
+          where: {
+            horarioReservado: { gte: inicioDia, lte: finDia },
+            estado: "COMPLETADO"
+          },
+          select: { precioCongelado: true }
         }
       },
       orderBy: { nombre: "asc" }
@@ -92,7 +109,8 @@ async function getStats() {
     barberos,
     proximosTurnos,
     serviciosPopulares,
-    turnosHoyPorBarbero
+    turnosHoyPorBarbero,
+    rendimientoHoyPorBarbero
   };
 }
 
@@ -108,11 +126,11 @@ export default async function AdminDashboard() {
           <StatCard title="Barberos" value={stats.totalBarberos} icon={Users} href="/barbero" />
           <StatCard title="Servicios" value={stats.totalServicios} icon={Scissors} href="/servicio" />
           <StatCard title="Total Turnos" value={stats.totalTurnos} icon={Calendar} href="/turno" />
-          <StatCard title="Pendientes" value={stats.turnosPendientes} icon={DollarSign} href="/turno" />
+          <StatCard title="Activos" value={stats.turnosPendientes} icon={DollarSign} href="/turno?filtro=activos" />
         </div>
 
         {/* DETALLE */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
           <DetailCard title="Próximos Turnos" icon={Calendar}>
             {stats.proximosTurnos.length === 0 ? (
@@ -135,7 +153,7 @@ export default async function AdminDashboard() {
               stats.barberos.map((b) => (
                 <Item key={b.id}>
                   <p className="text-white text-sm">{b.nombre}</p>
-                  <p className="text-amber-200/60 text-xs">{b._count.turnos} pendientes</p>
+                  <p className="text-amber-200/60 text-xs">{b._count.turnos} activos</p>
                 </Item>
               ))
             )}
@@ -151,6 +169,30 @@ export default async function AdminDashboard() {
                   <p className="text-amber-200/60 text-xs">{s._count.turnos} usos</p>
                 </Item>
               ))
+            )}
+          </DetailCard>
+
+          <DetailCard title="Rendimiento Hoy" icon={DollarSign}>
+            {stats.rendimientoHoyPorBarbero.length === 0 ? (
+              <Empty text="No hay barberos" />
+            ) : (
+              stats.rendimientoHoyPorBarbero.map((b) => {
+                const completados = b.turnos.length;
+                const recaudado = b.turnos.reduce((acc, t) => acc + Number(t.precioCongelado), 0);
+                const comision = (recaudado * 0.5); // Asumiendo un 50% de comisión
+                return (
+                  <Item key={b.id}>
+                    <p className="text-white text-sm">{b.nombre}</p>
+                    <p className="text-amber-200/60 text-xs">{completados} cortes completados</p>
+                    {completados > 0 && (
+                      <div className="mt-1 pt-1 border-t border-amber-900/50 flex justify-between">
+                        <span className="text-amber-500/80 text-xs">Total: ${recaudado.toFixed(2)}</span>
+                        <span className="text-green-500/80 text-xs">Comisión (50%): ${comision.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </Item>
+                );
+              })
             )}
           </DetailCard>
 
@@ -172,9 +214,18 @@ export default async function AdminDashboard() {
 
                   <div className="space-y-2 max-h-72 overflow-y-auto">
                     {b.turnos.map((t) => (
-                      <div key={t.id} className="bg-black/60 border border-amber-900/30 p-3 rounded-lg">
-                        <p className="text-white text-sm">{t.user.name}</p>
-                        <p className="text-amber-200/60 text-xs">{t.servicio.nombre}</p>
+                      <div key={t.id} className="bg-black/60 border border-amber-900/30 p-3 rounded-lg flex justify-between items-center">
+                        <div>
+                          <p className="text-white text-sm">{t.user.name}</p>
+                          <p className="text-amber-200/60 text-xs">{t.servicio.nombre}</p>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                          t.estado === 'CONFIRMADO' 
+                            ? 'bg-green-500/20 text-green-500 border-green-500/30' 
+                            : 'bg-amber-500/20 text-amber-500 border-amber-500/30'
+                        }`}>
+                          {t.estado}
+                        </span>
                       </div>
                     ))}
                   </div>

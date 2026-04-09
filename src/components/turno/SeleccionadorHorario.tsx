@@ -58,66 +58,70 @@ export default function SeleccionadorHorario({
   return (
     <div className="space-y-4">
       {/* FECHA */}
-      <div>
-        <label className="block text-sm font-medium mb-1 text-amber-200/70">
-          Fecha <span className="text-amber-500">*</span>
+      <div className="space-y-2">
+        <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-widest ml-1">
+          Fecha de Reserva <span className="text-[#E8B031]">*</span>
         </label>
-        <input
-          type="date"
-          className="w-full border border-amber-900/30 rounded-lg px-3 py-2 bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-          value={fecha}
-          onChange={(e) => setFecha(e.target.value)}
-          min={new Date().toISOString().split("T")[0]}
-        />
+        <div className="relative">
+          <input
+            type="date"
+            className="w-full bg-[#1C1812] border border-[#2C261D] rounded-xl px-4 py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-all appearance-none cursor-pointer"
+            value={fecha}
+            onChange={(e) => setFecha(e.target.value)}
+            min={new Date().toISOString().split("T")[0]}
+          />
+        </div>
       </div>
 
       {/* HORARIOS */}
-      <div>
-        <label className="block text-sm font-medium mb-1 text-amber-200/70">
-          Horarios disponibles <span className="text-amber-500">*</span>
+      <div className="space-y-2">
+        <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-widest ml-1">
+          Horarios Disponibles <span className="text-[#E8B031]">*</span>
         </label>
 
         {!fecha || !servicioId || !barberoId ? (
-          <div className="p-4 bg-black/60 border border-amber-900/30 rounded-lg backdrop-blur-sm">
-            <p className="text-sm text-amber-200/50">
-              ℹ️ Seleccione servicio, barbero y fecha
+          <div className="p-5 bg-black/60 border border-[#2C261D] rounded-xl backdrop-blur-sm border-dashed">
+            <p className="text-[11px] text-[#8E8675] flex items-center gap-2">
+              <span className="text-amber-500">ℹ️</span> Seleccione servicio, barbero y fecha para ver disponibilidad
             </p>
           </div>
         ) : loading ? (
-          <div className="p-4 bg-black/60 border border-amber-900/30 rounded-lg flex items-center gap-2 backdrop-blur-sm">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-500"></div>
-            <p className="text-sm text-amber-200/50">
-              Cargando horarios...
-            </p>
+          <div className="p-5 bg-black/20 border border-[#2C261D] rounded-xl flex items-center gap-3 animate-pulse">
+            <div className="w-4 h-4 border-2 border-[#E8B031]/30 border-t-[#E8B031] rounded-full animate-spin"></div>
+            <p className="text-[11px] text-[#8E8675]">Consultando agenda...</p>
           </div>
         ) : slots.length === 0 ? (
-          <div className="p-4 bg-amber-500/10 border border-amber-500/50 rounded-lg backdrop-blur-sm">
-            <p className="text-sm text-amber-400">
-              😔 No hay horarios disponibles para esta fecha
+          <div className="p-5 bg-red-500/5 border border-red-500/20 rounded-xl">
+            <p className="text-[11px] text-red-400/80 flex items-center gap-2">
+              <span className="text-red-500 font-bold">😔</span> No hay horarios disponibles para esta combinación
             </p>
           </div>
         ) : (
-          <>
+          <div className="space-y-3">
             <select
               name={name}
               defaultValue={defaultValue}
               required
-              className="w-full border border-amber-900/30 rounded-lg px-3 py-2 bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+              className="w-full bg-[#1C1812] border border-[#2C261D] rounded-xl px-4 py-3 text-[#E4E0D9] text-sm font-bold outline-none focus:border-[#E8B031] appearance-none cursor-pointer transition-all"
             >
-              <option value="">-- Seleccionar horario --</option>
+              <option value="" className="bg-[#14110C] text-[#8E8675]">-- Seleccionar horario --</option>
               {slots.map((slot) => (
-                <option key={slot} value={slot}>
+                <option key={slot} value={slot} className="bg-[#14110C]">
                   {new Date(slot).toLocaleTimeString("es-AR", {
                     hour: "2-digit",
                     minute: "2-digit",
-                  })}
+                    hour12: false
+                  })} hs
                 </option>
               ))}
             </select>
-            <p className="text-xs text-green-400 mt-2">
-              ✅ {slots.length} horarios disponibles
-            </p>
-          </>
+            <div className="flex items-center gap-2 ml-1">
+               <div className="w-1 h-1 rounded-full bg-green-500"></div>
+               <p className="text-[10px] font-bold text-green-500/70 uppercase tracking-widest">
+                 {slots.length} turnos encontrados
+               </p>
+            </div>
+          </div>
         )}
       </div>
     </div>
