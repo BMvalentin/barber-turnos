@@ -75,6 +75,10 @@ export async function POST(req: NextRequest) {
       case "rejected":
       case "cancelled": {
         // Pago rechazado/cancelado → turno vuelve a PENDIENTE sin paymentId confirmado
+        await prisma.turno.update({
+          where: { id: turnoId },
+          data: { estado: "PENDIENTE" },
+        });
         console.log(`❌ Pago rechazado/cancelado para turno ${turnoId}`);
         break;
       }
