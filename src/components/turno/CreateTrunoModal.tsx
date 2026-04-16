@@ -1,12 +1,13 @@
 "use client";
 
 import { createTurno } from "@/actions/turno.actions";
+import { crearPreferenciaPago } from "@/actions/mercadopago-actions";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { useEffect, useRef, useState } from "react";
 import SeleccionadorHorario from "./SeleccionadorHorario";
 import { Button } from "../ui/button";
-import { X, Plus } from "lucide-react";
+import { X, Plus, CreditCard, Clock, CheckCircle2, Loader2, Scissors } from "lucide-react";
 
 type ServicioData = {
   id: string;
@@ -28,6 +29,12 @@ type UsuarioData = {
   id: string;
   name: string | null;
   email: string | null;
+};
+
+type TurnoCreado = {
+  id: string;
+  precioCongelado: number;
+  seniaCongelada: number;
 };
 
 type Props = {
@@ -60,6 +67,12 @@ export default function CreateTurnoModal({
 
   const [selectedServicioId, setSelectedServicioId] = useState("");
   const [selectedBarberoId, setSelectedBarberoId] = useState("");
+
+  // Estado del modal de pago
+  const [turnoCreado, setTurnoCreado] = useState<TurnoCreado | null>(null);
+  const [showPagoModal, setShowPagoModal] = useState(false);
+  const [loadingPago, setLoadingPago] = useState(false);
+  const [errorPago, setErrorPago] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialServicios.length > 0) {
@@ -96,16 +109,50 @@ export default function CreateTurnoModal({
   }, [isOpen, initialServicios.length]);
 
   useEffect(() => {
-    if (state.success) {
-      alert("✅ Turno creado correctamente");
+    if (state.success && state.data) {
+      // Guardar el turno creado y mostrar modal de pago
+      setTurnoCreado({
+        id: state.data.id,
+        precioCongelado: state.data.precioCongelado,
+        seniaCongelada: state.data.seniaCongelada,
+      });
+      setIsOpen(false);
+      setShowPagoModal(true);
       formRef.current?.reset();
       setSelectedServicioId("");
       setSelectedBarberoId("");
-      setIsOpen(false);
     } else if (state.error) {
-      alert(`❌ Error: ${state.error}`);
+      // El error se muestra dentro del form, no hace falta alert
     }
   }, [state]);
+
+  const handlePagarSenia = async () => {
+    if (!turnoCreado) return;
+    setLoadingPago(true);
+    setErrorPago(null);
+
+    try {
+      const result = await crearPreferenciaPago(turnoCreado.id);
+
+      if (!result.success || !result.data?.checkoutUrl) {
+        setErrorPago(result.error ?? "No se pudo generar el enlace de pago");
+        setLoadingPago(false);
+        return;
+      }
+
+      // Redirigir a Mercado Pago
+      window.location.href = result.data.checkoutUrl;
+    } catch {
+      setErrorPago("Error inesperado al iniciar el pago");
+      setLoadingPago(false);
+    }
+  };
+
+  const handlePagarDespues = () => {
+    setShowPagoModal(false);
+    setTurnoCreado(null);
+    setErrorPago(null);
+  };
 
   return (
     <>
@@ -118,7 +165,9 @@ export default function CreateTurnoModal({
         Nuevo Turno
       </button>
 
-      {/* Modal */}
+      {/* ===================== */}
+      {/* MODAL CREAR TURNO     */}
+      {/* ===================== */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-black/95 backdrop-blur-xl border border-amber-900/30 rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -268,6 +317,101 @@ export default function CreateTurnoModal({
           </div>
         </div>
       )}
+
+      {/* ===================== */}
+      {/* MODAL DE PAGO (SEÑA)  */}
+      {/* ===================== */}
+      {showPagoModal && turnoCreado && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-900 border border-amber-500/20 rounded-2xl w-full max-w-md shadow-2xl shadow-amber-900/20 overflow-hidden">
+
+            {/* Header del modal de pago */}
+            <div className="bg-gradient-to-r from-amber-600/20 to-amber-500/10 border-b border-amber-500/20 p-6 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-white">¡Turno Reservado!</h2>
+                <p className="text-sm text-amber-200/60">Tu lugar está aparatado. Aboná la seña para confirmarlo.</p>
+              </div>
+            </div>
+
+            {/* Detalle de precios */}
+            <div className="p-6 space-y-4">
+              {/* Card de la seña */}
+              <div className="bg-black/40 border border-amber-500/30 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Scissors className="w-4 h-4 text-amber-400" />
+                  <span className="text-xs font-semibold text-amber-400 uppercase tracking-widest">
+                    Detalle del pago
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-zinc-400">Precio del servicio</span>
+                  <span className="text-sm text-white font-medium">
+                    ${turnoCreado.precioCongelado.toLocaleString("es-AR")}
+                  </span>
+                </div>
+
+                <div className="border-t border-zinc-700/50 pt-3 flex items-center justify-between">
+                  <div>
+                    <span className="text-sm font-semibold text-white">Seña requerida</span>
+                    <p className="text-xs text-zinc-500 mt-0.5">
+                      El resto se abona en el local
+                    </p>
+                  </div>
+                  <span className="text-2xl font-black text-amber-400">
+                    ${turnoCreado.seniaCongelada.toLocaleString("es-AR")}
+                  </span>
+                </div>
+              </div>
+
+              {/* Error de pago */}
+              {errorPago && (
+                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-400">
+                  {errorPago}
+                </div>
+              )}
+
+              {/* Botón pagar seña */}
+              <button
+                id="btn-pagar-senia"
+                onClick={handlePagarSenia}
+                disabled={loadingPago}
+                className="w-full flex items-center justify-center gap-3 bg-amber-500 hover:bg-amber-400 disabled:bg-amber-500/50 disabled:cursor-not-allowed text-zinc-950 font-black py-4 rounded-xl transition-all text-sm uppercase tracking-widest shadow-lg shadow-amber-500/20 hover:shadow-amber-400/30"
+              >
+                {loadingPago ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Generando enlace...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="w-5 h-5" />
+                    Pagar Seña · ${turnoCreado.seniaCongelada.toLocaleString("es-AR")}
+                  </>
+                )}
+              </button>
+
+              {/* Botón pagar después */}
+              <button
+                id="btn-pagar-despues"
+                onClick={handlePagarDespues}
+                disabled={loadingPago}
+                className="w-full flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-400 hover:text-zinc-200 font-medium py-3 rounded-xl transition-all text-sm"
+              >
+                <Clock className="w-4 h-4" />
+                Pagar después (turno pendiente)
+              </button>
+
+              <p className="text-center text-xs text-zinc-600">
+                Serás redirigido a Mercado Pago para completar el pago de forma segura.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -280,6 +424,7 @@ function SubmitButton() {
       type="submit"
       disabled={pending}
       className="px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white"
+
     >
       {pending ? "Procesando..." : "Confirmar Reserva"}
     </Button>

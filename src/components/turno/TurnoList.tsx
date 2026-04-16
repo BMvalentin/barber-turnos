@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import EditTurnoModal from "./EditarTurnoModal";
-import { Calendar, User, Scissors, DollarSign, Filter } from "lucide-react";
+import { Calendar, User, Scissors, DollarSign, Filter, CreditCard, Loader2 } from "lucide-react";
 import { cancelTurno } from "@/actions/user-dashboard";
+import { crearPreferenciaPago } from "@/actions/mercadopago-actions";
 
 type Turno = {
   id: string;
@@ -197,6 +198,8 @@ function FilterButton({
 
 function TurnoCard({ turno, session }: { turno: Turno; session: any }) {
   const [isCanceling, setIsCanceling] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
   const estadoColors = {
     PENDIENTE: "bg-amber-500/20 text-amber-500 border-amber-500/50",
     CONFIRMADO: "bg-green-500/20 text-green-500 border-green-500/50",
@@ -213,6 +216,23 @@ function TurnoCard({ turno, session }: { turno: Turno; session: any }) {
       alert("Error al cancelar el turno");
     } finally {
       setIsCanceling(false);
+    }
+  };
+
+  const handlePagarSenia = async () => {
+    setIsPaying(true);
+    setPayError(null);
+    try {
+      const result = await crearPreferenciaPago(turno.id);
+      if (!result.success || !result.data?.checkoutUrl) {
+        setPayError(result.error ?? "No se pudo generar el enlace de pago");
+        return;
+      }
+      window.location.href = result.data.checkoutUrl;
+    } catch {
+      setPayError("Error inesperado al iniciar el pago");
+    } finally {
+      setIsPaying(false);
     }
   };
 
@@ -315,20 +335,52 @@ function TurnoCard({ turno, session }: { turno: Turno; session: any }) {
 
       {/* Acciones */}
       {(session?.user?.role === "ADMIN" || (turno.user.id === session?.user?.id && (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO"))) && (
-        <div className="mt-4 pt-4 border-t border-amber-900/30 flex justify-end gap-2">
-          {turno.user.id === session?.user?.id && (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO") && (
-            <button 
-              onClick={handleCancel}
-              disabled={isCanceling}
-              className="text-xs font-bold text-red-500 hover:text-red-400 bg-red-400/10 hover:bg-red-500/20 px-4 py-2 rounded-lg transition-colors border border-red-500/20 disabled:opacity-50"
-            >
-              {isCanceling ? "Cancelando..." : "Cancelar Turno"}
-            </button>
-          )}
+        <div className="mt-4 pt-4 border-t border-amber-900/30 space-y-2">
 
-          {session?.user?.role === "ADMIN" && (
-            <EditTurnoModal turno={turno} />
-          )}
+          {/* Botón pagar seña: solo para el dueño del turno, PENDIENTE y con seña */}
+          {turno.user.id === session?.user?.id &&
+            turno.estado === "PENDIENTE" &&
+            turno.seniaCongelada > 0 && (
+              <div className="space-y-1">
+                <button
+                  id={`btn-pagar-senia-${turno.id}`}
+                  onClick={handlePagarSenia}
+                  disabled={isPaying}
+                  className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 disabled:bg-amber-500/50 disabled:cursor-not-allowed text-zinc-950 font-black py-2.5 rounded-lg transition-all text-xs uppercase tracking-widest"
+                >
+                  {isPaying ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Generando enlace...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="w-3.5 h-3.5" />
+                      Pagar Seña · ${turno.seniaCongelada.toLocaleString("es-AR")}
+                    </>
+                  )}
+                </button>
+                {payError && (
+                  <p className="text-xs text-red-400 text-center">{payError}</p>
+                )}
+              </div>
+            )}
+
+          <div className="flex justify-end gap-2">
+            {turno.user.id === session?.user?.id && (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO") && (
+              <button 
+                onClick={handleCancel}
+                disabled={isCanceling}
+                className="text-xs font-bold text-red-500 hover:text-red-400 bg-red-400/10 hover:bg-red-500/20 px-4 py-2 rounded-lg transition-colors border border-red-500/20 disabled:opacity-50"
+              >
+                {isCanceling ? "Cancelando..." : "Cancelar Turno"}
+              </button>
+            )}
+
+            {session?.user?.role === "ADMIN" && (
+              <EditTurnoModal turno={turno} />
+            )}
+          </div>
         </div>
       )}
     </div>
