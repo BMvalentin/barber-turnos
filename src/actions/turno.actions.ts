@@ -6,6 +6,7 @@ import { addMinutes } from "date-fns";
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
 import { auth } from "@/auth";
 import { MAP_DIA_SEMANA, REVERSE_MAP_DIA_SEMANA } from "@/lib/constants";
+import { sendTurnoEmail } from "@/lib/email";
 
 const TIMEZONE = "America/Argentina/Buenos_Aires";
 
@@ -152,7 +153,29 @@ export async function createTurno(
         seniaCongelada: servicio.senia,
         estado: "PENDIENTE",
       },
+      include: {
+        user: true,
+        barbero: true,
+        servicio: true,
+      },
     });
+
+    try {
+      const zoned = toZonedTime(inicio, TIMEZONE);
+      const dayName = new Intl.DateTimeFormat("es-AR", { weekday: "long" }).format(zoned);
+      const timeString = new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(zoned);
+      
+      await sendTurnoEmail(turno.user.email, {
+        clienteNombre: turno.user.name || "Cliente",
+        servicioNombre: turno.servicio.nombre,
+        barberoNombre: turno.barbero.nombre,
+        fechaSemana: dayName,
+        fechaHora: timeString,
+        estado: "CREADO",
+      });
+    } catch (e) {
+      console.error("Error enviando email de creación:", e);
+    }
 
     revalidatePath("/turno");
 
@@ -282,7 +305,25 @@ export async function actualizarTurno(
       const turnoActualizado = await prisma.turno.update({
         where: { id },
         data: dataUpdate,
+        include: { user: true, barbero: true, servicio: true },
       });
+
+      try {
+        const zoned = toZonedTime(turnoActualizado.horarioReservado, TIMEZONE);
+        const dayName = new Intl.DateTimeFormat("es-AR", { weekday: "long" }).format(zoned);
+        const timeString = new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(zoned);
+        
+        await sendTurnoEmail(turnoActualizado.user.email, {
+          clienteNombre: turnoActualizado.user.name || "Cliente",
+          servicioNombre: turnoActualizado.servicio.nombre,
+          barberoNombre: turnoActualizado.barbero.nombre,
+          fechaSemana: dayName,
+          fechaHora: timeString,
+          estado: turnoActualizado.estado === "CANCELADO" ? "CANCELADO" : "ACTUALIZADO",
+        });
+      } catch (e) {
+        console.error("Error enviando email de actualización:", e);
+      }
 
       revalidatePath("/turno");
       revalidatePath("/admin");
@@ -300,7 +341,25 @@ export async function actualizarTurno(
       const turnoActualizado = await prisma.turno.update({
         where: { id },
         data: { estado },
+        include: { user: true, barbero: true, servicio: true },
       });
+
+      try {
+        const zoned = toZonedTime(turnoActualizado.horarioReservado, TIMEZONE);
+        const dayName = new Intl.DateTimeFormat("es-AR", { weekday: "long" }).format(zoned);
+        const timeString = new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(zoned);
+        
+        await sendTurnoEmail(turnoActualizado.user.email, {
+          clienteNombre: turnoActualizado.user.name || "Cliente",
+          servicioNombre: turnoActualizado.servicio.nombre,
+          barberoNombre: turnoActualizado.barbero.nombre,
+          fechaSemana: dayName,
+          fechaHora: timeString,
+          estado: turnoActualizado.estado === "CANCELADO" ? "CANCELADO" : "ACTUALIZADO",
+        });
+      } catch (e) {
+        console.error("Error enviando email de estado:", e);
+      }
 
       revalidatePath("/turno");
       revalidatePath("/admin");
@@ -488,9 +547,35 @@ export async function deleteTurno(prevState: any, formData: FormData) {
       return { success: false, error: "ID inválido" };
     }
 
+    const turnoToDelete = await prisma.turno.findUnique({
+      where: { id },
+      include: { user: true, barbero: true, servicio: true },
+    });
+
+    if (!turnoToDelete) {
+      return { success: false, error: "Turno no encontrado" };
+    }
+
     await prisma.turno.delete({
       where: { id },
     });
+
+    try {
+      const zoned = toZonedTime(turnoToDelete.horarioReservado, TIMEZONE);
+      const dayName = new Intl.DateTimeFormat("es-AR", { weekday: "long" }).format(zoned);
+      const timeString = new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(zoned);
+      
+      await sendTurnoEmail(turnoToDelete.user.email, {
+        clienteNombre: turnoToDelete.user.name || "Cliente",
+        servicioNombre: turnoToDelete.servicio.nombre,
+        barberoNombre: turnoToDelete.barbero.nombre,
+        fechaSemana: dayName,
+        fechaHora: timeString,
+        estado: "CANCELADO",
+      });
+    } catch (e) {
+      console.error("Error enviando email de eliminación:", e);
+    }
 
     revalidatePath("/admin");
     revalidatePath("/turno");
