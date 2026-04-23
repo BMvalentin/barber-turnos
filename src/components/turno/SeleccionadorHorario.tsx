@@ -2,6 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { obtenerHorariosDisponibles } from "@/actions/turno.actions";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface Props {
   servicioId?: string;
@@ -18,22 +24,24 @@ export default function SeleccionadorHorario({
   defaultValue,
   name,
 }: Props) {
-  const [fecha, setFecha] = useState("");
+  const [date, setDate] = useState<Date | undefined>(defaultValue ? new Date(defaultValue) : undefined);
   const [slots, setSlots] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function cargar() {
-      if (!fecha || !servicioId || !barberoId) {
+      if (!date || !servicioId || !barberoId) {
         setSlots([]);
         return;
       }
+
+      const fechaStr = format(date, "yyyy-MM-dd");
 
       try {
         setLoading(true);
 
         const result = await obtenerHorariosDisponibles(
-          fecha,
+          fechaStr,
           servicioId,
           barberoId,
           turnoIdAExcluir
@@ -53,7 +61,7 @@ export default function SeleccionadorHorario({
     }
 
     cargar();
-  }, [fecha, servicioId, barberoId, turnoIdAExcluir]);
+  }, [date, servicioId, barberoId, turnoIdAExcluir]);
 
   return (
     <div className="space-y-4">
@@ -62,15 +70,35 @@ export default function SeleccionadorHorario({
         <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-widest ml-1">
           Fecha de Reserva <span className="text-[#E8B031]">*</span>
         </label>
-        <div className="relative">
-          <input
-            type="date"
-            className="w-full bg-[#1C1812] border border-[#2C261D] rounded-xl px-4 py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-all appearance-none cursor-pointer"
-            value={fecha}
-            onChange={(e) => setFecha(e.target.value)}
-            min={new Date().toISOString().split("T")[0]}
-          />
-        </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={cn(
+                "w-full flex items-center justify-start text-left bg-[#1C1812] border border-[#2C261D] rounded-xl px-4 py-3 text-[#E4E0D9] text-sm outline-none hover:border-[#E8B031] focus:border-[#E8B031] transition-all",
+                !date && "text-[#8E8675]"
+              )}
+            >
+              <CalendarIcon className="mr-3 h-4 w-4 text-[#8E8675]" />
+              {date ? format(date, "PPP", { locale: es }) : <span>Seleccionar fecha</span>}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0 bg-[#1C1812] border-[#2C261D] text-[#E4E0D9] shadow-2xl rounded-xl" align="start">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              disabled={(date) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return date < today;
+              }}
+              initialFocus
+              locale={es}
+              className="rounded-xl"
+            />
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* HORARIOS */}
@@ -79,7 +107,7 @@ export default function SeleccionadorHorario({
           Horarios Disponibles <span className="text-[#E8B031]">*</span>
         </label>
 
-        {!fecha || !servicioId || !barberoId ? (
+        {!date || !servicioId || !barberoId ? (
           <div className="p-5 bg-black/60 border border-[#2C261D] rounded-xl backdrop-blur-sm border-dashed">
             <p className="text-[11px] text-[#8E8675] flex items-center gap-2">
               <span className="text-amber-500">ℹ️</span> Seleccione servicio, barbero y fecha para ver disponibilidad

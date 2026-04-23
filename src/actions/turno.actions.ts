@@ -199,11 +199,19 @@ export async function createTurno(
 
 export async function getTurnos(): Promise<ActionState> {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: "No autorizado" };
+    }
+
+    const whereClause = session.user.role === "ADMIN" ? {} : { userId: session.user.id };
+
     const turnos = await prisma.turno.findMany({
+      where: whereClause,
       include: {
         user: { select: { id: true, name: true, email: true } },
-        servicio: { select: { nombre: true, duracion: true } },
-        barbero: { select: { nombre: true } },
+        servicio: { select: { id: true, nombre: true, duracion: true } },
+        barbero: { select: { id: true, nombre: true } },
       },
       orderBy: { horarioReservado: "asc" },
     });
@@ -261,6 +269,15 @@ export async function actualizarTurno(
     const cambioServicio = servicioId !== turnoActual.servicioId;
 
     if (cambioFecha || cambioBarbero || cambioServicio) {
+      if (cambioFecha) {
+        const ahora = new Date();
+        if (horario.getTime() <= ahora.getTime() + 10 * 60 * 1000) {
+          return {
+            success: false,
+            error: "El nuevo horario debe ser con al menos 10 minutos de anticipación",
+          };
+        }
+      }
       // Obtener el servicio (necesario para la validación y para actualizar precios si cambió)
       const servicio = await prisma.servicio.findUnique({
         where: { id: servicioId },
@@ -482,7 +499,11 @@ export async function obtenerHorariosDisponibles(
           return slotUTC < finT && finS > inicioT;
         });
 
-        if (!estaOcupado) {
+        // Verificar si el slot ya pasó (más un margen de 10 minutos)
+        const ahora = new Date();
+        const esPasado = slotUTC.getTime() <= ahora.getTime() + 10 * 60 * 1000;
+
+        if (!estaOcupado && !esPasado) {
           slotsDisponibles.push(slotUTC.toISOString());
         }
 

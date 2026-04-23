@@ -29,7 +29,6 @@ export async function GET() {
       }),
 
       prisma.user.findMany({
-        where: { role: "USER" },
         select: {
           id: true,
           name: true,

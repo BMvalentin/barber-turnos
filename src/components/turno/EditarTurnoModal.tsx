@@ -74,8 +74,8 @@ export default function EditTurnoModal({ turno }: Props) {
   const [loadingData, setLoadingData] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [selectedServicioId, setSelectedServicioId] = useState(turno.servicio.id);
-  const [selectedBarberoId, setSelectedBarberoId] = useState(turno.barbero.id);
+  const [selectedServicioId, setSelectedServicioId] = useState(turno.servicio?.id || "");
+  const [selectedBarberoId, setSelectedBarberoId] = useState(turno.barbero?.id || "");
   const formRef = useRef<HTMLFormElement>(null);
 
   const [state, formAction] = useActionState(actualizarTurno, initialState);
@@ -198,8 +198,8 @@ export default function EditTurnoModal({ turno }: Props) {
                       Información del Cliente
                     </h3>
                     <div className="bg-[#1C1812] border border-[#2C261D] rounded-xl p-5 space-y-1">
-                      <p className="text-lg font-semibold text-[#E4E0D9]">{turno.user.name || 'Sin nombre'}</p>
-                      <p className="text-sm text-[#8E8675]">{turno.user.email}</p>
+                      <p className="text-lg font-semibold text-[#E4E0D9]">{turno.user?.name || 'Usuario eliminado'}</p>
+                      <p className="text-sm text-[#8E8675]">{turno.user?.email}</p>
                       <div className="pt-3 mt-3 border-t border-[#2C261D] flex justify-between items-center text-[11px]">
                         <span className="text-[#8E8675]">Total a pagar:</span>
                         <span className="font-bold text-amber-500 text-sm">${turno.precioCongelado}</span>
@@ -235,25 +235,7 @@ export default function EditTurnoModal({ turno }: Props) {
                     </div>
                   </div>
 
-                  {/* SECCIÓN ESTADO */}
-                  <div className="space-y-4">
-                    <h3 className="text-[10px] font-bold text-[#E8B031] uppercase tracking-widest flex items-center gap-2">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Control de Estado
-                    </h3>
-                    <div className="grid gap-4">
-                      <select
-                        name="estado"
-                        defaultValue={turno.estado}
-                        className="w-full bg-[#E8B031]/10 border border-amber-600/30 rounded-xl px-4 py-4 text-[#E4E0D9] text-sm font-bold outline-none focus:border-[#E8B031] appearance-none cursor-pointer transition-all"
-                      >
-                        <option value="PENDIENTE" className="bg-[#14110C] text-amber-500">🟠 PENDIENTE</option>
-                        <option value="CONFIRMADO" className="bg-[#14110C] text-green-500">🟢 CONFIRMADO</option>
-                        <option value="COMPLETADO" className="bg-[#14110C] text-blue-500">🔵 COMPLETADO</option>
-                        <option value="CANCELADO" className="bg-[#14110C] text-red-500">🔴 CANCELADO</option>
-                      </select>
-                    </div>
-                  </div>
+
                 </div>
 
                 {/* Columna Derecha: AGENDA & HORARIOS */}
