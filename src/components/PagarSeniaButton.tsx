@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { crearPreferenciaPago } from "@/actions/mercadopago-actions";
-import { CreditCard, Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 
 interface PagarSeniaButtonProps {
   turnoId: string;
