@@ -93,10 +93,10 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
       ...(isProduction && { auto_return: "approved" as const }),
       notification_url: `${baseUrl}/api/mercadopago/webhook`,
       external_reference: turnoId,
-      // Vence en 24 horas
+      // Vence en 5 minutos para evitar que el usuario pague una seña vieja
       expires: true,
       expiration_date_from: new Date().toISOString(),
-      expiration_date_to: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      expiration_date_to: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
     };
 
     const response = await preference.create({ body });
@@ -121,9 +121,7 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
       data: {
         preferenceId: response.id,
         // Para producción se usa init_point, para sandbox sandbox_init_point
-        checkoutUrl: process.env.NODE_ENV === "production"
-          ? response.init_point
-          : response.sandbox_init_point,
+        checkoutUrl: response.init_point,
         initPoint: response.init_point,
         sandboxInitPoint: response.sandbox_init_point,
       },
