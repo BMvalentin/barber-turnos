@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
   try {
     // Calcular el límite de tiempo: hace 5 minutos
-    const limite = new Date(Date.now() - 5 * 60 * 1000);
+    const limite = new Date(Date.now() - 1 * 60 * 1000);
 
     // Buscar todos los turnos PENDIENTES que tengan más de 5 minutos sin pago
     // Se considera el createdAt del turno como punto de partida
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
         },
       },
       data: {
-        estado: "EXPIRADO" as any,
+        estado: "CANCELADO" as any,
       },
     });
 
