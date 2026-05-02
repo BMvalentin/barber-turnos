@@ -8,6 +8,7 @@ Este proyecto es una aplicación web moderna para gestión de turnos y usuarios,
 - **Base de Datos:** MySQL / MariaDB
 - **ORM:** Prisma 7 (con Driver Adapters Nativos)
 - **Autenticación:** Auth.js (NextAuth)
+- **Pasarela de Pagos:** Mercado Pago SDK
 - **Validación:** Zod
 - **Estilos:** Tailwind CSS
 
@@ -42,18 +43,21 @@ Crea un archivo llamado `.env` en la raíz del proyecto y copia el siguiente con
 
 ```env
 # Conexión a Base de Datos (URL Completa para Prisma)
-DATABASE_URL="mysql://root@127.0.0.1:3306/db_lavadero"
+DATABASE_URL="mysql://root@127.0.0.1:3306/db_barber"
 
 # Variables para el Adaptador Nativo (Requerido en Prisma 7)
 DATABASE_USER="root"
 DATABASE_PASSWORD=""
-DATABASE_NAME="db_lavadero"
+DATABASE_NAME="db_barber"
 DATABASE_HOST="127.0.0.1"
 DATABASE_PORT=3306
 
 # Configuración de Auth.js
-# Genera un secreto seguro en terminal, puede ser por ejemplo con: openssl rand -base64 32
+# Genera un secreto seguro en terminal: openssl rand -base64 32
 AUTH_SECRET="un_secreto_muy_largo_y_seguro"
+
+# Configuración de Tareas Programadas (Cron Jobs)
+CRON_SECRET="otro_secreto_para_cron_jobs"
 
 # Credenciales de Google OAuth (Ver paso 4)
 AUTH_GOOGLE_ID="TU_GOOGLE_ID_AQUI"
@@ -61,6 +65,14 @@ AUTH_GOOGLE_SECRET="TU_GOOGLE_SECRET_AQUI"
 
 # Importante para desarrollo local
 AUTH_TRUST_HOST=true
+NODE_ENV=production
+
+# Credenciales de Mercado Pago
+MP_ACCESS_TOKEN="TU_ACCESS_TOKEN_AQUI"
+MP_PUBLIC_KEY="TU_PUBLIC_KEY_AQUI"
+
+# URL Base de la Aplicación
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ---

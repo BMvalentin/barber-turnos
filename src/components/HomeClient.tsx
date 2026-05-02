@@ -16,8 +16,6 @@ export default function HomeClient() {
           <AboutSection />
           <LocationSection />
         </main>
-
-        <Footer />
       </div>
   );
 }
