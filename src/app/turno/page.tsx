@@ -34,7 +34,6 @@ async function getTurnoData() {
     }),
 
     prisma.user.findMany({ // No es necesario serializar aquí, ya que no hay campos Decimal
-      where: { role: "USER" },
       select: {
         id: true,
         name: true,
