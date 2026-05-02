@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { Scissors } from "lucide-react";
 
-export function Footer() {
+export function Footer( { openPrivacy, openTerms }: { openPrivacy: () => void; openTerms: () => void } ) {
   return (
     <footer className="py-8 border-t border-amber-900/30 mx-auto bg-black">
       <div className="container mx-auto px-4">
@@ -25,12 +25,20 @@ export function Footer() {
 
           {/* ENLACES SECUNDARIOS */}
           <div className="flex gap-8">
-            <a href="#" className="text-xs uppercase tracking-widest text-amber-100/40 hover:text-amber-500 transition-colors">
+            <button className="text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={(e) => {
+              e.preventDefault();
+              openTerms();
+            }}>
+
               Términos
-            </a>
-            <a href="#" className="text-xs uppercase tracking-widest text-amber-100/40 hover:text-amber-500 transition-colors">
+            </button>
+            <button className="text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={(e) => {
+              e.preventDefault();
+              openPrivacy();
+            }}>
+
               Privacidad
-            </a>
+            </button>
           </div>
           
         </div>
