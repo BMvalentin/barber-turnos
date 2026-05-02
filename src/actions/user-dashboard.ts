@@ -2,6 +2,10 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { sendTurnoEmail } from "@/lib/email";
+import { toZonedTime } from "date-fns-tz";
+
+const TIMEZONE = "America/Argentina/Buenos_Aires";
 
 export type State = {
   success: boolean;
@@ -75,10 +79,28 @@ export async function getUserTurnos(userId: string) {
 
 export async function cancelTurno(turnoId: string) {
   try {
-    await prisma.turno.update({
+    const turnoActualizado = await prisma.turno.update({
       where: { id: turnoId },
-      data: { estado: "CANCELADO" }, // Enum correcto
+      data: { estado: "CANCELADO" },
+      include: { user: true, barbero: true, servicio: true },
     });
+
+    try {
+      const zoned = toZonedTime(turnoActualizado.horarioReservado, TIMEZONE);
+      const dayName = new Intl.DateTimeFormat("es-AR", { weekday: "long" }).format(zoned);
+      const timeString = new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(zoned);
+      
+      await sendTurnoEmail(turnoActualizado.user.email, {
+        clienteNombre: turnoActualizado.user.name || "Cliente",
+        servicioNombre: turnoActualizado.servicio.nombre,
+        barberoNombre: turnoActualizado.barbero.nombre,
+        fechaSemana: dayName,
+        fechaHora: timeString,
+        estado: "CANCELADO",
+      });
+    } catch (e) {
+      console.error("Error enviando email de cancelación desde dashboard:", e);
+    }
 
     revalidatePath("/dashboard");
 
