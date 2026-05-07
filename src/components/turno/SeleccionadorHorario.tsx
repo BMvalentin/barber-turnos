@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { obtenerHorariosDisponibles } from "@/actions/turno.actions";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -24,28 +24,34 @@ export default function SeleccionadorHorario({
   defaultValue,
   name,
 }: Props) {
-  const [date, setDate] = useState<Date | undefined>(defaultValue ? new Date(defaultValue) : undefined);
+  const [fecha, setFecha] = useState<Date | undefined>(
+    defaultValue ? new Date(defaultValue) : undefined
+  );
   const [slots, setSlots] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  // Estado del turno seleccionado actualmente
+  const [cargando, setCargando] = useState(false);
+  // Turno horario seleccionado actualmente
   const [slotSeleccionado, setSlotSeleccionado] = useState<string>(
     defaultValue ?? ""
   );
+  // Controla si el popover del calendario está abierto
+  const [calendarioAbierto, setCalendarioAbierto] = useState(false);
+
+  // Ref para saber si es la primera carga (evitar resetear el slot inicial)
+  const esPrimeraCarga = useRef(true);
 
   useEffect(() => {
-    async function cargar() {
-      if (!date || !servicioId || !barberoId) {
+    async function cargarHorarios() {
+      if (!fecha || !servicioId || !barberoId) {
         setSlots([]);
         return;
       }
 
-      const fechaStr = format(date, "yyyy-MM-dd");
+      const fechaStr = format(fecha, "yyyy-MM-dd");
 
       try {
-        setLoading(true);
+        setCargando(true);
 
-
-        const result = await obtenerHorariosDisponibles(
+        const resultado = await obtenerHorariosDisponibles(
           fechaStr,
           servicioId,
           barberoId,
@@ -61,13 +67,14 @@ export default function SeleccionadorHorario({
         console.error("Error cargando horarios:", error);
         setSlots([]);
       } finally {
-        setLoading(false);
+        setCargando(false);
+        // Marcar que la primera carga ya ocurrió
+        esPrimeraCarga.current = false;
       }
     }
 
-    cargar();
-    
-  }, [date, servicioId, barberoId, turnoIdAExcluir]);
+    cargarHorarios();
+  }, [fecha, servicioId, barberoId, turnoIdAExcluir]);
 
   // Formatea un slot ISO a "HH:MM hs"
   const formatearHora = (slot: string) =>
@@ -77,35 +84,57 @@ export default function SeleccionadorHorario({
       hour12: false,
     }) + " hs";
 
+  // Maneja la selección de fecha desde el calendario
+  const manejarSeleccionFecha = (nuevaFecha: Date | undefined) => {
+    setFecha(nuevaFecha);
+    // Solo resetear el slot si el usuario cambió la fecha manualmente (no en carga inicial)
+    if (!esPrimeraCarga.current) {
+      setSlotSeleccionado("");
+    }
+    setCalendarioAbierto(false);
+  };
+
   return (
     <div className="space-y-4">
-      {/* FECHA */}
+      {/* Campo oculto para enviar el slot seleccionado en el formulario */}
+      <input type="hidden" name={name} value={slotSeleccionado} />
+
+      {/* SELECTOR DE FECHA */}
       <div className="space-y-2">
         <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-widest ml-1">
           Fecha de Reserva <span className="text-[#E8B031]">*</span>
         </label>
-        <Popover>
+
+        <Popover open={calendarioAbierto} onOpenChange={setCalendarioAbierto}>
           <PopoverTrigger asChild>
             <button
               type="button"
               className={cn(
                 "w-full flex items-center justify-start text-left bg-[#1C1812] border border-[#2C261D] rounded-xl px-4 py-3 text-[#E4E0D9] text-sm outline-none hover:border-[#E8B031] focus:border-[#E8B031] transition-all",
-                !date && "text-[#8E8675]"
+                !fecha && "text-[#8E8675]"
               )}
             >
               <CalendarIcon className="mr-3 h-4 w-4 text-[#8E8675]" />
-              {date ? format(date, "PPP", { locale: es }) : <span>Seleccionar fecha</span>}
+              {fecha ? (
+                format(fecha, "PPP", { locale: es })
+              ) : (
+                <span>Seleccionar fecha</span>
+              )}
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 bg-[#1C1812] border-[#2C261D] text-[#E4E0D9] shadow-2xl rounded-xl" align="start">
+          <PopoverContent
+            className="w-auto p-0 bg-[#1C1812] border-[#2C261D] text-[#E4E0D9] shadow-2xl rounded-xl"
+            align="start"
+          >
             <Calendar
               mode="single"
-              selected={date}
-              onSelect={setDate}
-              disabled={(date) => {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                return date < today;
+              selected={fecha}
+              onSelect={manejarSeleccionFecha}
+              disabled={(diaCalendario) => {
+                // Deshabilitar días anteriores a hoy
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                return diaCalendario < hoy;
               }}
               initialFocus
               locale={es}
@@ -121,21 +150,22 @@ export default function SeleccionadorHorario({
           Horarios Disponibles <span className="text-[#E8B031]">*</span>
         </label>
 
-        {!date || !servicioId || !barberoId ? (
+        {!fecha || !servicioId || !barberoId ? (
+          /* Estado: faltan datos para consultar */
           <div className="p-5 bg-black/60 border border-[#2C261D] rounded-xl backdrop-blur-sm border-dashed">
             <p className="text-[11px] text-[#8E8675] flex items-center gap-2">
               <span className="text-amber-500">ℹ️</span> Seleccione servicio,
               barbero y fecha para ver disponibilidad
             </p>
           </div>
-        ) : loading ? (
-          /* Estado: cargando */
+        ) : cargando ? (
+          /* Estado: consultando horarios al servidor */
           <div className="p-5 bg-black/20 border border-[#2C261D] rounded-xl flex items-center gap-3 animate-pulse">
             <div className="w-4 h-4 border-2 border-[#E8B031]/30 border-t-[#E8B031] rounded-full animate-spin" />
             <p className="text-[11px] text-[#8E8675]">Consultando agenda...</p>
           </div>
         ) : slots.length === 0 ? (
-          /* Estado: sin disponibilidad */
+          /* Estado: sin disponibilidad para la combinación elegida */
           <div className="p-5 bg-red-500/5 border border-red-500/20 rounded-xl">
             <p className="text-[11px] text-red-400/80 flex items-center gap-2">
               <span className="text-red-500 font-bold">😔</span> No hay
@@ -143,7 +173,7 @@ export default function SeleccionadorHorario({
             </p>
           </div>
         ) : (
-          /* Estado: cuadrícula de turnos */
+          /* Estado: cuadrícula de turnos disponibles */
           <div className="space-y-3">
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
               {slots.map((slot) => {
@@ -166,14 +196,20 @@ export default function SeleccionadorHorario({
                     `}
                   >
                     {formatearHora(slot)}
-                    {/* Indicador de selección */}
+                    {/* Indicador visual de selección activa */}
                     {estaSeleccionado && (
                       <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#E8B031] rounded-full border-2 border-[#14110C] flex items-center justify-center">
                         <svg
                           viewBox="0 0 8 8"
                           className="w-2 h-2 fill-[#14110C]"
                         >
-                          <path d="M1 4l2 2 4-4" stroke="#14110C" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+                          <path
+                            d="M1 4l2 2 4-4"
+                            stroke="#14110C"
+                            strokeWidth="1.5"
+                            fill="none"
+                            strokeLinecap="round"
+                          />
                         </svg>
                       </span>
                     )}
