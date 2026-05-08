@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { addMinutes } from "date-fns";
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
 import { auth } from "@/auth";
-import { MAP_DIA_SEMANA, REVERSE_MAP_DIA_SEMANA } from "@/lib/constants";
+import { MAP_DIA_SEMANA } from "@/lib/constants";
 import { sendTurnoEmail } from "@/lib/email";
 
 const TIMEZONE = "America/Argentina/Buenos_Aires";
@@ -15,6 +15,146 @@ export type ActionState = {
   error?: string;
   data?: any;
 };
+
+/* =========================
+   OBTENER DÍAS DISPONIBLES DEL MES
+   Devuelve un array de fechas "yyyy-MM-dd" que tienen
+   al menos un horario disponible para el barbero y servicio dados.
+========================= */
+
+export async function obtenerDiasDisponibles(
+  mes: string, // formato "yyyy-MM"
+  servicioId: string,
+  barberoId: string,
+  turnoIdAExcluir?: string,
+): Promise<{ success: boolean; data?: string[]; error?: string }> {
+  try {
+    if (!mes || !servicioId || !barberoId) {
+      return { success: false, error: "Faltan parámetros requeridos" };
+    }
+
+    // Construir el primer y último día del mes en zona horaria Argentina
+    const inicioDeMes = fromZonedTime(`${mes}-01T00:00:00`, TIMEZONE);
+    // Calcular el último día del mes sumando un mes y restando un día
+    const [anio, numMes] = mes.split("-").map(Number);
+    const ultimoDia = new Date(anio, numMes, 0).getDate(); // día 0 del mes siguiente = último día del mes
+    const finDeMes = fromZonedTime(`${mes}-${ultimoDia.toString().padStart(2, "0")}T23:59:59`, TIMEZONE);
+
+    // Obtener el servicio (necesitamos la duración)
+    const servicio = await prisma.servicio.findUnique({
+      where: { id: servicioId },
+      select: { duracion: true },
+    });
+
+    if (!servicio?.duracion) {
+      return { success: false, error: "Servicio no encontrado o sin duración" };
+    }
+
+    // Obtener todos los márgenes laborales activos del barbero
+    const horariosBarbero = await prisma.margen_laboral_barbero.findMany({
+      where: { barberoId, estado: true },
+      include: { margenLaboral: { include: { dia: true } } },
+    });
+
+    // Obtener todos los turnos del mes para este barbero (excluir cancelados y el turno a ignorar)
+    const turnosMes = await prisma.turno.findMany({
+      where: {
+        barberoId,
+        horarioReservado: { gte: inicioDeMes, lte: finDeMes },
+        estado: { notIn: ["CANCELADO"] },
+        ...(turnoIdAExcluir && { id: { not: turnoIdAExcluir } }),
+      },
+      include: { servicio: { select: { duracion: true } } },
+    });
+
+    const diasConDisponibilidad: string[] = [];
+    const ahora = new Date();
+
+    // Iterar día por día del mes
+    for (let dia = 1; dia <= ultimoDia; dia++) {
+      const fechaStr = `${mes}-${dia.toString().padStart(2, "0")}`;
+      const inicioDia = fromZonedTime(`${fechaStr}T00:00:00`, TIMEZONE);
+
+      // Ignorar días completamente pasados
+      const finDia = fromZonedTime(`${fechaStr}T23:59:59`, TIMEZONE);
+      if (finDia.getTime() < ahora.getTime()) continue;
+
+      // Obtener el día de la semana en Argentina (0=Dom, 1=Lun, ..., 6=Sáb)
+      const diaSemana = toZonedTime(inicioDia, TIMEZONE).getDay();
+      const diaEnum = MAP_DIA_SEMANA[diaSemana];
+
+      // Filtrar márgenes del barbero que correspondan a este día de la semana
+      const margenesDia = horariosBarbero.filter(
+        (h) =>
+          (h.margenLaboral.dia.dia as string) === diaEnum &&
+          h.margenLaboral.estado === true,
+      );
+
+      if (margenesDia.length === 0) continue;
+
+      // Filtrar los turnos reservados del día
+      const turnosDia = turnosMes.filter((t) => {
+        const tZoned = toZonedTime(new Date(t.horarioReservado), TIMEZONE);
+        const tFechaStr = `${tZoned.getFullYear()}-${String(tZoned.getMonth() + 1).padStart(2, "0")}-${String(tZoned.getDate()).padStart(2, "0")}`;
+        return tFechaStr === fechaStr;
+      });
+
+      // Verificar si existe al menos un slot libre en algún margen del día
+      let tieneSlot = false;
+
+      for (const horario of margenesDia) {
+        if (tieneSlot) break;
+
+        const { desde, hasta } = horario.margenLaboral;
+        const [hInicio, mInicio] = desde.split(":").map(Number);
+        const [hFin, mFin] = hasta.split(":").map(Number);
+
+        let actualMinutos = hInicio * 60 + mInicio;
+        const limiteMinutos = hFin * 60 + mFin;
+
+        while (actualMinutos + servicio.duracion <= limiteMinutos) {
+          const hora = Math.floor(actualMinutos / 60);
+          const min = actualMinutos % 60;
+
+          // Convertir el slot a UTC
+          const slotUTC = fromZonedTime(
+            `${fechaStr}T${hora.toString().padStart(2, "0")}:${min.toString().padStart(2, "0")}:00`,
+            TIMEZONE,
+          );
+
+          // Ignorar slots pasados (con margen de 10 minutos)
+          const esPasado = slotUTC.getTime() <= ahora.getTime() + 10 * 60 * 1000;
+
+          if (!esPasado) {
+            // Verificar si el slot está libre
+            const estaOcupado = turnosDia.some((turno) => {
+              const inicioT = new Date(turno.horarioReservado);
+              const finT = addMinutes(inicioT, turno.servicio.duracion);
+              const finS = addMinutes(slotUTC, servicio.duracion);
+              return slotUTC < finT && finS > inicioT;
+            });
+
+            if (!estaOcupado) {
+              tieneSlot = true;
+              break;
+            }
+          }
+
+          actualMinutos += 30; // Slots cada 30 min
+        }
+      }
+
+      if (tieneSlot) {
+        diasConDisponibilidad.push(fechaStr);
+      }
+    }
+
+    return { success: true, data: diasConDisponibilidad };
+  } catch (error) {
+    console.error("Error obteniendo días disponibles:", error);
+    return { success: false, error: "Error al obtener días disponibles" };
+  }
+}
 
 /* =========================
    HELPERS

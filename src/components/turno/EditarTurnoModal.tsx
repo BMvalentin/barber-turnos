@@ -1,25 +1,22 @@
 "use client";
 
-import { useActionState, useEffect, useState, useRef } from "react";
+import { useActionState, useCallback, useEffect, useState, useRef } from "react";
 import { actualizarTurno } from "@/actions/turno.actions";
 import SeleccionadorHorario from "./SeleccionadorHorario";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { 
-  X, 
-  Calendar, 
-  User, 
-  Scissors, 
-  Users, 
-  Clock, 
+import {
+  Clock,
+  Users,
+  Scissors,
+  User,
   ArrowLeft,
-  CheckCircle2,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react";
 import { useFormStatus } from "react-dom";
 
@@ -58,7 +55,7 @@ type Barbero = {
   nombre: string;
 };
 
-const initialState = {
+const estadoInicial = {
   success: false,
   error: undefined as string | undefined,
 };
@@ -68,80 +65,89 @@ interface Props {
 }
 
 export default function EditTurnoModal({ turno }: Props) {
-  const [open, setOpen] = useState(false);
+  const [abierto, setAbierto] = useState(false);
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [barberos, setBarberos] = useState<Barbero[]>([]);
-  const [loadingData, setLoadingData] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [cargandoDatos, setCargandoDatos] = useState(false);
+  const [errorCarga, setErrorCarga] = useState<string | null>(null);
 
-  const [selectedServicioId, setSelectedServicioId] = useState(turno.servicio?.id || "");
-  const [selectedBarberoId, setSelectedBarberoId] = useState(turno.barbero?.id || "");
-  const formRef = useRef<HTMLFormElement>(null);
+  const [servicioSeleccionadoId, setServicioSeleccionadoId] = useState(
+    turno.servicio?.id || ""
+  );
+  const [barberoSeleccionadoId, setBarberoSeleccionadoId] = useState(
+    turno.barbero?.id || ""
+  );
+  const formularioRef = useRef<HTMLFormElement>(null);
 
-  const [state, formAction] = useActionState(actualizarTurno, initialState);
+  const [state, formAction] = useActionState(actualizarTurno, estadoInicial);
 
-  // Cargar servicios y barberos cuando se abre el modal
-  useEffect(() => {
-    if (open) {
-      loadData();
-    }
-  }, [open]);
-
-  async function loadData() {
+  // useCallback para que la función sea estable entre renders y no cause loops
+  const cargarDatos = useCallback(async () => {
     try {
-      setLoadingData(true);
-      setLoadError(null);
-      const res = await fetch("/api/configuracion-turno");
+      setCargandoDatos(true);
+      setErrorCarga(null);
 
-      if (!res.ok) {
-        throw new Error(`Error del servidor: ${res.status}`);
+      const respuesta = await fetch("/api/configuracion-turno");
+
+      if (!respuesta.ok) {
+        throw new Error(`Error del servidor: ${respuesta.status}`);
       }
 
-      const data = await res.json();
+      const datos = await respuesta.json();
 
-      if (data.error) {
-        throw new Error(data.error);
+      if (datos.error) {
+        throw new Error(datos.error);
       }
 
-      setServicios(data.servicios || []);
-      setBarberos(data.barberos || []);
+      setServicios(datos.servicios || []);
+      setBarberos(datos.barberos || []);
     } catch (error) {
-      console.error("Error cargando datos:", error);
-      setLoadError("No se pudo cargar la configuración. Intente cerrando y abriendo el formulario.");
+      console.error("Error cargando datos del formulario:", error);
+      setErrorCarga(
+        "No se pudo cargar la configuración. Intente cerrando y abriendo el formulario."
+      );
     } finally {
-      setLoadingData(false);
+      setCargandoDatos(false);
     }
-  }
+  }, []); // Sin dependencias: la función no depende de ningún estado externo
 
+  // Cargar datos cuando se abre el modal
+  useEffect(() => {
+    if (abierto) {
+      cargarDatos();
+    }
+  }, [abierto, cargarDatos]);
+
+  // Cerrar modal y recargar página al guardar con éxito
   useEffect(() => {
     if (state.success) {
-      setOpen(false);
+      setAbierto(false);
       window.location.reload();
     }
   }, [state]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={abierto} onOpenChange={setAbierto}>
       <DialogTrigger asChild>
         <button className="w-full bg-amber-600/10 hover:bg-amber-600/20 text-amber-500 border border-amber-600/20 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all">
           Editar Turno
         </button>
       </DialogTrigger>
-      
+
       <DialogContent className="max-w-5xl bg-[#14110C] border-[#2C261D] p-0 overflow-hidden shadow-2xl">
         <form
-          ref={formRef}
+          ref={formularioRef}
           action={formAction}
           className="flex flex-col flex-1 overflow-hidden"
         >
-          {/* Inputs Ocultos */}
+          {/* Input oculto con el ID del turno */}
           <input type="hidden" name="id" value={turno.id} />
 
-          {/* --- HEADER DEL MODAL --- */}
+          {/* --- ENCABEZADO DEL MODAL --- */}
           <div className="flex items-center justify-between p-6 border-b border-[#2C261D] bg-[#1a1610]/50 sticky top-0 z-10">
             <div className="flex items-center gap-6">
               <button
-                onClick={() => setOpen(false)}
+                onClick={() => setAbierto(false)}
                 type="button"
                 className="p-2 hover:bg-amber-600/20 rounded-lg transition-all group"
               >
@@ -150,38 +156,52 @@ export default function EditTurnoModal({ turno }: Props) {
               <div>
                 <DialogHeader>
                   <DialogTitle className="text-xl font-bold text-[#E4E0D9]">
-                    Gestionar Turno: <span className="font-normal text-[#8E8675]">#{turno.id.slice(-6)}</span>
+                    Gestionar Turno:{" "}
+                    <span className="font-normal text-[#8E8675]">
+                      #{turno.id.slice(-6)}
+                    </span>
                   </DialogTitle>
                 </DialogHeader>
                 <div className="flex items-center gap-2 mt-1">
-                  <div className={`w-2 h-2 rounded-full ${
-                    turno.estado === 'CONFIRMADO' ? 'bg-green-500' : 
-                    turno.estado === 'PENDIENTE' ? 'bg-amber-500' : 
-                    turno.estado === 'COMPLETADO' ? 'bg-blue-500' : 'bg-red-500'
-                  }`} />
-                  <span className="text-[10px] font-bold text-[#8E8675] uppercase tracking-widest">{turno.estado}</span>
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      turno.estado === "CONFIRMADO"
+                        ? "bg-green-500"
+                        : turno.estado === "PENDIENTE"
+                        ? "bg-amber-500"
+                        : turno.estado === "COMPLETADO"
+                        ? "bg-blue-500"
+                        : "bg-red-500"
+                    }`}
+                  />
+                  <span className="text-[10px] font-bold text-[#8E8675] uppercase tracking-widest">
+                    {turno.estado}
+                  </span>
                 </div>
               </div>
             </div>
 
-            <SubmitButton />
+            <BotonGuardar />
           </div>
 
           {/* --- CUERPO DEL FORMULARIO --- */}
           <div className="overflow-y-auto p-8 grid grid-cols-1 md:grid-cols-2 gap-10 max-h-[75vh]">
-            
-            {loadingData ? (
+            {cargandoDatos ? (
+              /* Estado: cargando datos del servidor */
               <div className="col-span-2 py-20 text-center">
                 <div className="w-8 h-8 border-2 border-[#E8B031] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                <p className="text-sm text-[#8E8675]">Cargando configuración del servidor...</p>
+                <p className="text-sm text-[#8E8675]">
+                  Cargando configuración del servidor...
+                </p>
               </div>
-            ) : loadError ? (
+            ) : errorCarga ? (
+              /* Estado: error al cargar datos */
               <div className="col-span-2 py-16 text-center space-y-4">
                 <AlertCircle className="w-12 h-12 text-red-500/60 mx-auto" />
-                <p className="text-sm text-red-400">{loadError}</p>
+                <p className="text-sm text-red-400">{errorCarga}</p>
                 <button
                   type="button"
-                  onClick={loadData}
+                  onClick={cargarDatos}
                   className="px-6 py-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 border border-amber-600/30 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
                 >
                   Reintentar
@@ -198,11 +218,17 @@ export default function EditTurnoModal({ turno }: Props) {
                       Información del Cliente
                     </h3>
                     <div className="bg-[#1C1812] border border-[#2C261D] rounded-xl p-5 space-y-1">
-                      <p className="text-lg font-semibold text-[#E4E0D9]">{turno.user?.name || 'Usuario eliminado'}</p>
-                      <p className="text-sm text-[#8E8675]">{turno.user?.email}</p>
+                      <p className="text-lg font-semibold text-[#E4E0D9]">
+                        {turno.user?.name || "Usuario eliminado"}
+                      </p>
+                      <p className="text-sm text-[#8E8675]">
+                        {turno.user?.email}
+                      </p>
                       <div className="pt-3 mt-3 border-t border-[#2C261D] flex justify-between items-center text-[11px]">
                         <span className="text-[#8E8675]">Total a pagar:</span>
-                        <span className="font-bold text-amber-500 text-sm">${turno.precioCongelado}</span>
+                        <span className="font-bold text-amber-500 text-sm">
+                          ${turno.precioCongelado}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -213,29 +239,37 @@ export default function EditTurnoModal({ turno }: Props) {
                       <Scissors className="w-3 h-3" />
                       Servicio y Estética
                     </h3>
-                    
+
                     <div className="grid gap-4">
-                      <SelectField
+                      <CampoSelect
                         label="Cambiar Servicio"
                         name="servicioId"
-                        value={selectedServicioId}
-                        onChange={(e) => setSelectedServicioId(e.target.value)}
-                        icon={Scissors}
-                        options={servicios.map(s => ({ value: s.id, label: `${s.nombre} ($${s.precio})` }))}
+                        value={servicioSeleccionadoId}
+                        onChange={(e) =>
+                          setServicioSeleccionadoId(e.target.value)
+                        }
+                        icono={Scissors}
+                        opciones={servicios.map((s) => ({
+                          value: s.id,
+                          label: `${s.nombre} ($${s.precio})`,
+                        }))}
                       />
 
-                      <SelectField
+                      <CampoSelect
                         label="Asignar Barbero"
                         name="barberoId"
-                        value={selectedBarberoId}
-                        onChange={(e) => setSelectedBarberoId(e.target.value)}
-                        icon={Users}
-                        options={barberos.map(b => ({ value: b.id, label: b.nombre }))}
+                        value={barberoSeleccionadoId}
+                        onChange={(e) =>
+                          setBarberoSeleccionadoId(e.target.value)
+                        }
+                        icono={Users}
+                        opciones={barberos.map((b) => ({
+                          value: b.id,
+                          label: b.nombre,
+                        }))}
                       />
                     </div>
                   </div>
-
-
                 </div>
 
                 {/* Columna Derecha: AGENDA & HORARIOS */}
@@ -245,23 +279,25 @@ export default function EditTurnoModal({ turno }: Props) {
                       <Clock className="w-3 h-3" />
                       Nueva Agenda (Opcional)
                     </h3>
-                    
+
                     <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-xl mb-6">
                       <p className="text-[11px] text-amber-200/50 leading-relaxed italic">
-                        "Si solo necesitas cambiar el estado del turno, puedes dejar la sección de agenda sin modificar. Tus cambios se guardarán automáticamente."
+                        Si solo necesitas cambiar el estado del turno, puedes
+                        dejar la sección de agenda sin modificar. Tus cambios se
+                        guardarán automáticamente.
                       </p>
                     </div>
 
                     <SeleccionadorHorario
                       name="horarioReservado"
-                      servicioId={selectedServicioId}
-                      barberoId={selectedBarberoId}
+                      servicioId={servicioSeleccionadoId}
+                      barberoId={barberoSeleccionadoId}
                       turnoIdAExcluir={turno.id}
                       defaultValue={turno.horarioReservado.toISOString()}
                     />
                   </div>
 
-                  {/* Errores */}
+                  {/* Mensaje de error del servidor */}
                   {state.error && (
                     <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-start gap-3">
                       <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
@@ -282,7 +318,7 @@ export default function EditTurnoModal({ turno }: Props) {
 
 // --- COMPONENTES AUXILIARES ---
 
-function SubmitButton() {
+function BotonGuardar() {
   const { pending } = useFormStatus();
 
   return (
@@ -303,32 +339,39 @@ function SubmitButton() {
   );
 }
 
-interface SelectFieldProps {
+interface CampoSelectProps {
   label: string;
   name: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  icon: React.ElementType;
-  options: { value: string; label: string }[];
+  icono: React.ElementType;
+  opciones: { value: string; label: string }[];
 }
 
-function SelectField({ label, name, value, onChange, icon: Icon, options }: SelectFieldProps) {
+function CampoSelect({
+  label,
+  name,
+  value,
+  onChange,
+  icono: Icono,
+  opciones,
+}: CampoSelectProps) {
   return (
     <div className="space-y-2">
       <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-widest ml-1">
         {label}
       </label>
       <div className="relative">
-        <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8675]" />
+        <Icono className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8675]" />
         <select
           name={name}
           value={value}
           onChange={onChange}
           className="w-full bg-[#1C1812] border border-[#2C261D] rounded-xl pl-11 pr-4 py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-all appearance-none cursor-pointer"
         >
-          {options.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
+          {opciones.map((opcion) => (
+            <option key={opcion.value} value={opcion.value}>
+              {opcion.label}
             </option>
           ))}
         </select>
