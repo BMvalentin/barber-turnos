@@ -40,7 +40,7 @@ export function LocationSection() {
               </div>
               <div>
                 <h3 className="font-semibold text-amber-500 mb-1">Dirección</h3>
-                <p className="text-amber-100/80">Av. de los Barberos 1234, Barrio Norte</p>
+                <p className="text-amber-100/80">Av. Montreal 1234, Santa Clara del Mar</p>
               </div>
             </div>
 
@@ -51,7 +51,7 @@ export function LocationSection() {
               </div>
               <div>
                 <h3 className="font-semibold text-amber-500 mb-1">Turnos y Consultas</h3>
-                <p className="text-amber-100/80">+54 11 1234-5678</p>
+                <p className="text-amber-100/80">+54 9 2233 42-7022</p>
               </div>
             </div>
 
