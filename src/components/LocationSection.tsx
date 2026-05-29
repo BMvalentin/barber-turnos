@@ -1,8 +1,26 @@
 "use client";
 import { motion } from "framer-motion";
 import { MapPin, Phone, Clock, Scissors } from "lucide-react";
-
+import { useEffect, useState } from "react";
+import { getHorariosCompactos } from "@/actions/margenesHorario.actions";
 export function LocationSection() {
+  const [cargando,setCargando] = useState(true);
+  const [horarios,setHorarios] = useState(["Cargando..."]);
+  useEffect(() => {
+    try {
+      getHorariosCompactos().then((res) => {
+        if (res.length > 0 ) {
+        setHorarios(res);
+        } else {
+          setHorarios(["Cerrado"]);
+        }
+    });
+    }catch(error){
+      setHorarios(["Error al cargar horarios"]);
+    }finally{
+      setCargando(false);
+    }
+  },[])
   return (
     <section id="ubicacion" className="py-20 md:py-32 bg-linear-to-b from-black/90 to-black  justify-center items-center mx-auto border-y border-amber-900/20">
       <div className="container justify-around items-center mx-auto px-4">
@@ -56,15 +74,21 @@ export function LocationSection() {
             </div>
 
             {/* HORARIOS */}
-            <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-amber-500/50 transition-colors group">
+             <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-amber-500/50 transition-colors group">
               <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
                 <Clock className="w-6 h-6 text-amber-500" />
               </div>
               <div>
-                <h3 className="font-semibold text-amber-500 mb-1">Horarios de Atención</h3>
-                <p className="text-amber-100/80">Mar - Vie: 10:00 - 20:00</p>
-                <p className="text-amber-100/80">Sábados: 09:00 - 21:00</p>
-                <p className="text-amber-200/40 text-xs mt-1 italic font-light">Domingos y Lunes cerrado</p>
+                <h3 className="font-semibold text-amber-500 mb-1">Horarios</h3>
+                {cargando ? (
+                  <p className="text-amber-100/80">Cargando horarios...</p>
+                ) : (
+                  horarios.map((horario, index) => (
+                    <p key={index} className="text-amber-100/80">
+                      {horario}
+                    </p>
+                  ))
+                )}
               </div>
             </div>
           </motion.div>
