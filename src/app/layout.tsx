@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Turnos Barberia - UrbanBarber",
-  description: "Barberia - Reserva tu turno en línea de manera fácil y rápida. Santa clara, Buenos Aires.",
+  title: "Mayoraz - Turnos Barberia",
+  description: "Mayoraz - Reserva tu turno en línea de manera fácil y rápida. Santa clara, Buenos Aires.",
   icons: {
     icon: "/images/logopng.png",
     shortcut: "/images/logopng.png",

@@ -20,7 +20,7 @@ export function Header({ session }: HeaderProps) {
     >
       <div className="container flex items-center justify-between h-16 mx-auto px-4 select-none">
         <Link href="/#home" className="flex items-center gap-2">
-          <Scissors className="w-6 h-6 text-amber-500" /><span>{' URBAN '}</span><span className="text-amber-500">{'BARBER'}</span>
+          <Scissors className="w-6 h-6 text-amber-500" /><span>{' MAYORAZ '}</span><span className="text-amber-500">{'BARBER'}</span>
         </Link>
         
         <nav className="hidden md:flex items-center gap-8">

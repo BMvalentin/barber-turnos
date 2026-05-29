@@ -75,7 +75,7 @@ export default function LoginPage() {
                 <Scissors className="w-8 h-8 text-amber-500" />
               </div>
               <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tighter uppercase">
-                Urban <span className="text-amber-500">Barber</span>
+                MAYORAZ <span className="text-amber-500">Barber</span>
               </h1>
               <p className="text-zinc-400 text-sm mt-2 font-medium tracking-wide">INGRESA A TU CUENTA</p>
             </div>
