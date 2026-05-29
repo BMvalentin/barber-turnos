@@ -31,10 +31,10 @@ export function Hero({ onBookingClick }: HeroProps) {
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/80 border border-white/5 backdrop-blur-md mb-6">
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            <span className="text-xs font-bold uppercase tracking-widest text-zinc-300">Abierto Ahora</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-zinc-300">Solicita tu Turno</span>
           </div>
           
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white uppercase tracking-tighter leading-">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white uppercase tracking-tighter leading- flex text-wrap flex-wrap text-center items-center justify-center">
             Corte <span className="text-amber-500 italic pr-2">Impecable</span>
             <br className="hidden sm:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-300 to-zinc-600">
@@ -81,7 +81,7 @@ export function Hero({ onBookingClick }: HeroProps) {
                   <Star className="w-4 h-4 fill-current" />
                   <Star className="w-4 h-4 fill-current" />
                 </div>
-                <p className="text- text-zinc-400 font-bold uppercase tracking-wider">+500 Clientes</p>
+                <p className="text- text-zinc-400 font-bold uppercase tracking-wider">Clientes satisfechos</p>
               </div>
             </div>
 
@@ -95,7 +95,7 @@ export function Hero({ onBookingClick }: HeroProps) {
               <div className="flex flex-col gap-1 p-3 rounded-2xl bg-zinc-900/50 border border-white/5">
                 <MapPin className="w-5 h-5 text-zinc-400 mb-1" />
                 <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Ubicación</span>
-                <span className="text-sm font-bold text-zinc-200">Centro</span>
+                <span className="text-sm font-bold text-zinc-200">Santa Clara, Buenos Aires</span>
               </div>
             </div>
 
