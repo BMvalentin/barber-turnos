@@ -1,38 +1,33 @@
 // src/app/api/cron/expirar-turnos/route.ts
-// Se ejecuta cada 5 minutos para expirar turnos PENDIENTES sin pago
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
-// Clave secreta para proteger el endpoint de accesos no autorizados
-const CRON_SECRET = process.env.CRON_SECRET;
-
 export async function GET(req: NextRequest) {
-  // Verificar la clave secreta del cron (solo en producción)
-  if (process.env.NODE_ENV === "production") {
-    const authHeader = req.headers.get("authorization");
-    if (!CRON_SECRET || authHeader !== `Bearer ${CRON_SECRET}`) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      );
-    }
+  // Permitir únicamente requests del Cron de Vercel en producción
+  if (
+    process.env.NODE_ENV === "production" &&
+    req.headers.get("x-vercel-cron") !== "1"
+  ) {
+    return NextResponse.json(
+      { error: "No autorizado" },
+      { status: 401 }
+    );
   }
 
   try {
-    // Calcular el límite de tiempo: hace 5 minutos
-    const limite = new Date(Date.now() - 1 * 60 * 1000);
+    // Límite: turnos creados hace más de 5 minutos
+    const limite = new Date(Date.now() - 5 * 60 * 1000);
 
-    // Buscar todos los turnos PENDIENTES que tengan más de 5 minutos sin pago
-    // Se considera el createdAt del turno como punto de partida
+    // Buscar turnos pendientes sin pago
     const turnosPendientes = await prisma.turno.findMany({
       where: {
-        estado: "CANCELADO", // Solo los que están pendientes de pago
+        estado: "PENDIENTE",
         createdAt: {
-          lte: limite, // Creados hace más de 5 minutos
+          lte: limite,
         },
-        // Solo expiramos los que tienen seña (requieren pago)
         seniaCongelada: {
           gt: 0,
         },
@@ -42,11 +37,15 @@ export async function GET(req: NextRequest) {
         createdAt: true,
         seniaCongelada: true,
         user: {
-          select: { name: true, email: true },
+          select: {
+            name: true,
+            email: true,
+          },
         },
       },
     });
 
+    // Si no hay turnos para cancelar
     if (turnosPendientes.length === 0) {
       return NextResponse.json({
         ok: true,
@@ -56,7 +55,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Actualizar todos los turnos encontrados a EXPIRADO en una sola operación
+    // Cancelar todos los pendientes vencidos
     const resultado = await prisma.turno.updateMany({
       where: {
         id: {
@@ -64,17 +63,17 @@ export async function GET(req: NextRequest) {
         },
       },
       data: {
-        estado: "CANCELADO" as any,
+        estado: "CANCELADO",
       },
     });
 
     console.log(
-      `[CRON] Turnos expirados: ${resultado.count} | ${new Date().toISOString()}`
+      `[CRON] Turnos cancelados automáticamente: ${resultado.count}`
     );
 
     return NextResponse.json({
       ok: true,
-      mensaje: `Se expiraron ${resultado.count} turno(s) sin pago`,
+      mensaje: `Se cancelaron ${resultado.count} turno(s) pendientes`,
       expirados: resultado.count,
       turnos: turnosPendientes.map((t) => ({
         id: t.id,
@@ -84,9 +83,14 @@ export async function GET(req: NextRequest) {
       ejecutadoEn: new Date().toISOString(),
     });
   } catch (error: any) {
-    console.error("[CRON] Error al expirar turnos:", error);
+    console.error("[CRON] Error:", error);
+
     return NextResponse.json(
-      { error: "Error interno al expirar turnos", detalle: error.message },
+      {
+        ok: false,
+        error: "Error interno al expirar turnos",
+        detalle: error.message,
+      },
       { status: 500 }
     );
   }
