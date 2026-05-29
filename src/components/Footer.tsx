@@ -14,7 +14,7 @@ export function Footer( { openPrivacy, openTerms }: { openPrivacy: () => void; o
               <Scissors className="w-5 h-5 text-amber-500" />
             </div>
             <span className="font-bold text-white tracking-tight uppercase">
-              Barber<span className="text-amber-500">Shop</span>
+              URBAN<span className="text-amber-500">BARBER</span>
             </span>
           </div>
           
