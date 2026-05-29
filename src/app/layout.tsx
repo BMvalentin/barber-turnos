@@ -16,8 +16,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Reservas",
+  title: "Turnos Barberia - UrbanBarber",
   description: "Barberia - Reserva tu turno en línea de manera fácil y rápida. Santa clara, Buenos Aires.",
+  icons: {
+    icon: "/images/logopng.png",
+    shortcut: "/images/logopng.png",
+    apple: "/images/logopng.png",
+  },
 };
 
 export default async function RootLayout({

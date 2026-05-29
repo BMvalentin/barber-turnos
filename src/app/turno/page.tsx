@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { getUserTurnos } from "@/actions/user-dashboard";
 
 async function getTurnoData() {
   const [servicios, barberos, usuarios] = await Promise.all([
@@ -59,7 +60,7 @@ async function getTurnoData() {
 
 export default async function TurnoPage() {
   const session = await auth();
-  const result = await getTurnos();
+  const result = (session?.user) ? (session?.user.role === "ADMIN" ? await getTurnos() : { success: true, data: await getUserTurnos(session.user.id as string) }) : { success: false, error: "Usuario no autenticado" };
   const { servicios, barberos, usuarios } = await getTurnoData();
 
   return (
@@ -79,23 +80,24 @@ export default async function TurnoPage() {
                 <ArrowLeft className="h-6 w-6 text-amber-500 group-hover:text-amber-400 group-hover:-translate-x-1 transition-all" />
               </Link>
             )}
-
-            {/* Título */}
-            <div>
-              <h1 className="text-3xl font-bold text-white">Gestión de Turnos</h1>
-              <p className="text-amber-200/70">
-                Administra las reservas de turnos para tus servicios
-              </p>
+            <div className="flex flex-col md:flex-row items-center gap-4">
+              {/* Título */}
+              <div>
+                <h1 className="text-3xl font-bold text-white">Gestión de Turnos</h1>
+                <p className="text-amber-200/70">
+                  Administra las reservas de turnos para tus servicios
+                </p>
+              </div>
+              {/* Botón Nuevo Turno */}
+              <CreateTurnoModal
+                session={session}
+                initialServicios={servicios}
+                initialBarberos={barberos}
+                initialUsuarios={usuarios}
+              />
             </div>
           </div>
 
-          {/* Botón Nuevo Turno */}
-          <CreateTurnoModal
-            session={session}
-            initialServicios={servicios}
-            initialBarberos={barberos}
-            initialUsuarios={usuarios}
-          />
         </div>
 
         {/* Lista de turnos */}
