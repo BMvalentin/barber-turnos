@@ -4,14 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import MercadoPagoConfig, { Preference, Payment } from "mercadopago";
 
-// ============================
-// CONFIGURACIÓN DEL CLIENTE MP
-// ============================
-const mp = new MercadoPagoConfig({
-  accessToken: process.env.MP_ACCESS_TOKEN!,
-  options: { timeout: 5000 },
-});
-
 export type ActionState = {
   success: boolean;
   error?: string;
@@ -27,6 +19,22 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
     if (!turnoId) {
       return { success: false, error: "ID de turno inválido" };
     }
+
+    const config = await prisma.configuracion.findUnique({
+      where: { id: "global" },
+    });
+
+    if (!config || !config.mpAccessToken) {
+      return { 
+        success: false, 
+        error: "El negocio aún no configuró su cuenta de Mercado Pago para recibir pagos." 
+      };
+    }
+
+    const mp = new MercadoPagoConfig({
+      accessToken: config.mpAccessToken,
+      options: { timeout: 5000 },
+    });
 
     // Obtener el turno con toda la info necesaria
     const turno = await prisma.turno.findUnique({
@@ -57,7 +65,6 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL!;
-
     const isProduction = process.env.NODE_ENV === "production";
     const preference = new Preference(mp);
 
@@ -83,16 +90,20 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
         name: turno.user.name ?? "Cliente",
         email: turno.user.email ?? "cliente@email.com",
       },
+      // 1. CAMBIO AQUÍ: Centralizamos las 3 URLs viejas en la nueva ruta única dinámica
       back_urls: {
-        success: `${baseUrl}/pago/success?turnoId=${turnoId}`,
-        failure: `${baseUrl}/pago/failure?turnoId=${turnoId}`,
-        pending: `${baseUrl}/pago/pending?turnoId=${turnoId}`,
+        success: `${baseUrl}/pago/status?status=success&turnoId=${turnoId}`,
+        failure: `${baseUrl}/pago/status?status=failure&turnoId=${turnoId}`,
+        pending: `${baseUrl}/pago/status?status=pending&turnoId=${turnoId}`,
       },
       // auto_return solo funciona con URLs públicas (no localhost).
       // En producción lo activamos para redirigir automáticamente al usuario.
       ...(isProduction && { auto_return: "approved" as const }),
+      
+      // El webhook que va a escuchar los eventos reales en segundo plano
       notification_url: `${baseUrl}/api/mercadopago/webhook`,
       external_reference: turnoId,
+      
       // Vence en 5 minutos para evitar que el usuario pague una seña vieja
       expires: true,
       expiration_date_from: new Date().toISOString(),
@@ -106,7 +117,6 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
     }
 
     // Guardar el preference ID en el turno para tracking
-    // (requiere haber corrido: npx prisma migrate dev --name add_mp_fields)
     try {
       await (prisma.turno as any).update({
         where: { id: turnoId },
@@ -120,7 +130,6 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
       success: true,
       data: {
         preferenceId: response.id,
-        // Para producción se usa init_point, para sandbox sandbox_init_point
         checkoutUrl: response.init_point,
         initPoint: response.init_point,
         sandboxInitPoint: response.sandbox_init_point,
@@ -136,16 +145,15 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
 }
 
 // ======================================================
-// CONFIRMAR PAGO MANUAL (fallback desde back_url success)
-// Se llama desde la página /pago/success como respaldo
+// CONFIRMAR PAGO MANUAL (Fallback de seguridad)
 // ======================================================
 export async function confirmarPagoTurno(
   turnoId: string,
   paymentId?: string
 ): Promise<ActionState> {
   try {
-    if (!turnoId) {
-      return { success: false, error: "ID de turno inválido" };
+    if (!turnoId || !paymentId) {
+      return { success: false, error: "Faltan datos de la transacción" };
     }
 
     const turno = await prisma.turno.findUnique({
@@ -156,44 +164,73 @@ export async function confirmarPagoTurno(
       return { success: false, error: "Turno no encontrado" };
     }
 
-    // Si ya está confirmado, no hacer nada
+    // 1. Si el Webhook fue rapidísimo y ya lo confirmó, salimos.
     if (turno.estado === "CONFIRMADO") {
       return { success: true, data: turno };
     }
 
-    // Actualizar turno
-    const turnoActualizado = await prisma.turno.update({
-      where: { id: turnoId },
-      data: {
-        estado: "CONFIRMADO",
-        // mpPaymentId solo si el campo existe en el schema
-        ...(paymentId ? { mpPaymentId: paymentId } as any : {}),
-      },
+    // 2. Traer la configuración de MP del negocio
+    const config = await prisma.configuracion.findUnique({
+      where: { id: "global" },
     });
 
-    revalidatePath("/dashboard");
-    revalidatePath("/turno");
-    revalidatePath("/admin");
+    if (!config || !config.mpAccessToken) {
+      return { success: false, error: "Falta token de Mercado Pago" };
+    }
 
-    return {
-      success: true,
-      data: {
-        ...turnoActualizado,
-        precioCongelado: Number(turnoActualizado.precioCongelado),
-        seniaCongelada: Number(turnoActualizado.seniaCongelada),
-      },
-    };
+    // 3. Inicializar MP
+    const mp = new MercadoPagoConfig({
+      accessToken: config.mpAccessToken,
+      options: { timeout: 5000 },
+    });
+
+    const paymentClient = new Payment(mp);
+
+    // 4. VERIFICACIÓN REAL: Consultar a Mercado Pago el estado de este ID
+    const paymentData = await paymentClient.get({ id: paymentId });
+
+    // 5. Solo si Mercado Pago dice que está "approved", actualizamos la BD
+    if (paymentData.status === "approved") {
+      const turnoActualizado = await prisma.turno.update({
+        where: { id: turnoId },
+        data: {
+          estado: "CONFIRMADO",
+          mpPaymentId: paymentId,
+        },
+      });
+
+      revalidatePath("/dashboard");
+      revalidatePath("/turno");
+      revalidatePath("/admin");
+
+      return {
+        success: true,
+        data: {
+          ...turnoActualizado,
+          precioCongelado: Number(turnoActualizado.precioCongelado),
+          seniaCongelada: Number(turnoActualizado.seniaCongelada),
+        },
+      };
+    } else {
+      // Si el estado en MP no es approved (ej: pending, rejected), no confirmamos.
+      return { 
+        success: false, 
+        error: `El pago figura como ${paymentData.status} en Mercado Pago` 
+      };
+    }
+
   } catch (error: any) {
-    console.error("❌ Error confirmando pago:", error);
+    console.error("❌ Error verificando pago de manera manual:", error);
     return {
       success: false,
-      error: error?.message ?? "Error al confirmar el pago",
+      error: error?.message ?? "Error al verificar el pago",
     };
   }
 }
 
 // ======================================================
 // VERIFICAR ESTADO DE PAGO (desde el cliente)
+// El front-end puede usar esto para polling si fuera necesario
 // ======================================================
 export async function verificarEstadoPago(turnoId: string): Promise<ActionState> {
   try {
@@ -216,7 +253,6 @@ export async function verificarEstadoPago(turnoId: string): Promise<ActionState>
         id: turno.id,
         estado: turno.estado,
         seniaCongelada: Number(turno.seniaCongelada),
-        // Estos campos son opcionales — existen solo si corriste la migración add_mp_fields
         mpPaymentId: (turno as any).mpPaymentId ?? null,
         mpPreferenceId: (turno as any).mpPreferenceId ?? null,
       },
