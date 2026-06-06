@@ -12,7 +12,6 @@ export type ActionState = {
 
 // ======================================================
 // CREATE PREFERENCE
-// Crea la preferencia de pago en MP para la seña de un turno
 // ======================================================
 export async function crearPreferenciaPago(turnoId: string): Promise<ActionState> {
   try {
@@ -36,7 +35,6 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
       options: { timeout: 5000 },
     });
 
-    // Obtener el turno con toda la info necesaria
     const turno = await prisma.turno.findUnique({
       where: { id: turnoId },
       include: {
@@ -68,19 +66,18 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
     const isProduction = process.env.NODE_ENV === "production";
     const preference = new Preference(mp);
 
+    const fechaTurno = new Date(turno.horarioReservado);
+    const fechaFormateada = `${fechaTurno.getDate().toString().padStart(2, '0')}/${(fechaTurno.getMonth() + 1).toString().padStart(2, '0')}/${fechaTurno.getFullYear()} ${fechaTurno.getHours().toString().padStart(2, '0')}:${fechaTurno.getMinutes().toString().padStart(2, '0')}`;
+    const tituloItem = `Senia - ${turno.servicio.nombre}`
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
     const body = {
       items: [
         {
           id: turnoId,
-          title: `Seña - ${turno.servicio.nombre}`,
-          description: `Turno con ${turno.barbero.nombre} | ${turno.horarioReservado.toLocaleString("es-AR", {
-            timeZone: "America/Argentina/Buenos_Aires",
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}`,
+          title: tituloItem,
+          description: `Turno con ${turno.barbero.nombre} | ${fechaFormateada}`,
           quantity: 1,
           unit_price: seniaAmount,
           currency_id: "ARS",
@@ -90,21 +87,15 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
         name: turno.user.name ?? "Cliente",
         email: turno.user.email ?? "cliente@email.com",
       },
-      // 1. CAMBIO AQUÍ: Centralizamos las 3 URLs viejas en la nueva ruta única dinámica
       back_urls: {
-        success: `${baseUrl}/pago/status?status=success&turnoId=${turnoId}`,
-        failure: `${baseUrl}/pago/status?status=failure&turnoId=${turnoId}`,
-        pending: `${baseUrl}/pago/status?status=pending&turnoId=${turnoId}`,
+        success: `${baseUrl}/pago/status?turnoId=${turnoId}`,
+        failure: `${baseUrl}/pago/status?turnoId=${turnoId}`,
+        pending: `${baseUrl}/pago/status?turnoId=${turnoId}`,
       },
-      // auto_return solo funciona con URLs públicas (no localhost).
-      // En producción lo activamos para redirigir automáticamente al usuario.
-      ...(isProduction && { auto_return: "approved" as const }),
       
-      // El webhook que va a escuchar los eventos reales en segundo plano
+      ...(isProduction && { auto_return: "approved" as const }),
       notification_url: `${baseUrl}/api/mercadopago/webhook`,
       external_reference: turnoId,
-      
-      // Vence en 5 minutos para evitar que el usuario pague una seña vieja
       expires: true,
       expiration_date_from: new Date().toISOString(),
       expiration_date_to: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
@@ -116,14 +107,12 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
       return { success: false, error: "No se pudo crear la preferencia de pago" };
     }
 
-    // Guardar el preference ID en el turno para tracking
     try {
-      await (prisma.turno as any).update({
+      await prisma.turno.update({
         where: { id: turnoId },
-        data: { mpPreferenceId: response.id },
+        data: { mpPreferenceId: response.id } as any,
       });
     } catch {
-      // Campo mpPreferenceId aún no existe en el schema — ignorar
     }
 
     return {
@@ -164,12 +153,10 @@ export async function confirmarPagoTurno(
       return { success: false, error: "Turno no encontrado" };
     }
 
-    // 1. Si el Webhook fue rapidísimo y ya lo confirmó, salimos.
     if (turno.estado === "CONFIRMADO") {
       return { success: true, data: turno };
     }
 
-    // 2. Traer la configuración de MP del negocio
     const config = await prisma.configuracion.findUnique({
       where: { id: "global" },
     });
@@ -178,25 +165,21 @@ export async function confirmarPagoTurno(
       return { success: false, error: "Falta token de Mercado Pago" };
     }
 
-    // 3. Inicializar MP
     const mp = new MercadoPagoConfig({
       accessToken: config.mpAccessToken,
       options: { timeout: 5000 },
     });
 
     const paymentClient = new Payment(mp);
-
-    // 4. VERIFICACIÓN REAL: Consultar a Mercado Pago el estado de este ID
     const paymentData = await paymentClient.get({ id: paymentId });
 
-    // 5. Solo si Mercado Pago dice que está "approved", actualizamos la BD
     if (paymentData.status === "approved") {
       const turnoActualizado = await prisma.turno.update({
         where: { id: turnoId },
         data: {
           estado: "CONFIRMADO",
           mpPaymentId: paymentId,
-        },
+        } as any,
       });
 
       revalidatePath("/dashboard");
@@ -212,13 +195,11 @@ export async function confirmarPagoTurno(
         },
       };
     } else {
-      // Si el estado en MP no es approved (ej: pending, rejected), no confirmamos.
       return { 
         success: false, 
         error: `El pago figura como ${paymentData.status} en Mercado Pago` 
       };
     }
-
   } catch (error: any) {
     console.error("❌ Error verificando pago de manera manual:", error);
     return {
@@ -230,7 +211,6 @@ export async function confirmarPagoTurno(
 
 // ======================================================
 // VERIFICAR ESTADO DE PAGO (desde el cliente)
-// El front-end puede usar esto para polling si fuera necesario
 // ======================================================
 export async function verificarEstadoPago(turnoId: string): Promise<ActionState> {
   try {

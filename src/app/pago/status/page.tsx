@@ -1,23 +1,22 @@
 import Link from "next/link";
 import { confirmarPagoTurno } from "@/actions/mercadopago-actions";
-import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Calendar, ArrowRight, Ticket } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, Calendar, ArrowRight, RefreshCw, AlertTriangle } from "lucide-react";
 
 interface StatusPageProps {
   searchParams: Promise<{
-    status?: string;
     turnoId?: string;
-    payment_id?: string;
-    collection_id?: string; // Por si MP envía este fallback
-  }>;
+    status?: string;
+    payment_id?: string;   
+    collection_id?: string; 
+}>;
 }
 
 export default async function PagoStatusPage({ searchParams }: StatusPageProps) {
   const { status, turnoId, payment_id, collection_id } = await searchParams;
   
-  // Mercado Pago puede inyectar tanto payment_id como collection_id según el tipo de Checkout
   const paymentId = payment_id || collection_id;
 
-  // Validación de seguridad inicial
+  // Validación temprana: Si no hay turnoId, mostramos error genérico
   if (!turnoId) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
@@ -40,24 +39,32 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
     );
   }
 
-  // Si el estado que devuelve la URL es exitoso, disparamos el doble check seguro en el servidor
-  const transaccionExitosa = status === "success";
-  if (transaccionExitosa && paymentId) {
-    await confirmarPagoTurno(turnoId, paymentId);
+  // Evaluación de seguridad con la API de Mercado Pago
+  const esPagoAprobado = status === "approved";
+  let verificadoCorrectamente = false;
+
+  if (esPagoAprobado && paymentId) {
+    const result = await confirmarPagoTurno(turnoId, paymentId);
+    verificadoCorrectamente = result.success;
   }
+
+  // Mapeo preciso de estados
+  const mostrarExito = esPagoAprobado && (paymentId ? verificadoCorrectamente : true);
+  const mostrarFallo = status === "rejected" || status === "null" || (esPagoAprobado && paymentId && !verificadoCorrectamente);
+  const mostrarPendiente = status === "pending" || status === "in_process";
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4 py-8">
       <div className="max-w-md w-full text-center space-y-6">
         
-        {/* ========================================== */}
-        {/* RENDER CONDICIONAL DE ÍCONOS Y TÍTULOS     */}
-        {/* ========================================== */}
+        {/* ==========================================
+            ENCABEZADOS E ÍCONOS POR ESTADO
+        ========================================== */}
         
-        {status === "success" && (
+        {mostrarExito && (
           <>
             <div className="flex justify-center">
-              <div className="w-24 h-24 rounded-full bg-green-500/20 border-2 border-green-500/40 flex items-center justify-center animate-pulse">
+              <div className="w-24 h-24 rounded-full bg-green-500/20 border-2 border-green-500/40 flex items-center justify-center">
                 <CheckCircle2 className="w-12 h-12 text-green-400" />
               </div>
             </div>
@@ -66,17 +73,17 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
                 ¡Seña Pagada!
               </h1>
               <p className="text-zinc-400">
-                Tu turno quedó confirmado en nuestro sistema. ¡Te esperamos!
+                Tu turno quedó confirmado. Te esperamos.
               </p>
             </div>
           </>
         )}
 
-        {status === "pending" && (
+        {mostrarPendiente && (
           <>
             <div className="flex justify-center">
               <div className="w-24 h-24 rounded-full bg-yellow-500/20 border-2 border-yellow-500/40 flex items-center justify-center">
-                <AlertTriangle className="w-12 h-12 text-yellow-400" />
+                <Clock className="w-12 h-12 text-yellow-400" />
               </div>
             </div>
             <div>
@@ -84,13 +91,14 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
                 Pago Pendiente
               </h1>
               <p className="text-zinc-400">
-                Mercado Pago está procesando la transacción. Te avisaremos cuando se acredite.
+                Tu pago está siendo procesado. Te notificaremos cuando se acredite.
+                El turno quedará confirmado automáticamente.
               </p>
             </div>
           </>
         )}
 
-        {status === "failure" && (
+        {mostrarFallo && (
           <>
             <div className="flex justify-center">
               <div className="w-24 h-24 rounded-full bg-red-500/20 border-2 border-red-500/40 flex items-center justify-center">
@@ -99,20 +107,20 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
             </div>
             <div>
               <h1 className="text-3xl font-black text-white uppercase tracking-tight mb-2">
-                Pago Rechazado
+                Pago Fallido
               </h1>
               <p className="text-zinc-400">
-                No se pudo realizar el cobro. Podés reintentar el pago desde tu panel.
+                No se pudo procesar el pago. Tu turno sigue reservado, podés intentarlo de nuevo.
               </p>
             </div>
           </>
         )}
 
-        {!["success", "pending", "failure"].includes(status || "") && (
+        {!mostrarExito && !mostrarPendiente && !mostrarFallo && (
           <>
             <div className="flex justify-center">
               <div className="w-24 h-24 rounded-full bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center">
-                <HelpCircle className="w-12 h-12 text-zinc-400" />
+                <AlertTriangle className="w-12 h-12 text-zinc-400" />
               </div>
             </div>
             <div>
@@ -120,73 +128,103 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
                 Estado Desconocido
               </h1>
               <p className="text-zinc-400">
-                No pudimos determinar el estado final. Revisá tu panel de control.
+                No pudimos determinar el estado de tu pago. Revisá tu panel de control.
               </p>
             </div>
           </>
         )}
 
-        {/* ========================================== */}
-        {/* COMPROBANTE / TICKET DETALLADO             */}
-        {/* ========================================== */}
-        <div className="bg-zinc-900/60 border border-white/10 rounded-2xl p-5 text-left space-y-4 relative overflow-hidden">
-          {/* Efecto decorativo de corte de ticket clásico */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-[linear-gradient(to_right,#000_0%,#000_50%,transparent_50%,transparent_100%)] bg-[length:10px_1px]"></div>
-          
-          <div className="flex items-center justify-between border-b border-white/5 pb-2">
-            <p className="text-xs text-zinc-500 uppercase tracking-widest font-black flex items-center gap-1.5">
-              <Ticket className="w-3..5 h-3.5 text-amber-400" /> Comprobante de Operación
+        {/* ==========================================
+            BLOQUE DE INFORMACIÓN (COMPROBANTE/REF)
+        ========================================== */}
+
+        {mostrarExito && paymentId && (
+          <div className="bg-zinc-900/60 border border-white/10 rounded-2xl p-4 text-left space-y-2">
+            <p className="text-xs text-zinc-500 uppercase tracking-widest font-bold">
+              Comprobante
             </p>
-            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-              status === "success" ? "bg-green-500/10 text-green-400 border border-green-500/20" :
-              status === "pending" ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20" :
-              "bg-zinc-800 text-zinc-400"
-            }`}>
-              {status ?? "unknown"}
-            </span>
+            <p className="text-sm text-zinc-300">
+              <span className="text-zinc-500">ID de pago:</span>{" "}
+              <span className="font-mono text-amber-400">{paymentId}</span>
+            </p>
+            <p className="text-sm text-zinc-300">
+              <span className="text-zinc-500">Turno:</span>{" "}
+              <span className="font-mono text-zinc-300">{turnoId.slice(0, 8)}...</span>
+            </p>
           </div>
+        )}
 
-          <div className="space-y-2">
-            {paymentId && (
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-zinc-500">ID de Pago MP:</span>
-                <span className="font-mono text-amber-400 font-semibold">{paymentId}</span>
-              </div>
-            )}
-            
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-zinc-500">Referencia Turno:</span>
-              <span className="font-mono text-zinc-300 bg-zinc-950 px-2 py-0.5 rounded border border-white/5 text-xs">
-                {turnoId}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center text-sm border-t border-white/5 pt-2 mt-2">
-              <span className="text-zinc-400 font-medium">Concepto:</span>
-              <span className="text-zinc-200 text-right font-medium">Reserva de Seña</span>
-            </div>
+        {mostrarPendiente && paymentId && (
+          <div className="bg-zinc-900/60 border border-white/10 rounded-2xl p-4 text-left">
+            <p className="text-xs text-zinc-500 uppercase tracking-widest font-bold mb-1">
+              Referencia
+            </p>
+            <p className="font-mono text-yellow-400 text-sm">{paymentId}</p>
           </div>
-        </div>
+        )}
 
-        {/* ========================================== */}
-        {/* BOTONES DE ACCIÓN                          */}
-        {/* ========================================== */}
-        <div className="flex flex-col gap-3 pt-2">
-          <Link
-            href="/dashboard"
-            className="flex items-center justify-center gap-2 w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm shadow-lg shadow-amber-500/10"
-          >
-            <Calendar className="w-5 h-5" />
-            Ver mis turnos
-          </Link>
-          
-          <Link
-            href="/"
-            className="flex items-center justify-center gap-2 w-full bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-semibold py-3.5 rounded-2xl border border-white/5 transition-all text-sm"
-          >
-            Volver al inicio
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+        {/* ==========================================
+            BOTONES DE ACCIÓN POR ESTADO
+        ========================================== */}
+
+        <div className="flex flex-col gap-3">
+          {mostrarExito && (
+            <>
+              <Link
+                href="/dashboard"
+                className="flex items-center justify-center gap-2 w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
+              >
+                <Calendar className="w-5 h-5" />
+                Ver mis turnos
+              </Link>
+              <Link
+                href="/"
+                className="flex items-center justify-center gap-2 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium py-3 rounded-2xl transition-all text-sm"
+              >
+                Volver al inicio
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </>
+          )}
+
+          {mostrarPendiente && (
+            <Link
+              href="/dashboard"
+              className="flex items-center justify-center gap-2 w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
+            >
+              Ver mis turnos
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          )}
+
+          {mostrarFallo && (
+            <>
+              <Link
+                href={`/turno?retry=${turnoId}`}
+                className="flex items-center justify-center gap-2 w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
+              >
+                <RefreshCw className="w-5 h-5" />
+                Intentar de nuevo
+              </Link>
+              <Link
+                href="/dashboard"
+                className="flex items-center justify-center gap-2 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium py-3 rounded-2xl transition-all text-sm"
+              >
+                Ver mis turnos
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </>
+          )}
+
+          {!mostrarExito && !mostrarPendiente && !mostrarFallo && (
+            <Link
+              href="/dashboard"
+              className="flex items-center justify-center gap-2 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium py-3 rounded-2xl transition-all text-sm"
+            >
+              Ver mis turnos
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          )}
         </div>
 
       </div>
