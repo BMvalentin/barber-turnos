@@ -10,8 +10,10 @@ import {
   Calendar, 
   ClipboardList,
   Clock,
-  LogOut
+  LogOut,
 } from "lucide-react";
+
+import { CircleDollarSign } from "lucide-react"
 
 const menuItems = [
   { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -20,6 +22,7 @@ const menuItems = [
   { title: "Turnos", href: "/turno", icon: Calendar },
   { title: "Días Laborales", href: "/diaLaboral", icon: Clock },
   { title: "Excepciones", href: "/excepcionesLaborales", icon: ClipboardList },
+  { title: "Configuracion pago", href: "/admin/configuraciones", icon: CircleDollarSign },
 ];
 
 export default function AdminSidebar() {
