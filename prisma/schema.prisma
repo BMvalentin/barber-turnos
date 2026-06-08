@@ -59,6 +59,14 @@ model servicio {
   servicios   servicioxbarbero[]
 }
 
+model Configuracion {
+  id            String   @id @default("global")
+  mpAccessToken String?  @db.Text
+  mpPublicKey   String?  @db.Text 
+  updatedAt     DateTime @updatedAt
+
+  @@map("configuraciones")
+}
 model turno {
   id               String       @id @default(cuid())
   userId           String

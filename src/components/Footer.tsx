@@ -4,7 +4,7 @@ import { Scissors } from "lucide-react";
 
 export function Footer( { openPrivacy, openTerms }: { openPrivacy: () => void; openTerms: () => void } ) {
   return (
-    <footer className="py-8 border-t border-amber-900/30 mx-auto bg-black">
+    <footer className="py-8 border-t border-amber-900/30 mx-auto bg-black z-99">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           
