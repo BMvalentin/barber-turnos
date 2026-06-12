@@ -13,66 +13,137 @@ export type ActionState = {
 // ======================================================
 // CREATE PREFERENCE
 // ======================================================
-export async function crearPreferenciaPago(turnoId: string): Promise<ActionState> {
+export async function crearPreferenciaPago(
+  turnoId: string
+): Promise<ActionState> {
   try {
     if (!turnoId) {
-      return { success: false, error: "ID de turno inválido" };
+      return {
+        success: false,
+        error: "ID de turno inválido",
+      };
     }
 
     const config = await prisma.configuracion.findUnique({
       where: { id: "global" },
     });
 
-    if (!config || !config.mpAccessToken) {
-      return { 
-        success: false, 
-        error: "El negocio aún no configuró su cuenta de Mercado Pago para recibir pagos." 
+    if (!config?.mpAccessToken) {
+      return {
+        success: false,
+        error:
+          "El negocio aún no configuró su cuenta de Mercado Pago para recibir pagos.",
       };
     }
 
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+    if (!baseUrl) {
+      return {
+        success: false,
+        error:
+          "NEXT_PUBLIC_APP_URL no está configurada correctamente.",
+      };
+    }
+
+    const isProduction =
+      process.env.IS_PRODUCTION === "true";
+
+    console.log("================================");
+    console.log("MP CONFIG");
+    console.log("APP_URL:", baseUrl);
+    console.log("IS_PRODUCTION:", isProduction);
+    console.log("================================");
+
     const mp = new MercadoPagoConfig({
       accessToken: config.mpAccessToken,
-      options: { timeout: 5000 },
+      options: {
+        timeout: 5000,
+      },
     });
 
     const turno = await prisma.turno.findUnique({
       where: { id: turnoId },
       include: {
-        user: { select: { name: true, email: true } },
-        servicio: { select: { nombre: true, descripcion: true } },
-        barbero: { select: { nombre: true } },
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        servicio: {
+          select: {
+            nombre: true,
+            descripcion: true,
+          },
+        },
+        barbero: {
+          select: {
+            nombre: true,
+          },
+        },
       },
     });
 
     if (!turno) {
-      return { success: false, error: "Turno no encontrado" };
+      return {
+        success: false,
+        error: "Turno no encontrado",
+      };
     }
 
     if (turno.estado === "CONFIRMADO") {
-      return { success: false, error: "Este turno ya fue pagado" };
+      return {
+        success: false,
+        error: "Este turno ya fue pagado",
+      };
     }
 
     if (turno.estado === "CANCELADO") {
-      return { success: false, error: "Este turno está cancelado" };
+      return {
+        success: false,
+        error: "Este turno está cancelado",
+      };
     }
 
     const seniaAmount = Number(turno.seniaCongelada);
 
     if (seniaAmount <= 0) {
-      return { success: false, error: "Este servicio no requiere seña" };
+      return {
+        success: false,
+        error: "Este servicio no requiere seña",
+      };
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL!;
-    const isProduction = process.env.NODE_ENV === "production";
-    const preference = new Preference(mp);
+    const fechaTurno = new Date(
+      turno.horarioReservado
+    );
 
-    const fechaTurno = new Date(turno.horarioReservado);
-    const fechaFormateada = `${fechaTurno.getDate().toString().padStart(2, '0')}/${(fechaTurno.getMonth() + 1).toString().padStart(2, '0')}/${fechaTurno.getFullYear()} ${fechaTurno.getHours().toString().padStart(2, '0')}:${fechaTurno.getMinutes().toString().padStart(2, '0')}`;
-    const tituloItem = `Senia - ${turno.servicio.nombre}`
+    const fechaFormateada =
+      `${fechaTurno
+        .getDate()
+        .toString()
+        .padStart(2, "0")}/` +
+      `${(fechaTurno.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}/` +
+      `${fechaTurno.getFullYear()} ` +
+      `${fechaTurno
+        .getHours()
+        .toString()
+        .padStart(2, "0")}:` +
+      `${fechaTurno
+        .getMinutes()
+        .toString()
+        .padStart(2, "0")}`;
+
+    const tituloItem = `Seña - ${turno.servicio.nombre}`
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "");
 
-    const body = {
+    const preference = new Preference(mp);
+
+    const body: any = {
       items: [
         {
           id: turnoId,
@@ -83,52 +154,100 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
           currency_id: "ARS",
         },
       ],
+
       payer: {
         name: turno.user.name ?? "Cliente",
-        email: turno.user.email ?? "cliente@email.com",
+        email:
+          turno.user.email ??
+          "cliente@email.com",
       },
+
       back_urls: {
         success: `${baseUrl}/pago/status?turnoId=${turnoId}`,
         failure: `${baseUrl}/pago/status?turnoId=${turnoId}`,
         pending: `${baseUrl}/pago/status?turnoId=${turnoId}`,
       },
-      
-      ...(isProduction && { auto_return: "approved" as const }),
-      notification_url: `${baseUrl}/api/mercadopago/webhook`,
+
+      notification_url:
+        `${baseUrl}/api/mercadopago/webhook`,
+
       external_reference: turnoId,
-      expires: true,
-      expiration_date_from: new Date().toISOString(),
-      expiration_date_to: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
     };
 
-    const response = await preference.create({ body });
+    if (isProduction) {
+      body.auto_return = "approved";
+
+      body.expires = true;
+      body.expiration_date_from =
+        new Date().toISOString();
+
+      body.expiration_date_to = new Date(
+        Date.now() + 5 * 60 * 1000
+      ).toISOString();
+    }
+
+    console.log("🔔 CREANDO PREFERENCIA");
+    console.log(
+      JSON.stringify(body, null, 2)
+    );
+
+    const response = await preference.create({
+      body,
+    });
+
+    console.log("✅ PREFERENCIA CREADA");
+    console.log({
+      id: response.id,
+      collector_id: response.collector_id,
+      init_point: response.init_point,
+      sandbox_init_point:
+        response.sandbox_init_point,
+    });
 
     if (!response.id) {
-      return { success: false, error: "No se pudo crear la preferencia de pago" };
+      return {
+        success: false,
+        error:
+          "No se pudo crear la preferencia de pago",
+      };
     }
 
-    try {
-      await prisma.turno.update({
-        where: { id: turnoId },
-        data: { mpPreferenceId: response.id } as any,
-      });
-    } catch {
-    }
+    await prisma.turno.update({
+      where: {
+        id: turnoId,
+      },
+      data: {
+        mpPreferenceId: response.id,
+      } as any,
+    });
+
+    const checkoutUrl =
+      !isProduction &&
+      response.sandbox_init_point
+        ? response.sandbox_init_point
+        : response.init_point;
 
     return {
       success: true,
       data: {
         preferenceId: response.id,
-        checkoutUrl: response.init_point,
+        checkoutUrl,
         initPoint: response.init_point,
-        sandboxInitPoint: response.sandbox_init_point,
+        sandboxInitPoint:
+          response.sandbox_init_point,
       },
     };
   } catch (error: any) {
-    console.error("❌ Error creando preferencia MP:", error);
+    console.error(
+      "❌ Error creando preferencia MP:",
+      error
+    );
+
     return {
       success: false,
-      error: error?.message ?? "Error al crear el pago",
+      error:
+        error?.message ??
+        "Error al crear el pago",
     };
   }
 }
