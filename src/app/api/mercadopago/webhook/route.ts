@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import MercadoPagoConfig, { Payment } from "mercadopago";
+import { Payment } from "mercadopago";
+import { obtenerClienteMP } from "@/lib/mercadopago";
 
 export async function POST(req: NextRequest) {
   try {
@@ -32,10 +33,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Inicializar Mercado Pago con el token dinámico
-    const mp = new MercadoPagoConfig({
-      accessToken: config.mpAccessToken,
-      options: { timeout: 5000 },
-    });
+    const mp = await obtenerClienteMP();
 
     const paymentClient = new Payment(mp);
 
