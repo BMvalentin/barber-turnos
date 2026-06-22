@@ -4,40 +4,64 @@ import { revalidatePath } from "next/cache";
 import { obtenerConfiguracionMP, eliminarConfiguracionMP } from "@/lib/mercadopago";
 
 export type EstadoConexionMP = {
-  conectado: boolean;
-  bloqueado: boolean;
-  publicKey: string | null;
-  mpUserId: string | null;
-  liveMode: boolean | null;
-  actualizadoEn: string | null;
+  conectada: boolean;
+  bloqueada: boolean;
+  clavePublica: string | null;
+  idUsuarioMP: string | null;
+  modoProduccion: boolean | null;
+  actualizadaEn: string | null;
 };
 
-/** Devuelve el estado de la conexión, sin exponer los tokens sensibles */
+export type ConfiguracionOAuthMP = {
+  clientIdConfigurado: boolean;
+  clientSecretConfigurado: boolean;
+  urlAppConfigurada: boolean;
+  uriRedireccion: string | null;
+};
+
+/** Devuelve el estado de conexión sin exponer tokens sensibles */
 export async function obtenerEstadoConexionMP(): Promise<EstadoConexionMP> {
   const configuracion = await obtenerConfiguracionMP();
 
   if (!configuracion) {
     return {
-      conectado: false,
-      bloqueado: false,
-      publicKey: null,
-      mpUserId: null,
-      liveMode: null,
-      actualizadoEn: null,
+      conectada: false,
+      bloqueada: false,
+      clavePublica: null,
+      idUsuarioMP: null,
+      modoProduccion: null,
+      actualizadaEn: null,
     };
   }
 
   return {
-    conectado: configuracion.conectado,
-    bloqueado: configuracion.bloqueado,
-    publicKey: configuracion.publicKey,
-    mpUserId: configuracion.mpUserId,
-    liveMode: configuracion.liveMode,
-    actualizadoEn: configuracion.updatedAt.toISOString(),
+    conectada: configuracion.conectado,
+    bloqueada: configuracion.bloqueado,
+    clavePublica: configuracion.publicKey,
+    idUsuarioMP: configuracion.mpUserId,
+    modoProduccion: configuracion.liveMode,
+    actualizadaEn: configuracion.updatedAt.toISOString(),
   };
 }
 
-/** Desconecta la cuenta de Mercado Pago. Falla si la configuración está bloqueada. */
+/**
+ * Devuelve el estado de las variables de entorno necesarias para OAuth.
+ * No expone los valores reales, solo si están configuradas o no.
+ */
+export async function obtenerEstadoConfiguracionOAuth(): Promise<ConfiguracionOAuthMP> {
+  const urlApp = process.env.NEXT_PUBLIC_APP_URL;
+
+  return {
+    clientIdConfigurado: !!process.env.MP_CLIENT_ID,
+    clientSecretConfigurado: !!process.env.MP_CLIENT_SECRET,
+    urlAppConfigurada: !!urlApp,
+    uriRedireccion: urlApp
+      ? `${urlApp}/api/mercadopago/oauth/callback`
+      : null,
+  };
+}
+
+/** Desconecta la cuenta de MP. Falla si la configuración está bloqueada. */
 export async function desconectarMP() {
   try {
     await eliminarConfiguracionMP();

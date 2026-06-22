@@ -2,39 +2,72 @@ import "dotenv/config";
 import MercadoPagoConfig from "mercadopago";
 import { prisma } from "@/lib/prisma";
 
-// ID fijo: solo necesitamos una fila de configuración (la cuenta conectada del negocio)
+// ID fijo: solo necesitamos una fila de configuración
 const ID_CONFIGURACION_MP = "mercadopago-principal";
 
-const URL_AUTORIZACION_BASE =
+// URL base de autenticación para Argentina
+const URL_BASE_AUTORIZACION =
   process.env.MP_AUTH_BASE_URL || "https://auth.mercadopago.com.ar";
+
+// Endpoint de intercambio de tokens
 const URL_TOKEN_MP = "https://api.mercadopago.com/oauth/token";
 
-function obtenerRedirectUri(): string {
-  return `${process.env.NEXT_PUBLIC_APP_URL}/api/mercadopago/oauth/callback`;
-}
-
 /**
- * Construye la URL a la que se manda al admin para que autorice
- * nuestra aplicación desde su cuenta de Mercado Pago.
+ * Construye la URI de redirección exacta que debe estar registrada
+ * en el panel de Mercado Pago → Tu aplicación → Redirect URI
  */
-export function construirUrlAutorizacionMP(estado: string): string {
-  const clientId = process.env.MP_CLIENT_ID;
+function obtenerUriRedireccion(): string {
+  const urlBase = process.env.NEXT_PUBLIC_APP_URL;
 
-  if (!clientId) {
+  if (!urlBase) {
     throw new Error(
-      "Falta configurar MP_CLIENT_ID en las variables de entorno",
+      "Falta configurar NEXT_PUBLIC_APP_URL en las variables de entorno. " +
+        "Ejemplo: NEXT_PUBLIC_APP_URL=http://localhost:3000",
     );
   }
 
+  return `${urlBase}/api/mercadopago/oauth/callback`;
+}
+
+/**
+ * Valida que las variables de entorno necesarias para OAuth estén presentes.
+ * Lanza un error descriptivo si falta alguna.
+ */
+export function validarConfiguracionOAuthMP(): void {
+  const errores: string[] = [];
+
+  if (!process.env.MP_CLIENT_ID) {
+    errores.push("MP_CLIENT_ID no está definido en el .env");
+  }
+  if (!process.env.MP_CLIENT_SECRET) {
+    errores.push("MP_CLIENT_SECRET no está definido en el .env");
+  }
+  if (!process.env.NEXT_PUBLIC_APP_URL) {
+    errores.push("NEXT_PUBLIC_APP_URL no está definido en el .env");
+  }
+
+  if (errores.length > 0) {
+    throw new Error(
+      `Configuración incompleta para Mercado Pago OAuth:\n${errores.join("\n")}`,
+    );
+  }
+}
+
+/**
+ * Construye la URL a la que se redirige al admin para autorizar la app
+ * en su cuenta de Mercado Pago.
+ */
+export function construirUrlAutorizacionMP(estado: string): string {
+  validarConfiguracionOAuthMP();
+
   const parametros = new URLSearchParams({
-    client_id: clientId,
+    client_id: process.env.MP_CLIENT_ID!,
     response_type: "code",
-    platform_id: "mp",
-    redirect_uri: obtenerRedirectUri(),
+    redirect_uri: obtenerUriRedireccion(),
     state: estado,
   });
 
-  return `${URL_AUTORIZACION_BASE}/authorization?${parametros.toString()}`;
+  return `${URL_BASE_AUTORIZACION}/authorization?${parametros.toString()}`;
 }
 
 type RespuestaTokenMP = {
@@ -49,70 +82,84 @@ type RespuestaTokenMP = {
 };
 
 /**
- * Intercambia el "code" que devuelve Mercado Pago por los tokens
- * reales de la cuenta que se está conectando.
+ * Intercambia el código de autorización que devuelve Mercado Pago
+ * por los tokens reales de la cuenta que se está conectando.
  */
 export async function intercambiarCodigoPorToken(
   codigo: string,
 ): Promise<RespuestaTokenMP> {
-  const clientId = process.env.MP_CLIENT_ID;
-  const clientSecret = process.env.MP_CLIENT_SECRET;
+  validarConfiguracionOAuthMP();
 
-  if (!clientId || !clientSecret) {
-    throw new Error(
-      "Faltan MP_CLIENT_ID o MP_CLIENT_SECRET en las variables de entorno",
-    );
-  }
+  const cuerpo = {
+    client_id: process.env.MP_CLIENT_ID!,
+    client_secret: process.env.MP_CLIENT_SECRET!,
+    grant_type: "authorization_code",
+    code: codigo,
+    redirect_uri: obtenerUriRedireccion(),
+  };
+
+  console.log("🔄 Intercambiando código MP por token...");
 
   const respuesta = await fetch(URL_TOKEN_MP, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      client_id: clientId,
-      client_secret: clientSecret,
-      grant_type: "authorization_code",
-      code: codigo,
-      redirect_uri: obtenerRedirectUri(),
-    }),
+    body: JSON.stringify(cuerpo),
   });
 
   const datos = await respuesta.json();
 
   if (!respuesta.ok) {
-    console.error("❌ Error al intercambiar código MP:", datos);
-    throw new Error(datos?.message || "No se pudo conectar con Mercado Pago");
+    console.error("❌ Error al intercambiar código MP:", {
+      estado: respuesta.status,
+      datos,
+    });
+    throw new Error(
+      datos?.message ||
+        datos?.error_description ||
+        `Error ${respuesta.status} al conectar con Mercado Pago`,
+    );
   }
 
+  console.log("✅ Token de MP obtenido correctamente");
   return datos as RespuestaTokenMP;
 }
 
-/** Lee la configuración guardada (o null si nunca se conectó nada) */
+/** Lee la configuración guardada, o null si nunca se conectó nada */
 export async function obtenerConfiguracionMP() {
-  return prisma.configuracion_mercadopago.findUnique({
-    where: { id: ID_CONFIGURACION_MP },
-  });
+  try {
+    return await prisma.configuracion_mercadopago.findUnique({
+      where: { id: ID_CONFIGURACION_MP },
+    });
+  } catch (error) {
+    console.error("Error al leer configuración de MP desde la DB:", error);
+    return null;
+  }
 }
 
 /**
- * 🔒 Indica si la configuración actual está bloqueada.
- * Mientras esté bloqueada, no se puede ni reconectar ni desconectar la cuenta
- * desde el panel — la única forma de destrabarla es que el equipo de
- * desarrollo cambie este valor a `false` directamente en la base de datos.
+ * Indica si la configuración actual está bloqueada.
+ * Si hay error de DB (ej: migración no ejecutada), devuelve false
+ * para no bloquear el flujo de conexión inicial.
  */
 export async function estaBloqueadaMP(): Promise<boolean> {
-  const configuracion = await obtenerConfiguracionMP();
-  return configuracion?.bloqueado ?? false;
+  try {
+    const configuracion = await obtenerConfiguracionMP();
+    return configuracion?.bloqueado ?? false;
+  } catch (error) {
+    console.error("Error al verificar bloqueo de MP:", error);
+    // Si falla la consulta (tabla/columna no existe), no bloqueamos
+    return false;
+  }
 }
 
 type OpcionesGuardarMP = {
-  /** Si es true (default), la configuración queda bloqueada después de guardar */
+  /** Si true (por defecto), bloquea la configuración después de guardar */
   bloquearDespuesDeGuardar?: boolean;
 };
 
 /**
- * Guarda (o actualiza) en la base de datos la cuenta conectada.
- * Es de "bajo nivel": no valida el bloqueo, eso lo decide quien la llama
- * (conectarCuentaMP sí lo valida, refrescarTokenMP no).
+ * Guarda o actualiza en la base de datos la configuración de la cuenta conectada.
+ * Función de bajo nivel: no valida el bloqueo, eso lo decide quien la llama.
  */
 export async function guardarConfiguracionMP(
   datos: RespuestaTokenMP,
@@ -120,7 +167,7 @@ export async function guardarConfiguracionMP(
 ) {
   const { bloquearDespuesDeGuardar = true } = opciones;
 
-  const expiraEn = datos.expires_in
+  const fechaExpiracion = datos.expires_in
     ? new Date(Date.now() + datos.expires_in * 1000)
     : null;
 
@@ -134,7 +181,7 @@ export async function guardarConfiguracionMP(
       mpUserId: datos.user_id ? String(datos.user_id) : null,
       scope: datos.scope ?? null,
       liveMode: datos.live_mode ?? true,
-      expiraEn,
+      expiraEn: fechaExpiracion,
       conectado: true,
       bloqueado: bloquearDespuesDeGuardar,
     },
@@ -145,7 +192,7 @@ export async function guardarConfiguracionMP(
       mpUserId: datos.user_id ? String(datos.user_id) : null,
       scope: datos.scope ?? null,
       liveMode: datos.live_mode ?? true,
-      expiraEn,
+      expiraEn: fechaExpiracion,
       conectado: true,
       bloqueado: bloquearDespuesDeGuardar,
     },
@@ -153,50 +200,46 @@ export async function guardarConfiguracionMP(
 }
 
 /**
- * 🔒 Flujo "de alto nivel" para conectar/reconectar una cuenta.
- * Es lo que usa el callback de OAuth. Si la configuración está bloqueada,
- * rechaza la operación antes de guardar nada.
+ * Flujo de alto nivel para conectar/reconectar una cuenta.
+ * Valida el bloqueo antes de guardar nada.
  */
 export async function conectarCuentaMP(codigo: string) {
   const bloqueada = await estaBloqueadaMP();
 
   if (bloqueada) {
     throw new Error(
-      "La configuración de Mercado Pago está bloqueada por seguridad. Pedile al equipo de desarrollo que la desbloquee antes de conectar otra cuenta.",
+      "La configuración de Mercado Pago está bloqueada. " +
+        "Pedile al equipo de desarrollo que cambie 'bloqueado' a false en la base de datos.",
     );
   }
 
   const tokens = await intercambiarCodigoPorToken(codigo);
 
-  // Cada conexión nueva/reconexión vuelve a bloquear la configuración automáticamente
+  // Toda conexión nueva/reconexión vuelve a bloquear automáticamente
   await guardarConfiguracionMP(tokens, { bloquearDespuesDeGuardar: true });
 
   return tokens;
 }
 
 /**
- * Usa el refresh_token guardado para renovar el access_token
- * antes de que expire (los tokens de OAuth de MP duran ~180 días).
- * El bloqueo NO se modifica acá: es la misma cuenta, no un cambio de credenciales.
+ * Renueva el access_token usando el refresh_token guardado.
+ * El bloqueo NO se modifica: es la misma cuenta, no un cambio de credenciales.
  */
 export async function refrescarTokenMP(): Promise<RespuestaTokenMP> {
   const configuracion = await obtenerConfiguracionMP();
-  const clientId = process.env.MP_CLIENT_ID;
-  const clientSecret = process.env.MP_CLIENT_SECRET;
 
   if (!configuracion?.refreshToken) {
     throw new Error("No hay refresh_token guardado para renovar la conexión");
   }
-  if (!clientId || !clientSecret) {
-    throw new Error("Faltan MP_CLIENT_ID o MP_CLIENT_SECRET");
-  }
+
+  validarConfiguracionOAuthMP();
 
   const respuesta = await fetch(URL_TOKEN_MP, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      client_id: clientId,
-      client_secret: clientSecret,
+      client_id: process.env.MP_CLIENT_ID!,
+      client_secret: process.env.MP_CLIENT_SECRET!,
       grant_type: "refresh_token",
       refresh_token: configuracion.refreshToken,
     }),
@@ -205,27 +248,28 @@ export async function refrescarTokenMP(): Promise<RespuestaTokenMP> {
   const datos = await respuesta.json();
 
   if (!respuesta.ok) {
-    console.error("❌ Error al refrescar token MP:", datos);
+    console.error("❌ Error al refrescar token de MP:", datos);
     throw new Error("No se pudo renovar la conexión con Mercado Pago");
   }
 
+  // Preserva el estado de bloqueo actual al refrescar
   await guardarConfiguracionMP(datos, {
-    bloquearDespuesDeGuardar: configuracion.bloqueado, // preserva el estado de bloqueo actual
+    bloquearDespuesDeGuardar: configuracion.bloqueado,
   });
 
   return datos as RespuestaTokenMP;
 }
 
 /**
- * 🔒 Borra la conexión guardada (botón "Desconectar").
- * Lanza un error si la configuración está bloqueada.
+ * Borra la conexión guardada. Lanza error si la configuración está bloqueada.
  */
 export async function eliminarConfiguracionMP() {
   const bloqueada = await estaBloqueadaMP();
 
   if (bloqueada) {
     throw new Error(
-      "La configuración de Mercado Pago está bloqueada por seguridad. Pedile al equipo de desarrollo que la desbloquee antes de desconectar la cuenta.",
+      "La configuración está bloqueada. " +
+        "Pedile al equipo de desarrollo que la desbloquee antes de desconectar.",
     );
   }
 
@@ -236,21 +280,21 @@ export async function eliminarConfiguracionMP() {
 
 /**
  * Devuelve un cliente de Mercado Pago listo para usar.
- * Prioriza la cuenta conectada por OAuth (guardada en la DB);
- * si todavía no se conectó ninguna, cae al MP_ACCESS_TOKEN del .env.
+ * Prioriza el token guardado en DB; si no hay, usa el del .env como respaldo.
  */
 export async function obtenerClienteMP(): Promise<MercadoPagoConfig> {
   const configuracion = await obtenerConfiguracionMP();
-  const accessToken = configuracion?.accessToken || process.env.MP_ACCESS_TOKEN;
+  const tokenAcceso =
+    configuracion?.accessToken || process.env.MP_ACCESS_TOKEN;
 
-  if (!accessToken) {
+  if (!tokenAcceso) {
     throw new Error(
-      "No hay ninguna cuenta de Mercado Pago conectada ni token configurado",
+      "No hay ninguna cuenta de Mercado Pago conectada ni token configurado en el .env",
     );
   }
 
   return new MercadoPagoConfig({
-    accessToken,
+    accessToken: tokenAcceso,
     options: { timeout: 5000 },
   });
 }

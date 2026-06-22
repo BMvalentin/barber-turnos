@@ -1,11 +1,17 @@
 import { Suspense } from "react";
 import { ArrowLeft, CreditCard } from "lucide-react";
 import Link from "next/link";
-import { obtenerEstadoConexionMP } from "@/actions/mercadopago-oauth.actions";
+import {
+  obtenerEstadoConexionMP,
+  obtenerEstadoConfiguracionOAuth,
+} from "@/actions/mercadopago-oauth.actions";
 import MercadoPagoConnectionPanel from "@/components/admin/MercadoPagoConnectionPanel";
 
-export default async function MercadoPagoConfigPage() {
-  const estado = await obtenerEstadoConexionMP();
+export default async function PaginaConfiguracionMercadoPago() {
+  const [estadoConexion, configuracionOAuth] = await Promise.all([
+    obtenerEstadoConexionMP(),
+    obtenerEstadoConfiguracionOAuth(),
+  ]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black to-amber-950/30 p-6">
@@ -32,8 +38,15 @@ export default async function MercadoPagoConfigPage() {
           </div>
         </div>
 
-        <Suspense fallback={<p className="text-amber-200/50">Cargando estado de conexión...</p>}>
-          <MercadoPagoConnectionPanel estadoInicial={estado} />
+        <Suspense
+          fallback={
+            <p className="text-amber-200/50">Cargando estado de conexión...</p>
+          }
+        >
+          <MercadoPagoConnectionPanel
+            estadoInicial={estadoConexion}
+            configuracionOAuth={configuracionOAuth}
+          />
         </Suspense>
       </div>
     </div>
