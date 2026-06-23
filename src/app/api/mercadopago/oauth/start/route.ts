@@ -49,6 +49,7 @@ export async function GET(req: NextRequest) {
     }
 
     const estado = randomUUID();
+    
     const urlAutorizacion = construirUrlAutorizacionMP(estado);
 
     console.log("🔗 Redirigiendo a autorización de MP:", urlAutorizacion);
