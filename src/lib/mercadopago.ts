@@ -72,6 +72,7 @@ export function construirUrlAutorizacionMP(estado: string): string {
     response_type: "code",
     redirect_uri: obtenerUriRedireccion(),
     state: estado,
+    scope: "read write offline_access",
   });
 
   return `${URL_BASE_AUTORIZACION}/authorization?${parametros.toString()}`;
