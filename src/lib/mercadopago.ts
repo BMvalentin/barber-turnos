@@ -19,7 +19,7 @@ const URL_TOKEN_MP = "https://api.mercadopago.com/oauth/token";
 function obtenerUriRedireccion(): string {
   // Preferimos NEXT_PUBLIC_APP_URL si está definida (producción)
   let urlBase = process.env.NEXT_PUBLIC_APP_URL;
-  
+
   if (!urlBase) {
     // En Vercel, VERCEL_URL está disponible en runtime (ej: "proyecto-git-rama.vercel.app")
     const vercelUrl = process.env.VERCEL_URL;
@@ -119,13 +119,18 @@ export async function intercambiarCodigoPorToken(codigo: string): Promise<Respue
 
   const datos = await respuesta.json();
 
+  console.log("🔁 Respuesta de MP:");
+  console.log("   Status:", respuesta.status);
+  console.log("   Body:", JSON.stringify(datos, null, 2));
+
   if (!respuesta.ok) {
-    console.error("❌ Error al intercambiar código MP. Status:", respuesta.status);
-    console.error("📦 Respuesta completa:", JSON.stringify(datos, null, 2));
+    console.error("❌ Error intercambiando código MP");
+    console.error("   Status:", respuesta.status);
+    console.error("   Body:", JSON.stringify(datos, null, 2));
     throw new Error(
       datos?.message ||
-        datos?.error_description ||
-        `Error ${respuesta.status} al conectar con Mercado Pago`,
+      datos?.error_description ||
+      `Error ${respuesta.status} al conectar con Mercado Pago`
     );
   }
   return datos as RespuestaTokenMP;
@@ -176,6 +181,16 @@ export async function guardarConfiguracionMP(
   const fechaExpiracion = datos.expires_in
     ? new Date(Date.now() + datos.expires_in * 1000)
     : null;
+  console.log("💾 Guardando configuración en DB...");
+  console.log("   Datos a guardar:", {
+    accessToken: datos.access_token?.substring(0, 10) + "...",
+    refreshToken: datos.refresh_token ? "present" : "null",
+    publicKey: datos.public_key,
+    mpUserId: datos.user_id ? String(datos.user_id) : null,
+    liveMode: datos.live_mode,
+    expiraEn: fechaExpiracion,
+    bloqueado: bloquearDespuesDeGuardar,
+  });
 
   await prisma.configuracion_mercadopago.upsert({
     where: { id: ID_CONFIGURACION_MP },
@@ -215,15 +230,14 @@ export async function conectarCuentaMP(codigo: string) {
   if (bloqueada) {
     throw new Error(
       "La configuración de Mercado Pago está bloqueada. " +
-        "Pedile al equipo de desarrollo que cambie 'bloqueado' a false en la base de datos.",
+      "Pedile al equipo de desarrollo que cambie 'bloqueado' a false en la base de datos.",
     );
   }
 
   const tokens = await intercambiarCodigoPorToken(codigo);
-
-  // Toda conexión nueva/reconexión vuelve a bloquear automáticamente
+  console.log("   Tokens obtenidos:", !!tokens.access_token);
   await guardarConfiguracionMP(tokens, { bloquearDespuesDeGuardar: true });
-
+  console.log("✅ Configuración guardada correctamente.");
   return tokens;
 }
 
@@ -275,7 +289,7 @@ export async function eliminarConfiguracionMP() {
   if (bloqueada) {
     throw new Error(
       "La configuración está bloqueada. " +
-        "Pedile al equipo de desarrollo que la desbloquee antes de desconectar.",
+      "Pedile al equipo de desarrollo que la desbloquee antes de desconectar.",
     );
   }
 
