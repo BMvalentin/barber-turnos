@@ -128,8 +128,6 @@ export async function intercambiarCodigoPorToken(codigo: string): Promise<Respue
         `Error ${respuesta.status} al conectar con Mercado Pago`,
     );
   }
-
-  console.log("✅ Token de MP obtenido correctamente. ID usuario:", datos.user_id);
   return datos as RespuestaTokenMP;
 }
 /** Lee la configuración guardada, o null si nunca se conectó nada */
