@@ -493,12 +493,12 @@ export default function ServicioList({
           </div>
         ) : (
           <div className="bg-[#1C1812] border border-[#2C261D] rounded-xl overflow-hidden">
-            {/* Table Header — sin columna Categoría, Servicio ocupa col-span-7 */}
-            <div className="grid grid-cols-12 gap-4 p-4 border-b border-[#2C261D] bg-[#14110C]/50 text-[11px] font-bold text-[#8E8675] uppercase tracking-wider">
-              <div className="col-span-7">Servicio</div>
+            {/* Table Header */}
+            <div className="hidden md:grid md:grid-cols-12 gap-4 p-4 border-b border-[#2C261D] bg-[#14110C]/50 text-[11px] font-bold text-[#8E8675] uppercase tracking-wider">
+              <div className="col-span-6">Servicio</div>
               <div className="col-span-2 text-center">Duración</div>
               <div className="col-span-2 text-center">Precio</div>
-              <div className="col-span-1 text-right">Acciones</div>
+              <div className="col-span-2 text-right">Acciones</div>
             </div>
 
             <div className="divide-y divide-[#2C261D]">
@@ -591,9 +591,9 @@ function ServicioRow({
 
   return (
     <>
-      <div className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-[#14110C]/80 transition-colors group">
-        {/* Servicio: col-span-7 para coincidir con el header */}
-        <div className="col-span-7 flex items-center gap-4">
+      <div className="flex flex-col md:grid md:grid-cols-12 gap-4 p-4 md:items-center hover:bg-[#14110C]/80 transition-colors group">
+        {/* Servicio */}
+        <div className="md:col-span-6 flex items-start md:items-center gap-4">
           <div className="w-10 h-10 rounded-lg bg-[#251f15] border border-[#2C261D] flex items-center justify-center flex-shrink-0 text-[#E8B031]">
             {servicio.srcImage ? (
               <img
@@ -608,28 +608,30 @@ function ServicioRow({
               <Scissors className="w-5 h-5" />
             )}
           </div>
-          <div>
+          <div className="flex-1">
             <h3 className="text-[#E4E0D9] font-semibold text-sm">
               {servicio.nombre}
             </h3>
             {servicio.descripcion && (
-              <p className="text-[#8E8675] text-xs line-clamp-2 max-w-[350px] mt-0.5">
+              <p className="text-[#8E8675] text-xs line-clamp-2 md:max-w-[350px] mt-0.5">
                 {servicio.descripcion}
               </p>
             )}
           </div>
         </div>
 
-        <div className="col-span-2 flex justify-center items-center gap-1 text-[#8E8675] text-sm">
+        {/* Info adicional para desktop */}
+        <div className="hidden md:flex col-span-2 justify-center items-center gap-1 text-[#8E8675] text-sm">
           <Clock className="w-3 h-3" />
           {servicio.duracion} min
         </div>
 
-        <div className="col-span-2 flex justify-center font-semibold text-[#E8B031] text-sm">
+        <div className="hidden md:flex col-span-2 justify-center font-semibold text-[#E8B031] text-sm">
           ${servicio.precio}
         </div>
 
-        <div className="col-span-1 flex justify-end gap-2 items-center">
+        {/* Acciones para desktop */}
+        <div className="hidden md:flex col-span-2 justify-end gap-2 items-center">
           <button
             onClick={() => setShowEditModal(true)}
             title="Editar servicio"
@@ -657,6 +659,43 @@ function ServicioRow({
               <Trash2 className="w-5 h-5" />
             </button>
           </form>
+        </div>
+
+        {/* Vista para mobile (precio, duración y botones juntos) */}
+        <div className="flex md:hidden items-center justify-between mt-2 pt-3 border-t border-[#2C261D]/50">
+            <div className="flex items-center gap-4">
+              <span className="font-semibold text-[#E8B031] text-sm">${servicio.precio}</span>
+              <span className="flex items-center gap-1 text-[#8E8675] text-sm"><Clock className="w-3 h-3" /> {servicio.duracion} min</span>
+            </div>
+            <div className="flex justify-end gap-2 items-center">
+              <button
+                onClick={() => setShowEditModal(true)}
+                title="Editar servicio"
+                className="text-[#8E8675] hover:text-[#E8B031] transition-colors p-1.5 bg-[#1C1812] rounded border border-[#2C261D]"
+              >
+                <SquarePen className="w-4 h-4" />
+              </button>
+
+              <form action={formAction}>
+                <input type="hidden" name="id" value={servicio.id} />
+                <button
+                  type="submit"
+                  title="Eliminar servicio"
+                  className="text-[#8E8675] hover:text-red-500 transition-colors p-1.5 bg-[#1C1812] rounded border border-[#2C261D]"
+                  onClick={(e) => {
+                    if (
+                      !confirm(
+                        `¿Estás seguro de que deseas eliminar el servicio "${servicio.nombre}"?`,
+                      )
+                    ) {
+                      e.preventDefault();
+                    }
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </form>
+            </div>
         </div>
       </div>
 
