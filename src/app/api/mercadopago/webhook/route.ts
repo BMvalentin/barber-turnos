@@ -4,8 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { Payment } from "mercadopago";
 import { obtenerClienteMP } from "@/lib/mercadopago";
 
-const mp = await obtenerClienteMP();
-
 // Mercado Pago envía las notificaciones como POST
 export async function POST(req: NextRequest) {
   try {
@@ -26,6 +24,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Consultar los detalles del pago a la API de MP
+    const mp = await obtenerClienteMP();
     const payment = new Payment(mp);
     const paymentData = await payment.get({ id: paymentId });
 

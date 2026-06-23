@@ -262,7 +262,15 @@ export default function MercadoPagoConnectionPanel({
               </p>
               <p className="text-white">
                 {estado.actualizadaEn
-                  ? new Date(estado.actualizadaEn).toLocaleString("es-AR")
+                  ? new Date(estado.actualizadaEn).toLocaleString("es-AR", {
+                    timeZone: "America/Argentina/Buenos_Aires",
+                    hour12: false,
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
                   : "-"}
               </p>
             </div>
@@ -280,12 +288,7 @@ export default function MercadoPagoConnectionPanel({
                   bloqueada por seguridad
                 </strong>{" "}
                 para evitar que se cambien los tokens sin autorización. Si
-                necesitás conectar otra cuenta, pedile al equipo de desarrollo
-                que ejecute:
-                <code className="block mt-2 p-2 bg-black/40 rounded text-amber-400 text-[11px]">
-                  UPDATE configuracion_mercadopago SET bloqueado = false WHERE
-                  id = &apos;mercadopago-principal&apos;;
-                </code>
+                necesitás conectar otra cuenta, pedile al equipo de desarrollo que desbloquee la configuración.
               </p>
             </div>
           ) : estado.conectada ? (
@@ -320,8 +323,8 @@ export default function MercadoPagoConnectionPanel({
                     : undefined
                 }
                 className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-white text-sm font-bold transition-colors ${configuracionCompleta
-                    ? "bg-[#009EE3] hover:bg-[#0088CC] cursor-pointer"
-                    : "bg-zinc-700 cursor-not-allowed opacity-60"
+                  ? "bg-[#009EE3] hover:bg-[#0088CC] cursor-pointer"
+                  : "bg-zinc-700 cursor-not-allowed opacity-60"
                   }`}
               >
                 <Link2 className="h-4 w-4" />

@@ -64,7 +64,7 @@ export function validarConfiguracionOAuthMP(): void {
  * Construye la URL a la que se redirige al admin para autorizar la app
  * en su cuenta de Mercado Pago.
  */
-export function construirUrlAutorizacionMP(estado: string): string {
+export function construirUrlAutorizacionMP(estado: string, codeChallenge: string): string {
   validarConfiguracionOAuthMP();
 
   const parametros = new URLSearchParams({
@@ -73,11 +73,12 @@ export function construirUrlAutorizacionMP(estado: string): string {
     redirect_uri: obtenerUriRedireccion(),
     state: estado,
     scope: "read write offline_access",
+    code_challenge: codeChallenge,
+    code_challenge_method: "S256",
   });
 
   return `${URL_BASE_AUTORIZACION}/authorization?${parametros.toString()}`;
 }
-
 type RespuestaTokenMP = {
   access_token: string;
   token_type?: string;
@@ -93,7 +94,7 @@ type RespuestaTokenMP = {
  * Intercambia el código de autorización que devuelve Mercado Pago
  * por los tokens reales de la cuenta que se está conectando.
  */
-export async function intercambiarCodigoPorToken(codigo: string): Promise<RespuestaTokenMP> {
+export async function intercambiarCodigoPorToken(codigo: string, codeVerifier: string): Promise<RespuestaTokenMP> {
   validarConfiguracionOAuthMP();
 
   const cuerpo = {
@@ -102,6 +103,7 @@ export async function intercambiarCodigoPorToken(codigo: string): Promise<Respue
     grant_type: "authorization_code",
     code: codigo,
     redirect_uri: obtenerUriRedireccion(),
+    code_verifier: codeVerifier,   // <--- agregado
   };
 
   console.log("🔄 Intercambiando código MP por token...");
@@ -119,18 +121,13 @@ export async function intercambiarCodigoPorToken(codigo: string): Promise<Respue
 
   const datos = await respuesta.json();
 
-  console.log("🔁 Respuesta de MP:");
-  console.log("   Status:", respuesta.status);
-  console.log("   Body:", JSON.stringify(datos, null, 2));
-
   if (!respuesta.ok) {
-    console.error("❌ Error intercambiando código MP");
-    console.error("   Status:", respuesta.status);
-    console.error("   Body:", JSON.stringify(datos, null, 2));
+    console.error("❌ Error intercambiando código MP. Status:", respuesta.status);
+    console.error("📦 Respuesta completa:", JSON.stringify(datos, null, 2));
     throw new Error(
       datos?.message ||
       datos?.error_description ||
-      `Error ${respuesta.status} al conectar con Mercado Pago`
+      `Error ${respuesta.status} al conectar con Mercado Pago`,
     );
   }
   return datos as RespuestaTokenMP;
@@ -205,6 +202,7 @@ export async function guardarConfiguracionMP(
       expiraEn: fechaExpiracion,
       conectado: true,
       bloqueado: bloquearDespuesDeGuardar,
+      updatedAt: new Date(),
     },
     update: {
       accessToken: datos.access_token,
@@ -224,9 +222,8 @@ export async function guardarConfiguracionMP(
  * Flujo de alto nivel para conectar/reconectar una cuenta.
  * Valida el bloqueo antes de guardar nada.
  */
-export async function conectarCuentaMP(codigo: string) {
+export async function conectarCuentaMP(codigo: string, codeVerifier: string) {
   const bloqueada = await estaBloqueadaMP();
-
   if (bloqueada) {
     throw new Error(
       "La configuración de Mercado Pago está bloqueada. " +
@@ -234,10 +231,8 @@ export async function conectarCuentaMP(codigo: string) {
     );
   }
 
-  const tokens = await intercambiarCodigoPorToken(codigo);
-  console.log("   Tokens obtenidos:", !!tokens.access_token);
+  const tokens = await intercambiarCodigoPorToken(codigo, codeVerifier);
   await guardarConfiguracionMP(tokens, { bloquearDespuesDeGuardar: true });
-  console.log("✅ Configuración guardada correctamente.");
   return tokens;
 }
 
@@ -305,7 +300,7 @@ export async function eliminarConfiguracionMP() {
 export async function obtenerClienteMP(): Promise<MercadoPagoConfig> {
   const configuracion = await obtenerConfiguracionMP();
   const tokenAcceso =
-    configuracion?.accessToken || process.env.MP_ACCESS_TOKEN;
+    configuracion?.accessToken || "";
 
   if (!tokenAcceso) {
     throw new Error(
