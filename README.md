@@ -68,8 +68,8 @@ AUTH_TRUST_HOST=true
 NODE_ENV=production
 
 # Credenciales de Mercado Pago
-MP_ACCESS_TOKEN="TU_ACCESS_TOKEN_AQUI"
-MP_PUBLIC_KEY="TU_PUBLIC_KEY_AQUI"
+MP_CLIENT_ID=
+MP_CLIENT_SECRET=
 
 # URL Base de la Aplicación
 NEXT_PUBLIC_APP_URL=http://localhost:3000
