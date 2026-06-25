@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { 
   LayoutDashboard, 
   Scissors, 
@@ -11,6 +12,8 @@ import {
   ClipboardList,
   Clock,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 
 import { CircleDollarSign } from "lucide-react"
@@ -27,9 +30,31 @@ const menuItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <aside className="w-60 bg-black/40 backdrop-blur-lg border-r border-amber-900/30 flex flex-col fixed left-0 top-0 h-screen pt-20 shadow-xl">
+    <>
+      {/* Botón flotante para móvil */}
+      <button 
+        className="lg:hidden fixed bottom-6 right-6 z-50 bg-amber-500 text-black p-3 rounded-full shadow-lg shadow-amber-500/20"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+      </button>
+
+      {/* Overlay para móvil */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 top-16 bg-black/60 z-30 lg:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        w-60 bg-black/90 lg:bg-black/40 backdrop-blur-xl border-r border-amber-900/30 flex flex-col fixed left-0 top-16 h-[calc(100vh-4rem)] pt-4 shadow-xl z-40 transition-transform duration-300
+        ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
+      `}>
       
       {/* Header */}
       <div className="p-4 border-b border-amber-900/30">
@@ -49,6 +74,7 @@ export default function AdminSidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => setIsOpen(false)}
               className={`
                 flex items-center gap-3 px-3 py-2.5 rounded-lg
                 text-sm font-semibold transition-all duration-200 group
@@ -73,5 +99,6 @@ export default function AdminSidebar() {
       </nav>
 
     </aside>
+    </>
   );
 }
