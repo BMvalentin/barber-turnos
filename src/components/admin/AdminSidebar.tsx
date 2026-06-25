@@ -45,14 +45,14 @@ export default function AdminSidebar() {
       {/* Overlay para móvil */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+          className="fixed inset-0 top-16 bg-black/60 z-30 lg:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside className={`
-        w-60 bg-black/80 lg:bg-black/40 backdrop-blur-xl border-r border-amber-900/30 flex flex-col fixed left-0 top-0 h-screen pt-20 shadow-xl z-50 transition-transform duration-300
+        w-60 bg-black/90 lg:bg-black/40 backdrop-blur-xl border-r border-amber-900/30 flex flex-col fixed left-0 top-16 h-[calc(100vh-4rem)] pt-4 shadow-xl z-40 transition-transform duration-300
         ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
       `}>
       
