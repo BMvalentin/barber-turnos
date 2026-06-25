@@ -26,6 +26,7 @@ const menuItems = [
   { title: "Días Laborales", href: "/diaLaboral", icon: Clock },
   { title: "Excepciones", href: "/excepcionesLaborales", icon: ClipboardList },
   { title: "Configuracion pago", href: "/admin/configuraciones", icon: CircleDollarSign },
+  { title: "Mercado Pago", href: "/admin/mercadopago", icon: CreditCard },
 ];
 
 export default function AdminSidebar() {
@@ -78,19 +79,17 @@ export default function AdminSidebar() {
               className={`
                 flex items-center gap-3 px-3 py-2.5 rounded-lg
                 text-sm font-semibold transition-all duration-200 group
-                ${
-                  isActive
-                    ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-inner"
-                    : "text-amber-200/70 hover:bg-amber-500/10 hover:text-amber-400"
+                ${isActive
+                  ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-inner"
+                  : "text-amber-200/70 hover:bg-amber-500/10 hover:text-amber-400"
                 }
               `}
             >
               <Icon
-                className={`h-5 w-5 transition-colors ${
-                  isActive
+                className={`h-5 w-5 transition-colors ${isActive
                     ? "text-amber-400"
                     : "text-amber-200/70 group-hover:text-amber-400"
-                }`}
+                  }`}
               />
               <span>{item.title}</span>
             </Link>
