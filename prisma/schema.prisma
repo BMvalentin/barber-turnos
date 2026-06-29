@@ -179,12 +179,12 @@ model configuracion_mercadopago {
   refreshToken String?   @db.Text
   publicKey    String?
   mpUserId     String?
-  scope        String?   @db.Text
+  scope        String?
   liveMode     Boolean   @default(true)
   conectado    Boolean   @default(true)
   expiraEn     DateTime?
   createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @default(now()) @updatedAt
+  updatedAt    DateTime
   bloqueado    Boolean   @default(true)
 }
 
