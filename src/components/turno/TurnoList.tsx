@@ -6,6 +6,7 @@ import { Calendar, User, Scissors, DollarSign, CreditCard, Loader2 } from "lucid
 import { cancelTurno } from "@/actions/user-dashboard";
 import { completedTurno } from "@/actions/turno.actions";
 import { crearPreferenciaPago } from "@/actions/mercadopago-actions";
+import { toast } from "@/components/ui/use-toast";
 
 type Turno = {
   id: string;
@@ -89,8 +90,19 @@ function TurnoCard({ turno, session }: { turno: Turno; session: any }) {
     setIsCanceling(true);
     try {
       await cancelTurno(turno.id);
+      toast({
+        title: "Turno cancelado",
+        description: "El turno se ha cancelado correctamente.",
+        variant: "default",
+        duration: 4000,
+      });
     } catch {
-      alert("Error al cancelar el turno");
+      toast({
+        title: "Error al cancelar",
+        description: "Hubo un error al intentar cancelar el turno.",
+        variant: "destructive",
+        duration: 4000,
+      });
     } finally {
       setIsCanceling(false);
     }
@@ -104,7 +116,12 @@ function TurnoCard({ turno, session }: { turno: Turno; session: any }) {
       formData.append("id", turno.id);
       await completedTurno({ success: false }, formData);
     } catch {
-      alert("Error al completar el turno");
+      toast({
+        title: "Error al completar",
+        description: "Hubo un error al intentar marcar el turno como completado.",
+        variant: "destructive",
+        duration: 4000,
+      });
     } finally {
       setIsCompleting(false);
     }
@@ -261,7 +278,7 @@ function TurnoCard({ turno, session }: { turno: Turno; session: any }) {
             {/* Opciones del USER (Dueño) */}
             {turno.user?.id === session?.user?.id && session?.user?.role !== "ADMIN" && (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO") && (
               <>
-                <button 
+                <button
                   onClick={handleCancel}
                   disabled={isCanceling}
                   className="text-xs font-bold text-red-500 hover:text-red-400 bg-red-400/10 hover:bg-red-500/20 px-4 py-2 rounded-lg transition-colors border border-red-500/20 disabled:opacity-50"
@@ -275,14 +292,14 @@ function TurnoCard({ turno, session }: { turno: Turno; session: any }) {
             {/* Opciones del ADMIN */}
             {session?.user?.role === "ADMIN" && (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO") && (
               <>
-                <button 
+                <button
                   onClick={handleCancel}
                   disabled={isCanceling}
                   className="text-xs font-bold text-red-500 hover:text-red-400 bg-red-400/10 hover:bg-red-500/20 px-4 py-2 rounded-lg transition-colors border border-red-500/20 disabled:opacity-50"
                 >
                   {isCanceling ? "Cancelando..." : "Cancelar Turno"}
                 </button>
-                <button 
+                <button
                   onClick={handleCompletar}
                   disabled={isCompleting}
                   className="text-xs font-bold text-blue-500 hover:text-blue-400 bg-blue-400/10 hover:bg-blue-500/20 px-4 py-2 rounded-lg transition-colors border border-blue-500/20 disabled:opacity-50"
