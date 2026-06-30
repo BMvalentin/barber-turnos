@@ -317,6 +317,21 @@ export async function getTurnos(page: number = 1) {
   }
 }
 /* =========================
+   CONFIRMAR TURNO
+========================= */
+export async function confirmarTurno(turnoId: string) {
+  try {
+    await prisma.turno.update({
+      where: { id: turnoId },
+      data: { estado: "CONFIRMADO" },
+    });
+    revalidatePath("/turno"); // Refresca la página para ver el cambio
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "No se pudo confirmar el turno" };
+  }
+}
+/* =========================
    OBTENER HORARIOS DISPONIBLES
 ========================= */
 
