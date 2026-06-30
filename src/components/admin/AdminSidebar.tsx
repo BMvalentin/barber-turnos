@@ -1,4 +1,3 @@
-// components/admin/AdminSidebar.tsx
 "use client";
 
 import Link from "next/link";
@@ -14,6 +13,7 @@ import {
   CreditCard,
   Menu,
   X,
+  CreditCard
 } from "lucide-react";
 
 import { CircleDollarSign } from "lucide-react"

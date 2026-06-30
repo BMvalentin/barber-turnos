@@ -4,7 +4,7 @@ import { useState } from "react";
 import EditTurnoModal from "./EditarTurnoModal";
 import { Calendar, User, Scissors, DollarSign, CreditCard, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { cancelTurno } from "@/actions/user-dashboard";
-import { completedTurno } from "@/actions/turno.actions";
+import { completedTurno, confirmarTurno } from "@/actions/turno.actions";
 import { crearPreferenciaPago } from "@/actions/mercadopago-actions";
 import Link from "next/link";
 
@@ -44,7 +44,7 @@ export default function TurnoList({ turnos, session, totalPages, currentPage }: 
 
   return (
     <div className="space-y-6">
-      
+
       {/* 1. Mostramos el mensaje si está vacío, pero NO hacemos return temprano */}
       {turnosActivos.length === 0 ? (
         <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-lg p-8 text-center">
@@ -68,7 +68,7 @@ export default function TurnoList({ turnos, session, totalPages, currentPage }: 
           >
             <ChevronLeft className="w-6 h-6 text-amber-500" />
           </Link>
-          
+
           <span className="text-amber-200 font-bold">
             Pág. {currentPage} de {totalPages}
           </span>
@@ -90,6 +90,7 @@ export default function TurnoList({ turnos, session, totalPages, currentPage }: 
 function TurnoCard({ turno, session }: { turno: Turno; session: any }) {
   const [isCanceling, setIsCanceling] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
   const estadoColors = {
@@ -109,6 +110,14 @@ function TurnoCard({ turno, session }: { turno: Turno; session: any }) {
     } finally {
       setIsCanceling(false);
     }
+  };
+
+  const handleConfirmar = async () => {
+    if (!confirm("¿Confirmar este turno?")) return;
+    setIsConfirming(true);
+    const result = await confirmarTurno(turno.id);
+    if (!result.success) alert(result.error);
+    setIsConfirming(false);
   };
 
   const handleCompletar = async () => {
@@ -276,7 +285,7 @@ function TurnoCard({ turno, session }: { turno: Turno; session: any }) {
             {/* Opciones del USER (Dueño) */}
             {turno.user?.id === session?.user?.id && session?.user?.role !== "ADMIN" && (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO") && (
               <>
-                <button 
+                <button
                   onClick={handleCancel}
                   disabled={isCanceling}
                   className="text-xs font-bold text-red-500 hover:text-red-400 bg-red-400/10 hover:bg-red-500/20 px-4 py-2 rounded-lg transition-colors border border-red-500/20 disabled:opacity-50"
@@ -290,19 +299,26 @@ function TurnoCard({ turno, session }: { turno: Turno; session: any }) {
             {/* Opciones del ADMIN */}
             {session?.user?.role === "ADMIN" && (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO") && (
               <>
-                <button 
+                <button
                   onClick={handleCancel}
                   disabled={isCanceling}
                   className="text-xs font-bold text-red-500 hover:text-red-400 bg-red-400/10 hover:bg-red-500/20 px-4 py-2 rounded-lg transition-colors border border-red-500/20 disabled:opacity-50"
                 >
                   {isCanceling ? "Cancelando..." : "Cancelar Turno"}
                 </button>
-                <button 
+                <button
                   onClick={handleCompletar}
                   disabled={isCompleting}
                   className="text-xs font-bold text-blue-500 hover:text-blue-400 bg-blue-400/10 hover:bg-blue-500/20 px-4 py-2 rounded-lg transition-colors border border-blue-500/20 disabled:opacity-50"
                 >
                   {isCompleting ? "Completando..." : "Marcar Completado"}
+                </button>
+                <button
+                  onClick={handleConfirmar}
+                  disabled={isConfirming}
+                  className="text-xs font-bold text-green-500 hover:text-green-400 bg-green-400/10 hover:bg-green-500/20 px-4 py-2 rounded-lg transition-colors border border-green-500/20 disabled:opacity-50"
+                >
+                  {isConfirming ? "Confirmando..." : "Confirmar"}
                 </button>
               </>
             )}
