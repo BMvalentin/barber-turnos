@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import EditTurnoModal from "./EditarTurnoModal";
-import { Calendar, User, Scissors, DollarSign, CreditCard, Loader2 } from "lucide-react";
+import { Calendar, User, Scissors, DollarSign, CreditCard, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { cancelTurno } from "@/actions/user-dashboard";
 import { completedTurno } from "@/actions/turno.actions";
 import { crearPreferenciaPago } from "@/actions/mercadopago-actions";
+import Link from "next/link";
 
 type Turno = {
   id: string;
@@ -32,40 +33,54 @@ type Turno = {
 interface Props {
   turnos: Turno[];
   session: any;
+  totalPages: number;
+  currentPage: number;
 }
 
-export default function TurnoList({ turnos, session }: Props) {
+export default function TurnoList({ turnos, session, totalPages, currentPage }: Props) {
   const turnosActivos = turnos.filter(
     (t) => t.estado === "PENDIENTE" || t.estado === "CONFIRMADO"
   );
 
-  if (!turnosActivos.length) {
-    return (
-      <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-lg p-8 text-center">
-        <p className="text-amber-200/70">No hay turnos activos (pendientes o confirmados)</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      {/* Resultados */}
-      <div className="flex items-center justify-between">
-        <p className="text-amber-200/50 text-sm">
-          Mostrando{" "}
-          <span className="text-white font-semibold">
-            {turnosActivos.length}
-          </span>{" "}
-          {turnosActivos.length === 1 ? "turno activo" : "turnos activos"}
-        </p>
-      </div>
+      
+      {/* 1. Mostramos el mensaje si está vacío, pero NO hacemos return temprano */}
+      {turnosActivos.length === 0 ? (
+        <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-lg p-8 text-center">
+          <p className="text-amber-200/70">No hay turnos activos en esta página.</p>
+        </div>
+      ) : (
+        /* 2. Solo mostramos el grid si hay turnos */
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {turnosActivos.map((turno) => (
+            <TurnoCard key={turno.id} turno={turno} session={session} />
+          ))}
+        </div>
+      )}
 
-      {/* Grid de Turnos */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {turnosActivos.map((turno) => (
-          <TurnoCard key={turno.id} turno={turno} session={session} />
-        ))}
-      </div>
+      {/* 3. La paginación SIEMPRE se renderiza si hay más de 1 página total */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-4 py-8">
+          <Link
+            href={`?page=${currentPage - 1}`}
+            className={`p-2 rounded-lg bg-black/40 border border-amber-500/30 transition-all ${currentPage <= 1 ? "opacity-30 pointer-events-none" : "hover:bg-amber-500/20"}`}
+          >
+            <ChevronLeft className="w-6 h-6 text-amber-500" />
+          </Link>
+          
+          <span className="text-amber-200 font-bold">
+            Pág. {currentPage} de {totalPages}
+          </span>
+
+          <Link
+            href={`?page=${currentPage + 1}`}
+            className={`p-2 rounded-lg bg-black/40 border border-amber-500/30 transition-all ${currentPage >= totalPages ? "opacity-30 pointer-events-none" : "hover:bg-amber-500/20"}`}
+          >
+            <ChevronRight className="w-6 h-6 text-amber-500" />
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
