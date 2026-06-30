@@ -11,7 +11,7 @@ import {
   Calendar, 
   ClipboardList,
   Clock,
-  LogOut,
+  CreditCard,
   Menu,
   X,
 } from "lucide-react";
