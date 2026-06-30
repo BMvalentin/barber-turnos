@@ -12,12 +12,10 @@ async function getTurnoData() {
   const [servicios, barberos, usuarios] = await Promise.all([
     prisma.servicio.findMany({
       where: { estado: true },
-      select: { id: true, nombre: true, descripcion: true, precio: true, duracion: true, descuento: true, senia: true },
       orderBy: { nombre: "asc" },
     }),
     prisma.barbero.findMany({
       where: { estado: true },
-      select: { id: true, nombre: true, srcImage: true },
       orderBy: { nombre: "asc" },
     }),
     prisma.user.findMany({
@@ -26,14 +24,12 @@ async function getTurnoData() {
     }),
   ]);
 
-  const serializedServicios = servicios.map(s => ({
-    id: s.id,
-    nombre: s.nombre,
-    descripcion: s.descripcion,
-    duracion: s.duracion,
-    precio: Number(s.precio),
-    descuento: s.descuento !== null ? Number(s.descuento) : null,
-    senia: s.senia !== null ? Number(s.senia) : null,
+  // SERIALIZACIÓN OBLIGATORIA:
+  const serializedServicios = servicios.map((s) => ({
+    ...s,
+    precio: s.precio ? Number(s.precio) : 0,
+    descuento: s.descuento ? Number(s.descuento) : 0,
+    senia: s.senia ? Number(s.senia) : 0,
   }));
 
   return { servicios: serializedServicios, barberos, usuarios };

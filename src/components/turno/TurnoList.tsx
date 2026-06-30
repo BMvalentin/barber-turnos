@@ -42,23 +42,24 @@ export default function TurnoList({ turnos, session, totalPages, currentPage }: 
     (t) => t.estado === "PENDIENTE" || t.estado === "CONFIRMADO"
   );
 
-  if (!turnosActivos.length) {
-    return (
-      <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-lg p-8 text-center">
-        <p className="text-amber-200/70">No hay turnos activos</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {turnosActivos.map((turno) => (
-          <TurnoCard key={turno.id} turno={turno} session={session} />
-        ))}
-      </div>
+      
+      {/* 1. Mostramos el mensaje si está vacío, pero NO hacemos return temprano */}
+      {turnosActivos.length === 0 ? (
+        <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-lg p-8 text-center">
+          <p className="text-amber-200/70">No hay turnos activos en esta página.</p>
+        </div>
+      ) : (
+        /* 2. Solo mostramos el grid si hay turnos */
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {turnosActivos.map((turno) => (
+            <TurnoCard key={turno.id} turno={turno} session={session} />
+          ))}
+        </div>
+      )}
 
-      {/* AQUÍ ESTABA LO QUE TE FALTABA */}
+      {/* 3. La paginación SIEMPRE se renderiza si hay más de 1 página total */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 py-8">
           <Link
