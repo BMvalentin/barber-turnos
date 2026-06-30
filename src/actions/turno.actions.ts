@@ -273,48 +273,49 @@ export async function createTurno(
    GET TURNOS
 ========================= */
 
-export async function getTurnos(): Promise<ActionState> {
+export async function getTurnos(page: number = 1) {
   try {
     const session = await auth();
     if (!session?.user) return { success: false, error: "No autorizado" };
 
     const isAdmin = session.user.role === "ADMIN";
-    const userId = session.user.id;
-    
-    // Identificador único para el caché
-    const cacheKey = ["turnos-list", isAdmin ? "admin" : userId];
-    const cacheTags = [isAdmin ? "turnos-global" : `turnos-user-${userId}`];
+    const pageSize = 6;
+    const skip = (page - 1) * pageSize;
 
-    // La lógica de obtención y formateo queda dentro del caché
-    const fetchAndFormatTurnos = async () => {
-      
-      const turnos = await prisma.turno.findMany({
-        where: isAdmin ? {} : { userId: userId },
+    const [turnos, totalCount] = await Promise.all([
+      prisma.turno.findMany({
+        where: isAdmin ? {} : { userId: session.user.id },
+        skip,
+        take: pageSize,
         include: {
           user: { select: { id: true, name: true, email: true } },
           servicio: { select: { id: true, nombre: true, duracion: true } },
           barbero: { select: { id: true, nombre: true } },
         },
-        orderBy: { horarioReservado: "asc" },
-      });
+        orderBy: { horarioReservado: "desc" },
+      }),
+      prisma.turno.count({
+        where: isAdmin ? {} : { userId: session.user.id }
+      })
+    ]);
 
-      // Formateamos numeros, para que el caché guarde el objeto listo
-      return turnos.map((t) => ({
-        ...t,
-        precioCongelado: Number(t.precioCongelado),
-        seniaCongelada: Number(t.seniaCongelada),
-      }));
+    const data = turnos.map((t) => ({
+      ...t,
+      precioCongelado: Number(t.precioCongelado),
+      seniaCongelada: Number(t.seniaCongelada),
+    }));
+
+    return { 
+      success: true, 
+      data, 
+      totalPages: Math.ceil(totalCount / pageSize),
+      currentPage: page
     };
-
-    const data = await getCachedData(cacheKey, cacheTags, fetchAndFormatTurnos, 60);
-
-    return { success: true, data };
+    
   } catch (error) {
-    console.error("Error en getTurnos:", error);
     return { success: false, error: "Error al obtener turnos" };
   }
 }
-
 /* =========================
    OBTENER HORARIOS DISPONIBLES
 ========================= */
