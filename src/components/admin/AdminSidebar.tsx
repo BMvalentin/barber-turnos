@@ -12,8 +12,7 @@ import {
   Clock,
   CreditCard,
   Menu,
-  X,
-  CreditCard
+  X
 } from "lucide-react";
 
 import { CircleDollarSign } from "lucide-react"
