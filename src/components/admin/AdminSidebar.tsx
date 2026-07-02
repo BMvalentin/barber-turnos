@@ -1,4 +1,3 @@
-// components/admin/AdminSidebar.tsx
 "use client";
 
 import Link from "next/link";
@@ -11,9 +10,10 @@ import {
   Calendar, 
   ClipboardList,
   Clock,
-  LogOut,
+  CreditCard,
   Menu,
   X,
+  CreditCard
 } from "lucide-react";
 
 import { CircleDollarSign } from "lucide-react"
