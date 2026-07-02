@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import EditTurnoModal from "./EditarTurnoModal";
-import { Calendar, User, Scissors, DollarSign, CreditCard, Loader2 } from "lucide-react";
+import { Calendar, User, Scissors, DollarSign, CreditCard, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { cancelTurno } from "@/actions/user-dashboard";
-import { completedTurno } from "@/actions/turno.actions";
+import { completedTurno, confirmarTurno } from "@/actions/turno.actions";
 import { crearPreferenciaPago } from "@/actions/mercadopago-actions";
 import { toast } from "@/components/ui/use-toast";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
@@ -34,6 +34,8 @@ type Turno = {
 interface Props {
   turnos: Turno[];
   session: any;
+  totalPages: number;
+  currentPage: number;
 }
 
 type AccionConfirmacion = "cancelar" | "completar";
@@ -137,16 +139,6 @@ export default function TurnoList({ turnos, session }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Resultados */}
-      <div className="flex items-center justify-between">
-        <p className="text-amber-200/50 text-sm">
-          Mostrando{" "}
-          <span className="text-white font-semibold">
-            {turnosActivos.length}
-          </span>{" "}
-          {turnosActivos.length === 1 ? "turno activo" : "turnos activos"}
-        </p>
-      </div>
 
       {/* Grid de Turnos */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -189,6 +181,7 @@ function TurnoCard({
 }) {
   const [isCanceling, setIsCanceling] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
 
@@ -387,6 +380,13 @@ function TurnoCard({
                   className="text-xs font-bold text-blue-500 hover:text-blue-400 bg-blue-400/10 hover:bg-blue-500/20 px-4 py-2 rounded-lg transition-colors border border-blue-500/20 disabled:opacity-50"
                 >
                   {isCompleting ? "Completando..." : "Marcar Completado"}
+                </button>
+                <button
+                  onClick={handleConfirmar}
+                  disabled={isConfirming}
+                  className="text-xs font-bold text-green-500 hover:text-green-400 bg-green-400/10 hover:bg-green-500/20 px-4 py-2 rounded-lg transition-colors border border-green-500/20 disabled:opacity-50"
+                >
+                  {isConfirming ? "Confirmando..." : "Confirmar"}
                 </button>
               </>
             )}
