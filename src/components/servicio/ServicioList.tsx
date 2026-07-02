@@ -1,10 +1,9 @@
 "use client";
 
 import { deleteservicio } from "@/actions/servicio-actions";
-import { useActionState, useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import EditServicioModal from "./EditServicioModal";
 import CreateServicioForm from "./CreateServicioForm";
-import Link from "next/link";
 import {
   Scissors,
   Clock,
@@ -12,18 +11,13 @@ import {
   Filter,
   Trash2,
   SquarePen,
-  ArrowLeft,
   X,
   ChevronDown,
   Search,
   SlidersHorizontal,
 } from "lucide-react";
-
-const initialState = {
-  success: false,
-  error: undefined,
-  data: undefined,
-};
+import { ConfirmDialog } from "@/components/ui/confirm-modal";
+import { toast } from "@/components/ui/use-toast";
 
 type Servicio = {
   id: string;
@@ -76,12 +70,16 @@ export default function ServicioList({
   servicios: Servicio[];
   barberos: Barbero[];
 }) {
-  const ITEMS_PER_PAGE = 8; // Cantidad de servicios por página
+  const ITEMS_PER_PAGE = 8;
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
   const [currentPage, setCurrentPage] = useState(1);
   const filterPanelRef = useRef<HTMLDivElement>(null);
+
+  // Estado para el modal de confirmación
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  const [itemAEliminar, setItemAEliminar] = useState<string | null>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -98,6 +96,7 @@ export default function ServicioList({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showFilterPanel]);
 
+  // Filtrado y ordenamiento
   const serviciosFiltrados = servicios
     .filter((s) => {
       if (filters.search.trim()) {
@@ -144,15 +143,15 @@ export default function ServicioList({
       }
     });
 
-  // Lógica de Paginación
+  // Paginación
   const totalPages = Math.max(
     1,
-    Math.ceil(serviciosFiltrados.length / ITEMS_PER_PAGE),
+    Math.ceil(serviciosFiltrados.length / ITEMS_PER_PAGE)
   );
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedServicios = serviciosFiltrados.slice(
     startIndex,
-    startIndex + ITEMS_PER_PAGE,
+    startIndex + ITEMS_PER_PAGE
   );
   const displayCount = paginatedServicios.length;
 
@@ -171,25 +170,63 @@ export default function ServicioList({
 
   function updateFilter<K extends keyof FilterState>(
     key: K,
-    value: FilterState[K],
+    value: FilterState[K]
   ) {
     setFilters((prev) => ({ ...prev, [key]: value }));
-    setCurrentPage(1); // Volver a la página 1 al filtrar
+    setCurrentPage(1);
   }
 
   const activeServicesCount = servicios.filter((s) => s.estado).length;
   const avgPrice =
     servicios.length > 0
       ? (
-          servicios.reduce((acc, s) => acc + s.precio, 0) / servicios.length
-        ).toFixed(2)
+        servicios.reduce((acc, s) => acc + s.precio, 0) / servicios.length
+      ).toFixed(2)
       : "0.00";
   const avgTime =
     servicios.length > 0
       ? Math.round(
-          servicios.reduce((acc, s) => acc + s.duracion, 0) / servicios.length,
-        )
+        servicios.reduce((acc, s) => acc + s.duracion, 0) / servicios.length
+      )
       : 0;
+
+  // Manejadores del modal de confirmación
+  const handleEliminar = (id: string) => {
+    setItemAEliminar(id);
+    setMostrarConfirmacion(true);
+  };
+
+  const cancelarEliminacion = () => {
+    setMostrarConfirmacion(false);
+    setItemAEliminar(null);
+  };
+
+  const confirmarEliminacion = async () => {
+    if (!itemAEliminar) return;
+    const idAEliminar = itemAEliminar;
+    setMostrarConfirmacion(false);
+    setItemAEliminar(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("id", idAEliminar);
+      await deleteservicio(formData);
+      toast({
+        title: "Servicio eliminado",
+        description: "El servicio ha sido eliminado correctamente.",
+        variant: "default",
+        duration: 4000,
+      });
+      window.location.reload();
+    } catch (error) {
+      toast({
+        title: "Error al eliminar",
+        description: "Ocurrió un error al intentar eliminar el servicio.",
+        variant: "destructive",
+        duration: 4000,
+      });
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -233,11 +270,10 @@ export default function ServicioList({
             <div className="relative" ref={filterPanelRef}>
               <button
                 onClick={() => setShowFilterPanel((v) => !v)}
-                className={`flex items-center gap-2 px-4 py-2 border text-[10px] font-bold uppercase tracking-wider rounded transition-colors ${
-                  showFilterPanel || activeFilterCount > 0
+                className={`flex items-center gap-2 px-4 py-2 border text-[10px] font-bold uppercase tracking-wider rounded transition-colors ${showFilterPanel || activeFilterCount > 0
                     ? "border-[#E8B031] text-[#E8B031] bg-[#E8B031]/10"
                     : "border-[#2C261D] text-[#E4E0D9] bg-[#1C1812] hover:bg-[#2C261D]"
-                }`}
+                  }`}
               >
                 <SlidersHorizontal className="w-4 h-4" />
                 Filtrar
@@ -309,11 +345,10 @@ export default function ServicioList({
                           <button
                             key={opt.value || "todos"}
                             onClick={() => updateFilter("estado", opt.value)}
-                            className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${
-                              filters.estado === opt.value
+                            className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${filters.estado === opt.value
                                 ? "bg-[#E8B031] text-black"
                                 : "bg-[#1C1812] border border-[#2C261D] text-[#8E8675] hover:border-[#E8B031] hover:text-[#E4E0D9]"
-                            }`}
+                              }`}
                           >
                             {opt.label}
                           </button>
@@ -507,6 +542,7 @@ export default function ServicioList({
                   key={servicio.id}
                   servicio={servicio}
                   barberos={barberos}
+                  onEliminar={handleEliminar} // 👈 AHORA SÍ
                 />
               ))}
             </div>
@@ -549,6 +585,16 @@ export default function ServicioList({
         )}
       </div>
 
+      {/* Modal de confirmación (fuera de la tabla) */}
+      {mostrarConfirmacion && (
+        <ConfirmDialog
+          title="Eliminar servicio"
+          message={`¿Estás seguro de que deseas eliminar el servicio "${servicios.find(s => s.id === itemAEliminar)?.nombre}"?`}
+          onConfirm={confirmarEliminacion}
+          onCancel={cancelarEliminacion}
+        />
+      )}
+
       {showCreateModal && (
         <CreateServicioForm
           barberos={barberos}
@@ -558,6 +604,8 @@ export default function ServicioList({
     </div>
   );
 }
+
+// ---- Subcomponentes ----
 
 function FilterTag({
   label,
@@ -582,11 +630,12 @@ function FilterTag({
 function ServicioRow({
   servicio,
   barberos,
+  onEliminar,
 }: {
   servicio: Servicio;
   barberos: Barbero[];
+  onEliminar: (id: string) => void;
 }) {
-  const [state, formAction] = useActionState(deleteservicio, initialState);
   const [showEditModal, setShowEditModal] = useState(false);
 
   return (
@@ -640,62 +689,43 @@ function ServicioRow({
             <SquarePen className="w-5 h-5" />
           </button>
 
-          <form action={formAction}>
-            <input type="hidden" name="id" value={servicio.id} />
-            <button
-              type="submit"
-              title="Eliminar servicio"
-              className="text-[#8E8675] hover:text-red-500 transition-colors p-1"
-              onClick={(e) => {
-                if (
-                  !confirm(
-                    `¿Estás seguro de que deseas eliminar el servicio "${servicio.nombre}"?`,
-                  )
-                ) {
-                  e.preventDefault();
-                }
-              }}
-            >
-              <Trash2 className="w-5 h-5" />
-            </button>
-          </form>
+          {/* Eliminar sin confirm nativo */}
+          <button
+            onClick={() => onEliminar(servicio.id)}
+            title="Eliminar servicio"
+            className="text-[#8E8675] hover:text-red-500 transition-colors p-1"
+          >
+            <Trash2 className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Vista para mobile (precio, duración y botones juntos) */}
+        {/* Vista mobile */}
         <div className="flex md:hidden items-center justify-between mt-2 pt-3 border-t border-[#2C261D]/50">
-            <div className="flex items-center gap-4">
-              <span className="font-semibold text-[#E8B031] text-sm">${servicio.precio}</span>
-              <span className="flex items-center gap-1 text-[#8E8675] text-sm"><Clock className="w-3 h-3" /> {servicio.duracion} min</span>
-            </div>
-            <div className="flex justify-end gap-2 items-center">
-              <button
-                onClick={() => setShowEditModal(true)}
-                title="Editar servicio"
-                className="text-[#8E8675] hover:text-[#E8B031] transition-colors p-1.5 bg-[#1C1812] rounded border border-[#2C261D]"
-              >
-                <SquarePen className="w-4 h-4" />
-              </button>
+          <div className="flex items-center gap-4">
+            <span className="font-semibold text-[#E8B031] text-sm">
+              ${servicio.precio}
+            </span>
+            <span className="flex items-center gap-1 text-[#8E8675] text-sm">
+              <Clock className="w-3 h-3" /> {servicio.duracion} min
+            </span>
+          </div>
+          <div className="flex justify-end gap-2 items-center">
+            <button
+              onClick={() => setShowEditModal(true)}
+              title="Editar servicio"
+              className="text-[#8E8675] hover:text-[#E8B031] transition-colors p-1.5 bg-[#1C1812] rounded border border-[#2C261D]"
+            >
+              <SquarePen className="w-4 h-4" />
+            </button>
 
-              <form action={formAction}>
-                <input type="hidden" name="id" value={servicio.id} />
-                <button
-                  type="submit"
-                  title="Eliminar servicio"
-                  className="text-[#8E8675] hover:text-red-500 transition-colors p-1.5 bg-[#1C1812] rounded border border-[#2C261D]"
-                  onClick={(e) => {
-                    if (
-                      !confirm(
-                        `¿Estás seguro de que deseas eliminar el servicio "${servicio.nombre}"?`,
-                      )
-                    ) {
-                      e.preventDefault();
-                    }
-                  }}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </form>
-            </div>
+            <button
+              onClick={() => onEliminar(servicio.id)}
+              title="Eliminar servicio"
+              className="text-[#8E8675] hover:text-red-500 transition-colors p-1.5 bg-[#1C1812] rounded border border-[#2C261D]"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 

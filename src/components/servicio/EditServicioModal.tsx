@@ -5,11 +5,11 @@ import { useActionState, useState, useRef, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import {
   ArrowLeft,
-  LayoutGrid,
   DollarSign,
   Percent,
   Clock,
 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 const initialState = {
   success: false,
@@ -55,7 +55,12 @@ export default function EditServicioModal({
   // Efecto para cerrar el modal si la actualización fue exitosa
   useEffect(() => {
     if (state.success) {
-      alert("✅ Servicio actualizado exitosamente!");
+      toast({
+        title: "Servicio actualizado",
+        description: "El servicio se ha actualizado correctamente.",
+        variant: "default",
+        duration: 4000,
+      });
       onClose();
     }
   }, [state.success, onClose]);
