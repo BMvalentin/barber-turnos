@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import LayoutComponent from "@/components/LayoutComponent";
-import { auth} from "@/auth";
+import { auth } from "@/auth";
 import AppGate from "@/components/AppGate";
+import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,9 +38,10 @@ export default async function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {/* Pasa sesión al componente de cliente */}
         <LayoutComponent session={session}>
-        <AppGate>
-          {children}
-        </AppGate>
+          <AppGate>
+            {children}
+            <Toaster />
+          </AppGate>
         </LayoutComponent>
       </body>
     </html>

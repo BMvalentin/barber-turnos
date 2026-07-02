@@ -1,6 +1,5 @@
 "use client";
-
-import { toast } from "sonner";
+import {toast} from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useState, useTransition } from "react";
@@ -80,8 +79,19 @@ export default function EditBarberoModal({
       const result = await uploadBarberImages([file], "barberia/barberos");
       if (result.success && result.images.length > 0) {
         setSrcImage(result.images[0]);
-        toast.success("Imagen subida correctamente");
+        toast({
+          title: "Imagen subida",
+          description: "La imagen se ha subido correctamente.",
+          variant: "default",
+          duration: 4000,
+        });
       } else {
+        tpast({
+          title: "Error",
+          description: "Error al subir la imagen",
+          variant: "destructive",
+          duration: 4000,
+        });
         setUploadError("Error al subir la imagen");
         setSelectedFile(null);
       }
@@ -113,10 +123,21 @@ export default function EditBarberoModal({
       });
 
       if (result.success) {
-        toast.success("Barbero actualizado correctamente");
+        toast({
+          title: "Barbero actualizado",
+          description: "Los cambios se han guardado correctamente.",
+          variant: "default",
+          duration: 4000,
+        });
         onClose();
         router.refresh();
       } else {
+        toast({
+          title: "Error",
+          description: result.error || "Error al actualizar el barbero",
+          variant: "destructive",
+          duration: 4000,
+        });
         const errorMsg =
           typeof result.error === "string" ? result.error : "Datos inválidos";
         setError(errorMsg);
