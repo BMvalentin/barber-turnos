@@ -11,9 +11,9 @@ import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import ConfirmModal from "@/components/ui/confirm-modal";
+import { toast } from "@/components/ui/use-toast";
+import { ConfirmDialog } from "@/components/ui/confirm-modal";
 
 export type DiaLaboral = {
   id: string;
@@ -45,9 +45,9 @@ export function DiaLaboralClient({ initialData }: DiaLaboralClientProps) {
   const [selectedDia, setSelectedDia] = useState<DiaLaboral | null>(null);
   const [margenes, setMargenes] = useState<any[]>([]);
 
-  // ConfirmModal states
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [margenToDelete, setMargenToDelete] = useState<string | null>(null);
+  // Estado para controlar el modal de confirmación de eliminación
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  const [margenAEliminar, setMargenAEliminar] = useState<string | null>(null);
 
   const handleAsignarHorarios = async (dia: DiaLaboral) => {
     setSelectedDia(dia);
@@ -57,49 +57,61 @@ export function DiaLaboralClient({ initialData }: DiaLaboralClientProps) {
         setMargenes(margenesData);
         setIsHorariosDialogOpen(true);
       } catch (error) {
-        toast.error("Error al cargar los horarios");
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los horarios.",
+          variant: "destructive",
+          duration: 4000,
+        });
       }
     });
   };
 
-  // En lugar de abrir el modal sobre el dialog, cerramos el dialog primero
+  // Abre el modal de confirmación guardando el margen a eliminar
   const handleDeleteMargen = (margenId: string) => {
-    setMargenToDelete(margenId);
-    setIsHorariosDialogOpen(false); // cierra el panel de horarios
-    setShowDeleteModal(true);       // abre la confirmación
+    setMargenAEliminar(margenId);
+    setMostrarConfirmacion(true);
   };
 
-  const ejecutarEliminarMargen = () => {
-    if (!margenToDelete) return;
+  // Ejecuta la eliminación una vez confirmada por el usuario
+  const confirmarEliminacion = () => {
+    if (!margenAEliminar) return;
 
-    setShowDeleteModal(false);
+    const idAEliminar = margenAEliminar;
+    setMostrarConfirmacion(false);
+    setMargenAEliminar(null);
+
     startTransition(async () => {
-      const result = await deleteMargenLaboral(margenToDelete);
+      const result = await deleteMargenLaboral(idAEliminar);
 
       if (result.success) {
-        toast.success("Horario eliminado correctamente");
-        // Si todavía tenemos un día seleccionado, recargamos márgenes
+        toast({
+          title: "Éxito",
+          description: "Horario eliminado correctamente.",
+          variant: "default",
+          duration: 4000,
+        });
+        // Recargar márgenes
         if (selectedDia) {
           const margenesData = await getMargenesLaborales(selectedDia.id);
           setMargenes(margenesData);
         }
         router.refresh();
-        // Volvemos a abrir el panel de horarios (opcional, si querés que siga abierto)
-        setIsHorariosDialogOpen(true);
       } else {
-        toast.error(result.error || "Error al eliminar el horario");
-        // También reabrimos el panel para que el usuario vea el error
-        setIsHorariosDialogOpen(true);
+        toast({
+          title: "Error",
+          description: result.error || "Error al eliminar el horario",
+          variant: "destructive",
+          duration: 4000,
+        });
       }
-      setMargenToDelete(null);
     });
   };
 
+  // Cancela la eliminación y cierra el modal
   const cancelarEliminacion = () => {
-    setShowDeleteModal(false);
-    setMargenToDelete(null);
-    // Reabrimos el panel de horarios que habíamos cerrado
-    setIsHorariosDialogOpen(true);
+    setMostrarConfirmacion(false);
+    setMargenAEliminar(null);
   };
 
   const handleHorariosSuccess = async () => {
@@ -123,7 +135,17 @@ export function DiaLaboralClient({ initialData }: DiaLaboralClientProps) {
         open={isHorariosDialogOpen}
         onOpenChange={setIsHorariosDialogOpen}
       >
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto bg-black/95 backdrop-blur-xl border border-amber-900/30">
+        <DialogContent
+          className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto bg-black/95 backdrop-blur-xl border border-amber-900/30"
+          onInteractOutside={(evento) => {
+            // Evita que Radix cierre este diálogo cuando la interacción
+            // viene del modal de confirmación (montado vía portal en body)
+            const objetivo = evento.target as HTMLElement;
+            if (objetivo.closest("[data-confirm-modal]")) {
+              evento.preventDefault();
+            }
+          }}
+        >
           <div className="py-2">
             {selectedDia && (
               <HorariosList
@@ -135,19 +157,19 @@ export function DiaLaboralClient({ initialData }: DiaLaboralClientProps) {
               />
             )}
           </div>
+
         </DialogContent>
       </Dialog>
-
-      {/* Modal de confirmación para eliminar horario */}
-      <ConfirmModal
-        open={showDeleteModal}
-        title="Eliminar horario"
-        description="¿Estás seguro de que deseas eliminar este horario? Esta acción no se puede deshacer."
-        confirmText="Eliminar"
-        cancelText="Cancelar"
-        onConfirm={ejecutarEliminarMargen}
-        onCancel={cancelarEliminacion}
-      />
+      {/* Modal de confirmación, renderizado dentro del Dialog de Radix
+              para que quede dentro de su zona interactiva y no bloquee los clicks */}
+      {mostrarConfirmacion && (
+        <ConfirmDialog
+          title="Eliminar horario"
+          message="¿Estás seguro de eliminar este horario?"
+          onConfirm={confirmarEliminacion}
+          onCancel={cancelarEliminacion}
+        />
+      )}
     </>
   );
 }

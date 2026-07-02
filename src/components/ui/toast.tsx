@@ -4,7 +4,7 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 const variantes = cva(
-  "select-none group pointer-events-auto relative flex w-full items-center gap-4 overflow-hidden rounded-[2rem] border p-6 shadow-lg",
+  "select-none group pointer-events-auto relative flex w-full items-center gap-4 overflow-hidden rounded-[1rem] border p-6 shadow-lg",
   {
     variants: {
       variant: {

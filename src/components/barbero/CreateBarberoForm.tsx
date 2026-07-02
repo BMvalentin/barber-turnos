@@ -1,6 +1,6 @@
 "use client";
 
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
@@ -162,7 +162,12 @@ export default function CreateBarberoForm({
       });
 
       if (result.success) {
-        toast.success("Barbero creado correctamente");
+        toast({
+          title: "Barbero creado",
+          description: "El barbero se ha creado correctamente.",
+          variant: "default",
+          duration: 4000,
+        })
 
         setNombre("");
         setSrcImage("");
@@ -175,7 +180,12 @@ export default function CreateBarberoForm({
         router.refresh();
       } else {
         setError(result.error || "Error al crear barbero");
-        toast.error(result.error || "Error");
+        toast({
+          title: "Error",
+          description: result.error || "Error al crear barbero",
+          variant: "destructive",
+          duration: 4000,
+        });
       }
     });
   };

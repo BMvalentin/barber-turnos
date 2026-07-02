@@ -1,81 +1,67 @@
-// component/ui/confirm-modal.tsx
 "use client";
 
-import { AlertTriangle } from "lucide-react";
+import { X } from "lucide-react";
+import { createPortal } from "react-dom";
 
-interface ConfirmModalProps {
-  open: boolean;
+interface ConfirmDialogProps {
   title: string;
-  description?: string;
-  confirmText?: string;
-  cancelText?: string;
+  message: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-export default function ConfirmModal({
-  open,
-  title,
-  description,
-  confirmText = "Confirmar",
-  cancelText = "Cancelar",
-  onConfirm,
-  onCancel,
-}: ConfirmModalProps) {
-  if (!open) return null;
+export function ConfirmDialog({ title, message, onConfirm, onCancel }: ConfirmDialogProps) {
+  // En SSR document no existe, evitamos renderizar hasta estar en el cliente
+  if (typeof document === "undefined") return null;
 
-  return (
-    // Aumenté el z-index de z-50 a z-[60] para que quede sobre el Dialog
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      {/* Fondo oscuro con blur */}
+  return createPortal(
+    <div
+      data-confirm-modal
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+      style={{
+        background: "rgba(7,26,24,0.7)",
+        backdropFilter: "blur(8px)",
+        pointerEvents: "auto",
+      }}
+    >
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity"
-        onClick={onCancel}
-      />
-
-      {/* Contenedor del modal */}
-      <div className="relative w-full max-w-md bg-zinc-900 border border-amber-900/40 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        {/* Línea decorativa superior */}
-        <div className="h-1.5 bg-gradient-to-r from-amber-600 via-amber-400 to-amber-600" />
-
-        <div className="p-8">
-          {/* Icono y título */}
-          <div className="flex items-start gap-4 mb-6">
-            <div className="flex-shrink-0 p-2.5 bg-amber-500/10 rounded-full">
-              <AlertTriangle className="h-6 w-6 text-amber-400" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white leading-tight">
-                {title}
-              </h2>
-              {description && (
-                <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
-                  {description}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Botones */}
-          <div className="flex justify-end gap-3 mt-6">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-sm transition-colors border border-zinc-700 hover:border-zinc-600"
-            >
-              {cancelText}
-            </button>
-
-            <button
-              type="button"
-              onClick={onConfirm}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black font-bold text-sm shadow-lg shadow-amber-900/30 transition-all active:scale-[0.97]"
-            >
-              {confirmText}
-            </button>
-          </div>
+        className="w-full max-w-sm rounded-2xl p-8 shadow-2xl relative"
+        style={{ background: "#ffffff", border: "1px solid #b2dede" }}
+      >
+        <button
+          onClick={onCancel}
+          className="absolute top-4 right-4 transition-colors"
+          style={{ color: "#4a7c80" }}
+        >
+          <X size={20} />
+        </button>
+        <h3
+          className="text-xl font-black uppercase italic mb-4"
+          style={{ color: "#083d42" }}
+        >
+          {title}
+        </h3>
+        <p className="text-sm mb-8" style={{ color: "#4a7c80" }}>
+          {message}
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 rounded-lg text-sm font-bold uppercase"
+            style={{ background: "#f0fafa", color: "#4a7c80" }}
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 rounded-lg text-sm font-bold uppercase text-white"
+            style={{ background: "#e05050" }}
+          >
+            Aceptar
+          </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
