@@ -10,7 +10,6 @@ import {
   Calendar, 
   ClipboardList,
   Clock,
-  CreditCard,
   Menu,
   X,
   CreditCard
