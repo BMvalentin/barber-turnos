@@ -11,8 +11,9 @@ import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { toast } from "@/components/ui/use-toast";
+import { ConfirmDialog } from "@/components/ui/confirm-modal";
 
 export type DiaLaboral = {
   id: string;
@@ -44,6 +45,10 @@ export function DiaLaboralClient({ initialData }: DiaLaboralClientProps) {
   const [selectedDia, setSelectedDia] = useState<DiaLaboral | null>(null);
   const [margenes, setMargenes] = useState<any[]>([]);
 
+  // Estado para controlar el modal de confirmación de eliminación
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  const [margenAEliminar, setMargenAEliminar] = useState<string | null>(null);
+
   const handleAsignarHorarios = async (dia: DiaLaboral) => {
     setSelectedDia(dia);
     startTransition(async () => {
@@ -52,19 +57,40 @@ export function DiaLaboralClient({ initialData }: DiaLaboralClientProps) {
         setMargenes(margenesData);
         setIsHorariosDialogOpen(true);
       } catch (error) {
-        toast.error("Error al cargar los horarios");
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los horarios.",
+          variant: "destructive",
+          duration: 4000,
+        });
       }
     });
   };
 
-  const handleDeleteMargen = async (margenId: string) => {
-    if (!confirm("¿Estás seguro de eliminar este horario?")) return;
+  // Abre el modal de confirmación guardando el margen a eliminar
+  const handleDeleteMargen = (margenId: string) => {
+    setMargenAEliminar(margenId);
+    setMostrarConfirmacion(true);
+  };
+
+  // Ejecuta la eliminación una vez confirmada por el usuario
+  const confirmarEliminacion = () => {
+    if (!margenAEliminar) return;
+
+    const idAEliminar = margenAEliminar;
+    setMostrarConfirmacion(false);
+    setMargenAEliminar(null);
 
     startTransition(async () => {
-      const result = await deleteMargenLaboral(margenId);
+      const result = await deleteMargenLaboral(idAEliminar);
 
       if (result.success) {
-        toast.success("Horario eliminado correctamente");
+        toast({
+          title: "Éxito",
+          description: "Horario eliminado correctamente.",
+          variant: "default",
+          duration: 4000,
+        });
         // Recargar márgenes
         if (selectedDia) {
           const margenesData = await getMargenesLaborales(selectedDia.id);
@@ -72,9 +98,20 @@ export function DiaLaboralClient({ initialData }: DiaLaboralClientProps) {
         }
         router.refresh();
       } else {
-        toast.error(result.error || "Error al eliminar el horario");
+        toast({
+          title: "Error",
+          description: result.error || "Error al eliminar el horario",
+          variant: "destructive",
+          duration: 4000,
+        });
       }
     });
+  };
+
+  // Cancela la eliminación y cierra el modal
+  const cancelarEliminacion = () => {
+    setMostrarConfirmacion(false);
+    setMargenAEliminar(null);
   };
 
   const handleHorariosSuccess = async () => {
@@ -98,7 +135,17 @@ export function DiaLaboralClient({ initialData }: DiaLaboralClientProps) {
         open={isHorariosDialogOpen}
         onOpenChange={setIsHorariosDialogOpen}
       >
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto bg-black/95 backdrop-blur-xl border border-amber-900/30">
+        <DialogContent
+          className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto bg-black/95 backdrop-blur-xl border border-amber-900/30"
+          onInteractOutside={(evento) => {
+            // Evita que Radix cierre este diálogo cuando la interacción
+            // viene del modal de confirmación (montado vía portal en body)
+            const objetivo = evento.target as HTMLElement;
+            if (objetivo.closest("[data-confirm-modal]")) {
+              evento.preventDefault();
+            }
+          }}
+        >
           <div className="py-2">
             {selectedDia && (
               <HorariosList
@@ -110,8 +157,19 @@ export function DiaLaboralClient({ initialData }: DiaLaboralClientProps) {
               />
             )}
           </div>
+
         </DialogContent>
       </Dialog>
+      {/* Modal de confirmación, renderizado dentro del Dialog de Radix
+              para que quede dentro de su zona interactiva y no bloquee los clicks */}
+      {mostrarConfirmacion && (
+        <ConfirmDialog
+          title="Eliminar horario"
+          message="¿Estás seguro de eliminar este horario?"
+          onConfirm={confirmarEliminacion}
+          onCancel={cancelarEliminacion}
+        />
+      )}
     </>
   );
 }

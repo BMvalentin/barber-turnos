@@ -3,9 +3,9 @@
 import { useActionState, useEffect } from "react";
 import { createExcepcion } from "@/actions/excepcionesLaborales.actions";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useFormStatus } from "react-dom";
+import { toast } from "@/components/ui/use-toast";
 
 const initialState = {
   success: false,
@@ -37,10 +37,20 @@ export default function ExcepcionForm({ barberos }: { barberos: Barbero[] }) {
 
   useEffect(() => {
     if (state.success) {
-      toast.success("Excepción creada correctamente");
+      toast({
+        title: "Excepción creada",
+        description: "La excepción laboral se ha creado correctamente.",
+        variant: "default",
+        duration: 4000,
+      });
       router.refresh();
     } else if (state.error) {
-      toast.error(state.error);
+      toast({
+        title: "Error",
+        description: state.error || "Error al crear la excepción laboral",
+        variant: "destructive",
+        duration: 4000,
+      });
     }
   }, [state, router]);
 

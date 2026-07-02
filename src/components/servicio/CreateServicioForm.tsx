@@ -3,7 +3,8 @@
 import { createServicio, ActionState } from "@/actions/servicio-actions";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { ArrowLeft, Clock, DollarSign, Percent } from "lucide-react";
+import { ArrowLeft, DollarSign } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 const initialState: ActionState = {
   success: false,
@@ -35,7 +36,12 @@ export default function CreateServicioForm({
   useEffect(() => {
     if (state.success) {
       formRef.current?.reset();
-      alert("✅ Servicio creado exitosamente!");
+      toast({
+        title: "Servicio creado",
+        description: "El servicio se ha creado correctamente.",
+        variant: "default",
+        duration: 4000,
+      });
       onClose(); // Cerramos el modal tras la creación exitosa
     }
   }, [state.success, onClose]);
@@ -234,11 +240,9 @@ function InputField({
         )}
         <input
           {...props}
-          className={`w-full bg-[#14110C] border ${
-            errors ? "border-red-500" : "border-[#2C261D]"
-          } rounded-lg ${Icon ? "pl-11" : "pl-4"} ${
-            unit ? "pr-14" : "pr-4"
-          } py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-colors`}
+          className={`w-full bg-[#14110C] border ${errors ? "border-red-500" : "border-[#2C261D]"
+            } rounded-lg ${Icon ? "pl-11" : "pl-4"} ${unit ? "pr-14" : "pr-4"
+            } py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-colors`}
         />
         {unit && (
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#8E8675] uppercase">
