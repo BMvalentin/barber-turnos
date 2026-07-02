@@ -12,10 +12,9 @@ import {
   Clock,
   Menu,
   X,
-  CreditCard
+  CreditCard,
+  CircleDollarSign
 } from "lucide-react";
-
-import { CircleDollarSign } from "lucide-react"
 
 const menuItems = [
   { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
