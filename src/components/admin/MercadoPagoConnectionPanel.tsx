@@ -19,7 +19,7 @@ import {
   type EstadoConexionMP,
   type ConfiguracionOAuthMP,
 } from "@/actions/mercadopago-oauth.actions";
-import ConfirmModal from "@/components/ui/confirm-modal";
+import { ConfirmDialog } from "@/components/ui/confirm-modal"; // ← import nombrado
 
 interface Props {
   estadoInicial: EstadoConexionMP;
@@ -166,9 +166,10 @@ export default function MercadoPagoConnectionPanel({
         title: "Cuenta conectada correctamente",
         description:
           "Ahora podés cobrar señas online con Mercado Pago. ¡Éxitos!",
-        variant: "success",
+        variant: "default",
         duration: 4000,
       });
+      // Actualizamos el estado local para reflejar la conexión (opcional, luego la página se recarga)
       setEstado((prev) => ({ ...prev, conectada: true, bloqueada: true }));
       router.replace("/admin/mercadopago");
     }
@@ -200,7 +201,7 @@ export default function MercadoPagoConnectionPanel({
         toast({
           title: "Cuenta desconectada correctamente",
           description: "La cuenta de Mercado Pago ha sido desconectada.",
-          variant: "success",
+          variant: "default",
           duration: 4000,
         });
         setEstado({
@@ -281,14 +282,14 @@ export default function MercadoPagoConnectionPanel({
               <p className="text-white">
                 {estado.actualizadaEn
                   ? new Date(estado.actualizadaEn).toLocaleString("es-AR", {
-                    timeZone: "America/Argentina/Buenos_Aires",
-                    hour12: false,
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
+                      timeZone: "America/Argentina/Buenos_Aires",
+                      hour12: false,
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
                   : "-"}
               </p>
             </div>
@@ -333,20 +334,21 @@ export default function MercadoPagoConnectionPanel({
                 onClick={
                   !configuracionCompleta
                     ? (e) => {
-                      e.preventDefault();
-                      toast({
-                        title: "Configuración incompleta",
-                        description:
-                          "Completá la configuración del .env antes de conectar",
-                        variant: "destructive",
-                      });
-                    }
+                        e.preventDefault();
+                        toast({
+                          title: "Configuración incompleta",
+                          description:
+                            "Completá la configuración del .env antes de conectar",
+                          variant: "destructive",
+                        });
+                      }
                     : undefined
                 }
-                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-white text-sm font-bold transition-colors ${configuracionCompleta
+                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-white text-sm font-bold transition-colors ${
+                  configuracionCompleta
                     ? "bg-[#009EE3] hover:bg-[#0088CC] cursor-pointer"
                     : "bg-zinc-700 cursor-not-allowed opacity-60"
-                  }`}
+                }`}
               >
                 <Link2 className="h-4 w-4" />
                 Conectar con Mercado Pago
@@ -362,16 +364,15 @@ export default function MercadoPagoConnectionPanel({
         </div>
       </div>
 
-      {/* Modal de confirmación */}
-      <ConfirmModal
-        open={showConfirmModal}
-        title="Desconectar cuenta de Mercado Pago"
-        description="¿Estás seguro? Dejarás de recibir pagos de señas online hasta que conectes otra cuenta."
-        confirmText="Sí, desconectar"
-        cancelText="Cancelar"
-        onConfirm={ejecutarDesconexion}
-        onCancel={() => setShowConfirmModal(false)}
-      />
+      {/* Modal de confirmación - usando ConfirmDialog correctamente */}
+      {showConfirmModal && (
+        <ConfirmDialog
+          title="Desconectar cuenta de Mercado Pago"
+          message="¿Estás seguro? Dejarás de recibir pagos de señas online hasta que conectes otra cuenta."
+          onConfirm={ejecutarDesconexion}
+          onCancel={() => setShowConfirmModal(false)}
+        />
+      )}
     </div>
   );
 }
