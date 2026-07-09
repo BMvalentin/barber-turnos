@@ -38,7 +38,7 @@ interface Props {
   currentPage: number;
 }
 
-type AccionConfirmacion = "cancelar" | "completar";
+type AccionConfirmacion = "cancelar" | "completar" | "confirmar";
 
 export default function TurnoList({ turnos, session }: Props) {
   const turnosActivos = turnos.filter(
@@ -149,6 +149,11 @@ export default function TurnoList({ turnos, session }: Props) {
             session={session}
             onCancelRequest={handleRequestCancel}
             onCompleteRequest={handleRequestComplete}
+            onConfirmRequest={(id) => {
+              setAccionConfirmacion("confirmar");
+              setTurnoIdConfirmacion(id);
+              setMostrarConfirmacion(true);
+            }}
           />
         ))}
       </div>
@@ -173,11 +178,13 @@ function TurnoCard({
   session,
   onCancelRequest,
   onCompleteRequest,
+  onConfirmRequest,
 }: {
   turno: Turno;
   session: any;
   onCancelRequest: (id: string) => void;
   onCompleteRequest: (id: string) => void;
+  onConfirmRequest: (id: string) => void;
 }) {
   const [isCanceling, setIsCanceling] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
@@ -201,6 +208,10 @@ function TurnoCard({
   const handleCompletar = () => {
     onCompleteRequest(turno.id);
   };
+
+  const handleConfirmar = () => {
+    onConfirmRequest(turno.id);
+  }
 
   const handlePagarSenia = async () => {
     setIsPaying(true);
