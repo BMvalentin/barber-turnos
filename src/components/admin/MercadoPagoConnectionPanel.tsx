@@ -19,8 +19,7 @@ import {
   type EstadoConexionMP,
   type ConfiguracionOAuthMP,
 } from "@/actions/mercadopago-oauth.actions";
-import { ConfirmDialog } from "@/components/ui/confirm-modal"; // ← import nombrado
-
+import { ConfirmDialog } from "@/components/ui/confirm-modal";
 interface Props {
   estadoInicial: EstadoConexionMP;
   configuracionOAuth: ConfiguracionOAuthMP;
@@ -282,14 +281,14 @@ export default function MercadoPagoConnectionPanel({
               <p className="text-white">
                 {estado.actualizadaEn
                   ? new Date(estado.actualizadaEn).toLocaleString("es-AR", {
-                      timeZone: "America/Argentina/Buenos_Aires",
-                      hour12: false,
-                      year: "numeric",
-                      month: "2-digit",
-                      day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
+                    timeZone: "America/Argentina/Buenos_Aires",
+                    hour12: false,
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
                   : "-"}
               </p>
             </div>
@@ -334,21 +333,20 @@ export default function MercadoPagoConnectionPanel({
                 onClick={
                   !configuracionCompleta
                     ? (e) => {
-                        e.preventDefault();
-                        toast({
-                          title: "Configuración incompleta",
-                          description:
-                            "Completá la configuración del .env antes de conectar",
-                          variant: "destructive",
-                        });
-                      }
+                      e.preventDefault();
+                      toast({
+                        title: "Configuración incompleta",
+                        description:
+                          "Completá la configuración del .env antes de conectar",
+                        variant: "destructive",
+                      });
+                    }
                     : undefined
                 }
-                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-white text-sm font-bold transition-colors ${
-                  configuracionCompleta
+                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-white text-sm font-bold transition-colors ${configuracionCompleta
                     ? "bg-[#009EE3] hover:bg-[#0088CC] cursor-pointer"
                     : "bg-zinc-700 cursor-not-allowed opacity-60"
-                }`}
+                  }`}
               >
                 <Link2 className="h-4 w-4" />
                 Conectar con Mercado Pago
