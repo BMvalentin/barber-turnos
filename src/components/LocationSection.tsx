@@ -106,7 +106,7 @@ export function LocationSection() {
             <div className="absolute inset-0 bg-amber-950/5 pointer-events-none group-hover:bg-transparent transition-colors z-10" />
 
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3284.016887889407!2d-58.3815704!3d-34.6037389!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4aa0d3049103f57f%3A0x6961474d2b27137b!2sObelisco!5e0!3m2!1ses-419!2sar!4v1700000000000!5m2!1ses-419!2sar"
+              src="https://maps.app.goo.gl/dkW49FJRgJnZF9cR8"
               width="100%"
               height="100%"
               style={{ border: 0, filter: "grayscale(0.8) invert(0.9) contrast(1.2)" }}
