@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { servicioSchema } from "@/lib/servicios-zod";
+import { uploadMultipleToCloudinary } from "@/lib/cloudinary-uploader";
 
 export type ActionState = {
   error?: string;
@@ -95,10 +96,14 @@ export const createServicio = async (
   formData: FormData,
 ): Promise<ActionState> => {
   try {
+    const image = formData.get("image") as File | null;
     const rawData = Object.fromEntries(formData.entries());
-    
+
+    delete rawData.image;
+
     // Validar con Zod
     const validated = servicioSchema.safeParse(rawData);
+
 
     if (!validated.success) {
       return {
@@ -110,7 +115,24 @@ export const createServicio = async (
 
     const { nombre, descripcion, srcImage: srcImageRaw, estado, duracion, precio, descuento, senia } = validated.data;
 
-    const srcImage = cleanImageUrl(srcImageRaw || null);
+    let srcImage = cleanImageUrl(srcImageRaw || null);
+
+    if (image && image.size > 0) {
+      const upload = await uploadMultipleToCloudinary([image], {
+        folder: "barberia/servicios",
+      });
+
+      const uploaded = upload.find((r) => r.success);
+
+      if (!uploaded?.url) {
+        return {
+          success: false,
+          error: "No se pudo subir la imagen.",
+        };
+      }
+
+      srcImage = uploaded.url;
+    }
 
     const nuevoServicio = await prisma.servicio.create({
       data: {
