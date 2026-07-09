@@ -236,7 +236,7 @@ export default function CreateBarberoForm({
           </div>
         ) : (
           <label
-            className={`flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-amber-900/40 rounded-lg cursor-pointer hover:border-amber-500/50 transition ${uploading ? "opacity-50 pointer-events-none" : ""
+            className={`relative flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-amber-900/40 rounded-lg cursor-pointer hover:border-amber-500/50 transition ${uploading ? "opacity-50 pointer-events-none" : ""
               }`}
           >
             {uploading ? (
@@ -253,7 +253,7 @@ export default function CreateBarberoForm({
               type="file"
               accept="image/*"
               onChange={handleFileChange}
-              className="hidden"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               disabled={uploading}
             />
           </label>
