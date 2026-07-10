@@ -4,6 +4,7 @@ import { useState } from "react";
 import EditBarberoModal from "./EditBarberoModal";
 import { deleteBarbero } from "@/actions/barbero.actions";
 import { User } from "lucide-react";
+import { Button } from "../ui/button";
 
 type Barbero = {
   id: string;
@@ -128,18 +129,17 @@ function BarberoCard({
 
           {/* BOTONES */}
           <div className="flex gap-2 pt-3 border-t border-amber-900/30">
-            <button
+            <Button className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
               onClick={() => setOpen(true)}
-              className="flex-1 bg-amber-600 text-white py-2 rounded"
             >
               Editar
-            </button>
+            </Button>
 
             <form action={deleteBarbero}>
               <input type="hidden" name="id" value={barbero.id} />
-              <button className="px-3 py-2 bg-red-500/20 text-red-400 rounded">
+              <Button className="px-3 py-2 bg-red-500/20 text-red-400 rounded">
                 Baja
-              </button>
+              </Button>
             </form>
           </div>
         </div>

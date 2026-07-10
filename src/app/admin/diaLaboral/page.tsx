@@ -10,7 +10,7 @@ export default async function DiaLaboralPage() {
   const session = await auth();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black to-amber-950/30 p-6">
+    <div className="min-h-screen p-6">
       <div className="container mx-auto max-w-7xl mt-20">
         {/* Header con flecha de regreso */}
         <div className="mb-8 flex items-center gap-4">
