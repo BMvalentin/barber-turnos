@@ -1,5 +1,5 @@
 "use client";
-import {toast} from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useState, useTransition } from "react";
@@ -192,7 +192,7 @@ export default function EditBarberoModal({
               </div>
             ) : (
               <label
-                className={`flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-amber-900/40 rounded-lg cursor-pointer hover:border-amber-500/50 transition ${uploading ? "opacity-50 pointer-events-none" : ""
+                className={`relative flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-amber-900/40 rounded-lg cursor-pointer hover:border-amber-500/50 transition ${uploading ? "opacity-50 pointer-events-none" : ""
                   }`}
               >
                 {uploading ? (
@@ -209,7 +209,7 @@ export default function EditBarberoModal({
                   type="file"
                   accept="image/*"
                   onChange={handleFileChange}
-                  className="hidden"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   disabled={uploading}
                 />
               </label>

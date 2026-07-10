@@ -19,8 +19,7 @@ import {
   type EstadoConexionMP,
   type ConfiguracionOAuthMP,
 } from "@/actions/mercadopago-oauth.actions";
-import ConfirmModal from "@/components/ui/confirm-modal";
-
+import { ConfirmDialog } from "@/components/ui/confirm-modal";
 interface Props {
   estadoInicial: EstadoConexionMP;
   configuracionOAuth: ConfiguracionOAuthMP;
@@ -166,9 +165,10 @@ export default function MercadoPagoConnectionPanel({
         title: "Cuenta conectada correctamente",
         description:
           "Ahora podés cobrar señas online con Mercado Pago. ¡Éxitos!",
-        variant: "success",
+        variant: "default",
         duration: 4000,
       });
+      // Actualizamos el estado local para reflejar la conexión (opcional, luego la página se recarga)
       setEstado((prev) => ({ ...prev, conectada: true, bloqueada: true }));
       router.replace("/admin/mercadopago");
     }
@@ -200,7 +200,7 @@ export default function MercadoPagoConnectionPanel({
         toast({
           title: "Cuenta desconectada correctamente",
           description: "La cuenta de Mercado Pago ha sido desconectada.",
-          variant: "success",
+          variant: "default",
           duration: 4000,
         });
         setEstado({
@@ -362,16 +362,15 @@ export default function MercadoPagoConnectionPanel({
         </div>
       </div>
 
-      {/* Modal de confirmación */}
-      <ConfirmModal
-        open={showConfirmModal}
-        title="Desconectar cuenta de Mercado Pago"
-        description="¿Estás seguro? Dejarás de recibir pagos de señas online hasta que conectes otra cuenta."
-        confirmText="Sí, desconectar"
-        cancelText="Cancelar"
-        onConfirm={ejecutarDesconexion}
-        onCancel={() => setShowConfirmModal(false)}
-      />
+      {/* Modal de confirmación - usando ConfirmDialog correctamente */}
+      {showConfirmModal && (
+        <ConfirmDialog
+          title="Desconectar cuenta de Mercado Pago"
+          message="¿Estás seguro? Dejarás de recibir pagos de señas online hasta que conectes otra cuenta."
+          onConfirm={ejecutarDesconexion}
+          onCancel={() => setShowConfirmModal(false)}
+        />
+      )}
     </div>
   );
 }
