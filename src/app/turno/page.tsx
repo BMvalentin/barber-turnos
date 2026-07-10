@@ -1,6 +1,6 @@
 import { getTurnos } from "@/actions/turno.actions";
 import TurnoList from "@/components/turno/TurnoList";
-import CreateTurnoModal from "@/components/turno/CreateTrunoModal";
+import CreateTurnoModal from "@/components/turno/CreateTurnoModal";
 import { Suspense } from "react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";

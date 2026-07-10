@@ -18,8 +18,8 @@ export function Header({ session }: HeaderProps) {
     <motion.header
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-linear-to-br from-black to-amber-950/30
-                shadow-md w-full drop-shadow-2xl text-white"
+      className="fixed top-0 left-0 right-0 z-50 bg-linear-to-br from-black/70 to-amber-950/20 backdrop-blur-2xl
+                shadow-md w-full shadow-black text-white"
     >
       <div className="container flex items-center justify-between h-16 mx-auto px-4 select-none">
         <Link href="/#home" className="flex items-center gap-2 relative z-50">
