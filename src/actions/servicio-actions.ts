@@ -91,6 +91,37 @@ export const getServicios = async (): Promise<ActionState> => {
   }
 };
 
+export const getServiciosCarrusel = async (): Promise<ActionState> => {
+  try {
+    const servicios = await prisma.servicio.findMany({
+      where: {
+        estado: true,
+      },
+      select: {
+        id: true,
+        nombre: true,
+        descripcion: true,
+        srcImage: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return {
+      success: true,
+      data: servicios,
+    };
+  } catch (error: any) {
+    console.error("Error al obtener servicios para carrusel:", error);
+    return {
+      success: false,
+      error: "Error al cargar los servicios del carrusel",
+      data: [],
+    };
+  }
+};
+
 export const createServicio = async (
   prevState: ActionState,
   formData: FormData,
