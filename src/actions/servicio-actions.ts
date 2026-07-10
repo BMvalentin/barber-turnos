@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { servicioSchema } from "@/lib/servicios-zod";
+import { uploadMultipleToCloudinary } from "@/lib/cloudinary-uploader";
 
 export type ActionState = {
   error?: string;
@@ -95,10 +96,14 @@ export const createServicio = async (
   formData: FormData,
 ): Promise<ActionState> => {
   try {
+    const image = formData.get("image") as File | null;
     const rawData = Object.fromEntries(formData.entries());
-    
+
+    delete rawData.image;
+
     // Validar con Zod
     const validated = servicioSchema.safeParse(rawData);
+
 
     if (!validated.success) {
       return {
@@ -110,7 +115,24 @@ export const createServicio = async (
 
     const { nombre, descripcion, srcImage: srcImageRaw, estado, duracion, precio, descuento, senia } = validated.data;
 
-    const srcImage = cleanImageUrl(srcImageRaw || null);
+    let srcImage = cleanImageUrl(srcImageRaw || null);
+
+    if (image && image.size > 0) {
+      const upload = await uploadMultipleToCloudinary([image], {
+        folder: "barberia/servicios",
+      });
+
+      const uploaded = upload.find((r) => r.success);
+
+      if (!uploaded?.url) {
+        return {
+          success: false,
+          error: "No se pudo subir la imagen.",
+        };
+      }
+
+      srcImage = uploaded.url;
+    }
 
     const nuevoServicio = await prisma.servicio.create({
       data: {
@@ -151,10 +173,22 @@ export const actualizarServicio = async (
   formData: FormData,
 ): Promise<ActionState> => {
   try {
-    const rawData = Object.fromEntries(formData.entries());
     const id = formData.get("id") as string;
 
-    if (!id) return { success: false, error: "ID no proporcionado" };
+    if (!id) {
+      return { 
+        success: false, 
+        error: "ID no proporcionado" 
+      };
+    }
+
+    // 👇 Obtener imagen nueva si existe
+    const image = formData.get("image") as File | null;
+
+    const rawData = Object.fromEntries(formData.entries());
+
+    // No mandar File al zod
+    delete rawData.image;
 
     const validated = servicioSchema.safeParse(rawData);
 
@@ -166,27 +200,59 @@ export const actualizarServicio = async (
       };
     }
 
-    const { nombre, descripcion, srcImage: srcImageRaw, estado, duracion, precio, descuento, senia } = validated.data;
-    const srcImage = cleanImageUrl(srcImageRaw || null);
+    const {
+      nombre,
+      descripcion,
+      srcImage: srcImageRaw,
+      estado,
+      duracion,
+      precio,
+      descuento,
+      senia
+    } = validated.data;
+
+
+    let srcImage = cleanImageUrl(srcImageRaw || null);
+
+
+    // 👇 Si seleccionó nueva imagen, reemplaza la anterior
+    if (image && image.size > 0) {
+      const upload = await uploadMultipleToCloudinary([image], {
+        folder: "barberia/servicios",
+      });
+
+      const uploaded = upload.find((r) => r.success);
+
+      if (!uploaded?.url) {
+        return {
+          success: false,
+          error: "No se pudo subir la nueva imagen.",
+        };
+      }
+
+      srcImage = uploaded.url;
+    }
+
 
     const servicioActualizado = await prisma.servicio.update({
       where: { id },
       data: {
         nombre: nombre.trim(),
         descripcion: descripcion || null,
-        srcImage: srcImage,
+        srcImage,
         estado: estado ?? true,
-        duracion: duracion,
-        precio: precio,
-        descuento: descuento,
-        senia: senia,
+        duracion,
+        precio,
+        descuento,
+        senia,
         updatedAt: new Date(),
       },
     });
 
+
     revalidatePath("/servicio");
 
-    // 💡 SOLUCIÓN: Convertimos a Number antes de retornar
+
     return {
       success: true,
       data: {
@@ -196,10 +262,14 @@ export const actualizarServicio = async (
         senia: Number(servicioActualizado.senia),
       },
     };
+
   } catch (error) {
     console.error("Error al actualizar servicio:", error);
+
     return {
-      error: `Error al actualizar: ${error instanceof Error ? error.message : "Error desconocido"}`,
+      error: `Error al actualizar: ${
+        error instanceof Error ? error.message : "Error desconocido"
+      }`,
       success: false,
     };
   }
