@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { Button } from "../ui/button";
 
 const initialState = {
   success: false,
@@ -106,7 +107,7 @@ export default function EditServicioModal({
   return (
     <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto">
       {/* Contenedor Principal del Modal */}
-      <div className="bg-[#14110C] border border-[#2C261D] rounded-xl w-full max-w-7xl shadow-2xl relative flex flex-col max-h-[95vh]">
+      <div className="bg-black/70 backdrop-blur-2xl border border-[#2C261D] rounded-xl w-full max-w-7xl shadow-2xl relative flex flex-col max-h-[95vh]">
         {/* Formulario envolvente para capturar la acción del botón en el header */}
         <form
           ref={formRef}
@@ -138,14 +139,6 @@ export default function EditServicioModal({
           {/* --- HEADER DEL MODAL (Estilo imagen) --- */}
           <div className="flex items-center justify-between p-6 border-b border-[#2C261D]">
             <div className="flex items-center gap-6">
-              <button
-                onClick={onClose}
-                type="button"
-                className="p-2 hover:bg-amber-600/20 rounded-lg transition-all group"
-                title="Regresar"
-              >
-                <ArrowLeft className="h-6 w-6 text-amber-500 group-hover:text-amber-400 group-hover:-translate-x-1 transition-all" />
-              </button>
               <h2 className="text-2xl font-bold text-[#E4E0D9]">
                 Editar Servicio:{" "}
                 <span className="font-normal text-[#8E8675]">
@@ -156,8 +149,11 @@ export default function EditServicioModal({
 
             {/* Acciones del Header */}
             <div className="flex items-center gap-4">
-              {/* VISTA PREVIA ELIMINADA */}
-              <SubmitButton pending={isPending} />
+              <button
+                onClick={onClose}
+                className="rounded-sm ring-offset-background transition-opacity data-[state=open]:bg-accent data-[state=open]:text-muted-foreground hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none bg-amber-600 hover:bg-amber-700 p-1 text-white hover:cursor-pointer">
+                <X className="h-4 w-4" />
+              </button>
             </div>
           </div>
 
@@ -195,7 +191,7 @@ export default function EditServicioModal({
                     value={descripcion}
                     onChange={(e) => setDescripcion(e.target.value.slice(0, 500))}
                     rows={3}
-                    className={`w-full bg-[#1C1812] border ${state.errors?.descripcion ? "border-red-500" : "border-[#2C261D]"} rounded-lg px-4 py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-colors resize-none`}
+                    className={`w-full bg-black/70 backdrop-blur-2xl  border ${state.errors?.descripcion ? "border-red-500" : "border-[#2C261D]"} rounded-lg px-4 py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-colors resize-none`}
                     placeholder="Detalla qué incluye el servicio..."
                   />
                   {state.errors?.descripcion && (
@@ -317,6 +313,16 @@ export default function EditServicioModal({
           </div>
 
           {/* SECCIÓN DE BARBEROS Y BOTÓN ELIMINAR QUITADOS DEL FINAL */}
+        <div className="flex justify-end px-6 py-4 gap-4 border-t border-[#2C261D] bg-black/70 w-full">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-3 hover:cursor-pointer rounded-lg font-bold text-xs uppercase tracking-wider text-[#E4E0D9] hover:bg-[#2C261D] transition-colors"
+          >
+            Cancelar
+          </button>
+          <SubmitButton pending={isPending} />
+        </div>
         </form>
       </div>
     </div>
@@ -332,13 +338,13 @@ function SubmitButton({
   pending: boolean;
 }) {
   return (
-    <button
+    <Button
       type="submit"
       disabled={pending}
-      className="bg-[#E8B031] hover:bg-[#d49f2c] text-black font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+      className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
     >
       {pending ? "Actualizando..." : "Actualizar"}
-    </button>
+    </Button>
   );
 }
 
@@ -365,11 +371,11 @@ function InputField({
       </label>
       <div className="relative">
         {Icon && (
-          <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8675]" />
+          <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60 z-99" />
         )}
         <input
           {...props}
-          className={`w-full bg-[#1C1812] border ${errors ? "border-red-500" : "border-[#2C261D]"
+          className={`w-full bg-black/70 backdrop-blur-2xl border ${errors ? "border-red-500" : "border-[#2C261D]"
             } rounded-lg ${Icon ? "pl-11" : "pl-4"} ${unit ? "pr-14" : "pr-4"
             } py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-colors`}
         />

@@ -147,11 +147,11 @@ export default function EditBarberoModal({
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#14110C] border border-amber-900/30 rounded-xl p-6 space-y-6 shadow-2xl">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto border bg-black/70 border-amber-900/30 rounded-xl p-6 space-y-6 shadow-2xl">
         <div className="flex justify-between items-center border-b border-amber-900/30 pb-4">
           <h2 className="text-2xl font-bold text-white">Editar Barbero</h2>
-          <button onClick={onClose} className="text-amber-500 hover:text-amber-400">
-            <X />
+          <button onClick={onClose} className="rounded-sm ring-offset-background transition-opacity data-[state=open]:bg-accent data-[state=open]:text-muted-foreground hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none bg-amber-600 hover:bg-amber-700 p-1 text-white hover:cursor-pointer">
+            <X className="h-4 w-4" />
           </button>
         </div>
 

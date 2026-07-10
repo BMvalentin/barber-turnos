@@ -90,23 +90,23 @@ export default function CreateServicioForm({
 
   return (
     <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto">
-      <div className="bg-[#14110C] border border-[#2C261D] rounded-xl w-full max-w-4xl shadow-2xl relative flex flex-col max-h-[90vh]">
+      <div className="bg-black/60 border border-[#2C261D] rounded-xl w-full max-w-4xl shadow-2xl relative flex flex-col max-h-[90vh]">
         {/* Header Modal */}
-        <div className="flex items-center gap-4 p-6 border-b border-[#2C261D]">
-          <button
-            onClick={onClose}
-            type="button"
-            className="p-2 hover:bg-amber-600/20 rounded-lg transition-all group"
-            title="Regresar"
-          >
-            <ArrowLeft className="h-6 w-6 text-amber-500 group-hover:text-amber-400 group-hover:-translate-x-1 transition-all" />
-          </button>
+        <div className="flex justify-between items-center gap-4 p-6 border-b border-[#2C261D]">
           <div>
             <h2 className="text-xl font-bold text-[#E4E0D9]">Nuevo Servicio</h2>
             <p className="text-[#8E8675] text-xs mt-1">
               Completa los datos para agregar un servicio al catálogo.
             </p>
           </div>
+          {/* Acciones del Header */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={onClose}
+                className="rounded-sm ring-offset-background transition-opacity data-[state=open]:bg-accent data-[state=open]:text-muted-foreground hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none bg-amber-600 hover:bg-amber-700 p-1 text-white hover:cursor-pointer">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
         </div>
         {/* Formulario */}
         <div className="overflow-y-auto p-6 flex-1">
@@ -131,7 +131,7 @@ export default function CreateServicioForm({
             className="space-y-6"
           >
             {/* Información General */}
-            <div className="bg-[#1C1812] border border-[#2C261D] rounded-xl p-6">
+            <div className="bg-black/70 border border-[#2C261D] rounded-xl p-6">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xs font-bold text-[#E8B031] uppercase tracking-wider">
                   Información General
@@ -142,7 +142,7 @@ export default function CreateServicioForm({
                   </span>
                   <select
                     name="estado"
-                    className="bg-[#14110C] border border-[#2C261D] text-[#E4E0D9] text-xs rounded px-2 py-1 outline-none"
+                    className="bg-black/70 border border-[#2C261D] text-[#E4E0D9] text-xs rounded px-2 py-1 outline-none"
                   >
                     <option value="true">Activo</option>
                     <option value="false">Inactivo</option>
@@ -173,7 +173,7 @@ export default function CreateServicioForm({
                     value={descripcion}
                     onChange={(e) => setDescripcion(e.target.value.slice(0, 500))}
                     rows={3}
-                    className={`w-full bg-[#14110C] border ${state.errors?.descripcion ? 'border-red-500' : 'border-[#2C261D]'} rounded-lg px-4 py-3 text-[#E4E0D9] outline-none focus:border-[#E8B031] transition-colors resize-none`}
+                    className={`w-full bg-black/70 border ${state.errors?.descripcion ? 'border-red-500' : 'border-[#2C261D]'} rounded-lg px-4 py-3 text-[#E4E0D9] outline-none focus:border-[#E8B031] transition-colors resize-none`}
                     placeholder="Detalla qué incluye el servicio..."
                   />
                   {state.errors?.descripcion && (
@@ -240,7 +240,7 @@ export default function CreateServicioForm({
             </div>
 
             {/* Detalles Técnicos & Precios */}
-            <div className="bg-[#1C1812] border border-[#2C261D] rounded-xl p-6">
+            <div className="bg-black/70 border border-[#2C261D] rounded-xl p-6">
               <h3 className="text-xs font-bold text-[#E8B031] uppercase tracking-wider mb-6">
                 Precio & Detalles
               </h3>
@@ -296,7 +296,7 @@ export default function CreateServicioForm({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-3 rounded-lg font-bold text-xs uppercase tracking-wider text-[#E4E0D9] hover:bg-[#2C261D] transition-colors"
+                className="px-6 py-3 hover:cursor-pointer rounded-lg font-bold text-xs uppercase tracking-wider text-[#E4E0D9] hover:bg-[#2C261D] transition-colors"
               >
                 Cancelar
               </button>
@@ -352,7 +352,7 @@ function InputField({
         )}
         <input
           {...props}
-          className={`w-full bg-[#14110C] border ${errors ? "border-red-500" : "border-[#2C261D]"
+          className={`w-full bg-black/70 border ${errors ? "border-red-500" : "border-[#2C261D]"
             } rounded-lg ${Icon ? "pl-11" : "pl-4"} ${unit ? "pr-14" : "pr-4"
             } py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-colors`}
         />
