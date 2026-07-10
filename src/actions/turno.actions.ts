@@ -309,7 +309,7 @@ export async function getTurnos(page: number = 1) {
         skip,
         take: pageSize,
         include: {
-          user: { select: { id: true, name: true, email: true } },
+          user: { select: { id: true, name: true, email: true , telefono: true } },
           servicio: { select: { id: true, nombre: true, duracion: true } },
           barbero: { select: { id: true, nombre: true } },
         },

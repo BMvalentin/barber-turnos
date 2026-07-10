@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import EditTurnoModal from "./EditarTurnoModal";
-import { Calendar, User, Scissors, DollarSign, CreditCard, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, User, Scissors, DollarSign, CreditCard, Loader2, ChevronLeft, ChevronRight, Phone } from "lucide-react";
 import { cancelTurno } from "@/actions/user-dashboard";
 import { completedTurno, confirmarTurno } from "@/actions/turno.actions";
 import { crearPreferenciaPago } from "@/actions/mercadopago-actions";
@@ -19,6 +19,7 @@ type Turno = {
     id: string;
     name: string | null;
     email: string | null;
+    telefono: string | null;
   };
   servicio: {
     id: string;
@@ -239,9 +240,6 @@ function TurnoCard({
         >
           {turno.estado}
         </span>
-        <span className="text-xs text-amber-200/50">
-          #{turno.id.slice(0, 8)}
-        </span>
       </div>
 
       {/* Información del Turno */}
@@ -254,6 +252,26 @@ function TurnoCard({
             <p className="font-semibold text-white text-sm truncate">
               {turno.user?.name || turno.user?.email || "Usuario eliminado"}
             </p>
+          </div>
+        </div>
+
+        {/**telefono  */}
+        <div className="flex items-start gap-2">
+          <Phone className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-amber-200/50">Teléfono</p>
+            {turno.user?.telefono ? (
+              <a
+                href={`https://wa.me/${turno.user.telefono.replace(/\D/g, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-sm font-semibold text-white hover:text-amber-400 hover:underline truncate transition-colors"
+              >
+                {turno.user.telefono}
+              </a>
+            ) : (
+              <p className="text-xs text-amber-200/50 truncate">Sin teléfono</p>
+            )}
           </div>
         </div>
 
@@ -328,82 +346,55 @@ function TurnoCard({
       </div>
 
       {/* Acciones */}
-      {(session?.user?.role === "ADMIN" || (turno.user?.id === session?.user?.id && (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO"))) && (
-        <div className="mt-4 pt-4 border-t border-amber-900/30 space-y-2">
+      {
+        (session?.user?.role === "ADMIN" || (turno.user?.id === session?.user?.id && (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO"))) && (
+          <div className="mt-4 pt-4 border-t border-amber-900/30 space-y-2">
+            
+            <div className="flex justify-end gap-2">
+              {/* Opciones del USER (Dueño) */}
+              {turno.user?.id === session?.user?.id && session?.user?.role !== "ADMIN" && (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO") && (
+                <>
+                  <button
+                    onClick={handleCancel}
+                    disabled={isCanceling}
+                    className="text-xs font-bold text-red-500 hover:text-red-400 bg-red-400/10 hover:bg-red-500/20 px-4 py-2 rounded-lg transition-colors border border-red-500/20 disabled:opacity-50"
+                  >
+                    {isCanceling ? "Cancelando..." : "Cancelar Turno"}
+                  </button>
+                  <EditTurnoModal turno={turno} />
+                </>
+              )}
 
-          {/* Botón pagar seña: solo para el dueño del turno, PENDIENTE y con seña */}
-          {turno.user?.id === session?.user?.id &&
-            turno.estado === "PENDIENTE" &&
-            turno.seniaCongelada > 0 && (
-              <div className="space-y-1">
-                <button
-                  id={`btn-pagar-senia-${turno.id}`}
-                  onClick={handlePagarSenia}
-                  disabled={isPaying}
-                  className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 disabled:bg-amber-500/50 disabled:cursor-not-allowed text-zinc-950 font-black py-2.5 rounded-lg transition-all text-xs uppercase tracking-widest"
-                >
-                  {isPaying ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      Generando enlace...
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="w-3.5 h-3.5" />
-                      Pagar Seña · ${turno.seniaCongelada.toLocaleString("es-AR")}
-                    </>
-                  )}
-                </button>
-                {payError && (
-                  <p className="text-xs text-red-400 text-center">{payError}</p>
-                )}
-              </div>
-            )}
-
-          <div className="flex justify-end gap-2">
-            {/* Opciones del USER (Dueño) */}
-            {turno.user?.id === session?.user?.id && session?.user?.role !== "ADMIN" && (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO") && (
-              <>
-                <button
-                  onClick={handleCancel}
-                  disabled={isCanceling}
-                  className="text-xs font-bold text-red-500 hover:text-red-400 bg-red-400/10 hover:bg-red-500/20 px-4 py-2 rounded-lg transition-colors border border-red-500/20 disabled:opacity-50"
-                >
-                  {isCanceling ? "Cancelando..." : "Cancelar Turno"}
-                </button>
-                <EditTurnoModal turno={turno} />
-              </>
-            )}
-
-            {/* Opciones del ADMIN */}
-            {session?.user?.role === "ADMIN" && (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO") && (
-              <>
-                <button
-                  onClick={handleCancel}
-                  disabled={isCanceling}
-                  className="text-xs font-bold text-red-500 hover:text-red-400 bg-red-400/10 hover:bg-red-500/20 px-4 py-2 rounded-lg transition-colors border border-red-500/20 disabled:opacity-50"
-                >
-                  {isCanceling ? "Cancelando..." : "Cancelar Turno"}
-                </button>
-                <button
-                  onClick={handleCompletar}
-                  disabled={isCompleting}
-                  className="text-xs font-bold text-blue-500 hover:text-blue-400 bg-blue-400/10 hover:bg-blue-500/20 px-4 py-2 rounded-lg transition-colors border border-blue-500/20 disabled:opacity-50"
-                >
-                  {isCompleting ? "Completando..." : "Marcar Completado"}
-                </button>
-                <button
-                  onClick={handleConfirmar}
-                  disabled={isConfirming}
-                  className="text-xs font-bold text-green-500 hover:text-green-400 bg-green-400/10 hover:bg-green-500/20 px-4 py-2 rounded-lg transition-colors border border-green-500/20 disabled:opacity-50"
-                >
-                  {isConfirming ? "Confirmando..." : "Confirmar"}
-                </button>
-              </>
-            )}
+              {/* Opciones del ADMIN */}
+              {session?.user?.role === "ADMIN" && (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO") && (
+                <>
+                  <button
+                    onClick={handleCancel}
+                    disabled={isCanceling}
+                    className="text-xs font-bold text-red-500 hover:text-red-400 bg-red-400/10 hover:bg-red-500/20 px-4 py-2 rounded-lg transition-colors border border-red-500/20 disabled:opacity-50"
+                  >
+                    {isCanceling ? "Cancelando..." : "Cancelar Turno"}
+                  </button>
+                  <button
+                    onClick={handleCompletar}
+                    disabled={isCompleting}
+                    className="text-xs font-bold text-blue-500 hover:text-blue-400 bg-blue-400/10 hover:bg-blue-500/20 px-4 py-2 rounded-lg transition-colors border border-blue-500/20 disabled:opacity-50"
+                  >
+                    {isCompleting ? "Completando..." : "Marcar Completado"}
+                  </button>
+                  <button
+                    onClick={handleConfirmar}
+                    disabled={isConfirming}
+                    className="text-xs font-bold text-green-500 hover:text-green-400 bg-green-400/10 hover:bg-green-500/20 px-4 py-2 rounded-lg transition-colors border border-green-500/20 disabled:opacity-50"
+                  >
+                    {isConfirming ? "Confirmando..." : "Confirmar"}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 }
