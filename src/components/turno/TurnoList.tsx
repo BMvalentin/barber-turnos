@@ -6,7 +6,8 @@ import { Calendar, User, Scissors, DollarSign, CreditCard, Loader2, ChevronLeft,
 import { cancelTurno } from "@/actions/user-dashboard";
 import { completedTurno, confirmarTurno } from "@/actions/turno.actions";
 import { crearPreferenciaPago } from "@/actions/mercadopago-actions";
-import Link from "next/link";
+import { toast } from "@/components/ui/use-toast";
+import { ConfirmDialog } from "@/components/ui/confirm-modal";
 
 type Turno = {
   id: string;
@@ -37,62 +38,160 @@ interface Props {
   currentPage: number;
 }
 
-export default function TurnoList({ turnos, session, totalPages, currentPage }: Props) {
+type AccionConfirmacion = "cancelar" | "completar" | "confirmar";
+
+export default function TurnoList({ turnos, session }: Props) {
   const turnosActivos = turnos.filter(
     (t) => t.estado === "PENDIENTE" || t.estado === "CONFIRMADO"
   );
 
+  // Estados del modal de confirmación
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  const [accionConfirmacion, setAccionConfirmacion] = useState<AccionConfirmacion | null>(null);
+  const [turnoIdConfirmacion, setTurnoIdConfirmacion] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Solicitar cancelación
+  const handleRequestCancel = (turnoId: string) => {
+    setAccionConfirmacion("cancelar");
+    setTurnoIdConfirmacion(turnoId);
+    setMostrarConfirmacion(true);
+  };
+
+  // Solicitar completar
+  const handleRequestComplete = (turnoId: string) => {
+    setAccionConfirmacion("completar");
+    setTurnoIdConfirmacion(turnoId);
+    setMostrarConfirmacion(true);
+  };
+
+  // Cancelar (cerrar modal sin hacer nada)
+  const cancelarConfirmacion = () => {
+    setMostrarConfirmacion(false);
+    setAccionConfirmacion(null);
+    setTurnoIdConfirmacion(null);
+    setIsLoading(false);
+  };
+
+  // Confirmar acción
+  const confirmarAccion = async () => {
+    if (!turnoIdConfirmacion || !accionConfirmacion) return;
+    setIsLoading(true);
+
+    try {
+      if (accionConfirmacion === "cancelar") {
+        await cancelTurno(turnoIdConfirmacion);
+        toast({
+          title: "Turno cancelado",
+          description: "El turno se ha cancelado correctamente.",
+          variant: "default",
+          duration: 4000,
+        });
+      } else if (accionConfirmacion === "completar") {
+        const formData = new FormData();
+        formData.append("id", turnoIdConfirmacion);
+        await completedTurno({ success: false }, formData);
+        toast({
+          title: "Turno completado",
+          description: "El turno se ha marcado como completado.",
+          variant: "default",
+          duration: 4000,
+        });
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description:
+          accionConfirmacion === "cancelar"
+            ? "Hubo un error al intentar cancelar el turno."
+            : "Hubo un error al intentar completar el turno.",
+        variant: "destructive",
+        duration: 4000,
+      });
+    } finally {
+      setIsLoading(false);
+      cancelarConfirmacion();
+    }
+  };
+
+  // Determinar mensaje según acción
+  const getModalMessage = () => {
+    if (accionConfirmacion === "cancelar") {
+      return "¿Estás seguro de que querés cancelar este turno? Esta acción no se puede deshacer.";
+    }
+    if (accionConfirmacion === "completar") {
+      return "¿Marcar este turno como completado? El cliente recibirá una notificación.";
+    }
+    return "";
+  };
+
+  const getModalTitle = () => {
+    return accionConfirmacion === "cancelar" ? "Cancelar Turno" : "Completar Turno";
+  };
+
+  if (!turnosActivos.length) {
+    return (
+      <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-lg p-8 text-center">
+        <p className="text-amber-200/70">No hay turnos activos (pendientes o confirmados)</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
 
-      {/* 1. Mostramos el mensaje si está vacío, pero NO hacemos return temprano */}
-      {turnosActivos.length === 0 ? (
-        <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-lg p-8 text-center">
-          <p className="text-amber-200/70">No hay turnos activos en esta página.</p>
-        </div>
-      ) : (
-        /* 2. Solo mostramos el grid si hay turnos */
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {turnosActivos.map((turno) => (
-            <TurnoCard key={turno.id} turno={turno} session={session} />
-          ))}
-        </div>
-      )}
+      {/* Grid de Turnos */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {turnosActivos.map((turno) => (
+          <TurnoCard
+            key={turno.id}
+            turno={turno}
+            session={session}
+            onCancelRequest={handleRequestCancel}
+            onCompleteRequest={handleRequestComplete}
+            onConfirmRequest={(id) => {
+              setAccionConfirmacion("confirmar");
+              setTurnoIdConfirmacion(id);
+              setMostrarConfirmacion(true);
+            }}
+          />
+        ))}
+      </div>
 
-      {/* 3. La paginación SIEMPRE se renderiza si hay más de 1 página total */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4 py-8">
-          <Link
-            href={`?page=${currentPage - 1}`}
-            className={`p-2 rounded-lg bg-black/40 border border-amber-500/30 transition-all ${currentPage <= 1 ? "opacity-30 pointer-events-none" : "hover:bg-amber-500/20"}`}
-          >
-            <ChevronLeft className="w-6 h-6 text-amber-500" />
-          </Link>
-
-          <span className="text-amber-200 font-bold">
-            Pág. {currentPage} de {totalPages}
-          </span>
-
-          <Link
-            href={`?page=${currentPage + 1}`}
-            className={`p-2 rounded-lg bg-black/40 border border-amber-500/30 transition-all ${currentPage >= totalPages ? "opacity-30 pointer-events-none" : "hover:bg-amber-500/20"}`}
-          >
-            <ChevronRight className="w-6 h-6 text-amber-500" />
-          </Link>
-        </div>
+      {/* Modal de confirmación */}
+      {mostrarConfirmacion && (
+        <ConfirmDialog
+          title={getModalTitle()}
+          message={getModalMessage()}
+          onConfirm={confirmarAccion}
+          onCancel={cancelarConfirmacion}
+        />
       )}
     </div>
   );
 }
 
+// ---- Subcomponente TurnoCard ----
 
-
-function TurnoCard({ turno, session }: { turno: Turno; session: any }) {
+function TurnoCard({
+  turno,
+  session,
+  onCancelRequest,
+  onCompleteRequest,
+  onConfirmRequest,
+}: {
+  turno: Turno;
+  session: any;
+  onCancelRequest: (id: string) => void;
+  onCompleteRequest: (id: string) => void;
+  onConfirmRequest: (id: string) => void;
+}) {
   const [isCanceling, setIsCanceling] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
+
   const estadoColors = {
     PENDIENTE: "bg-amber-500/20 text-amber-500 border-amber-500/50",
     CONFIRMADO: "bg-green-500/20 text-green-500 border-green-500/50",
@@ -100,39 +199,19 @@ function TurnoCard({ turno, session }: { turno: Turno; session: any }) {
     CANCELADO: "bg-red-500/20 text-red-500 border-red-500/50",
   };
 
-  const handleCancel = async () => {
-    if (!confirm("¿Estás seguro de que querés cancelar este turno?")) return;
-    setIsCanceling(true);
-    try {
-      await cancelTurno(turno.id);
-    } catch {
-      alert("Error al cancelar el turno");
-    } finally {
-      setIsCanceling(false);
-    }
+  // Manejar cancelación (abre modal)
+  const handleCancel = () => {
+    onCancelRequest(turno.id);
   };
 
-  const handleConfirmar = async () => {
-    if (!confirm("¿Confirmar este turno?")) return;
-    setIsConfirming(true);
-    const result = await confirmarTurno(turno.id);
-    if (!result.success) alert(result.error);
-    setIsConfirming(false);
+  // Manejar completar (abre modal)
+  const handleCompletar = () => {
+    onCompleteRequest(turno.id);
   };
 
-  const handleCompletar = async () => {
-    if (!confirm("¿Marcar este turno como completado?")) return;
-    setIsCompleting(true);
-    try {
-      const formData = new FormData();
-      formData.append("id", turno.id);
-      await completedTurno({ success: false }, formData);
-    } catch {
-      alert("Error al completar el turno");
-    } finally {
-      setIsCompleting(false);
-    }
-  };
+  const handleConfirmar = () => {
+    onConfirmRequest(turno.id);
+  }
 
   const handlePagarSenia = async () => {
     setIsPaying(true);

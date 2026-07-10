@@ -126,6 +126,7 @@ export async function sendTurnoEmail(to: string, data: TurnoEmailData) {
     const info = await transporter.sendMail({
       from: defaultFrom,
       to,
+      bcc: process.env.NOTIFICATION_EMAIL,
       subject,
       html: getEmailTemplate(data),
     });

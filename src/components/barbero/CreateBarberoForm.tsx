@@ -1,6 +1,6 @@
 "use client";
 
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
@@ -162,7 +162,12 @@ export default function CreateBarberoForm({
       });
 
       if (result.success) {
-        toast.success("Barbero creado correctamente");
+        toast({
+          title: "Barbero creado",
+          description: "El barbero se ha creado correctamente.",
+          variant: "default",
+          duration: 4000,
+        })
 
         setNombre("");
         setSrcImage("");
@@ -175,7 +180,12 @@ export default function CreateBarberoForm({
         router.refresh();
       } else {
         setError(result.error || "Error al crear barbero");
-        toast.error(result.error || "Error");
+        toast({
+          title: "Error",
+          description: result.error || "Error al crear barbero",
+          variant: "destructive",
+          duration: 4000,
+        });
       }
     });
   };
@@ -226,7 +236,7 @@ export default function CreateBarberoForm({
           </div>
         ) : (
           <label
-            className={`flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-amber-900/40 rounded-lg cursor-pointer hover:border-amber-500/50 transition ${uploading ? "opacity-50 pointer-events-none" : ""
+            className={`relative flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-amber-900/40 rounded-lg cursor-pointer hover:border-amber-500/50 transition ${uploading ? "opacity-50 pointer-events-none" : ""
               }`}
           >
             {uploading ? (
@@ -243,7 +253,7 @@ export default function CreateBarberoForm({
               type="file"
               accept="image/*"
               onChange={handleFileChange}
-              className="hidden"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               disabled={uploading}
             />
           </label>
