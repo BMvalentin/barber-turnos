@@ -62,14 +62,18 @@ const estadoInicial = {
 
 interface Props {
   turno: Turno;
+  userId?: string;
 }
 
-export default function EditTurnoModal({ turno }: Props) {
+export default function EditTurnoModal({ turno, userId = "" }: Props) {
   const [abierto, setAbierto] = useState(false);
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [barberos, setBarberos] = useState<Barbero[]>([]);
   const [cargandoDatos, setCargandoDatos] = useState(false);
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
+
+  // sessionId único por instancia del modal
+  const [sessionId] = useState(() => crypto.randomUUID());
 
   const [servicioSeleccionadoId, setServicioSeleccionadoId] = useState(
     turno.servicio?.id || ""
@@ -294,6 +298,8 @@ export default function EditTurnoModal({ turno }: Props) {
                       barberoId={barberoSeleccionadoId}
                       turnoIdAExcluir={turno.id}
                       defaultValue={turno.horarioReservado.toISOString()}
+                      sessionId={sessionId}
+                      userId={userId || turno.user?.id || ""}
                     />
                   </div>
 

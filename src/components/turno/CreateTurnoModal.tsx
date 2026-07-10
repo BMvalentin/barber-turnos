@@ -60,6 +60,9 @@ export default function CreateTurnoModal({
   const [state, formAction] = useActionState(createTurno, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
+  // sessionId único por instancia del modal — no cambia entre renders
+  const [sessionId] = useState(() => crypto.randomUUID());
+
   const [servicios, setServicios] = useState<ServicioData[]>(initialServicios);
   const [barberos, setBarberos] = useState<BarberoData[]>(initialBarberos);
   const [usuarios, setUsuarios] = useState<UsuarioData[]>(initialUsuarios);
@@ -293,6 +296,8 @@ export default function CreateTurnoModal({
                   name="horarioReservado"
                   servicioId={selectedServicioId}
                   barberoId={selectedBarberoId}
+                  sessionId={sessionId}
+                  userId={session?.user?.id ?? ""}
                 />
 
                 {state.error && (
