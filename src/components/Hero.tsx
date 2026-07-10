@@ -67,21 +67,6 @@ export function Hero({ onBookingClick }: HeroProps) {
                   <Calendar className="w-6 h-6 text-amber-500" />
                   Tu Turno
                 </h2>
-                <p className="text-xs text-zinc-500 uppercase tracking-widest font-bold mt-1">
-                  Sin esperas, sin excusas
-                </p>
-              </div>
-              
-              {/* Reviews Badge */}
-              <div className="text-right">
-                <div className="flex items-center gap-1 justify-end text-amber-500 mb-1">
-                  <Star className="w-4 h-4 fill-current" />
-                  <Star className="w-4 h-4 fill-current" />
-                  <Star className="w-4 h-4 fill-current" />
-                  <Star className="w-4 h-4 fill-current" />
-                  <Star className="w-4 h-4 fill-current" />
-                </div>
-                <p className="text- text-zinc-400 font-bold uppercase tracking-wider">Clientes satisfechos</p>
               </div>
             </div>
 
