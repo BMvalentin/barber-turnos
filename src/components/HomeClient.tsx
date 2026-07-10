@@ -13,7 +13,7 @@ export default function HomeClient() {
         <main>
           <Hero onBookingClick={() => {}} />
           <ImageCarousel />
-          <AboutSection />
+          {/* <AboutSection /> */}
           <LocationSection />
         </main>
       </div>
