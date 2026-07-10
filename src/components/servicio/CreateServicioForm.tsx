@@ -4,6 +4,7 @@ import { createServicio, ActionState } from "@/actions/servicio-actions";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, DollarSign, Upload, X } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { Button } from "../ui/button";
 
 const initialState: ActionState = {
   success: false,
@@ -107,7 +108,6 @@ export default function CreateServicioForm({
             </p>
           </div>
         </div>
-
         {/* Formulario */}
         <div className="overflow-y-auto p-6 flex-1">
           <form
@@ -317,13 +317,12 @@ function SubmitButton({
 }) {
 
   return (
-    <button
+    <Button className="font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white"
       type="submit"
       disabled={pending}
-      className="bg-[#E8B031] hover:bg-[#d49f2c] text-black font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
     >
       {pending ? "Creando..." : "Crear Servicio"}
-    </button>
+    </Button>
   );
 }
 

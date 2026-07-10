@@ -140,7 +140,7 @@ export default async function AdminDashboard() {
   const stats = await getStats();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black to-amber-950/30 p-6">
+    <div className="min-h-screen p-6">
       <div className="max-w-7xl mx-auto space-y-10 mt-10">
         {/* STATS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
