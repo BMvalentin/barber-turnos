@@ -71,7 +71,7 @@ export default async function BarberosPage() {
   const { servicios, diasLaborales, barberos } = await getData();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black to-amber-950/30 p-6">
+    <div className="min-h-screen p-6">
       <div className="container mx-auto max-w-7xl mt-20">
 
         {/* HEADER */}

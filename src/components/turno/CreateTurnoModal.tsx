@@ -160,14 +160,12 @@ export default function CreateTurnoModal({
   return (
     <>
       {/* Botón para abrir modal */}
-      <button
+      <Button className="flex items-center gap-2 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white"
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
       >
         <Plus className="h-5 w-5" />
         Nuevo Turno
-      </button>
-
+      </Button>
       {/* ===================== */}
       {/* MODAL CREAR TURNO     */}
       {/* ===================== */}

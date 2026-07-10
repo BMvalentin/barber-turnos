@@ -276,7 +276,6 @@ export const actualizarServicio = async (
 };
 
 export const deleteservicio = async (
-  prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> => {
   try {

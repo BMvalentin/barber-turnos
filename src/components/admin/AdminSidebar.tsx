@@ -16,13 +16,15 @@ import {
   CircleDollarSign
 } from "lucide-react";
 
-const menuItems = [
-  { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { title: "Barberos", href: "/barbero", icon: Users },
-  { title: "Servicios", href: "/servicio", icon: Scissors },
+const userMenuItems = [
   { title: "Turnos", href: "/turno", icon: Calendar },
-  { title: "Días Laborales", href: "/diaLaboral", icon: Clock },
-  { title: "Excepciones", href: "/excepcionesLaborales", icon: ClipboardList },
+];
+const adminMenuItems = [
+  { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { title: "Barberos", href: "/admin/barbero", icon: Users },
+  { title: "Servicios", href: "/admin/servicio", icon: Scissors },
+  { title: "Días Laborales", href: "/admin/diaLaboral", icon: Clock },
+  { title: "Excepciones", href: "/admin/excepcionesLaborales", icon: ClipboardList },
   { title: "Mercado Pago", href: "/admin/mercadopago", icon: CreditCard },
 ];
 
@@ -55,7 +57,7 @@ export default function AdminSidebar() {
       `}>
 
         {/* Header */}
-        <div className="p-4 border-b border-amber-900/30">
+        <div className="p-4">
           <h1 className="text-xl font-bold text-white">Admin Panel</h1>
           <p className="text-xs text-amber-200/60 mt-1">
             Gestión de barbería
@@ -64,7 +66,37 @@ export default function AdminSidebar() {
 
         {/* Menu */}
         <nav className="flex-1 p-3 space-y-2 overflow-y-auto">
-          {menuItems.map((item) => {
+          <div className="border-t border-amber-900/30 my-2" />
+          {adminMenuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setIsOpen(false)}
+                className={`
+                flex items-center gap-3 px-3 py-2.5 rounded-lg
+                text-sm font-semibold transition-all duration-200 group
+                ${isActive
+                    ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-inner"
+                    : "text-amber-200/70 hover:bg-amber-500/10 hover:text-amber-400"
+                  }
+              `}
+              >
+                <Icon
+                  className={`h-5 w-5 transition-colors ${isActive
+                    ? "text-amber-400"
+                    : "text-amber-200/70 group-hover:text-amber-400"
+                    }`}
+                />
+                <span>{item.title}</span>
+              </Link>
+            );
+          })}
+          <div className="border-t border-amber-900/30 my-2" />
+          {userMenuItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
 
