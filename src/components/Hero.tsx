@@ -7,7 +7,7 @@ interface HeroProps {
   onBookingClick?: () => void;
 }
 
-export function Hero({ onBookingClick }: HeroProps) {
+export function Hero() {
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden py-24">
       
@@ -85,7 +85,7 @@ export function Hero({ onBookingClick }: HeroProps) {
             </div>
 
             {/* BOTÓN DE RESERVA */}
-            <Link href="/turno" className="block w-full" onClick={onBookingClick}>
+            <Link href="/turno" className="block w-full">
               <button className="relative w-full group overflow-hidden bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black py-5 rounded-2xl transition-all active:scale-">
                 <div className="relative z-10 flex items-center justify-center gap-2 uppercase tracking-widest text-sm md:text-base">
                   Reservar Ahora
