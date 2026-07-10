@@ -14,7 +14,7 @@ export default async function PaginaConfiguracionMercadoPago() {
   ]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black to-amber-950/30 p-6">
+    <div className="min-h-screen p-6">
       <div className="container mx-auto max-w-3xl mt-20">
         <div className="mb-8 flex items-center gap-4">
           <Link
