@@ -1,111 +1,116 @@
-import * as React from "react";
-import * as ToastPrimitives from "@radix-ui/react-toast";
-import { cva, type VariantProps } from "class-variance-authority";
-import { X } from "lucide-react";
+"use client"
 
-import { cn } from "@/lib/utils";
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
 
-const ToastProvider = ToastPrimitives.Provider;
-
-const ToastViewport = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Viewport>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Viewport
-    ref={ref}
-    className={cn(
-      "fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]",
-      className,
-    )}
-    {...props}
-  />
-));
-ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
-
-const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
+const variantes = cva(
+  "select-none group pointer-events-auto relative flex w-full items-center gap-4 overflow-hidden rounded-[1rem] border p-6 shadow-lg",
   {
     variants: {
       variant: {
-        default: "border bg-background text-foreground",
-        destructive: "destructive group border-destructive bg-destructive text-destructive-foreground",
+        default: "border-slate-100 bg-white text-slate-900",
+        destructive: "border-red-200 bg-red-50 text-red-800",
       },
     },
-    defaultVariants: {
-      variant: "default",
-    },
-  },
-);
+    defaultVariants: { variant: "default" },
+  }
+)
 
-const Toast = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Root>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> & VariantProps<typeof toastVariants>
->(({ className, variant, ...props }, ref) => {
-  return <ToastPrimitives.Root ref={ref} className={cn(toastVariants({ variant }), className)} {...props} />;
-});
-Toast.displayName = ToastPrimitives.Root.displayName;
+interface PropiedadesToast
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof variantes> {
+  onDismiss?: () => void
+  dismissed?: boolean
+  duration?: number
+}
 
-const ToastAction = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Action>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Action>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Action
-    ref={ref}
-    className={cn(
-      "inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors group-[.destructive]:border-muted/40 hover:bg-secondary group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 group-[.destructive]:focus:ring-destructive disabled:pointer-events-none disabled:opacity-50",
-      className,
-    )}
-    {...props}
-  />
-));
-ToastAction.displayName = ToastPrimitives.Action.displayName;
+const DURACION_ANIMACION_SALIDA = 400
 
-const ToastClose = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Close>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Close>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Close
-    ref={ref}
-    className={cn(
-      "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity group-hover:opacity-100 group-[.destructive]:text-red-300 hover:text-foreground group-[.destructive]:hover:text-red-50 focus:opacity-100 focus:outline-none focus:ring-2 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
-      className,
-    )}
-    toast-close=""
-    {...props}
-  >
-    <X className="h-4 w-4" />
-  </ToastPrimitives.Close>
-));
-ToastClose.displayName = ToastPrimitives.Close.displayName;
+export const Toast = React.forwardRef<HTMLDivElement, PropiedadesToast>(
+  ({ className, variant, onDismiss, dismissed, duration = 5000, children, ...props }, ref) => {
+    const [desplazamientoX, setDesplazamientoX] = React.useState(0)
+    const [deslizando, setDeslizando] = React.useState(false)
+    const [saliendo, setSaliendo] = React.useState(false)
+    const yaInicioSalida = React.useRef(false)
+    const inicioX = React.useRef(0)
+    const refToast = React.useRef<HTMLDivElement>(null)
 
-const ToastTitle = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Title>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Title ref={ref} className={cn("text-sm font-semibold", className)} {...props} />
-));
-ToastTitle.displayName = ToastPrimitives.Title.displayName;
+    const iniciarSalida = React.useCallback(() => {
+      // Evita doble disparo
+      if (yaInicioSalida.current) return
+      yaInicioSalida.current = true
+      setSaliendo(true)
+      setTimeout(() => {
+        onDismiss?.()
+      }, DURACION_ANIMACION_SALIDA)
+    }, [onDismiss])
 
-const ToastDescription = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Description>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Description>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Description ref={ref} className={cn("text-sm opacity-90", className)} {...props} />
-));
-ToastDescription.displayName = ToastPrimitives.Description.displayName;
+    // Auto-dismiss tras "duration" ms
+    React.useEffect(() => {
+      const temporizador = setTimeout(iniciarSalida, duration)
+      return () => clearTimeout(temporizador)
+    }, []) // Sin dependencias: solo corre al montar
 
-type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>;
+    // Reacciona al dismissed externo, pero solo si cambia a true
+    React.useEffect(() => {
+      if (dismissed) iniciarSalida()
+    }, [dismissed])
 
-type ToastActionElement = React.ReactElement<typeof ToastAction>;
+    const alPresionar = (e: React.PointerEvent) => {
+      setDeslizando(true)
+      inicioX.current = e.clientX
+      ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+    }
 
-export {
-  type ToastProps,
-  type ToastActionElement,
-  ToastProvider,
-  ToastViewport,
-  Toast,
-  ToastTitle,
-  ToastDescription,
-  ToastClose,
-  ToastAction,
-};
+    const alMover = (e: React.PointerEvent) => {
+      if (!deslizando) return
+      const delta = e.clientX - inicioX.current
+      if (delta > 0) setDesplazamientoX(delta)
+    }
+
+    const alSoltar = (e: React.PointerEvent) => {
+      if (!deslizando) return
+      setDeslizando(false)
+      const delta = e.clientX - inicioX.current
+      if (delta > 80) {
+        iniciarSalida()
+      } else {
+        setDesplazamientoX(0)
+      }
+    }
+
+    React.useImperativeHandle(ref, () => refToast.current as HTMLDivElement)
+
+    const transformFinal = saliendo
+      ? "translateX(120%)"
+      : `translateX(${desplazamientoX}px)`
+
+    return (
+      <div
+        ref={refToast}
+        role="alert"
+        aria-live="assertive"
+        className={variantes({ variant, className })}
+        style={{
+          transform: transformFinal,
+          opacity: saliendo ? 0 : 1,
+          transition: saliendo
+            ? `transform ${DURACION_ANIMACION_SALIDA}ms cubic-bezier(0.4, 0, 1, 1), opacity ${DURACION_ANIMACION_SALIDA}ms ease`
+            : deslizando
+              ? "none"
+              : "transform 200ms ease, opacity 200ms ease",
+          touchAction: "none",
+        }}
+        onPointerDown={alPresionar}
+        onPointerMove={alMover}
+        onPointerUp={alSoltar}
+        onPointerCancel={alSoltar}
+        {...props}
+      >
+        {children}
+      </div>
+    )
+  }
+)
+
+Toast.displayName = "Toast"

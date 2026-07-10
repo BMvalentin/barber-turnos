@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { obtenerHorariosDisponibles, obtenerDiasDisponibles } from "@/actions/turno.actions";
+import { useSlotLocks } from "@/hooks/useSlotLocks";
 import {
   format,
   startOfMonth,
@@ -16,7 +17,7 @@ import {
   endOfWeek,
 } from "date-fns";
 import { es } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Lock } from "lucide-react";
 
 interface Props {
   servicioId?: string;
@@ -24,6 +25,8 @@ interface Props {
   turnoIdAExcluir?: string;
   defaultValue?: string;
   name: string;
+  sessionId?: string;
+  userId?: string;
 }
 
 // Encabezados de columna: Dom primero, igual que en la imagen de referencia
@@ -35,6 +38,8 @@ export default function SeleccionadorHorario({
   turnoIdAExcluir,
   defaultValue,
   name,
+  sessionId = "no-session",
+  userId = "no-user",
 }: Props) {
   const [fecha, setFecha] = useState<Date | undefined>(
     defaultValue ? new Date(defaultValue) : undefined
@@ -56,6 +61,14 @@ export default function SeleccionadorHorario({
 
   // Ref para evitar resetear el slot en la carga inicial
   const esPrimeraCarga = useRef(true);
+
+  // ── WebSocket + polling para locks en tiempo real ─────────────────────
+  const { isSlotBloqueado, lockSlot, unlockSlot, wsEstado } = useSlotLocks({
+    barberoId: barberoId ?? "",
+    fecha,
+    sessionId,
+    userId,
+  });
 
   // ─── Cargar días disponibles cuando cambia el mes o los filtros ───────────
   const cargarDiasDelMes = useCallback(async () => {
@@ -132,10 +145,18 @@ export default function SeleccionadorHorario({
     hoy.setHours(0, 0, 0, 0);
     if (dia < hoy) return;
     setFecha(dia);
-    // Solo resetear el slot si el usuario ya había interactuado antes
+    // Liberar slot anterior al cambiar de fecha
     if (!esPrimeraCarga.current) {
+      unlockSlot();
       setSlotSeleccionado("");
     }
+  };
+
+  // ─── Seleccionar un slot de hora ─────────────────────────────────────────
+  const manejarSeleccionSlot = (slot: string) => {
+    if (isSlotBloqueado(slot)) return;
+    setSlotSeleccionado(slot);
+    lockSlot(slot);
   };
 
   // ─── Construir grilla (semana empieza en Domingo, weekStartsOn: 0) ────────
@@ -319,9 +340,33 @@ export default function SeleccionadorHorario({
 
       {/* CUADRÍCULA DE HORARIOS */}
       <div className="space-y-2">
-        <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-widest ml-1">
-          Horarios Disponibles <span className="text-[#E8B031]">*</span>
-        </label>
+        {/* Header con indicador de estado WS */}
+        <div className="flex items-center justify-between ml-1">
+          <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-widest">
+            Horarios Disponibles <span className="text-[#E8B031]">*</span>
+          </label>
+          {/* Indicador de conexión WebSocket */}
+          {barberoId && fecha && (
+            <div className="flex items-center gap-1.5 mr-1">
+              <span
+                className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                  wsEstado === "conectado"
+                    ? "bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.7)]"
+                    : wsEstado === "conectando"
+                    ? "bg-yellow-500 animate-pulse"
+                    : "bg-red-500/60"
+                }`}
+              />
+              <span className="text-[8px] text-[#6B6355] uppercase tracking-widest">
+                {wsEstado === "conectado"
+                  ? "En vivo"
+                  : wsEstado === "conectando"
+                  ? "Conectando"
+                  : "Sin conexión"}
+              </span>
+            </div>
+          )}
+        </div>
 
         {!fecha || !servicioId || !barberoId ? (
           /* Estado: faltan datos */
@@ -351,24 +396,40 @@ export default function SeleccionadorHorario({
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
               {slots.map((slot) => {
                 const estaSeleccionado = slotSeleccionado === slot;
+                const estaBloqueado = isSlotBloqueado(slot);
+
                 return (
                   <button
                     key={slot}
                     type="button"
-                    onClick={() => setSlotSeleccionado(slot)}
+                    onClick={() => manejarSeleccionSlot(slot)}
+                    disabled={estaBloqueado}
+                    title={estaBloqueado ? "Seleccionado por otro usuario" : undefined}
                     className={`
                       relative px-2 py-3 rounded-xl text-xs font-bold tracking-wide
-                      border transition-all duration-200 cursor-pointer
+                      border transition-all duration-200
                       ${
-                        estaSeleccionado
+                        estaBloqueado
+                          ? // Bloqueado por otro usuario: gris con candado
+                            "bg-[#1A1612] border-[#2A2318] text-[#4A4438] cursor-not-allowed opacity-70"
+                          : estaSeleccionado
                           ? // Activo: dorado
-                            "bg-[#E8B031] border-[#E8B031] text-[#14110C] shadow-[0_0_12px_rgba(232,176,49,0.35)]"
+                            "bg-[#E8B031] border-[#E8B031] text-[#14110C] shadow-[0_0_12px_rgba(232,176,49,0.35)] cursor-pointer"
                           : // Inactivo: oscuro con borde sutil
-                            "bg-[#1C1812] border-[#2C261D] text-[#E4E0D9] hover:border-[#E8B031]/50 hover:text-[#E8B031]"
+                            "bg-[#1C1812] border-[#2C261D] text-[#E4E0D9] hover:border-[#E8B031]/50 hover:text-[#E8B031] cursor-pointer"
                       }
                     `}
                   >
-                    {formatearHora(slot)}
+                    {estaBloqueado ? (
+                      /* Slot bloqueado por otro usuario */
+                      <span className="flex items-center justify-center gap-1">
+                        <Lock className="w-3 h-3" />
+                        {formatearHora(slot)}
+                      </span>
+                    ) : (
+                      formatearHora(slot)
+                    )}
+
                     {/* Indicador visual de selección activa */}
                     {estaSeleccionado && (
                       <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#E8B031] rounded-full border-2 border-[#14110C] flex items-center justify-center">

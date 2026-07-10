@@ -1,9 +1,9 @@
 "use client";
 
 import { createServicio, ActionState } from "@/actions/servicio-actions";
-import { useActionState, useEffect, useRef, useState } from "react";
-import { useFormStatus } from "react-dom";
-import { ArrowLeft, Clock, DollarSign, Percent } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, DollarSign, Upload, X } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 const initialState: ActionState = {
   success: false,
@@ -28,17 +28,64 @@ export default function CreateServicioForm({
   barberos,
   onClose,
 }: CreateServicioFormProps) {
-  const [state, formAction] = useActionState(createServicio, initialState);
+  const [isPending, setIsPending] = useState(false);
+  const [state, setState] = useState<ActionState>(initialState);
   const formRef = useRef<HTMLFormElement>(null);
   const [descripcion, setDescripcion] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [srcImage, setSrcImage] = useState("");
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (state.success) {
       formRef.current?.reset();
-      alert("✅ Servicio creado exitosamente!");
-      onClose(); // Cerramos el modal tras la creación exitosa
+
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      setSrcImage("");
+      setUploadError(null);
+
+      toast({
+        title: "Servicio creado",
+        description: "El servicio se ha creado correctamente.",
+        variant: "default",
+        duration: 4000,
+      });
+
+      onClose();
     }
-  }, [state.success, onClose]);
+  }, [state.success]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setUploadError("El archivo debe ser una imagen");
+      return;
+    }
+
+    setUploadError(null);
+    setSrcImage("");
+    setSelectedFile(file);
+
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+  };
+
+  const handleRemoveImage = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setSrcImage("");
+    setUploadError(null);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto">
@@ -63,7 +110,26 @@ export default function CreateServicioForm({
 
         {/* Formulario */}
         <div className="overflow-y-auto p-6 flex-1">
-          <form ref={formRef} action={formAction} className="space-y-6">
+          <form
+            ref={formRef}
+            action={async (formData) => {
+              if (isPending) return;
+
+              setIsPending(true);
+
+              try {
+                if (selectedFile) {
+                  formData.set("image", selectedFile);
+                }
+
+                const result = await createServicio(initialState, formData);
+                setState(result);
+              } finally {
+                setIsPending(false);
+              }
+            }}
+            className="space-y-6"
+          >
             {/* Información General */}
             <div className="bg-[#1C1812] border border-[#2C261D] rounded-xl p-6">
               <div className="flex justify-between items-center mb-6">
@@ -115,12 +181,61 @@ export default function CreateServicioForm({
                   )}
                 </div>
 
-                <InputField
-                  label="URL de Imagen (Opcional)"
-                  name="srcImage"
-                  placeholder="https://ejemplo.com/imagen.jpg"
-                  errors={state.errors?.srcImage}
-                />
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider">
+                    Imagen del Servicio
+                  </label>
+
+                  {previewUrl || srcImage ? (
+                    <div className="relative w-fit">
+                      <img
+                        src={previewUrl || srcImage}
+                        alt="Vista previa"
+                        className="h-32 w-32 object-cover rounded-lg border border-[#2C261D]"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute -top-2 -right-2 p-1 bg-red-600 rounded-full text-white hover:bg-red-700"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label
+                      className={`relative flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-[#2C261D] rounded-lg cursor-pointer hover:border-[#E8B031] transition ${isPending ? "opacity-50 pointer-events-none" : ""
+                        }`}
+                    >
+                      {isPending ? (
+                        <span className="text-[#E8B031] text-sm">
+                          Subiendo...
+                        </span>
+                      ) : (
+                        <>
+                          <Upload className="h-6 w-6 text-[#E8B031]" />
+                          <span className="text-sm text-[#8E8675]">
+                            Hacé clic para subir una imagen
+                          </span>
+                        </>
+                      )}
+
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        disabled={isPending}
+                      />
+                    </label>
+                  )}
+
+                  {uploadError && (
+                    <p className="text-red-500 text-sm">
+                      {uploadError}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -185,7 +300,7 @@ export default function CreateServicioForm({
               >
                 Cancelar
               </button>
-              <SubmitButton />
+              <SubmitButton pending={isPending} />
             </div>
           </form>
         </div>
@@ -194,8 +309,12 @@ export default function CreateServicioForm({
   );
 }
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
+
+function SubmitButton({
+  pending,
+}: {
+  pending: boolean;
+}) {
 
   return (
     <button
@@ -234,11 +353,9 @@ function InputField({
         )}
         <input
           {...props}
-          className={`w-full bg-[#14110C] border ${
-            errors ? "border-red-500" : "border-[#2C261D]"
-          } rounded-lg ${Icon ? "pl-11" : "pl-4"} ${
-            unit ? "pr-14" : "pr-4"
-          } py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-colors`}
+          className={`w-full bg-[#14110C] border ${errors ? "border-red-500" : "border-[#2C261D]"
+            } rounded-lg ${Icon ? "pl-11" : "pl-4"} ${unit ? "pr-14" : "pr-4"
+            } py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-colors`}
         />
         {unit && (
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#8E8675] uppercase">

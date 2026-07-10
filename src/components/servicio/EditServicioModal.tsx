@@ -1,15 +1,16 @@
 "use client";
 
 import { actualizarServicio } from "@/actions/servicio-actions"; // Asumimos que esta acción maneja la actualización
-import { useActionState, useState, useRef, useEffect } from "react";
-import { useFormStatus } from "react-dom";
+import { useState, useRef, useEffect } from "react";
 import {
   ArrowLeft,
-  LayoutGrid,
   DollarSign,
   Percent,
   Clock,
+  Upload,
+  X,
 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 const initialState = {
   success: false,
@@ -40,7 +41,8 @@ export default function EditServicioModal({
   onClose,
 }: EditServicioModalProps) {
   // Estado para la acción del servidor
-  const [state, formAction] = useActionState(actualizarServicio, initialState);
+  const [state, setState] = useState(initialState);
+  const [isPending, setIsPending] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   // Estados locales para controlar los inputs (opcional, pero útil para validaciones inmediatas si las tuvieras)
@@ -51,14 +53,55 @@ export default function EditServicioModal({
   const [duracion, setDuracion] = useState(servicio.duracion);
   const [descuento, setDescuento] = useState(servicio.descuento);
   const [senia, setSenia] = useState(servicio.senia);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPreviewUrl(servicio.srcImage || null);
+  }, [servicio.srcImage]);
 
   // Efecto para cerrar el modal si la actualización fue exitosa
   useEffect(() => {
     if (state.success) {
-      alert("✅ Servicio actualizado exitosamente!");
+      toast({
+        title: "Servicio actualizado",
+        description: "El servicio se ha actualizado correctamente.",
+        variant: "default",
+        duration: 4000,
+      });
       onClose();
     }
   }, [state.success, onClose]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setUploadError("El archivo debe ser una imagen");
+      return;
+    }
+
+    setUploadError(null);
+
+    if (previewUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handleRemoveImage = () => {
+    if (previewUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setSrcImage("");
+  };
 
   return (
     <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto">
@@ -67,12 +110,30 @@ export default function EditServicioModal({
         {/* Formulario envolvente para capturar la acción del botón en el header */}
         <form
           ref={formRef}
-          action={formAction}
+          action={async (formData) => {
+            if (isPending) return;
+
+            setIsPending(true);
+
+            try {
+              if (selectedFile) {
+                formData.set("image", selectedFile);
+              }
+              const result = await actualizarServicio(initialState, formData);
+              setState(result);
+            } finally {
+              setIsPending(false);
+            }
+          }}
           className="flex flex-col flex-1 overflow-hidden"
         >
           {/* Inputs Ocultos necesarios para la acción */}
           <input type="hidden" name="id" value={servicio.id} />
-          <input type="hidden" name="estado" value={String(servicio.estado)} />
+          <input
+            type="hidden"
+            name="srcImage"
+            value={srcImage}
+          />
 
           {/* --- HEADER DEL MODAL (Estilo imagen) --- */}
           <div className="flex items-center justify-between p-6 border-b border-[#2C261D]">
@@ -96,7 +157,7 @@ export default function EditServicioModal({
             {/* Acciones del Header */}
             <div className="flex items-center gap-4">
               {/* VISTA PREVIA ELIMINADA */}
-              <SubmitButton />
+              <SubmitButton pending={isPending} />
             </div>
           </div>
 
@@ -142,15 +203,49 @@ export default function EditServicioModal({
                   )}
                 </div>
 
-                {/* URL de Imagen */}
-                <InputField
-                  label="URL de Imagen"
-                  name="srcImage"
-                  value={srcImage}
-                  onChange={(e) => setSrcImage(e.target.value)}
-                  placeholder="https://tu-imagen.com/foto.jpg"
-                  errors={state.errors?.srcImage}
-                />
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider">
+                    Imagen del Servicio
+                  </label>
+
+                  {previewUrl ? (
+                    <div className="relative w-fit">
+                      <img
+                        src={previewUrl}
+                        alt="Vista previa"
+                        className="h-32 w-32 object-cover rounded-lg border border-[#2C261D]"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute -top-2 -right-2 p-1 bg-red-600 rounded-full text-white hover:bg-red-700"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="relative flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-[#2C261D] rounded-lg cursor-pointer hover:border-[#E8B031] transition">
+                      <Upload className="h-6 w-6 text-[#E8B031]" />
+                      <span className="text-sm text-[#8E8675]">
+                        Hacé clic para seleccionar una imagen
+                      </span>
+
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
+                    </label>
+                  )}
+
+                  {uploadError && (
+                    <p className="text-red-500 text-sm">
+                      {uploadError}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -231,9 +326,11 @@ export default function EditServicioModal({
 // --- COMPONENTES AUXILIARES ---
 
 // Botón de Submit ubicado en el Header
-function SubmitButton() {
-  const { pending } = useFormStatus();
-
+function SubmitButton({
+  pending,
+}: {
+  pending: boolean;
+}) {
   return (
     <button
       type="submit"

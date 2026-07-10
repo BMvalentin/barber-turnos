@@ -258,15 +258,30 @@ export async function getHorariosCompactos() {
 
     if (diasLaborales.length === 0) return ["Cerrado"];
 
+    const ORDEN_DIAS: Record<string, number> = {
+      Domingo: 0,
+      Lunes: 1,
+      Martes: 2,
+      Miercoles: 3,
+      Jueves: 4,
+      Viernes: 5,
+      Sabado: 6,
+    };
+
+    // Ordenar los días cronológicamente
+    diasLaborales.sort((a: any, b: any) => ORDEN_DIAS[a.dia] - ORDEN_DIAS[b.dia]);
+
     // 1. Mapeamos a un formato procesable
     const diasProcesados = diasLaborales.map((d:any) => {
       const horarioStr = d.margenes
         .map((m:any) => `${m.desde} a ${m.hasta}`)
         .join(" / ");
       
+      const numDia = ORDEN_DIAS[d.dia];
+
       return {
-        num: d.dia,
-        nombre: DIAS_NOMBRES[d.dia],
+        num: numDia,
+        nombre: DIAS_NOMBRES[numDia],
         horario: horarioStr || "Cerrado",
       };
     });
