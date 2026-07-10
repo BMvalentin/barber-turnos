@@ -221,6 +221,22 @@ export async function createTurno(
 
     if (hayChoque) return { success: false, error: "Horario ocupado" };
 
+    // ── Verificar que no haya otro usuario con lock activo en ese slot ──
+    const lockAjeno = await prisma.slotLock.findFirst({
+      where: {
+        barberoId,
+        horarioReservado: inicio,
+        expiresAt: { gt: new Date() },
+        NOT: { userId },
+      },
+    });
+    if (lockAjeno) {
+      return {
+        success: false,
+        error: "Este horario está siendo seleccionado por otro usuario en este momento. Intentá con otro horario.",
+      };
+    }
+
     const turno = await prisma.turno.create({
       data: {
         servicioId,
@@ -238,6 +254,11 @@ export async function createTurno(
     revalidateBarberoCache(barberoId, fechaSolo);
     revalidateTag(`turnos-mes-${barberoId}-${fechaSolo.substring(0, 7)}`);
     revalidateTag(`turnos-user-${userId}`);
+
+    // ── Limpiar locks propios del usuario para ese slot (cleanup) ───────
+    try {
+      await prisma.slotLock.deleteMany({ where: { userId, barberoId, horarioReservado: inicio } });
+    } catch { /* No bloquear el flujo si falla la limpieza */ }
 
     try {
       const zoned = toZonedTime(inicio, TIMEZONE);
@@ -455,6 +476,22 @@ export async function actualizarTurno(
 
       if (!horariosDisponibles.success || !horariosDisponibles.data?.includes(horario.toISOString())) {
         return { success: false, error: "El horario seleccionado no está disponible para este barbero/servicio" };
+      }
+
+      // ── Verificar que no haya lock ajeno activo para ese slot ──────────
+      const lockAjeno = await prisma.slotLock.findFirst({
+        where: {
+          barberoId,
+          horarioReservado: horario,
+          expiresAt: { gt: new Date() },
+          NOT: { userId: turnoActual.userId },
+        },
+      });
+      if (lockAjeno) {
+        return {
+          success: false,
+          error: "Este horario está siendo seleccionado por otro usuario. Intentá con otro horario.",
+        };
       }
 
       const dataUpdate: any = { servicioId, barberoId, horarioReservado: horario, estado };

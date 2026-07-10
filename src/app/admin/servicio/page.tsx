@@ -19,7 +19,7 @@ export default async function ServiciosPage() {
 
   return (
     // Contenedor principal con el mismo fondo y padding que en Barberos
-    <div className="min-h-screen bg-gradient-to-br from-black to-amber-950/30 p-6">
+    <div className="min-h-screen p-6">
       {/* Contenedor centralizado con el mismo margen superior */}
       <div className="container mx-auto max-w-7xl mt-20">
         <div className="mb-8 flex items-center justify-between">
