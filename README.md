@@ -67,9 +67,14 @@ AUTH_GOOGLE_SECRET="TU_GOOGLE_SECRET_AQUI"
 AUTH_TRUST_HOST=true
 NODE_ENV=production
 
+# Cloudinary
+CLOUDINARY_CLOUD_NAME="your_cloud_name"
+CLOUDINARY_API_KEY="your_api_key"
+CLOUDINARY_API_SECRET="your_api_secret"
+
 # Credenciales de Mercado Pago
-MP_ACCESS_TOKEN="TU_ACCESS_TOKEN_AQUI"
-MP_PUBLIC_KEY="TU_PUBLIC_KEY_AQUI"
+MP_CLIENT_ID=
+MP_CLIENT_SECRET=
 
 # URL Base de la Aplicación
 NEXT_PUBLIC_APP_URL=http://localhost:3000

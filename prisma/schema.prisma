@@ -179,13 +179,26 @@ model configuracion_mercadopago {
   refreshToken String?   @db.Text
   publicKey    String?
   mpUserId     String?
-  scope        String?
+  scope        String?   @db.Text
   liveMode     Boolean   @default(true)
   conectado    Boolean   @default(true)
   expiraEn     DateTime?
   createdAt    DateTime  @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime  @default(now())
   bloqueado    Boolean   @default(true)
+}
+
+model SlotLock {
+  id               String   @id @default(cuid())
+  barberoId        String
+  horarioReservado DateTime
+  userId           String
+  sessionId        String   @unique
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+
+  @@index([barberoId, horarioReservado])
+  @@index([expiresAt])
 }
 
 enum user_role {
