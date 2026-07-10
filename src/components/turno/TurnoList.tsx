@@ -349,7 +349,7 @@ function TurnoCard({
       {
         (session?.user?.role === "ADMIN" || (turno.user?.id === session?.user?.id && (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO"))) && (
           <div className="mt-4 pt-4 border-t border-amber-900/30 space-y-2">
-            
+
             <div className="flex justify-end gap-2">
               {/* Opciones del USER (Dueño) */}
               {turno.user?.id === session?.user?.id && session?.user?.role !== "ADMIN" && (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO") && (
@@ -389,6 +389,8 @@ function TurnoCard({
                   >
                     {isConfirming ? "Confirmando..." : "Confirmar"}
                   </button>
+                  
+                  <EditTurnoModal turno={turno} />
                 </>
               )}
             </div>
