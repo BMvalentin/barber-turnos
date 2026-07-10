@@ -59,7 +59,7 @@ export function LocationSection() {
               </div>
               <div>
                 <h3 className="font-semibold text-amber-500 mb-1">Dirección</h3>
-                <p className="text-amber-100/80">Av. Montreal 1234, Santa Clara del Mar</p>
+                <p className="text-amber-100/80">Av. Montreal 695, Santa Clara del Mar</p>
               </div>
             </div>
 
