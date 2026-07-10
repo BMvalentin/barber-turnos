@@ -251,7 +251,7 @@ export default function ServicioList({
     <div className="space-y-8">
       {/* Top Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-[#1C1812] border border-[#2C261D] rounded-xl p-5">
+        <div className="bg-black/70 border border-[#2C261D] rounded-xl p-5">
           <p className="text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
             Servicios Activos
           </p>
@@ -259,13 +259,13 @@ export default function ServicioList({
             {activeServicesCount}
           </p>
         </div>
-        <div className="bg-[#1C1812] border border-[#2C261D] rounded-xl p-5">
+        <div className="bg-black/70 border border-[#2C261D] rounded-xl p-5">
           <p className="text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
             Precio Promedio
           </p>
           <p className="text-3xl font-semibold text-[#E4E0D9]">${avgPrice}</p>
         </div>
-        <div className="bg-[#1C1812] border border-[#2C261D] rounded-xl p-5">
+        <div className="bg-black/70 border border-[#2C261D] rounded-xl p-5">
           <p className="text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
             Tiempo Estimado
           </p>
@@ -304,7 +304,7 @@ export default function ServicioList({
               </button>
 
               {showFilterPanel && (
-                <div className="absolute right-0 top-full mt-2 w-80 bg-[#14110C] border border-[#2C261D] rounded-xl shadow-2xl z-40 overflow-hidden">
+                <div className="absolute right-0 top-full mt-2 w-80 bg-black/70 border border-[#2C261D] rounded-xl shadow-2xl z-40 overflow-hidden">
                   <div className="flex items-center justify-between px-5 py-4 border-b border-[#2C261D]">
                     <div className="flex items-center gap-2">
                       <Filter className="w-4 h-4 text-amber-600" />
@@ -528,7 +528,7 @@ export default function ServicioList({
         )}
 
         {serviciosFiltrados.length === 0 ? (
-          <div className="bg-[#1C1812] border border-[#2C261D] rounded-xl p-12 text-center">
+          <div className="bg-black/70 border border-[#2C261D] rounded-xl p-12 text-center">
             <Scissors className="h-12 w-12 text-[#8E8675] mx-auto mb-4 opacity-50" />
             <p className="text-[#8E8675]">
               {servicios.length === 0
@@ -545,7 +545,7 @@ export default function ServicioList({
             )}
           </div>
         ) : (
-          <div className="bg-[#1C1812] border border-[#2C261D] rounded-xl overflow-hidden">
+          <div className="bg-black/70 border border-[#2C261D] rounded-xl overflow-hidden">
             {/* Table Header */}
             <div className="hidden md:grid md:grid-cols-12 gap-4 p-4 border-b border-[#2C261D] bg-[#14110C]/50 text-[11px] font-bold text-[#8E8675] uppercase tracking-wider">
               <div className="col-span-6">Servicio</div>

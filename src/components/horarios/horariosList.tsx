@@ -77,7 +77,7 @@ export function HorariosList({
         <Button
           onClick={handleCreate}
           size="sm"
-          className="bg-amber-600 hover:bg-amber-700 text-white"
+          className="bg-amber-600 hover:bg-amber-700 text-white mr-6"
         >
           <Plus className="h-4 w-4 mr-2" />
           Agregar
