@@ -3,7 +3,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Car, Calendar, Clock, Phone, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -32,14 +32,22 @@ export function BookingModal({ isOpen, onClose }: BookingModalProps) {
 
   const handleSubmit = () => {
     if (!formData.vehicleType || !formData.date || !formData.time || !formData.phone) {
-      toast.error("Por favor completá todos los campos");
+      toast({
+        title: "Error",
+        description: "Por favor completa todos los campos antes de continuar.",
+        variant: "destructive",
+        duration: 4000,
+      })
       return;
     }
-    
-    toast.success("¡Turno reservado con éxito!", {
-      description: `Te esperamos el ${formData.date} a las ${formData.time}`,
+
+    toast({
+      title: "Turno reservado",
+      description: `Tu turno para ${formData.vehicleType} el ${formData.date} a las ${formData.time} ha sido reservado.`,
+      variant: "default",
+      duration: 4000,
     });
-    
+
     setStep(4);
   };
 
@@ -110,11 +118,10 @@ export function BookingModal({ isOpen, onClose }: BookingModalProps) {
                             setFormData({ ...formData, vehicleType: type.id });
                             setStep(2);
                           }}
-                          variant={`${
-                            formData.vehicleType === type.id
+                          variant={`${formData.vehicleType === type.id
                               ? "celeste"
                               : "blanco"
-                          }`}
+                            }`}
                           className={`p-4 rounded-xl border-2`}
                         >
                           <span className="text-3xl block mb-2">{type.icon}</span>
@@ -137,7 +144,7 @@ export function BookingModal({ isOpen, onClose }: BookingModalProps) {
                       <Calendar className="w-4 h-4" />
                       <span>Elegí día y horario</span>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-foreground">Fecha</label>
                       <input
@@ -158,11 +165,10 @@ export function BookingModal({ isOpen, onClose }: BookingModalProps) {
                         {timeSlots.map((time) => (
                           <Button
                             key={time}
-                            variant={`${
-                              formData.time === time
+                            variant={`${formData.time === time
                                 ? "celeste"
                                 : "blanco"
-                            }`}
+                              }`}
                             size="sm"
                             onClick={() => setFormData({ ...formData, time })}
                             className={`p-2 rounded-lg text-sm font-medium transition-all`}>
@@ -200,7 +206,7 @@ export function BookingModal({ isOpen, onClose }: BookingModalProps) {
                       <Phone className="w-4 h-4" />
                       <span>Tu número de contacto</span>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-foreground">Teléfono</label>
                       <input

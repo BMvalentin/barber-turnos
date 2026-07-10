@@ -8,8 +8,8 @@ import {
   updateMargenLaboral,
   type ActionState,
 } from "@/actions/margenesHorario.actions";
-import { toast } from "sonner";
-import { Clock, CheckCircle2, Loader2, XCircle } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
+import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 
 type HorariosFormProps = {
   diaId: string;
@@ -62,10 +62,20 @@ export function HorariosForm({
 
   useEffect(() => {
     if (state.success) {
-      toast.success("Guardado correctamente");
+      toast({
+        title: "Horario guardado",
+        description: "El horario se ha guardado correctamente.",
+        variant: "default",
+        duration: 4000,
+      });
       onSuccess?.();
     } else if (state.error) {
-      toast.error(state.error);
+      toast({
+        title: "Error",
+        description: state.error || "Error al guardar el horario",
+        variant: "destructive",
+        duration: 4000,
+      });
     }
   }, [state, onSuccess]);
 
@@ -110,7 +120,7 @@ export function HorariosForm({
 
       {/* BOTONES */}
       <div className="flex justify-end gap-2 pt-3 border-t border-amber-900/30">
-        
+
         {/* 🔥 BOTÓN CANCELAR MEJORADO */}
         <Button
           type="button"

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { toast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
-import { createBarbero } from "@/actions/barbero.actions";
+import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { createBarbero } from "@/actions/barbero.actions";
+import { ChevronDown, ChevronUp, Upload, X } from "lucide-react";
+import { uploadBarberImages } from "@/actions/upload-images.actions";
 
 type Servicio = {
   id: string;
@@ -58,6 +59,11 @@ export default function CreateBarberoForm({
   const [showServicios, setShowServicios] = useState(false);
   const [showHorarios, setShowHorarios] = useState(false);
 
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
   // ✅ VALIDACIÓN EN TIEMPO REAL
   const handleNombreChange = (value: string) => {
     setNombre(value);
@@ -83,27 +89,90 @@ export default function CreateBarberoForm({
     );
   };
 
-  const handleSubmit = () => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setUploadError("El archivo debe ser una imagen");
+      return;
+    }
+
+    // Limpiar errores y estado previo
+    setUploadError(null);
+    setSrcImage("");
+    setSelectedFile(file);
+
+    // Crear URL temporal para previsualización
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+  };
+
+  const handleRemoveImage = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setSrcImage("");
+    setUploadError(null);
+  };
+
+  const handleSubmit = async () => {
     setError(null);
+    setUploadError(null);
 
     if (!nombre.trim()) {
       setError("El nombre es obligatorio");
       return;
     }
 
+    let finalImageUrl = srcImage; // mantiene valor previo (útil en edición, pero acá siempre "")
+
+    // Si el usuario seleccionó un archivo, lo subimos AHORA
+    if (selectedFile) {
+      setUploading(true);
+      try {
+        const uploadResult = await uploadBarberImages([selectedFile], "barberia/barberos");
+        if (uploadResult.success && uploadResult.images.length > 0) {
+          finalImageUrl = uploadResult.images[0];
+          // limpiar la vista previa local
+          if (previewUrl) URL.revokeObjectURL(previewUrl);
+          setPreviewUrl(null);
+          setSelectedFile(null);
+        } else {
+          setUploadError("Error al subir la imagen");
+          setUploading(false);
+          return; // no continuar si falla la subida
+        }
+      } catch (err) {
+        setUploadError("Error al subir la imagen");
+        setUploading(false);
+        return;
+      } finally {
+        setUploading(false);
+      }
+    }
+
+    // Ahora creamos el barbero con la URL definitiva
     startTransition(async () => {
       const result = await createBarbero({
         nombre: nombre.trim(),
-        srcImage: srcImage.trim() || null,
+        srcImage: finalImageUrl?.trim() || null,
         serviciosIds: selectedServicios,
         margenesIds: selectedHorarios,
       });
 
       if (result.success) {
-        toast.success("Barbero creado correctamente");
+        toast({
+          title: "Barbero creado",
+          description: "El barbero se ha creado correctamente.",
+          variant: "default",
+          duration: 4000,
+        })
 
         setNombre("");
         setSrcImage("");
+        setPreviewUrl(null);
+        setSelectedFile(null);
         setSelectedServicios([]);
         setSelectedHorarios([]);
 
@@ -111,15 +180,19 @@ export default function CreateBarberoForm({
         router.refresh();
       } else {
         setError(result.error || "Error al crear barbero");
-        toast.error(result.error || "Error");
+        toast({
+          title: "Error",
+          description: result.error || "Error al crear barbero",
+          variant: "destructive",
+          duration: 4000,
+        });
       }
     });
   };
 
   return (
     <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl p-6 space-y-6">
-      
-      <h2 className="text-2xl font-bold text-white">Nuevo Barbero</h2>
+
 
       {/* NOMBRE */}
       <div className="space-y-2">
@@ -143,16 +216,49 @@ export default function CreateBarberoForm({
       {/* IMAGEN */}
       <div className="space-y-2">
         <label className="text-sm font-semibold text-amber-200/70">
-          Imagen <span className="text-amber-200/50 text-xs">(Opcional)</span>
+          Foto del barbero <span className="text-amber-200/50 text-xs">(Opcional)</span>
         </label>
 
-        <input
-          type="text"
-          value={srcImage}
-          onChange={(e) => setSrcImage(e.target.value)}
-          className="w-full border border-amber-900/30 rounded-lg px-3 py-2 bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-          placeholder="URL de la imagen"
-        />
+        {previewUrl || srcImage ? (
+          <div className="relative w-fit">
+            <img
+              src={previewUrl || srcImage}
+              alt="Vista previa"
+              className="h-32 w-32 object-cover rounded-lg border border-amber-500/50"
+            />
+            <button
+              type="button"
+              onClick={handleRemoveImage}
+              className="absolute -top-2 -right-2 p-1 bg-red-600 rounded-full text-white hover:bg-red-700"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <label
+            className={`relative flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-amber-900/40 rounded-lg cursor-pointer hover:border-amber-500/50 transition ${uploading ? "opacity-50 pointer-events-none" : ""
+              }`}
+          >
+            {uploading ? (
+              <span className="text-amber-400 text-sm">Subiendo...</span>
+            ) : (
+              <>
+                <Upload className="h-6 w-6 text-amber-500" />
+                <span className="text-sm text-amber-200/70">
+                  Hacé clic para subir una imagen
+                </span>
+              </>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              disabled={uploading}
+            />
+          </label>
+        )}
+        {uploadError && <p className="text-red-400 text-sm">{uploadError}</p>}
       </div>
 
       {/* SERVICIOS */}
@@ -180,7 +286,7 @@ export default function CreateBarberoForm({
 
         {showServicios && (
           <div className="p-4 bg-black/60 border border-amber-900/30 rounded-lg space-y-2 max-h-60 overflow-y-auto">
-            
+
             {selectedServicios.length === 0 && (
               <p className="text-xs text-amber-500/60 italic">
                 No seleccionaste ningún servicio
@@ -237,7 +343,7 @@ export default function CreateBarberoForm({
 
         {showHorarios && (
           <div className="p-4 bg-black/60 border border-amber-900/30 rounded-lg space-y-3 max-h-80 overflow-y-auto">
-            
+
             {selectedHorarios.length === 0 && (
               <p className="text-xs text-amber-500/60 italic">
                 No seleccionaste horarios
@@ -274,10 +380,10 @@ export default function CreateBarberoForm({
       {/* BOTÓN */}
       <Button
         onClick={handleSubmit}
-        disabled={isPending || !!error}
+        disabled={isPending || uploading || !!error}
         className="w-full bg-amber-600 hover:bg-amber-700 text-white"
       >
-        {isPending ? "Guardando..." : "Crear Barbero"}
+        {isPending || uploading ? "Guardando..." : "Crear Barbero"}
       </Button>
     </div>
   );
