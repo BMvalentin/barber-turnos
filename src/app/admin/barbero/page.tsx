@@ -27,7 +27,7 @@ async function getData() {
       orderBy: { dia: "asc" },
     }),
     prisma.barbero.findMany({
-      where: { estado: true }, // 🔥 SOLO ACTIVOS
+      where: { estado: true }, 
       include: {
         servicios: {
           include: {
@@ -39,6 +39,7 @@ async function getData() {
             margenLaboral: true,
             dia: {
               select: {
+                id: true,
                 dia: true,
               },
             },
@@ -49,7 +50,6 @@ async function getData() {
     }),
   ]);
 
-  // 🔥 SERIALIZAR barberos: Convertir campos Decimal a Number
   const serializedBarberos = barberos.map(barbero => ({
     ...barbero,
     servicios: barbero.servicios.map(sb => ({
