@@ -9,7 +9,7 @@ import { ArrowLeft } from "lucide-react";
 import { getUserTurnos } from "@/actions/user-dashboard";
 
 async function getTurnoData() {
-  const [servicios, barberos, usuarios] = await Promise.all([
+  const [servicios, barberos, usuarios, relaciones] = await Promise.all([
     prisma.servicio.findMany({
       where: { estado: true },
       orderBy: { nombre: "asc" },
@@ -22,9 +22,11 @@ async function getTurnoData() {
       select: { id: true, name: true, email: true },
       orderBy: { name: "asc" },
     }),
+    prisma.servicioxbarbero.findMany({
+      select: { barberoId: true, servicioId: true },
+    }),
   ]);
 
-  // SERIALIZACIÓN OBLIGATORIA:
   const serializedServicios = servicios.map((s) => ({
     ...s,
     precio: s.precio ? Number(s.precio) : 0,
@@ -32,7 +34,7 @@ async function getTurnoData() {
     senia: s.senia ? Number(s.senia) : 0,
   }));
 
-  return { servicios: serializedServicios, barberos, usuarios };
+  return { servicios: serializedServicios, barberos, usuarios, relaciones };
 }
 
 // Corregido: Agregamos searchParams para leer la página de la URL
@@ -49,7 +51,7 @@ export default async function TurnoPage({ searchParams }: { searchParams: { page
         : { success: true, data: await getUserTurnos(session.user.id as string), totalPages: 1, currentPage: 1 }) 
     : { success: false, error: "Usuario no autenticado" };
 
-  const { servicios, barberos, usuarios } = await getTurnoData();
+  const { servicios, barberos, usuarios, relaciones } = await getTurnoData();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black to-amber-950/30 p-6">
@@ -70,6 +72,7 @@ export default async function TurnoPage({ searchParams }: { searchParams: { page
               initialServicios={servicios}
               initialBarberos={barberos}
               initialUsuarios={usuarios}
+              initialRelaciones={relaciones}
             />
           </div>
         </div>
