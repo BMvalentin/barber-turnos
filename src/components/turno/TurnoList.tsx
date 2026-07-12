@@ -139,10 +139,10 @@ export default function TurnoList({ turnos, session }: Props) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full overflow-hidden">
 
       {/* Grid de Turnos */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {turnosActivos.map((turno) => (
           <TurnoCard
             key={turno.id}
@@ -232,8 +232,7 @@ function TurnoCard({
   };
 
   return (
-    <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl shadow-lg p-5 hover:border-amber-500/50 transition-all">
-      {/* Header con Estado */}
+    <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl shadow-lg p-4 sm:p-5 hover:border-amber-500/50 transition-all w-full box-border">      {/* Header con Estado */}
       <div className="flex items-center justify-between mb-4 pb-3 border-b border-amber-900/30">
         <span
           className={`px-3 py-1 rounded-full text-xs font-bold border ${estadoColors[turno.estado]}`}
@@ -245,7 +244,7 @@ function TurnoCard({
       {/* Información del Turno */}
       <div className="space-y-3">
         {/* Cliente */}
-        <div className="flex items-start gap-2">
+        <div className="flex items-start gap-2 min-w-0">
           <User className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-xs text-amber-200/50">Cliente</p>
@@ -348,9 +347,9 @@ function TurnoCard({
       {/* Acciones */}
       {
         (session?.user?.role === "ADMIN" || (turno.user?.id === session?.user?.id && (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO"))) && (
-          <div className="mt-4 pt-4 border-t border-amber-900/30 space-y-2">
+          <div className="mt-4 pt-4 border-t border-amber-900/30">
 
-            <div className="flex justify-end gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {/* Opciones del USER (Dueño) */}
               {turno.user?.id === session?.user?.id && session?.user?.role !== "ADMIN" && (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO") && (
                 <>
@@ -371,27 +370,31 @@ function TurnoCard({
                   <button
                     onClick={handleCancel}
                     disabled={isCanceling}
-                    className="text-xs font-bold text-red-500 hover:text-red-400 bg-red-400/10 hover:bg-red-500/20 px-4 py-2 rounded-lg transition-colors border border-red-500/20 disabled:opacity-50"
+                    className="col-span-1 px-3 py-2.5 rounded-lg text-xs font-bold border transition-all 
+                 bg-red-950/20 border-red-900/50 text-red-400 hover:bg-red-900/40"
                   >
                     {isCanceling ? "Cancelando..." : "Cancelar Turno"}
                   </button>
                   <button
                     onClick={handleCompletar}
                     disabled={isCompleting}
-                    className="text-xs font-bold text-blue-500 hover:text-blue-400 bg-blue-400/10 hover:bg-blue-500/20 px-4 py-2 rounded-lg transition-colors border border-blue-500/20 disabled:opacity-50"
+                    className="col-span-1 px-3 py-2.5 rounded-lg text-xs font-bold border transition-all 
+                 bg-blue-950/20 border-blue-900/50 text-blue-400 hover:bg-blue-900/40"
                   >
                     {isCompleting ? "Completando..." : "Marcar Completado"}
                   </button>
                   <button
                     onClick={handleConfirmar}
                     disabled={isConfirming}
-                    className="text-xs font-bold text-green-500 hover:text-green-400 bg-green-400/10 hover:bg-green-500/20 px-4 py-2 rounded-lg transition-colors border border-green-500/20 disabled:opacity-50"
+                    className="col-span-1 px-3 py-2.5 rounded-lg text-xs font-bold border transition-all 
+                 bg-green-950/20 border-green-900/50 text-green-400 hover:bg-green-900/40"
                   >
                     {isConfirming ? "Confirmando..." : "Confirmar"}
                   </button>
-                  
-                  <EditTurnoModal turno={turno} />
-                </>
+
+                  <div className="col-span-1">
+                    <EditTurnoModal turno={turno} />
+                  </div>                </>
               )}
             </div>
           </div>

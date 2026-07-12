@@ -39,34 +39,41 @@ async function getTurnoData() {
 
 // Corregido: Agregamos searchParams para leer la página de la URL
 export default async function TurnoPage({ searchParams }: { searchParams: { page?: string } }) {
-  
+
   const params = await searchParams;
   const page = Number(params.page) || 1;
   const session = await auth();
-  
+
   // Corregido: Ahora pasamos el número de página a getTurnos
-  const result = (session?.user) 
-    ? (session?.user.role === "ADMIN" 
-        ? await getTurnos(page) 
-        : { success: true, data: await getUserTurnos(session.user.id as string), totalPages: 1, currentPage: 1 }) 
+  const result = (session?.user)
+    ? (session?.user.role === "ADMIN"
+      ? await getTurnos(page)
+      : { success: true, data: await getUserTurnos(session.user.id as string), totalPages: 1, currentPage: 1 })
     : { success: false, error: "Usuario no autenticado" };
 
   const { servicios, barberos, usuarios, relaciones } = await getTurnoData();
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-black to-amber-950/30 p-6">
-      <div className="container mx-auto max-w-7xl mt-20">
-        <div className="mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+    <div className="min-h-screen w-full bg-gradient-to-br from-black to-amber-950/30 p-2 sm:p-6 overflow-x-hidden">
+      <div className="container mx-auto max-w-7xl">
+
+        {/* CABECERA RESPONSIVE */}
+        {/* Cambiado a flex-col en móvil y flex-row en desktop */}
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="flex items-center gap-3 sm:gap-4">
             {session?.user?.role === "ADMIN" && (
-              <Link href="/admin" className="p-2 hover:bg-amber-600/20 rounded-lg transition-all group">
+              <Link href="/admin" className="p-2 hover:bg-amber-600/20 rounded-lg transition-all group shrink-0">
                 <ArrowLeft className="h-6 w-6 text-amber-500" />
               </Link>
             )}
             <div>
-              <h1 className="text-3xl font-bold text-white">Gestión de Turnos</h1>
-              <p className="text-amber-200/70">Administra las reservas de turnos</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">Gestión de Turnos</h1>
+              <p className="text-sm sm:text-base text-amber-200/70">Administra las reservas</p>
             </div>
+          </div>
+
+          {/* Botón de crear - ocupa ancho completo en móvil */}
+          <div className="w-full sm:w-auto">
             <CreateTurnoModal
               session={session}
               initialServicios={servicios}
@@ -78,13 +85,12 @@ export default async function TurnoPage({ searchParams }: { searchParams: { page
         </div>
 
         <Suspense fallback={<LoadingSkeleton />}>
-          {/* Corregido: Accedemos de forma segura a result.totalPages y result.currentPage */}
           {result.success && result.data ? (
-            <TurnoList 
-              session={session} 
-              turnos={result.data} 
-              totalPages={result.totalPages || 1} 
-              currentPage={page} 
+            <TurnoList
+              session={session}
+              turnos={result.data}
+              totalPages={result.totalPages || 1}
+              currentPage={page}
             />
           ) : (
             <div className="bg-amber-500/10 border border-amber-500/50 rounded-lg p-4">
