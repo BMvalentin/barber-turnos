@@ -370,31 +370,32 @@ function TurnoCard({
                   <button
                     onClick={handleCancel}
                     disabled={isCanceling}
-                    className="col-span-1 px-3 py-2.5 rounded-lg text-xs font-bold border transition-all 
-                 bg-red-950/20 border-red-900/50 text-red-400 hover:bg-red-900/40"
+                    className="col-span-1 px-3 py-2.5 rounded-lg text-xs font-bold border transition-all  bg-red-950/20 border-red-900/50 text-red-400 hover:bg-red-900/40"
                   >
-                    {isCanceling ? "Cancelando..." : "Cancelar Turno"}
+                    {isCanceling ? "Cancelando..." : "Cancelar"}
                   </button>
+
                   <button
                     onClick={handleCompletar}
                     disabled={isCompleting}
-                    className="col-span-1 px-3 py-2.5 rounded-lg text-xs font-bold border transition-all 
-                 bg-blue-950/20 border-blue-900/50 text-blue-400 hover:bg-blue-900/40"
+                    className="col-span-1 px-3 py-2.5 rounded-lg text-xs font-bold border transition-all bg-blue-950/20 border-blue-900/50 text-blue-400 hover:bg-blue-900/40"
                   >
-                    {isCompleting ? "Completando..." : "Marcar Completado"}
+                    {isCompleting ? "Completando..." : "Completar"}
                   </button>
+
                   <button
                     onClick={handleConfirmar}
                     disabled={isConfirming}
-                    className="col-span-1 px-3 py-2.5 rounded-lg text-xs font-bold border transition-all 
-                 bg-green-950/20 border-green-900/50 text-green-400 hover:bg-green-900/40"
+                    className="col-span-1 px-3 py-2.5 rounded-lg text-xs font-bold border transition-all  bg-green-950/20 border-green-900/50 text-green-400 hover:bg-green-900/40"
                   >
                     {isConfirming ? "Confirmando..." : "Confirmar"}
                   </button>
 
+                  {/* APLICAMOS LAS MISMAS CLASES AQUÍ */}
                   <div className="col-span-1">
                     <EditTurnoModal turno={turno} />
-                  </div>                </>
+                  </div>
+                </>
               )}
             </div>
           </div>
