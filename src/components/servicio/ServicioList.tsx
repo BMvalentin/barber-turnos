@@ -275,7 +275,7 @@ export default function ServicioList({
 
       {/* Main Table Section */}
       <div>
-        <div className="flex justify-between items-end mb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start mb-4">
           <div>
             <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-1">
               Catálogo
@@ -285,7 +285,7 @@ export default function ServicioList({
             </h2>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mt-3 sm:mt-0">
             <div className="relative" ref={filterPanelRef}>
               <button
                 onClick={() => setShowFilterPanel((v) => !v)}
@@ -304,176 +304,209 @@ export default function ServicioList({
               </button>
 
               {showFilterPanel && (
-                <div className="absolute right-0 top-full mt-2 w-80 bg-black/70 border border-[#2C261D] rounded-xl shadow-2xl z-40 overflow-hidden">
-                  <div className="flex items-center justify-between px-5 py-4 border-b border-[#2C261D]">
-                    <div className="flex items-center gap-2">
-                      <Filter className="w-4 h-4 text-amber-600" />
-                      <span className="text-xs font-bold text-[#E4E0D9] uppercase tracking-wider">
-                        Filtros
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {activeFilterCount > 0 && (
-                        <button
-                          onClick={resetFilters}
-                          className="text-[10px] font-bold text-[#8E8675] hover:text-amber-600 uppercase tracking-wider transition-colors"
-                        >
-                          Limpiar
-                        </button>
-                      )}
-                      <button
-                        onClick={() => setShowFilterPanel(false)}
-                        className="text-[#8E8675] hover:text-[#E4E0D9] transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
+                <>
+                  <div
+                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 sm:hidden"
+                    onClick={() => setShowFilterPanel(false)}
+                  />
+                  <div
+                    className="
+                      fixed inset-x-0 bottom-0 z-50
+                      h-[85dvh]
+                      bg-black
+                      border-t border-[#2C261D]
+                      rounded-t-3xl
+                      shadow-2xl
+                      flex flex-col
+                      sm:absolute
+                      sm:right-0
+                      sm:top-full
+                      sm:bottom-auto
+                      sm:inset-x-auto
+                      sm:mt-2
+                      sm:w-80
+                      sm:h-auto
+                      sm:rounded-xl
+                      sm:border
+                      sm:border-[#2C261D]
+                      sm:bg-black/90
+                      sm:overflow-hidden
+                    "
+                  >
+                    {/* Header */}
+                    <div className="shrink-0">
+                      <div className="flex items-center justify-between px-5 py-4 border-b border-[#2C261D]">
+                        <div className="flex items-center gap-2">
+                          <Filter className="w-4 h-4 text-amber-600" />
+                          <span className="text-xs font-bold text-[#E4E0D9] uppercase tracking-wider">
+                            Filtros
+                          </span>
+                        </div>
 
-                  <div className="p-5 space-y-5">
-                    {/* Búsqueda */}
-                    <div>
-                      <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
-                        Buscar
-                      </label>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#8E8675]" />
-                        <input
-                          type="text"
-                          value={filters.search}
-                          onChange={(e) =>
-                            updateFilter("search", e.target.value)
-                          }
-                          placeholder="Nombre o descripción..."
-                          className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg pl-9 pr-4 py-2.5 text-[#E4E0D9] text-sm outline-none focus:border-amber-600 transition-colors placeholder:text-[#8E8675]/50"
-                        />
-                      </div>
-                    </div>
+                        <div className="flex items-center gap-3">
+                          {activeFilterCount > 0 && (
+                            <button
+                              onClick={resetFilters}
+                              className="text-[10px] font-bold text-[#8E8675] hover:text-amber-600 uppercase tracking-wider transition-colors"
+                            >
+                              Limpiar
+                            </button>
+                          )}
 
-                    {/* Estado */}
-                    <div>
-                      <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
-                        Estado
-                      </label>
-                      <div className="flex gap-2">
-                        {[
-                          { value: "", label: "Todos" },
-                          { value: "true", label: "Activo" },
-                          { value: "false", label: "Inactivo" },
-                        ].map((opt) => (
                           <button
-                            key={opt.value || "todos"}
-                            onClick={() => updateFilter("estado", opt.value)}
-                            className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${filters.estado === opt.value
-                                ? "bg-amber-600 text-black"
-                                : "bg-[#1C1812] border border-[#2C261D] text-[#8E8675] hover:border-amber-600 hover:text-[#E4E0D9]"
-                              }`}
+                            onClick={() => setShowFilterPanel(false)}
+                            className="text-[#8E8675] hover:text-[#E4E0D9] transition-colors"
                           >
-                            {opt.label}
+                            <X className="w-4 h-4" />
                           </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Rango de precio */}
-                    <div>
-                      <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
-                        Rango de Precio
-                      </label>
-                      <div className="flex gap-2 items-center">
-                        <div className="relative flex-1">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8E8675] text-xs">
-                            $
-                          </span>
-                          <input
-                            type="number"
-                            value={filters.precioMin}
-                            onChange={(e) =>
-                              updateFilter("precioMin", e.target.value)
-                            }
-                            placeholder="Mín"
-                            min="0"
-                            className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg pl-7 pr-3 py-2.5 text-[#E4E0D9] text-sm outline-none focus:border-amber-600 transition-colors placeholder:text-[#8E8675]/50"
-                          />
-                        </div>
-                        <span className="text-[#8E8675] text-xs font-bold">
-                          —
-                        </span>
-                        <div className="relative flex-1">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8E8675] text-xs">
-                            $
-                          </span>
-                          <input
-                            type="number"
-                            value={filters.precioMax}
-                            onChange={(e) =>
-                              updateFilter("precioMax", e.target.value)
-                            }
-                            placeholder="Máx"
-                            min="0"
-                            className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg pl-7 pr-3 py-2.5 text-[#E4E0D9] text-sm outline-none focus:border-amber-600 transition-colors placeholder:text-[#8E8675]/50"
-                          />
                         </div>
                       </div>
                     </div>
 
-                    {/* Duración máxima */}
-                    <div>
-                      <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
-                        Duración Máxima
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          value={filters.duracionMax}
-                          onChange={(e) =>
-                            updateFilter("duracionMax", e.target.value)
-                          }
-                          placeholder="ej: 60"
-                          min="1"
-                          className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg px-4 pr-14 py-2.5 text-[#E4E0D9] text-sm outline-none focus:border-amber-600 transition-colors placeholder:text-[#8E8675]/50"
-                        />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#8E8675] uppercase">
-                          min
-                        </span>
+                    {/* Contenido scrolleable */}
+                    <div className="flex-1 overflow-y-auto p-5 space-y-5">
+                      {/* Búsqueda */}
+                      <div>
+                        <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
+                          Buscar
+                        </label>
+
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#8E8675]" />
+
+                          <input
+                            type="text"
+                            value={filters.search}
+                            onChange={(e) => updateFilter("search", e.target.value)}
+                            placeholder="Nombre o descripción..."
+                            className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg pl-9 pr-4 py-2.5 text-[#E4E0D9] text-sm outline-none focus:border-amber-600 transition-colors placeholder:text-[#8E8675]/50"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Estado */}
+                      <div>
+                        <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
+                          Estado
+                        </label>
+
+                        <div className="flex gap-2">
+                          {[
+                            { value: "", label: "Todos" },
+                            { value: "true", label: "Activo" },
+                            { value: "false", label: "Inactivo" },
+                          ].map((opt) => (
+                            <button
+                              key={opt.value || "todos"}
+                              onClick={() => updateFilter("estado", opt.value)}
+                              className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                                filters.estado === opt.value
+                                  ? "bg-amber-600 text-black"
+                                  : "bg-[#1C1812] border border-[#2C261D] text-[#8E8675] hover:border-amber-600 hover:text-[#E4E0D9]"
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Rango de precio */}
+                      <div>
+                        <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
+                          Rango de Precio
+                        </label>
+
+                        <div className="flex gap-2 items-center">
+                          <div className="relative flex-1">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8E8675] text-xs">
+                              $
+                            </span>
+
+                            <input
+                              type="number"
+                              value={filters.precioMin}
+                              onChange={(e) => updateFilter("precioMin", e.target.value)}
+                              placeholder="Mín"
+                              min="0"
+                              className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg pl-7 pr-3 py-2.5 text-[#E4E0D9] text-sm outline-none focus:border-amber-600 transition-colors placeholder:text-[#8E8675]/50"
+                            />
+                          </div>
+
+                          <span className="text-[#8E8675] text-xs font-bold">—</span>
+
+                          <div className="relative flex-1">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8E8675] text-xs">
+                              $
+                            </span>
+
+                            <input
+                              type="number"
+                              value={filters.precioMax}
+                              onChange={(e) => updateFilter("precioMax", e.target.value)}
+                              placeholder="Máx"
+                              min="0"
+                              className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg pl-7 pr-3 py-2.5 text-[#E4E0D9] text-sm outline-none focus:border-amber-600 transition-colors placeholder:text-[#8E8675]/50"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Duración máxima */}
+                      <div>
+                        <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
+                          Duración Máxima
+                        </label>
+
+                        <div className="relative">
+                          <input
+                            type="number"
+                            value={filters.duracionMax}
+                            onChange={(e) => updateFilter("duracionMax", e.target.value)}
+                            placeholder="ej: 60"
+                            min="1"
+                            className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg px-4 pr-14 py-2.5 text-[#E4E0D9] text-sm outline-none focus:border-amber-600 transition-colors placeholder:text-[#8E8675]/50"
+                          />
+
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#8E8675] uppercase">
+                            min
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Ordenar por */}
+                      <div>
+                        <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
+                          Ordenar Por
+                        </label>
+
+                        <div className="relative">
+                          <select
+                            value={filters.ordenPor}
+                            onChange={(e) => updateFilter("ordenPor", e.target.value)}
+                            className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg px-4 py-2.5 text-[#E4E0D9] text-sm outline-none focus:border-amber-600 transition-colors appearance-none cursor-pointer"
+                          >
+                            <option value="reciente">Más reciente</option>
+                            <option value="nombre">Nombre A→Z</option>
+                            <option value="precio_asc">Precio: menor a mayor</option>
+                            <option value="precio_desc">Precio: mayor a menor</option>
+                            <option value="duracion">Duración</option>
+                          </select>
+
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8675] pointer-events-none" />
+                        </div>
                       </div>
                     </div>
 
-                    {/* Ordenar por */}
-                    <div>
-                      <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
-                        Ordenar Por
-                      </label>
-                      <div className="relative">
-                        <select
-                          value={filters.ordenPor}
-                          onChange={(e) =>
-                            updateFilter("ordenPor", e.target.value)
-                          }
-                          className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg px-4 py-2.5 text-[#E4E0D9] text-sm outline-none focus:border-amber-600 transition-colors appearance-none cursor-pointer"
-                        >
-                          <option value="reciente">Más reciente</option>
-                          <option value="nombre">Nombre A→Z</option>
-                          <option value="precio_asc">
-                            Precio: menor a mayor
-                          </option>
-                          <option value="precio_desc">
-                            Precio: mayor a menor
-                          </option>
-                          <option value="duracion">Duración</option>
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8675] pointer-events-none" />
-                      </div>
+                    {/* Footer */}
+                    <div className="shrink-0 px-5 py-4 border-t border-[#2C261D] bg-[#1C1812]/50">
+                      <p className="text-[10px] text-[#8E8675] text-center">
+                        {serviciosFiltrados.length} de {servicios.length} servicios
+                        encontrados
+                      </p>
                     </div>
                   </div>
-
-                  <div className="px-5 py-4 border-t border-[#2C261D] bg-[#1C1812]/50">
-                    <p className="text-[10px] text-[#8E8675] text-center">
-                      {serviciosFiltrados.length} de {servicios.length}{" "}
-                      servicios encontrados
-                    </p>
-                  </div>
-                </div>
+                </>
               )}
             </div>
 

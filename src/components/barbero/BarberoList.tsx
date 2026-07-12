@@ -6,6 +6,18 @@ import { deleteBarbero } from "@/actions/barbero.actions";
 import { User } from "lucide-react";
 import { Button } from "../ui/button";
 
+type HorarioBarbero = {
+  margenLaboralId: string;
+  dia: {
+    id: string;
+    dia: string; // "Lunes" | "Martes" | ... (enum dias_laborales)
+  };
+  margenLaboral: {
+    desde: string;
+    hasta: string;
+  };
+};
+
 type Barbero = {
   id: string;
   nombre: string | null;
@@ -18,14 +30,19 @@ type Barbero = {
       nombre: string;
     };
   }[];
-  horarios?: {
-    margenLaboralId: string;
-    margenLaboral: {
-      desde: string;
-      hasta: string;
-    };
-  }[];
+  horarios?: HorarioBarbero[];
 };
+
+// Orden fijo para que los días no aparezcan salteados / desordenados
+const ORDEN_DIAS = [
+  "Lunes",
+  "Martes",
+  "Miercoles",
+  "Jueves",
+  "Viernes",
+  "Sabado",
+  "Domingo",
+];
 
 export default function BarberoList({
   barberos = [],
@@ -59,6 +76,18 @@ export default function BarberoList({
   );
 }
 
+function agruparHorariosPorDia(
+  horarios: HorarioBarbero[] = []
+): Record<string, HorarioBarbero[]> {
+  const acc: Record<string, HorarioBarbero[]> = {};
+  for (const h of horarios) {
+    const nombreDia = h.dia.dia;
+    if (!acc[nombreDia]) acc[nombreDia] = [];
+    acc[nombreDia].push(h);
+  }
+  return acc;
+}
+
 function BarberoCard({
   barbero,
   servicios,
@@ -69,6 +98,12 @@ function BarberoCard({
   diasLaborales: any[];
 }) {
   const [open, setOpen] = useState(false);
+
+  const horariosPorDia = agruparHorariosPorDia(barbero.horarios);
+
+  const diasConHorario = Object.keys(horariosPorDia).sort(
+    (a, b) => ORDEN_DIAS.indexOf(a) - ORDEN_DIAS.indexOf(b)
+  );
 
   return (
     <>
@@ -90,7 +125,7 @@ function BarberoCard({
         <div className="p-4 space-y-3">
           <h3 className="text-white font-bold">{barbero.nombre}</h3>
 
-          {/* ✅ SERVICIOS */}
+          {/* SERVICIOS */}
           <div>
             <p className="text-xs text-amber-400 mb-1">Servicios:</p>
             <div className="flex flex-wrap gap-1">
@@ -108,28 +143,39 @@ function BarberoCard({
               )}
             </div>
           </div>
-          {/* ✅ HORARIOS */}
+
+          {/* HORARIOS AGRUPADOS POR DÍA */}
           <div>
             <p className="text-xs text-amber-400 mb-1">Horarios:</p>
-            <div className="flex flex-wrap gap-1">
-              {barbero.horarios?.length ? (
-                barbero.horarios.map((h) => (
-                  <span
-                    key={h.margenLaboralId}
-                    className="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded"
-                  >
-                    {h.margenLaboral.desde} - {h.margenLaboral.hasta}
-                  </span>
-                ))
-              ) : (
-                <span className="text-xs text-gray-400">Sin horarios</span>
-              )}
-            </div>
+            {diasConHorario.length ? (
+              <div className="space-y-1.5">
+                {diasConHorario.map((dia) => (
+                  <div key={dia} className="flex items-start gap-2">
+                    <span className="text-[11px] font-semibold text-white w-16 flex-shrink-0 pt-0.5">
+                      {dia}
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {horariosPorDia[dia].map((h) => (
+                        <span
+                          key={h.margenLaboralId}
+                          className="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded"
+                        >
+                          {h.margenLaboral.desde} - {h.margenLaboral.hasta}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <span className="text-xs text-gray-400">Sin horarios</span>
+            )}
           </div>
 
           {/* BOTONES */}
           <div className="flex gap-2 pt-3 border-t border-amber-900/30">
-            <Button className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
+            <Button
+              className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
               onClick={() => setOpen(true)}
             >
               Editar

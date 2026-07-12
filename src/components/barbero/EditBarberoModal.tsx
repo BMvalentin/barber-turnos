@@ -23,14 +23,14 @@ type EditBarberoModalProps = {
   onClose: () => void;
 };
 
-const DIAS_SEMANA = [
+const ORDEN_DIAS = [
   "Domingo",
   "Lunes",
   "Martes",
-  "Miércoles",
+  "Miercoles",
   "Jueves",
   "Viernes",
-  "Sábado",
+  "Sabado",
 ];
 
 export default function EditBarberoModal({
@@ -86,7 +86,7 @@ export default function EditBarberoModal({
           duration: 4000,
         });
       } else {
-        tpast({
+        toast({
           title: "Error",
           description: "Error al subir la imagen",
           variant: "destructive",
@@ -266,35 +266,46 @@ export default function EditBarberoModal({
               {showHorarios ? <ChevronUp /> : <ChevronDown />}
             </button>
             {showHorarios && (
-              <div className="p-4 bg-black/40 border border-amber-900/30 rounded-lg space-y-4">
-                {diasLaborales.map((dia) => (
-                  <div key={dia.id}>
-                    <p className="text-amber-500 font-bold text-xs mb-2">
-                      {DIAS_SEMANA[dia.dia]}
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {dia.margenes.map((m: any) => (
-                        <label
-                          key={m.id}
-                          className="flex items-center gap-2 text-white text-xs"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedHorarios.includes(m.id)}
-                            onChange={() =>
-                              setSelectedHorarios((prev) =>
-                                prev.includes(m.id)
-                                  ? prev.filter((x) => x !== m.id)
-                                  : [...prev, m.id]
-                              )
-                            }
-                          />
-                          {m.desde} - {m.hasta}
-                        </label>
-                      ))}
+              <div className="p-4 bg-black/40 border border-amber-900/30 rounded-lg space-y-4 max-h-80 overflow-y-auto">
+                {[...diasLaborales]
+                  .filter((dia) => dia.margenes.length > 0)
+                  .sort(
+                    (a, b) =>
+                      ORDEN_DIAS.indexOf(a.dia) - ORDEN_DIAS.indexOf(b.dia)
+                  )
+                  .map((dia) => (
+                    <div key={dia.id} className="space-y-2">
+                      <p className="text-sm font-semibold text-amber-400">
+                        {dia.dia}:
+                      </p>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        {[...dia.margenes]
+                          .sort((a: any, b: any) =>
+                            a.desde.localeCompare(b.desde)
+                          )
+                          .map((m: any) => (
+                            <label
+                              key={m.id}
+                              className="flex items-center gap-2 text-white text-xs p-2 bg-black/40 rounded hover:bg-black/60 transition cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedHorarios.includes(m.id)}
+                                onChange={() =>
+                                  setSelectedHorarios((prev) =>
+                                    prev.includes(m.id)
+                                      ? prev.filter((x) => x !== m.id)
+                                      : [...prev, m.id]
+                                  )
+                                }
+                              />
+                              {m.desde} - {m.hasta}
+                            </label>
+                          ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             )}
           </div>

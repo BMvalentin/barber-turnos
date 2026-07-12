@@ -153,7 +153,6 @@ export async function getBarberos(): Promise<ActionState> {
       orderBy: { nombre: "asc" },
     });
 
-    // 🔥 SERIALIZAR TODO lo que sea Decimal
     const data = barberos.map((b) => ({
       ...b,
 
@@ -162,7 +161,6 @@ export async function getBarberos(): Promise<ActionState> {
         servicio: {
           ...s.servicio,
 
-          // 🔥 IMPORTANTE: todos los Decimal
           precio: s.servicio.precio
             ? Number(s.servicio.precio)
             : null,
@@ -212,7 +210,6 @@ export async function getBarberoById(id: string): Promise<ActionState> {
       return { success: false, error: "Barbero no encontrado" };
     }
 
-    // 🔥 SERIALIZAR campos Decimal para evitar errores en Client Components
     const serializedData = {
       ...barbero,
       servicios: barbero.servicios.map((s) => ({
