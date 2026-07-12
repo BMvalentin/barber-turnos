@@ -2,7 +2,7 @@
 
 import { toast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { createBarbero } from "@/actions/barbero.actions";
 import { ChevronDown, ChevronUp, Upload, X } from "lucide-react";
@@ -22,7 +22,7 @@ type MargenLaboral = {
 
 type DiaLaboral = {
   id: string;
-  dia: number;
+  dia: string;
   margenes: MargenLaboral[];
 };
 
@@ -32,14 +32,14 @@ type Props = {
   onSuccess?: () => void;
 };
 
-const DIAS_SEMANA = [
+const ORDEN_DIAS = [
   "Domingo",
   "Lunes",
   "Martes",
-  "Miércoles",
+  "Miercoles",
   "Jueves",
   "Viernes",
-  "Sábado",
+  "Sabado",
 ];
 
 export default function CreateBarberoForm({
@@ -189,7 +189,11 @@ export default function CreateBarberoForm({
       }
     });
   };
-
+  useEffect(() => {
+    return () => {
+      console.log(diasLaborales)
+    };
+  }, []);
   return (
     <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl p-6 space-y-6">
 
@@ -340,39 +344,44 @@ export default function CreateBarberoForm({
             <ChevronDown className="h-4 w-4 text-amber-500" />
           )}
         </button>
-
         {showHorarios && (
-          <div className="p-4 bg-black/60 border border-amber-900/30 rounded-lg space-y-3 max-h-80 overflow-y-auto">
-
+          <div className="p-4 bg-black/60 border border-amber-900/30 rounded-lg space-y-4 max-h-80 overflow-y-auto">
             {selectedHorarios.length === 0 && (
               <p className="text-xs text-amber-500/60 italic">
                 No seleccionaste horarios
               </p>
             )}
+            {[...diasLaborales]
+              .filter((dia) => dia.margenes.length > 0)
+              .sort(
+                (a, b) =>
+                  ORDEN_DIAS.indexOf(a.dia) - ORDEN_DIAS.indexOf(b.dia)
+              )
+              .map((dia) => (
+                <div key={dia.id} className="space-y-2">
+                  <p className="text-sm font-semibold text-amber-400">
+                    {dia.dia}:
+                  </p>
 
-            {diasLaborales.map((dia) => (
-              <div key={dia.id}>
-                <p className="text-sm text-amber-400">
-                  {DIAS_SEMANA[dia.dia]}
-                </p>
-
-                <div className="grid grid-cols-2 gap-2">
-                  {dia.margenes.map((m) => (
-                    <label
-                      key={m.id}
-                      className="flex items-center gap-2 text-white text-xs p-2 bg-black/40 rounded"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedHorarios.includes(m.id)}
-                        onChange={() => toggleHorario(m.id)}
-                      />
-                      {m.desde} - {m.hasta}
-                    </label>
-                  ))}
+                  <div className="grid grid-cols-2 gap-2">
+                    {[...dia.margenes]
+                      .sort((a, b) => a.desde.localeCompare(b.desde))
+                      .map((m) => (
+                        <label
+                          key={m.id}
+                          className="flex items-center gap-2 text-white text-xs p-2 bg-black/40 rounded hover:bg-black/60 transition cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedHorarios.includes(m.id)}
+                            onChange={() => toggleHorario(m.id)}
+                          />
+                          {m.desde} - {m.hasta}
+                        </label>
+                      ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         )}
       </div>

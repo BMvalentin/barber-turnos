@@ -51,12 +51,36 @@ export function ImageCarousel({ servicios }: { servicios: any[] }) {
                       sizes="(max-width: 768px) 50vw, 25vw"
                       className="object-cover object-center transition-transform duration-500 group-hover:scale-105" />
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/90 to-transparent transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black to-black/20 transition-opacity" />
 
                     <div className="absolute bottom-0 left-0 right-0 p-3">
                       <h3 className="text-sm font-bold text-white uppercase tracking-tight truncate">
                         {servicio.nombre}
                       </h3>
+                      <div className="flex items-end gap-2">
+                        {servicio.descuento > 0 ? (
+                          <>
+                            <span className="text-sm text-gray-400 line-through">
+                              ${servicio.precio}
+                            </span>
+
+                            <h2 className="text-xl font-bold text-amber-500 leading-none">
+                              $
+                              {Math.round(
+                                servicio.precio - (servicio.precio * servicio.descuento) / 100
+                              )}
+                            </h2>
+
+                            <span className="text-xs font-semibold text-green-400 mb-0.5">
+                              {servicio.descuento}% OFF
+                            </span>
+                          </>
+                        ) : (
+                          <h2 className="text-lg font-bold text-amber-500">
+                            ${servicio.precio}
+                          </h2>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CarouselItem>

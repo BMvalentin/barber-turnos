@@ -54,7 +54,7 @@ export default async function TurnoPage({ searchParams }: { searchParams: { page
   const { servicios, barberos, usuarios, relaciones } = await getTurnoData();
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-black to-amber-950/30 p-2 sm:p-6 overflow-x-hidden">
+    <div className="min-h-screen w-full bg-gradient-to-br from-black to-amber-950/30 p-2 sm:p-6 pt-24 md:pt-24 overflow-x-hidden">
       <div className="container mx-auto max-w-7xl">
 
         {/* CABECERA RESPONSIVE */}
