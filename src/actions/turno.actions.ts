@@ -11,6 +11,8 @@ import { getCachedData } from "@/lib/cache";
 
 const TIMEZONE = "America/Argentina/Buenos_Aires";
 
+const GRANULARIDAD_MINUTOS = 15; // minutos
+
 const revalidateBarberoCache = (barberoId: string, fecha: string) => {
   revalidateTag(`turnos-${barberoId}-${fecha}`);
   revalidateTag("turnos-global");
@@ -131,7 +133,7 @@ export async function obtenerDiasDisponibles(
             });
             if (!estaOcupado) { tieneSlot = true; break; }
           }
-          actualMinutos += 30;
+          actualMinutos += GRANULARIDAD_MINUTOS; // Avanzamos por la duración del servicio para el próximo slot
         }
       }
       if (tieneSlot) diasConDisponibilidad.push(fechaStr);
@@ -432,7 +434,7 @@ export async function obtenerHorariosDisponibles(
         if (!estaOcupado && slotUTC.getTime() > ahora.getTime() + 10 * 60 * 1000) {
           slotsDisponibles.push(slotUTC.toISOString());
         }
-        actualMinutos += 30;
+        actualMinutos += GRANULARIDAD_MINUTOS; // Avanzamos por la duración del servicio para el próximo slot
       }
     }
     return slotsDisponibles; // Retornamos el array final calculado
