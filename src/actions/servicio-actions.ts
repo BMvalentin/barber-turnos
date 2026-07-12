@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { servicioSchema } from "@/lib/servicios-zod";
 import { uploadMultipleToCloudinary } from "@/lib/cloudinary-uploader";
+import { serializeData } from "@/lib/utils";
 
 export type ActionState = {
   error?: string;
@@ -102,6 +103,8 @@ export const getServiciosCarrusel = async (): Promise<ActionState> => {
         nombre: true,
         descripcion: true,
         srcImage: true,
+        precio: true,
+        descuento: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -110,7 +113,7 @@ export const getServiciosCarrusel = async (): Promise<ActionState> => {
 
     return {
       success: true,
-      data: servicios,
+      data: serializeData(servicios),
     };
   } catch (error: any) {
     console.error("Error al obtener servicios para carrusel:", error);

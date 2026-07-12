@@ -31,6 +31,11 @@ type UsuarioData = {
   email: string | null;
 };
 
+type RelacionData = {
+  barberoId: string;
+  servicioId: string;
+};
+
 type TurnoCreado = {
   id: string;
   precioCongelado: number;
@@ -42,6 +47,7 @@ type Props = {
   initialServicios?: ServicioData[];
   initialBarberos?: BarberoData[];
   initialUsuarios?: UsuarioData[];
+  initialRelaciones?: RelacionData[];
 };
 
 const initialState = {
@@ -55,6 +61,7 @@ export default function CreateTurnoModal({
   initialServicios = [],
   initialBarberos = [],
   initialUsuarios = [],
+  initialRelaciones = [],
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [state, formAction] = useActionState(createTurno, initialState);
@@ -66,10 +73,16 @@ export default function CreateTurnoModal({
   const [servicios, setServicios] = useState<ServicioData[]>(initialServicios);
   const [barberos, setBarberos] = useState<BarberoData[]>(initialBarberos);
   const [usuarios, setUsuarios] = useState<UsuarioData[]>(initialUsuarios);
+  const [relaciones, setRelaciones] = useState<RelacionData[]>(initialRelaciones);
   const [loadingData, setLoadingData] = useState(!initialServicios.length);
 
   const [selectedServicioId, setSelectedServicioId] = useState("");
   const [selectedBarberoId, setSelectedBarberoId] = useState("");
+  // Cliente para el cual se está creando el turno: si es USER, es él mismo;
+  // si es ADMIN, es el que elige en el <select name="userId">
+  const [selectedUserId, setSelectedUserId] = useState(
+    session?.user?.role === "USER" ? session?.user?.id ?? "" : ""
+  );
 
   // Estado del modal de pago
   const [turnoCreado, setTurnoCreado] = useState<TurnoCreado | null>(null);
@@ -94,6 +107,7 @@ export default function CreateTurnoModal({
           setServicios(data.servicios || []);
           setBarberos(data.barberos || []);
           setUsuarios(data.usuarios || []);
+          setRelaciones(data.relaciones || []);
           setLoadingData(false);
         }
       } catch (error) {
@@ -124,9 +138,11 @@ export default function CreateTurnoModal({
       formRef.current?.reset();
       setSelectedServicioId("");
       setSelectedBarberoId("");
+      setSelectedUserId(session?.user?.role === "USER" ? session?.user?.id ?? "" : "");
     } else if (state.error) {
       // El error se muestra dentro del form, no hace falta alert
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
   const handlePagarSenia = async () => {
@@ -155,6 +171,51 @@ export default function CreateTurnoModal({
     setShowPagoModal(false);
     setTurnoCreado(null);
     setErrorPago(null);
+  };
+
+  // ─── Filtro cruzado barbero ↔ servicio ────────────────────────────────
+  const serviciosFiltrados = selectedBarberoId
+    ? servicios.filter((s) =>
+        relaciones.some(
+          (r) => r.barberoId === selectedBarberoId && r.servicioId === s.id
+        )
+      )
+    : servicios;
+
+  const barberosFiltrados = selectedServicioId
+    ? barberos.filter((b) =>
+        relaciones.some(
+          (r) => r.servicioId === selectedServicioId && r.barberoId === b.id
+        )
+      )
+    : barberos;
+
+  const handleBarberoChange = (nuevoBarberoId: string) => {
+    setSelectedBarberoId(nuevoBarberoId);
+    // Si el servicio ya elegido no aplica a este barbero, se limpia
+    if (
+      selectedServicioId &&
+      nuevoBarberoId &&
+      !relaciones.some(
+        (r) => r.barberoId === nuevoBarberoId && r.servicioId === selectedServicioId
+      )
+    ) {
+      setSelectedServicioId("");
+    }
+  };
+
+  const handleServicioChange = (nuevoServicioId: string) => {
+    setSelectedServicioId(nuevoServicioId);
+    // Si el barbero ya elegido no ofrece este servicio, se limpia
+    if (
+      selectedBarberoId &&
+      nuevoServicioId &&
+      !relaciones.some(
+        (r) => r.servicioId === nuevoServicioId && r.barberoId === selectedBarberoId
+      )
+    ) {
+      setSelectedBarberoId("");
+    }
   };
 
   return (
@@ -192,7 +253,7 @@ export default function CreateTurnoModal({
             ) : (
               <form ref={formRef} action={formAction} className="p-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  
+
                   {/* CLIENTE */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-amber-200/70">
@@ -220,8 +281,9 @@ export default function CreateTurnoModal({
                       <select
                         name="userId"
                         required
+                        value={selectedUserId}
+                        onChange={(e) => setSelectedUserId(e.target.value)}
                         className="w-full p-2.5 border border-amber-900/30 rounded-lg bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                        defaultValue=""
                       >
                         <option value="">-- Seleccionar Cliente --</option>
                         {usuarios.map((u) => (
@@ -242,19 +304,21 @@ export default function CreateTurnoModal({
                       name="barberoId"
                       required
                       value={selectedBarberoId}
-                      onChange={(e) => setSelectedBarberoId(e.target.value)}
+                      onChange={(e) => handleBarberoChange(e.target.value)}
                       className="w-full p-2.5 border border-amber-900/30 rounded-lg bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                     >
                       <option value="">-- Seleccionar Barbero --</option>
-                      {barberos.map((b) => (
+                      {barberosFiltrados.map((b) => (
                         <option key={b.id} value={b.id}>
                           {b.nombre}
                         </option>
                       ))}
                     </select>
-                    {barberos.length === 0 && (
+                    {barberosFiltrados.length === 0 && (
                       <p className="text-xs text-amber-400">
-                        No hay barberos disponibles. Crea barberos primero.
+                        {selectedServicioId
+                          ? "Ningún barbero ofrece este servicio."
+                          : "No hay barberos disponibles. Crea barberos primero."}
                       </p>
                     )}
                   </div>
@@ -268,11 +332,11 @@ export default function CreateTurnoModal({
                       name="servicioId"
                       required
                       value={selectedServicioId}
-                      onChange={(e) => setSelectedServicioId(e.target.value)}
+                      onChange={(e) => handleServicioChange(e.target.value)}
                       className="w-full p-2.5 border border-amber-900/30 rounded-lg bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                     >
                       <option value="">-- Seleccionar Servicio --</option>
-                      {servicios.map((s) => (
+                      {serviciosFiltrados.map((s) => (
                         <option key={s.id} value={s.id}>
                           {s.nombre}
                           {s.precio && ` - $${s.precio.toString()}`}
@@ -281,9 +345,11 @@ export default function CreateTurnoModal({
                         </option>
                       ))}
                     </select>
-                    {servicios.length === 0 && (
+                    {serviciosFiltrados.length === 0 && (
                       <p className="text-xs text-amber-400">
-                        No hay servicios disponibles. Crea servicios primero.
+                        {selectedBarberoId
+                          ? "Este barbero no tiene servicios asignados."
+                          : "No hay servicios disponibles. Crea servicios primero."}
                       </p>
                     )}
                   </div>
@@ -295,7 +361,7 @@ export default function CreateTurnoModal({
                   servicioId={selectedServicioId}
                   barberoId={selectedBarberoId}
                   sessionId={sessionId}
-                  userId={session?.user?.id ?? ""}
+                  userId={selectedUserId}
                 />
 
                 {state.error && (

@@ -77,8 +77,8 @@ model turno {
   estado           turno_estado @default(PENDIENTE)
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
-  mpPreferenceId   String?
   mpPaymentId      String?
+  mpPreferenceId   String?
   user             user         @relation(fields: [userId], references: [id], onDelete: Cascade)
   barbero          barbero      @relation(fields: [barberoId], references: [id], onDelete: Cascade)
   servicio         servicio     @relation(fields: [servicioId], references: [id], onDelete: Cascade)
@@ -109,9 +109,9 @@ model excepcion_laboral {
   desde     DateTime
   hasta     DateTime
   estado    Boolean  @default(true)
-  barberoId String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  barberoId String?
   barbero   barbero? @relation(fields: [barberoId], references: [id], onDelete: Cascade)
 
   @@index([barberoId])

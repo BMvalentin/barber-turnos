@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const [servicios, barberos, usuarios] = await Promise.all([
+    const [servicios, barberos, usuarios, relaciones] = await Promise.all([
       prisma.servicio.findMany({
         where: { estado: true },
         select: {
@@ -36,6 +36,13 @@ export async function GET() {
         },
         orderBy: { name: "asc" },
       }),
+      prisma.servicioxbarbero.findMany({
+        select: { 
+          barberoId: true,
+          servicioId: true 
+        },
+      }),
+
     ]);
 
     // Serializar campos Decimal a Number para evitar errores de serialización
@@ -53,6 +60,7 @@ export async function GET() {
       servicios: serializedServicios,
       barberos,
       usuarios,
+      relaciones,
     });
   } catch (error) {
     console.error("[GET /api/configuracion-turno] Error:", error);
