@@ -7,7 +7,7 @@ interface HeroProps {
   onBookingClick?: () => void;
 }
 
-export function Hero({ onBookingClick }: HeroProps) {
+export function Hero() {
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden py-24">
       
@@ -38,13 +38,13 @@ export function Hero({ onBookingClick }: HeroProps) {
             Corte <span className="text-amber-500 italic pr-2">Impecable</span>
             <br className="hidden sm:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-300 to-zinc-600">
-              Actitud Urbana
+              Actitud y Estilo
             </span>
           </h1>
           
           <p className="mt-6 text-zinc-400 text-sm md:text-base font-medium max-w-xl mx-auto tracking-wide">
-            Más que un corte de pelo, es una declaración de intenciones. 
-            Experimenta el grooming premium en el corazón de la ciudad.
+            Más que un corte, brindamos un servicio pensado para que te veas y te sientas bien.
+            Atención profesional, precisión en cada detalle y un ambiente cómodo para cada visita.
           </p>
         </motion.div>
 
@@ -85,7 +85,7 @@ export function Hero({ onBookingClick }: HeroProps) {
             </div>
 
             {/* BOTÓN DE RESERVA */}
-            <Link href="/turno" className="block w-full" onClick={onBookingClick}>
+            <Link href="/turno" className="block w-full">
               <button className="relative w-full group overflow-hidden bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black py-5 rounded-2xl transition-all active:scale-">
                 <div className="relative z-10 flex items-center justify-center gap-2 uppercase tracking-widest text-sm md:text-base">
                   Reservar Ahora

@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { revalidatePath,revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { addMinutes } from "date-fns";
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
 import { auth } from "@/auth";
@@ -10,6 +10,8 @@ import { sendTurnoEmail } from "@/lib/email";
 import { getCachedData } from "@/lib/cache";
 
 const TIMEZONE = "America/Argentina/Buenos_Aires";
+
+const GRANULARIDAD_MINUTOS = 15; // minutos
 
 const revalidateBarberoCache = (barberoId: string, fecha: string) => {
   revalidateTag(`turnos-${barberoId}-${fecha}`);
@@ -36,7 +38,7 @@ export async function obtenerDiasDisponibles(
 ): Promise<{ success: boolean; data?: string[]; error?: string }> {
   
   const cacheKey = ["dias-disponibles", mes, servicioId, barberoId, turnoIdAExcluir || "none"];
-  const cacheTags = [`turnos-mes-${barberoId}-${mes}`, `servicio-${servicioId}`, `margenes-${barberoId}`, "turnos-global"];
+  const cacheTags = [`turnos-mes-${barberoId}-${mes}`, `servicio-${servicioId}`, `margenes-${barberoId}`, `excepciones-${barberoId}`, "turnos-global"];
 
   // Envolvemos toda la lógica pesada en una función para el caché
   const calcularDiasDisponibles = async () => {
@@ -47,7 +49,7 @@ export async function obtenerDiasDisponibles(
     const finDeMes = fromZonedTime(`${mes}-${ultimoDia.toString().padStart(2, "0")}T23:59:59`, TIMEZONE);
 
     // Obtenemos datos necesarios (estas consultas individuales ya están cacheadas por tu getCachedData)
-    const [servicio, horariosBarbero, turnosMes] = await Promise.all([
+    const [servicio, horariosBarbero, turnosMes, excepcionesMes] = await Promise.all([
       prisma.servicio.findUnique({ where: { id: servicioId }, select: { duracion: true } }),
       prisma.margen_laboral_barbero.findMany({
         where: { barberoId, estado: true },
@@ -62,6 +64,16 @@ export async function obtenerDiasDisponibles(
         },
         include: { servicio: { select: { duracion: true } } },
       }),
+      // Excepciones activas que se solapan con el mes: específicas de este
+      // barbero o globales (barberoId null = aplica a todo el negocio)
+      prisma.excepcion_laboral.findMany({
+        where: {
+          estado: true,
+          desde: { lte: finDeMes },
+          hasta: { gte: inicioDeMes },
+          OR: [{ barberoId }, { barberoId: null }],
+        },
+      }),
     ]);
 
     if (!servicio?.duracion) throw new Error("Servicio no encontrado");
@@ -75,6 +87,13 @@ export async function obtenerDiasDisponibles(
       const finDia = fromZonedTime(`${fechaStr}T23:59:59`, TIMEZONE);
 
       if (finDia.getTime() < ahora.getTime()) continue;
+
+      // Si el día cae dentro de una excepción laboral activa, se descarta
+      // directamente sin calcular slots (queda deshabilitado en el calendario)
+      const tieneExcepcion = excepcionesMes.some(
+        (ex) => inicioDia < ex.hasta && finDia > ex.desde
+      );
+      if (tieneExcepcion) continue;
 
       const diaSemana = toZonedTime(inicioDia, TIMEZONE).getDay();
       const diaEnum = MAP_DIA_SEMANA[diaSemana];
@@ -114,7 +133,7 @@ export async function obtenerDiasDisponibles(
             });
             if (!estaOcupado) { tieneSlot = true; break; }
           }
-          actualMinutos += 30;
+          actualMinutos += GRANULARIDAD_MINUTOS; // Avanzamos por la duración del servicio para el próximo slot
         }
       }
       if (tieneSlot) diasConDisponibilidad.push(fechaStr);
@@ -309,7 +328,7 @@ export async function getTurnos(page: number = 1) {
         skip,
         take: pageSize,
         include: {
-          user: { select: { id: true, name: true, email: true } },
+          user: { select: { id: true, name: true, email: true, telefono: true } },
           servicio: { select: { id: true, nombre: true, duracion: true } },
           barbero: { select: { id: true, nombre: true } },
         },
@@ -326,13 +345,13 @@ export async function getTurnos(page: number = 1) {
       seniaCongelada: Number(t.seniaCongelada),
     }));
 
-    return { 
-      success: true, 
-      data, 
+    return {
+      success: true,
+      data,
       totalPages: Math.ceil(totalCount / pageSize),
       currentPage: page
     };
-    
+
   } catch (error) {
     return { success: false, error: "Error al obtener turnos" };
   }
@@ -362,10 +381,10 @@ export async function obtenerHorariosDisponibles(
   barberoId: string,
   turnoIdAExcluir?: string,
 ): Promise<ActionState> {
-  
+
   // Clave única para el resultado final procesado
   const cacheKey = ["horarios-finales", fecha, servicioId, barberoId, turnoIdAExcluir || "none"];
-  
+
   // Tags que invalidarán este caché si algo cambia
   const cacheTags = [`turnos-${barberoId}-${fecha}`, `servicio-${servicioId}`, "turnos-global"];
 
@@ -405,7 +424,7 @@ export async function obtenerHorariosDisponibles(
       const limiteMinutos = parseInt(hasta.split(":")[0]) * 60 + parseInt(hasta.split(":")[1]);
 
       while (actualMinutos + servicio.duracion <= limiteMinutos) {
-        const slotUTC = fromZonedTime(`${fecha}T${Math.floor(actualMinutos/60).toString().padStart(2, '0')}:${(actualMinutos%60).toString().padStart(2, '0')}:00`, TIMEZONE);
+        const slotUTC = fromZonedTime(`${fecha}T${Math.floor(actualMinutos / 60).toString().padStart(2, '0')}:${(actualMinutos % 60).toString().padStart(2, '0')}:00`, TIMEZONE);
 
         const estaOcupado = (turnosReservados as any[]).some((turno) => {
           const inicioT = new Date(turno.horarioReservado);
@@ -415,7 +434,7 @@ export async function obtenerHorariosDisponibles(
         if (!estaOcupado && slotUTC.getTime() > ahora.getTime() + 10 * 60 * 1000) {
           slotsDisponibles.push(slotUTC.toISOString());
         }
-        actualMinutos += 30;
+        actualMinutos += GRANULARIDAD_MINUTOS; // Avanzamos por la duración del servicio para el próximo slot
       }
     }
     return slotsDisponibles; // Retornamos el array final calculado

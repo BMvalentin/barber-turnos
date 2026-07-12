@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { servicioSchema } from "@/lib/servicios-zod";
 import { uploadMultipleToCloudinary } from "@/lib/cloudinary-uploader";
+import { serializeData } from "@/lib/utils";
 
 export type ActionState = {
   error?: string;
@@ -86,6 +87,39 @@ export const getServicios = async (): Promise<ActionState> => {
     return {
       success: false,
       error: error?.message ?? "Error inesperado al obtener los servicios",
+      data: [],
+    };
+  }
+};
+
+export const getServiciosCarrusel = async (): Promise<ActionState> => {
+  try {
+    const servicios = await prisma.servicio.findMany({
+      where: {
+        estado: true,
+      },
+      select: {
+        id: true,
+        nombre: true,
+        descripcion: true,
+        srcImage: true,
+        precio: true,
+        descuento: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return {
+      success: true,
+      data: serializeData(servicios),
+    };
+  } catch (error: any) {
+    console.error("Error al obtener servicios para carrusel:", error);
+    return {
+      success: false,
+      error: "Error al cargar los servicios del carrusel",
       data: [],
     };
   }

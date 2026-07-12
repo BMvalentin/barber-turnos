@@ -76,48 +76,55 @@ export default function ExcepcionesList({ excepciones }: { excepciones: Excepcio
       {excepciones.map((excepcion) => (
         <div
           key={excepcion.id}
-          className="bg-black/60 border border-amber-900/30 rounded-lg p-4 hover:border-amber-500/50 transition-all"
+          className="bg-black/60 border border-amber-900/30 rounded-lg p-3 sm:p-4 hover:border-amber-500/50 transition-all space-y-3"
         >
-          <div className="flex justify-between items-start gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <Calendar className="h-4 w-4 text-amber-500" />
-                <p className="text-white font-semibold">{excepcion.motivo}</p>
-              </div>
-
-              <div className="flex items-center gap-2 mb-2 text-xs">
-                {excepcion.barbero ? (
-                  <span className="flex items-center gap-1 bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/20">
-                    <User className="h-3 w-3" /> {excepcion.barbero.nombre}
-                  </span>
-                ) : (
-                  <span className="bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/20">🌎 Global</span>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-amber-200/70">
-                <span>Desde:</span>
-                <span className="font-mono text-amber-400">
-                  {new Date(excepcion.desde).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}
-                </span>
-                <span>→</span>
-                <span>Hasta:</span>
-                <span className="font-mono text-amber-400">
-                  {new Date(excepcion.hasta).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}
-                </span>
-              </div>
+          {/* Cabecera: usamos flex-wrap para que el barbero baje si no hay espacio */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Calendar className="h-4 w-4 text-amber-500 shrink-0" />
+              <p className="text-white font-semibold truncate">{excepcion.motivo}</p>
             </div>
 
-            {/* Botón que dispara la apertura del modal de confirmación */}
-            <button
-              type="button"
-              onClick={() => handleEliminar(excepcion.id)}
-              className="flex items-center gap-2 text-red-400 border border-red-500/50 px-3 py-2 rounded-lg hover:bg-red-500/20 transition-colors text-sm font-semibold"
-            >
-              <Trash2 className="h-4 w-4" />
-              Eliminar
-            </button>
+            {excepcion.barbero ? (
+              <span className="flex items-center gap-1 bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full text-[10px] border border-amber-500/20 whitespace-nowrap">
+                <User className="h-3 w-3" /> {excepcion.barbero.nombre}
+              </span>
+            ) : (
+              <span className="bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full text-[10px] border border-blue-500/20">Global</span>
+            )}
           </div>
+
+          {/* Grilla de fechas: usamos text-xs y menos padding en móviles */}
+          <div className="grid grid-cols-2 gap-2 text-[10px] sm:text-xs">
+            <div className="bg-amber-950/20 p-2 rounded border border-amber-900/20">
+              <p className="text-amber-200/50 uppercase mb-0.5">Desde</p>
+              <p className="text-amber-400 font-mono font-medium">
+                {new Date(excepcion.desde).toLocaleDateString('es-AR')}
+              </p>
+              <p className="text-white">
+                {new Date(excepcion.desde).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+            <div className="bg-amber-950/20 p-2 rounded border border-amber-900/20">
+              <p className="text-amber-200/50 uppercase mb-0.5">Hasta</p>
+              <p className="text-amber-400 font-mono font-medium">
+                {new Date(excepcion.hasta).toLocaleDateString('es-AR')}
+              </p>
+              <p className="text-white">
+                {new Date(excepcion.hasta).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+          </div>
+
+          {/* Botón: mantenemos el ancho total para que siempre sea clicable fácilmente */}
+          <button
+            type="button"
+            onClick={() => handleEliminar(excepcion.id)}
+            className="w-full flex items-center justify-center gap-2 text-red-400 bg-red-500/5 border border-red-500/20 py-2.5 rounded-lg hover:bg-red-500/20 transition-colors text-sm font-semibold"
+          >
+            <Trash2 className="h-4 w-4" />
+            Eliminar
+          </button>
         </div>
       ))}
 

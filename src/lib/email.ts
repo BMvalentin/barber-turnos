@@ -113,7 +113,6 @@ const getEmailTemplate = (data: TurnoEmailData) => {
 
 export async function sendTurnoEmail(to: string, data: TurnoEmailData) {
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.warn("Faltan variables de entorno SMTP. Saltando envío a:", to);
     return { success: false, error: "SMTP no configurado" };
   }
 
@@ -131,10 +130,8 @@ export async function sendTurnoEmail(to: string, data: TurnoEmailData) {
       html: getEmailTemplate(data),
     });
 
-    console.log("Mensaje enviado: %s", info.messageId);
     return { success: true, data: info };
   } catch (error) {
-    console.error("Excepción al enviar email:", error);
     return { success: false, error };
   }
 }
