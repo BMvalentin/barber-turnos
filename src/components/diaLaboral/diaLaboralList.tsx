@@ -137,7 +137,7 @@ export function DiaLaboralList({
                         key={margen.id}
                         className="flex items-center gap-2 text-sm bg-black/60 px-3 py-2 rounded-lg border border-amber-900/30"
                       >
-                        <Clock className="h-3 w-3 text-amber-500" />
+                        <Clock className="h-3 w-3 text-amber-500 shrink-0" />
                         <span className="font-mono text-white font-semibold">
                           {margen.desde} → {margen.hasta}
                         </span>

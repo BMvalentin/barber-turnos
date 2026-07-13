@@ -155,14 +155,20 @@ function BarberoCard({
                       {dia}
                     </span>
                     <div className="flex flex-wrap gap-1">
-                      {horariosPorDia[dia].map((h) => (
-                        <span
-                          key={h.margenLaboralId}
-                          className="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded"
-                        >
-                          {h.margenLaboral.desde} - {h.margenLaboral.hasta}
-                        </span>
-                      ))}
+                      {[...horariosPorDia[dia]]
+                        .sort((a, b) => {
+                          const [ah, am] = a.margenLaboral.desde.split(":").map(Number);
+                          const [bh, bm] = b.margenLaboral.desde.split(":").map(Number);
+                          return ah * 60 + am - (bh * 60 + bm);
+                        })
+                        .map((h) => (
+                          <span
+                            key={h.margenLaboralId}
+                            className="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded"
+                          >
+                            {h.margenLaboral.desde} - {h.margenLaboral.hasta}
+                          </span>
+                        ))}
                     </div>
                   </div>
                 ))}
