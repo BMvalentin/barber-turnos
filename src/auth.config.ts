@@ -4,13 +4,17 @@ export const authConfig = {
   session: { strategy: "jwt" },
   providers: [],
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
       if (user){
         token.id = (user as any).id;
         token.role = (user as any).role;
         token.telefono = (user as any).telefono;
         token.image = (user as any).image;
       } 
+      if (trigger === "update" && session) {
+        token.name = session.name;
+        token.telefono = session.telefono;
+      }
       return token;
     },
     session({ session, token }) {

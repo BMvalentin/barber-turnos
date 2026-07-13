@@ -53,5 +53,10 @@ export default auth((req) => {
     return NextResponse.redirect(new URL(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`, nextUrl));
   }
 
+  // 4. Requiere teléfono para sacar turno
+  if (nextUrl.pathname.startsWith("/turno") && isLoggedIn && !req.auth?.user?.telefono) {
+    return NextResponse.redirect(new URL("/dashboard", nextUrl));
+  }
+
   return NextResponse.next();
 });
