@@ -58,7 +58,7 @@ export function HorariosList({
 
   return (
     <div className="space-y-4">
-      
+
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -157,12 +157,11 @@ export function HorariosList({
 
       {/* MODAL */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        
-        {/* 🔥 ACA ESTA EL CAMBIO DE LA X */}
+
         <DialogContent className="max-w-md p-0 bg-transparent border-none [&>button]:text-white [&>button]:hover:text-amber-400">
 
           <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl p-6 space-y-6 shadow-2xl shadow-amber-900/20">
-            
+
             <DialogHeader>
               <DialogTitle className="text-xl text-white">
                 {editingMargen ? "Editar Horario" : "Nuevo Horario"}
