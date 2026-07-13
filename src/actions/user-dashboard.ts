@@ -18,11 +18,17 @@ export async function updateProfile(
   formData: FormData
 ): Promise<State> {
   const name = formData.get("name") as string;
-  const telefono = formData.get("telefono") as string;
+  let telefono = formData.get("telefono") as string;
 
   if (!userId) {
     return { success: false, message: "ID de usuario no encontrado" };
   }
+
+  if (!telefono || telefono.trim() === "") {
+    return { success: false, message: "El teléfono es obligatorio" };
+  }
+
+  telefono = telefono.trim();
 
   try {
     const updatedUser = await prisma.user.update({

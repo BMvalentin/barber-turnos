@@ -416,7 +416,14 @@ export async function obtenerHorariosDisponibles(
     const diaSemana = toZonedTime(fromZonedTime(`${fecha}T00:00:00`, TIMEZONE), TIMEZONE).getDay();
     const diaEnum = MAP_DIA_SEMANA[diaSemana];
 
-    const horariosDia = horariosBarbero.filter((h: any) => h.margenLaboral.dia.dia === diaEnum && h.margenLaboral.estado === true);
+    const horariosDia = horariosBarbero
+      .filter((h: any) => h.margenLaboral.dia.dia === diaEnum && h.margenLaboral.estado === true)
+      .sort((a: any, b: any) => {
+        // Ordenar por hora de inicio para que los slots siempre se generen de menor a mayor
+        const [ah, am] = a.margenLaboral.desde.split(":").map(Number);
+        const [bh, bm] = b.margenLaboral.desde.split(":").map(Number);
+        return ah * 60 + am - (bh * 60 + bm);
+      });
 
     for (const horario of horariosDia) {
       const { desde, hasta } = horario.margenLaboral;
@@ -434,10 +441,13 @@ export async function obtenerHorariosDisponibles(
         if (!estaOcupado && slotUTC.getTime() > ahora.getTime() + 10 * 60 * 1000) {
           slotsDisponibles.push(slotUTC.toISOString());
         }
-        actualMinutos += GRANULARIDAD_MINUTOS; // Avanzamos por la duración del servicio para el próximo slot
+        actualMinutos += GRANULARIDAD_MINUTOS;
       }
     }
-    return slotsDisponibles; // Retornamos el array final calculado
+
+    // Ordenar cronológicamente y eliminar duplicados (pueden surgir si hay rangos solapados)
+    const slotsUnicos = [...new Set(slotsDisponibles)].sort();
+    return slotsUnicos;
   };
 
   try {

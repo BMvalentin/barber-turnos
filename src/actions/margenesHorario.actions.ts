@@ -7,6 +7,7 @@ export type ActionState = {
   success: boolean;
   data?: any;
   error?: string;
+  warning?: string;
 };
 
 /**
@@ -75,26 +76,36 @@ export async function createMargenLaboral(
     }
 
     // Verificar que el día laboral existe
-    const diaLaboral = await prisma.dia_laboral.findUnique({
+    await prisma.dia_laboral.findUnique({
       where: { id: diaId },
     });
 
-    // Obtener todos los márgenes del día para verificar solapamientos
+    // Obtener todos los márgenes del día para detectar solapamientos (solo advertencia)
     const margenesExistentes = await prisma.margen_laboral.findMany({
       where: { diaId },
     });
 
-    // Verificar solapamientos con cada margen existente
-    for (const margen of margenesExistentes) {
-      if (horariosSeSuperponen(desde, hasta, margen.desde, margen.hasta)) {
-        return {
-          success: false,
-          error: `El horario se solapa con el rango ${margen.desde} - ${margen.hasta}`,
-        };
-      }
+    // Detectar si ya existe un rango idéntico
+    const esDuplicadoExacto = margenesExistentes.some(
+      (m) => m.desde === desde && m.hasta === hasta
+    );
+
+    // Detectar solapamientos (no bloqueante, solo informativo)
+    const margenesConSolapamiento = margenesExistentes.filter((m) =>
+      horariosSeSuperponen(desde, hasta, m.desde, m.hasta)
+    );
+
+    let warning: string | undefined;
+    if (esDuplicadoExacto) {
+      warning = `Ya existe un rango idéntico (${desde} - ${hasta}). Se creó igualmente para poder asignarlo a otro barbero.`;
+    } else if (margenesConSolapamiento.length > 0) {
+      const rangosSolapados = margenesConSolapamiento
+        .map((m) => `${m.desde} - ${m.hasta}`)
+        .join(", ");
+      warning = `Este horario se solapa con: ${rangosSolapados}. Se creó igualmente para poder asignarlo a distintos barberos.`;
     }
 
-    // Crear el margen laboral (ahora con strings)
+    // Crear el margen laboral
     const margen = await prisma.margen_laboral.create({
       data: {
         diaId,
@@ -109,6 +120,7 @@ export async function createMargenLaboral(
     return {
       success: true,
       data: margen,
+      warning,
     };
   } catch (error) {
     console.error("Error al crear margen laboral:", error);
@@ -159,14 +171,24 @@ export async function updateMargenLaboral(
       },
     });
 
-    // Verificar solapamientos
-    for (const margen of margenesExistentes) {
-      if (horariosSeSuperponen(desde, hasta, margen.desde, margen.hasta)) {
-        return {
-          success: false,
-          error: `El horario se solapa con el rango ${margen.desde} - ${margen.hasta}`,
-        };
-      }
+    // Detectar si ya existe un rango idéntico (excluyendo el actual)
+    const esDuplicadoExacto = margenesExistentes.some(
+      (m) => m.desde === desde && m.hasta === hasta
+    );
+
+    // Detectar solapamientos (no bloqueante, solo informativo)
+    const margenesConSolapamiento = margenesExistentes.filter((m) =>
+      horariosSeSuperponen(desde, hasta, m.desde, m.hasta)
+    );
+
+    let warning: string | undefined;
+    if (esDuplicadoExacto) {
+      warning = `Ya existe un rango idéntico (${desde} - ${hasta}). Se guardó igualmente para poder asignarlo a otro barbero.`;
+    } else if (margenesConSolapamiento.length > 0) {
+      const rangosSolapados = margenesConSolapamiento
+        .map((m) => `${m.desde} - ${m.hasta}`)
+        .join(", ");
+      warning = `Este horario se solapa con: ${rangosSolapados}. Se guardó igualmente para poder asignarlo a distintos barberos.`;
     }
 
     // Actualizar el margen laboral
@@ -185,6 +207,7 @@ export async function updateMargenLaboral(
     return {
       success: true,
       data: margen,
+      warning,
     };
   } catch (error) {
     console.error("Error al actualizar margen laboral:", error);
@@ -272,11 +295,29 @@ export async function getHorariosCompactos() {
     diasLaborales.sort((a: any, b: any) => ORDEN_DIAS[a.dia] - ORDEN_DIAS[b.dia]);
 
     // 1. Mapeamos a un formato procesable
-    const diasProcesados = diasLaborales.map((d:any) => {
-      const horarioStr = d.margenes
-        .map((m:any) => `${m.desde} a ${m.hasta}`)
-        .join(" / ");
-      
+    const diasProcesados = diasLaborales.map((d: any) => {
+      // Ordenar márgenes por hora de inicio
+      const margenes: { desde: string; hasta: string }[] = [...d.margenes].sort(
+        (a: any, b: any) => a.desde.localeCompare(b.desde)
+      );
+
+      if (margenes.length === 0) {
+        return { num: ORDEN_DIAS[d.dia], nombre: DIAS_NOMBRES[ORDEN_DIAS[d.dia]], horario: "Cerrado" };
+      }
+
+      // Fusionar rangos solapados: si A y B se superponen, tomar el mayor span
+      const fusionados: { desde: string; hasta: string }[] = [];
+      for (const m of margenes) {
+        const ultimo = fusionados[fusionados.length - 1];
+        if (ultimo && m.desde <= ultimo.hasta) {
+          // Se solapa: extender el hasta si el nuevo es mayor
+          if (m.hasta > ultimo.hasta) ultimo.hasta = m.hasta;
+        } else {
+          fusionados.push({ desde: m.desde, hasta: m.hasta });
+        }
+      }
+
+      const horarioStr = fusionados.map((f) => `${f.desde} a ${f.hasta}`).join(", ");
       const numDia = ORDEN_DIAS[d.dia];
 
       return {
