@@ -53,16 +53,39 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [msg, setMsg] = useState("");
   const [activeTab, setActiveTab] = useState<'perfil' | 'turnos'>('perfil');
+  const [hasPhone, setHasPhone] = useState(!!user.telefono);
+
+  let defaultPrefix = "+54 9";
+  let defaultPhone = "";
+  if (user.telefono) {
+    const match = user.telefono.match(/^(\+\d{1,3}(?:\s\d)?)\s?(.*)$/);
+    if (match) {
+      defaultPrefix = match[1].trim();
+      defaultPhone = match[2].trim();
+    } else {
+      defaultPhone = user.telefono;
+    }
+  }
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    
+    const prefix = formData.get("prefix") as string;
+    const telefonoNum = formData.get("telefono") as string;
+    if (prefix && telefonoNum) {
+      formData.set("telefono", `${prefix} ${telefonoNum}`);
+    }
+
     startTransition(async () => {
       const res = await updateProfile(user.id, formData);
       if (res.success) {
         setStatus('success');
         setMsg("Perfil actualizado correctamente.");
-        if (res.user) await update({ name: res.user.name, telefono: res.user.telefono });
+        if (res.user) {
+          await update({ name: res.user.name, telefono: res.user.telefono });
+          if (res.user.telefono) setHasPhone(true);
+        }
         setTimeout(() => setStatus('idle'), 3000);
       } else {
         setStatus('error');
@@ -73,6 +96,64 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
 
   return (
     <div className="flex flex-col min-h-screen bg-neutral-950 w-full font-sans">
+      
+      {/* MODAL OBLIGATORIO DE TELÉFONO */}
+      {!hasPhone && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+          <div className="bg-neutral-900 border border-amber-500/30 rounded-3xl w-full max-w-md p-6 shadow-2xl shadow-amber-900/20">
+            <h2 className="text-2xl font-black text-white uppercase tracking-widest mb-2">Atención</h2>
+            <p className="text-amber-100/60 mb-6 text-sm">
+              Para poder reservar un turno necesitamos tu número de teléfono.
+              Por favor, ingresálo y guardálo para continuar.
+            </p>
+            <form onSubmit={handleFormSubmit} className="space-y-6">
+              <input type="hidden" name="name" value={user.name || ''} />
+              
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <Phone className="w-3.5 h-3.5" /> WhatsApp / Teléfono
+                </label>
+                <div className="flex bg-black/40 border border-amber-900/30 rounded-2xl overflow-hidden focus-within:ring-1 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all">
+                  <div className="flex items-center justify-center px-2 bg-amber-500/10 border-r border-amber-900/30">
+                    <select name="prefix" defaultValue={defaultPrefix} className="bg-transparent text-amber-500 font-bold outline-none cursor-pointer pr-2 text-sm">
+                      <option value="+54 9" className="bg-neutral-900 text-white">🇦🇷 +54 9</option>
+                      <option value="+598" className="bg-neutral-900 text-white">🇺🇾 +598</option>
+                      <option value="+56" className="bg-neutral-900 text-white">🇨🇱 +56</option>
+                      <option value="+55" className="bg-neutral-900 text-white">🇧🇷 +55</option>
+                      <option value="+595" className="bg-neutral-900 text-white">🇵🇾 +595</option>
+                      <option value="+591" className="bg-neutral-900 text-white">🇧🇴 +591</option>
+                      <option value="+1" className="bg-neutral-900 text-white">🇺🇸 +1</option>
+                      <option value="+34" className="bg-neutral-900 text-white">🇪🇸 +34</option>
+                    </select>
+                  </div>
+                  <input
+                    name="telefono"
+                    defaultValue={defaultPhone}
+                    type="tel"
+                    required
+                    placeholder="11 1234-5678"
+                    className="w-full p-4 bg-transparent text-white outline-none placeholder:text-neutral-800"
+                  />
+                </div>
+              </div>
+
+              {status === 'error' && (
+                <div className="text-red-500 text-xs font-bold uppercase tracking-tighter">
+                  ⚠ {msg}
+                </div>
+              )}
+
+              <Button
+                disabled={isPending}
+                type="submit"
+                className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black uppercase tracking-widest px-10 rounded-2xl h-14 transition-all shadow-lg shadow-amber-500/10 active:scale-95"
+              >
+                {isPending ? "Guardando..." : "Guardar Teléfono"}
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
 
       <main className="flex-grow w-full max-w-5xl mx-auto px-4 md:px-8 pt-24 pb-12">
 
@@ -153,13 +234,28 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
                   <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] flex items-center gap-2">
                     <Phone className="w-3.5 h-3.5" /> WhatsApp / Teléfono
                   </label>
-                  <input
-                    name="telefono"
-                    defaultValue={user.telefono || ''}
-                    type="text"
-                    placeholder="+54 9..."
-                    className="w-full p-4 bg-black/40 border border-amber-900/30 rounded-2xl text-white focus:ring-1 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all placeholder:text-neutral-800"
-                  />
+                  <div className="flex bg-black/40 border border-amber-900/30 rounded-2xl overflow-hidden focus-within:ring-1 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all">
+                    <div className="flex items-center justify-center px-2 bg-amber-500/10 border-r border-amber-900/30">
+                      <select name="prefix" defaultValue={defaultPrefix} className="bg-transparent text-amber-500 font-bold outline-none cursor-pointer pr-2 text-sm">
+                        <option value="+54 9" className="bg-neutral-900 text-white">🇦🇷 +54 9</option>
+                        <option value="+598" className="bg-neutral-900 text-white">🇺🇾 +598</option>
+                        <option value="+56" className="bg-neutral-900 text-white">🇨🇱 +56</option>
+                        <option value="+55" className="bg-neutral-900 text-white">🇧🇷 +55</option>
+                        <option value="+595" className="bg-neutral-900 text-white">🇵🇾 +595</option>
+                        <option value="+591" className="bg-neutral-900 text-white">🇧🇴 +591</option>
+                        <option value="+1" className="bg-neutral-900 text-white">🇺🇸 +1</option>
+                        <option value="+34" className="bg-neutral-900 text-white">🇪🇸 +34</option>
+                      </select>
+                    </div>
+                    <input
+                      name="telefono"
+                      defaultValue={defaultPhone}
+                      type="tel"
+                      required
+                      placeholder="11 1234-5678"
+                      className="w-full p-4 bg-transparent text-white outline-none placeholder:text-neutral-800"
+                    />
+                  </div>
                 </div>
 
                 <div className="md:col-span-2 flex flex-col md:flex-row items-center justify-between gap-8 mt-4 pt-8 border-t border-amber-900/10">

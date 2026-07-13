@@ -10,6 +10,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/use-toast";
@@ -146,6 +147,7 @@ export function DiaLaboralClient({ initialData }: DiaLaboralClientProps) {
             }
           }}
         >
+          <DialogTitle className="sr-only">Asignar Horarios</DialogTitle>
           <div className="py-2">
             {selectedDia && (
               <HorariosList

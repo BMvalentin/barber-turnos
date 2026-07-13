@@ -166,7 +166,9 @@ export async function getDiasLaborales() {
   try {
     const diasEnDb = await prisma.dia_laboral.findMany({
       include: {
-        margenes: true,
+        margenes: {
+          orderBy: { desde: "asc" },
+        },
       },
       orderBy: {
         dia: "asc",
@@ -193,7 +195,11 @@ export async function getDiasLaborales() {
 
         // Retornamos la lista completa actualizada
         const updatedDias = await prisma.dia_laboral.findMany({
-          include: { margenes: true },
+          include: {
+            margenes: {
+              orderBy: { desde: "asc" },
+            },
+          },
         });
         
         return updatedDias.map(formatDia).sort((a, b) => a.dia - b.dia);
