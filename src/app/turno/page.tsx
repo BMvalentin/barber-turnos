@@ -1,30 +1,18 @@
 import { getTurnos } from "@/actions/turno.actions";
 import TurnoList from "@/components/turno/TurnoList";
 import CreateTurnoModal from "@/components/turno/CreateTurnoModal";
-import { Suspense } from "react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { getUserTurnos } from "@/actions/user-dashboard";
+import TurnoManager from "@/components/turno/TurnoManager";
 
 async function getTurnoData() {
   const [servicios, barberos, usuarios, relaciones] = await Promise.all([
-    prisma.servicio.findMany({
-      where: { estado: true },
-      orderBy: { nombre: "asc" },
-    }),
-    prisma.barbero.findMany({
-      where: { estado: true },
-      orderBy: { nombre: "asc" },
-    }),
-    prisma.user.findMany({
-      select: { id: true, name: true, email: true },
-      orderBy: { name: "asc" },
-    }),
-    prisma.servicioxbarbero.findMany({
-      select: { barberoId: true, servicioId: true },
-    }),
+    prisma.servicio.findMany({ where: { estado: true }, orderBy: { nombre: "asc" } }),
+    prisma.barbero.findMany({ where: { estado: true }, orderBy: { nombre: "asc" } }),
+    prisma.user.findMany({ select: { id: true, name: true, email: true }, orderBy: { name: "asc" } }),
+    prisma.servicioxbarbero.findMany({ select: { barberoId: true, servicioId: true } }),
   ]);
 
   const serializedServicios = servicios.map((s) => ({
@@ -37,78 +25,56 @@ async function getTurnoData() {
   return { servicios: serializedServicios, barberos, usuarios, relaciones };
 }
 
-// Corregido: Agregamos searchParams para leer la página de la URL
-export default async function TurnoPage({ searchParams }: { searchParams: { page?: string } }) {
-
-  const params = await searchParams;
-  const page = Number(params.page) || 1;
+export default async function TurnoPage() {
   const session = await auth();
-
-  // Corregido: Ahora pasamos el número de página a getTurnos
-  const result = (session?.user)
-    ? (session?.user.role === "ADMIN"
-      ? await getTurnos(page)
-      : { success: true, data: await getUserTurnos(session.user.id as string), totalPages: 1, currentPage: 1 })
-    : { success: false, error: "Usuario no autenticado" };
-
   const { servicios, barberos, usuarios, relaciones } = await getTurnoData();
+  const result = await getTurnos(1);
+
+  // Preparamos los datos de forma segura
+  const turnosData = (result.success && result.data) ? result.data : [];
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-black to-amber-950/30 p-2 sm:p-6 pt-24 md:pt-24 overflow-x-hidden">
       <div className="container mx-auto max-w-7xl">
-
-        {/* CABECERA RESPONSIVE */}
-        {/* Cambiado a flex-col en móvil y flex-row en desktop */}
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-          <div className="flex items-center gap-3 sm:gap-4">
-            {session?.user?.role === "ADMIN" && (
-              <Link href="/admin" className="p-2 hover:bg-amber-600/20 rounded-lg transition-all group shrink-0">
-                <ArrowLeft className="h-6 w-6 text-amber-500" />
-              </Link>
-            )}
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">Gestión de Turnos</h1>
-              <p className="text-sm sm:text-base text-amber-200/70">Administra las reservas</p>
+        <div className="mb-8 flex flex-col gap-6">
+          
+          {/* CABECERA */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {session?.user?.role === "ADMIN" && (
+                <Link href="/admin" className="p-2 hover:bg-amber-600/20 rounded-lg transition-all">
+                  <ArrowLeft className="h-6 w-6 text-amber-500" />
+                </Link>
+              )}
+              <h1 className="text-3xl font-bold text-white">Gestión de Turnos</h1>
             </div>
-          </div>
-
-          {/* Botón de crear - ocupa ancho completo en móvil */}
-          <div className="w-full sm:w-auto">
-            <CreateTurnoModal
-              session={session}
-              initialServicios={servicios}
-              initialBarberos={barberos}
-              initialUsuarios={usuarios}
-              initialRelaciones={relaciones}
+            
+            <CreateTurnoModal 
+              session={session} 
+              initialServicios={servicios} 
+              initialBarberos={barberos} 
+              initialUsuarios={usuarios} 
+              initialRelaciones={relaciones} 
             />
           </div>
-        </div>
 
-        <Suspense fallback={<LoadingSkeleton />}>
-          {result.success && result.data ? (
-            <TurnoList
-              session={session}
-              turnos={result.data}
-              totalPages={result.totalPages || 1}
-              currentPage={page}
+          {/* LISTADO (Manager o Lista estándar) */}
+          {session?.user?.role === "ADMIN" ? (
+            <TurnoManager 
+              initialTurnos={turnosData} 
+              session={session} 
             />
           ) : (
-            <div className="bg-amber-500/10 border border-amber-500/50 rounded-lg p-4">
-              <p className="text-amber-400">{result.error || "Error al cargar"}</p>
-            </div>
+            <TurnoList 
+              session={session} 
+              turnos={turnosData} 
+              totalPages={1} 
+              currentPage={1} 
+            />
           )}
-        </Suspense>
+          
+        </div>
       </div>
-    </div>
-  );
-}
-
-function LoadingSkeleton() {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="border border-amber-900/30 bg-black/40 rounded-lg p-4 animate-pulse h-40"></div>
-      ))}
     </div>
   );
 }
