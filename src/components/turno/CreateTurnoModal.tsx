@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import SeleccionadorHorario from "./SeleccionadorHorario";
 import { Button } from "../ui/button";
 import { X, Plus, CreditCard, Clock, CheckCircle2, Loader2, Scissors } from "lucide-react";
+import { prisma } from "@/lib/prisma";
 
 type ServicioData = {
   id: string;
@@ -40,6 +41,8 @@ type TurnoCreado = {
   id: string;
   precioCongelado: number;
   seniaCongelada: number;
+  servicioNombre?: string;
+  barberoNombre?: string
 };
 
 type Props = {
@@ -48,6 +51,7 @@ type Props = {
   initialBarberos?: BarberoData[];
   initialUsuarios?: UsuarioData[];
   initialRelaciones?: RelacionData[];
+  whatsappPhone: string;
 };
 
 const initialState = {
@@ -62,7 +66,30 @@ export default function CreateTurnoModal({
   initialBarberos = [],
   initialUsuarios = [],
   initialRelaciones = [],
+  whatsappPhone,
 }: Props) {
+
+  const enviarMensajeWhatsApp = (
+    turno: TurnoCreado,
+    servicioNombre: string,
+    barberoNombre: string,
+    fecha: Date,
+    estado: "Pagado" | "Pendiente de pago" // Nuevo parámetro
+  ) => {
+    const fechaFormateada = new Date(fecha).toLocaleString('es-AR', {
+      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+    });
+
+    const mensaje = `Hola! Confirmé mi turno:
+    📅 Fecha: ${fechaFormateada}
+    ✂️ Servicio: ${servicioNombre}
+    💈 Barbero: ${barberoNombre}
+    Estado: ${estado}`;
+
+    const url = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, "_blank");
+  };
+
   const [isOpen, setIsOpen] = useState(false);
   const [state, formAction] = useActionState(createTurno, initialState);
   const formRef = useRef<HTMLFormElement>(null);
@@ -127,23 +154,27 @@ export default function CreateTurnoModal({
 
   useEffect(() => {
     if (state.success && state.data) {
-      // Guardar el turno creado y mostrar modal de pago
-      setTurnoCreado({
-        id: state.data.id,
-        precioCongelado: state.data.precioCongelado,
-        seniaCongelada: state.data.seniaCongelada,
-      });
+      const nombreServicio = servicios.find(s => s.id === selectedServicioId)?.nombre || "N/A";
+      const nombreBarbero = barberos.find(b => b.id === selectedBarberoId)?.nombre || "N/A";
+
+      const nuevoTurnoData: TurnoCreado = {
+        ...state.data,
+        servicioNombre: nombreServicio,
+        barberoNombre: nombreBarbero
+      };
+
+      // 3. GUARDAMOS EN EL ESTADO
+      setTurnoCreado(nuevoTurnoData);
+
+      // 4. RESETEO
       setIsOpen(false);
       setShowPagoModal(true);
       formRef.current?.reset();
       setSelectedServicioId("");
       setSelectedBarberoId("");
       setSelectedUserId(session?.user?.role === "USER" ? session?.user?.id ?? "" : "");
-    } else if (state.error) {
-      // El error se muestra dentro del form, no hace falta alert
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
+  }, [state.success, state.data]);
 
   const handlePagarSenia = async () => {
     if (!turnoCreado) return;
@@ -158,16 +189,24 @@ export default function CreateTurnoModal({
         setLoadingPago(false);
         return;
       }
+      const servicio = servicios.find(s => s.id === selectedServicioId);
+      const barbero = barberos.find(b => b.id === selectedBarberoId);
 
+      enviarMensajeWhatsApp(turnoCreado, servicio?.nombre || "N/A", barbero?.nombre || "N/A", new Date(), "Pagado");
       // Redirigir a Mercado Pago
       window.location.href = result.data.checkoutUrl;
     } catch {
       setErrorPago("Error inesperado al iniciar el pago");
       setLoadingPago(false);
     }
+
+
   };
 
   const handlePagarDespues = () => {
+
+    // Aquí enviamos el mensaje con el estado "Pendiente"
+    enviarMensajeWhatsApp(turnoCreado!, turnoCreado?.servicioNombre || "N/A", turnoCreado?.barberoNombre || "N/A", new Date(), "Pendiente de pago");
     setShowPagoModal(false);
     setTurnoCreado(null);
     setErrorPago(null);
@@ -176,18 +215,18 @@ export default function CreateTurnoModal({
   // ─── Filtro cruzado barbero ↔ servicio ────────────────────────────────
   const serviciosFiltrados = selectedBarberoId
     ? servicios.filter((s) =>
-        relaciones.some(
-          (r) => r.barberoId === selectedBarberoId && r.servicioId === s.id
-        )
+      relaciones.some(
+        (r) => r.barberoId === selectedBarberoId && r.servicioId === s.id
       )
+    )
     : servicios;
 
   const barberosFiltrados = selectedServicioId
     ? barberos.filter((b) =>
-        relaciones.some(
-          (r) => r.servicioId === selectedServicioId && r.barberoId === b.id
-        )
+      relaciones.some(
+        (r) => r.servicioId === selectedServicioId && r.barberoId === b.id
       )
+    )
     : barberos;
 
   const handleBarberoChange = (nuevoBarberoId: string) => {
@@ -324,10 +363,9 @@ export default function CreateTurnoModal({
                   </div>
 
                   {/* SERVICIO */}
+
                   <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium text-amber-200/70">
-                      Servicio <span className="text-amber-500">*</span>
-                    </label>
+                    <label className="text-sm font-medium text-amber-200/70">Servicio</label>
                     <select
                       name="servicioId"
                       required
@@ -336,20 +374,29 @@ export default function CreateTurnoModal({
                       className="w-full p-2.5 border border-amber-900/30 rounded-lg bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                     >
                       <option value="">-- Seleccionar Servicio --</option>
-                      {serviciosFiltrados.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.nombre}
-                          {s.precio && ` - $${s.precio.toString()}`}
-                          {s.duracion && ` (${s.duracion} min)`}
-                          {s.descripcion && ` - ${s.descripcion}`}
-                        </option>
-                      ))}
+
+                      {/* Reemplaza tu mapa actual por este: */}
+                      {serviciosFiltrados.map((s) => {
+                        // Definimos el corte de la descripción antes del return
+                        const descripcionCorta = s.descripcion && s.descripcion.length > 50
+                          ? s.descripcion.substring(0, 50) + "..."
+                          : s.descripcion;
+
+                        return (
+                          <option key={s.id} value={s.id}>
+                            {s.nombre}
+                            {s.precio && ` - $${s.precio.toString()}`}
+                            {s.duracion && ` (${s.duracion} min)`}
+                            {descripcionCorta && ` - ${descripcionCorta}`}
+                          </option>
+                        );
+                      })}
                     </select>
-                    {serviciosFiltrados.length === 0 && (
-                      <p className="text-xs text-amber-400">
-                        {selectedBarberoId
-                          ? "Este barbero no tiene servicios asignados."
-                          : "No hay servicios disponibles. Crea servicios primero."}
+
+                    {/* Mostrar la descripción detallada aquí debajo */}
+                    {selectedServicioId && servicios.find(s => s.id === selectedServicioId)?.descripcion && (
+                      <p className="text-xs text-amber-200/50 italic p-2 border-l-2 border-amber-500">
+                        {servicios.find(s => s.id === selectedServicioId)?.descripcion}
                       </p>
                     )}
                   </div>

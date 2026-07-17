@@ -36,7 +36,7 @@ export async function obtenerDiasDisponibles(
   barberoId: string,
   turnoIdAExcluir?: string,
 ): Promise<{ success: boolean; data?: string[]; error?: string }> {
-  
+
   const cacheKey = ["dias-disponibles", mes, servicioId, barberoId, turnoIdAExcluir || "none"];
   const cacheTags = [`turnos-mes-${barberoId}-${mes}`, `servicio-${servicioId}`, `margenes-${barberoId}`, `excepciones-${barberoId}`, "turnos-global"];
 
@@ -98,7 +98,7 @@ export async function obtenerDiasDisponibles(
       const diaSemana = toZonedTime(inicioDia, TIMEZONE).getDay();
       const diaEnum = MAP_DIA_SEMANA[diaSemana];
 
-      const margenesDia = horariosBarbero.filter((h: any) => 
+      const margenesDia = horariosBarbero.filter((h: any) =>
         h.margenLaboral.dia.dia === diaEnum && h.margenLaboral.estado === true
       );
 
@@ -123,7 +123,7 @@ export async function obtenerDiasDisponibles(
           const hora = Math.floor(actualMinutos / 60);
           const min = actualMinutos % 60;
           const slotUTC = fromZonedTime(`${fechaStr}T${hora.toString().padStart(2, "0")}:${min.toString().padStart(2, "0")}:00`, TIMEZONE);
-          
+
           if (slotUTC.getTime() > ahora.getTime() + 10 * 60 * 1000) {
             const estaOcupado = turnosDia.some((turno: any) => {
               const inicioT = new Date(turno.horarioReservado);
@@ -313,7 +313,7 @@ export async function createTurno(
    GET TURNOS
 ========================= */
 
-export async function getTurnos(page: number = 1) {
+export async function getTurnos(page: number = 1, estadoFiltro?: string, fechaFiltro?: string) {
   try {
     const session = await auth();
     if (!session?.user) return { success: false, error: "No autorizado" };
@@ -322,9 +322,26 @@ export async function getTurnos(page: number = 1) {
     const pageSize = 6;
     const skip = (page - 1) * pageSize;
 
+    const where: any = {};
+
+    if (!isAdmin) where.userId = session.user.id;
+    if (estadoFiltro && estadoFiltro !== "TODOS") where.estado = estadoFiltro;
+
+    // Filtrado por fecha (convierte el string 'YYYY-MM-DD' a rango)
+    if (fechaFiltro) {
+      const start = new Date(fechaFiltro);
+      const end = new Date(fechaFiltro);
+      end.setDate(end.getDate() + 1);
+
+      where.horarioReservado = {
+        gte: start,
+        lt: end,
+      };
+    }
+
     const [turnos, totalCount] = await Promise.all([
       prisma.turno.findMany({
-        where: isAdmin ? {} : { userId: session.user.id },
+        where,
         skip,
         take: pageSize,
         include: {
@@ -334,9 +351,7 @@ export async function getTurnos(page: number = 1) {
         },
         orderBy: { horarioReservado: "desc" },
       }),
-      prisma.turno.count({
-        where: isAdmin ? {} : { userId: session.user.id }
-      })
+      prisma.turno.count({ where })
     ]);
 
     const data = turnos.map((t) => ({
