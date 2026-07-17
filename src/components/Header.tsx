@@ -25,7 +25,7 @@ export function Header({ session }: HeaderProps) {
         <Link href="/#home" className="flex items-center gap-2 relative z-50">
           <Scissors className="w-6 h-6 text-amber-500" /><span>{' MAYORAZ '}</span><span className="text-amber-500">{'BARBER'}</span>
         </Link>
-        
+
         {/* DESKTOP NAV & AUTH */}
         <div className="hidden md:flex items-center gap-8">
           <nav className="flex items-center gap-8">
@@ -35,11 +35,11 @@ export function Header({ session }: HeaderProps) {
               </Button>
             </Link>
 
-            <Link href="/#nosotros" className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
+            {/* <Link href="/#nosotros" className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
               <Button variant="link" size="sm">
                 Nosotros
               </Button>
-            </Link>
+            </Link> */}
 
             <Link href="/#ubicacion" className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
               <Button variant="link" size="sm">
@@ -57,14 +57,14 @@ export function Header({ session }: HeaderProps) {
 
             <Link href={session ? "/turno" : "/login"} className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
               <Button variant="amarillo" size="sm">
-                  Turnos
+                Turnos
               </Button>
             </Link>
           </nav>
 
           {session ? (
             <div className="flex items-center gap-4 border-l border-amber-900/50 pl-6">
-              <span className="text-sm"><Link className="flex flex-row items-center" href="/dashboard"><Image src={session.user?.image || "/images/avatar-default.svg"} alt="" className="rounded-full" width={32} height={32}/><Button variant="link" size="sm">{session.user?.name}</Button></Link></span>
+              <span className="text-sm"><Link className="flex flex-row items-center" href="/dashboard"><Image src={session.user?.image || "/images/avatar-default.svg"} alt="" className="rounded-full" width={32} height={32} /><Button variant="link" size="sm">{session.user?.name}</Button></Link></span>
               <form action={handleSignOut}>
                 <Button variant="rojo" size="sm" type="submit">Salir</Button>
               </form>
@@ -81,7 +81,7 @@ export function Header({ session }: HeaderProps) {
         </div>
 
         {/* MOBILE TOGGLE */}
-        <button 
+        <button
           className="md:hidden relative z-50 text-amber-500 p-2"
           onClick={() => setIsOpen(!isOpen)}
         >
@@ -108,7 +108,7 @@ export function Header({ session }: HeaderProps) {
               <Link href="/#ubicacion" onClick={() => setIsOpen(false)} className="text-base text-gray-300 hover:text-white transition-colors py-2">
                 Ubicación
               </Link>
-              
+
               {session?.user?.role === "ADMIN" && (
                 <Link href="/admin" onClick={() => setIsOpen(false)} className="text-base text-amber-500 hover:text-amber-400 font-medium transition-colors py-2">
                   Administrador
@@ -125,7 +125,7 @@ export function Header({ session }: HeaderProps) {
                 {session ? (
                   <div className="flex flex-col gap-4">
                     <Link href="/dashboard" onClick={() => setIsOpen(false)} className="flex items-center gap-3 py-2">
-                      <Image src={session.user?.image || "/images/avatar-default.svg"} alt="" className="rounded-full border border-amber-500/50" width={40} height={40}/>
+                      <Image src={session.user?.image || "/images/avatar-default.svg"} alt="" className="rounded-full border border-amber-500/50" width={40} height={40} />
                       <span className="text-base font-medium text-white">{session.user?.name}</span>
                     </Link>
                     <form action={handleSignOut} className="w-full">
