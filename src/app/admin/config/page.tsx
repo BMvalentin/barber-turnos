@@ -7,7 +7,7 @@ export default async function ConfigPage() {
   });
 
   return (
-    <div className="container mx-auto p-6 max-w-2xl">
+    <div className="container mx-auto p-6 max-w-2xl mt-12">
       <h1 className="text-2xl font-bold text-white mb-6">Configuración de Contacto</h1>
       
       <div className="bg-black/40 border border-amber-900/30 p-6 rounded-xl">

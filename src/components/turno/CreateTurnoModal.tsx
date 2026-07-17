@@ -174,7 +174,7 @@ export default function CreateTurnoModal({
       setSelectedBarberoId("");
       setSelectedUserId(session?.user?.role === "USER" ? session?.user?.id ?? "" : "");
     }
-  }, [state.success, state.data]); 
+  }, [state.success, state.data]);
 
   const handlePagarSenia = async () => {
     if (!turnoCreado) return;
@@ -363,10 +363,9 @@ export default function CreateTurnoModal({
                   </div>
 
                   {/* SERVICIO */}
+
                   <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium text-amber-200/70">
-                      Servicio <span className="text-amber-500">*</span>
-                    </label>
+                    <label className="text-sm font-medium text-amber-200/70">Servicio</label>
                     <select
                       name="servicioId"
                       required
@@ -375,20 +374,29 @@ export default function CreateTurnoModal({
                       className="w-full p-2.5 border border-amber-900/30 rounded-lg bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                     >
                       <option value="">-- Seleccionar Servicio --</option>
-                      {serviciosFiltrados.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.nombre}
-                          {s.precio && ` - $${s.precio.toString()}`}
-                          {s.duracion && ` (${s.duracion} min)`}
-                          {s.descripcion && ` - ${s.descripcion}`}
-                        </option>
-                      ))}
+
+                      {/* Reemplaza tu mapa actual por este: */}
+                      {serviciosFiltrados.map((s) => {
+                        // Definimos el corte de la descripción antes del return
+                        const descripcionCorta = s.descripcion && s.descripcion.length > 50
+                          ? s.descripcion.substring(0, 50) + "..."
+                          : s.descripcion;
+
+                        return (
+                          <option key={s.id} value={s.id}>
+                            {s.nombre}
+                            {s.precio && ` - $${s.precio.toString()}`}
+                            {s.duracion && ` (${s.duracion} min)`}
+                            {descripcionCorta && ` - ${descripcionCorta}`}
+                          </option>
+                        );
+                      })}
                     </select>
-                    {serviciosFiltrados.length === 0 && (
-                      <p className="text-xs text-amber-400">
-                        {selectedBarberoId
-                          ? "Este barbero no tiene servicios asignados."
-                          : "No hay servicios disponibles. Crea servicios primero."}
+
+                    {/* Mostrar la descripción detallada aquí debajo */}
+                    {selectedServicioId && servicios.find(s => s.id === selectedServicioId)?.descripcion && (
+                      <p className="text-xs text-amber-200/50 italic p-2 border-l-2 border-amber-500">
+                        {servicios.find(s => s.id === selectedServicioId)?.descripcion}
                       </p>
                     )}
                   </div>
