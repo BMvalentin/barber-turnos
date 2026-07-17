@@ -13,7 +13,8 @@ import {
   Menu,
   X,
   CreditCard,
-  CircleDollarSign
+  CircleDollarSign,
+  Settings
 } from "lucide-react";
 
 const userMenuItems = [
@@ -26,6 +27,7 @@ const adminMenuItems = [
   { title: "Días Laborales", href: "/admin/diaLaboral", icon: Clock },
   { title: "Excepciones", href: "/admin/excepcionesLaborales", icon: ClipboardList },
   { title: "Mercado Pago", href: "/admin/mercadopago", icon: CreditCard },
+  { title: "Configuración", href: "/admin/config", icon: Settings },
 ];
 
 export default function AdminSidebar() {

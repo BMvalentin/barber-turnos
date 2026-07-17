@@ -8,11 +8,13 @@ import { ArrowLeft } from "lucide-react";
 import TurnoManager from "@/components/turno/TurnoManager";
 
 async function getTurnoData() {
-  const [servicios, barberos, usuarios, relaciones] = await Promise.all([
+  // Corregido: la desestructuración ahora captura el objeto config correctamente
+  const [servicios, barberos, usuarios, relaciones, config] = await Promise.all([
     prisma.servicio.findMany({ where: { estado: true }, orderBy: { nombre: "asc" } }),
     prisma.barbero.findMany({ where: { estado: true }, orderBy: { nombre: "asc" } }),
     prisma.user.findMany({ select: { id: true, name: true, email: true }, orderBy: { name: "asc" } }),
     prisma.servicioxbarbero.findMany({ select: { barberoId: true, servicioId: true } }),
+    prisma.pageConfig.findUnique({ where: { id: 1 } }),
   ]);
 
   const serializedServicios = servicios.map((s) => ({
@@ -22,15 +24,14 @@ async function getTurnoData() {
     senia: s.senia ? Number(s.senia) : 0,
   }));
 
-  return { servicios: serializedServicios, barberos, usuarios, relaciones };
+  return { servicios: serializedServicios, barberos, usuarios, relaciones, config };
 }
 
 export default async function TurnoPage() {
   const session = await auth();
-  const { servicios, barberos, usuarios, relaciones } = await getTurnoData();
+  const { servicios, barberos, usuarios, relaciones, config } = await getTurnoData();
   const result = await getTurnos(1);
 
-  // Preparamos los datos de forma segura
   const turnosData = (result.success && result.data) ? result.data : [];
 
   return (
@@ -38,7 +39,6 @@ export default async function TurnoPage() {
       <div className="container mx-auto max-w-7xl">
         <div className="mb-8 flex flex-col gap-6">
           
-          {/* CABECERA */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               {session?.user?.role === "ADMIN" && (
@@ -55,10 +55,10 @@ export default async function TurnoPage() {
               initialBarberos={barberos} 
               initialUsuarios={usuarios} 
               initialRelaciones={relaciones} 
+              whatsappPhone={config?.whatsapp || ""} 
             />
           </div>
 
-          {/* LISTADO (Manager o Lista estándar) */}
           {session?.user?.role === "ADMIN" ? (
             <TurnoManager 
               initialTurnos={turnosData} 
@@ -72,7 +72,6 @@ export default async function TurnoPage() {
               currentPage={1} 
             />
           )}
-          
         </div>
       </div>
     </div>

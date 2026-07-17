@@ -201,6 +201,46 @@ model SlotLock {
   @@index([expiresAt])
 }
 
+
+model PageConfig {
+  id                   Int                       @id @default(1)
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+
+  //general
+  name            String
+  description          String?                   @db.Text
+  slogan               String?
+  logo                 String?                   @db.Text
+  favicon              String?                   @db.Text
+  primaryColor         String?                   @default("#000000")
+  secondaryColor       String?                   @default("#FFFFFF")
+
+  //Contacto
+  phone                String?
+  whatsapp             String?
+  email                String?
+  instagram            String?                   @db.Text
+
+  //Location
+  locationEnabled      Boolean                   @default(false)
+  address              String?
+  city                 String?
+  province             String?
+  country              String?
+  postalCode           String?
+  mapsUrl              String?                   @db.Text
+
+  
+  currency             String                    @default("ARS")
+  language             String                    @default("es")
+  maintenanceMode      Boolean                   @default(false)
+  metaTitle            String?
+  metaDescription      String?                   @db.Text
+  termsAndConditions   String?                   @db.Text
+  privacyPolicy        String?                   @db.Text
+}
+
 enum user_role {
   USER
   ADMIN
