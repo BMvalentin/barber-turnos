@@ -42,7 +42,8 @@ type TurnoCreado = {
   precioCongelado: number;
   seniaCongelada: number;
   servicioNombre?: string;
-  barberoNombre?: string
+  barberoNombre?: string;
+  horarioReservado?: Date | string;
 };
 
 type Props = {
@@ -73,11 +74,16 @@ export default function CreateTurnoModal({
     turno: TurnoCreado,
     servicioNombre: string,
     barberoNombre: string,
-    fecha: Date,
-    estado: "Pagado" | "Pendiente de pago" // Nuevo parámetro
+    fecha: Date | string, 
+    estado: "Pagado" | "Pendiente de pago"
   ) => {
-    const fechaFormateada = new Date(fecha).toLocaleString('es-AR', {
-      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+    const fechaObj = new Date(fecha);
+    
+    const fechaFormateada = fechaObj.toLocaleString('es-AR', {
+      day: '2-digit', 
+      month: '2-digit', 
+      hour: '2-digit', 
+      minute: '2-digit'
     });
 
     const mensaje = `Hola! Confirmé mi turno:
@@ -192,7 +198,7 @@ export default function CreateTurnoModal({
       const servicio = servicios.find(s => s.id === selectedServicioId);
       const barbero = barberos.find(b => b.id === selectedBarberoId);
 
-      enviarMensajeWhatsApp(turnoCreado, servicio?.nombre || "N/A", barbero?.nombre || "N/A", new Date(), "Pagado");
+      enviarMensajeWhatsApp(turnoCreado, servicio?.nombre || "N/A", barbero?.nombre || "N/A",turnoCreado.horarioReservado || new Date() , "Pagado");
       // Redirigir a Mercado Pago
       window.location.href = result.data.checkoutUrl;
     } catch {
@@ -206,7 +212,7 @@ export default function CreateTurnoModal({
   const handlePagarDespues = () => {
 
     // Aquí enviamos el mensaje con el estado "Pendiente"
-    enviarMensajeWhatsApp(turnoCreado!, turnoCreado?.servicioNombre || "N/A", turnoCreado?.barberoNombre || "N/A", new Date(), "Pendiente de pago");
+    enviarMensajeWhatsApp(turnoCreado!, turnoCreado?.servicioNombre || "N/A", turnoCreado?.barberoNombre || "N/A", turnoCreado?.horarioReservado || new Date(), "Pendiente de pago");
     setShowPagoModal(false);
     setTurnoCreado(null);
     setErrorPago(null);
