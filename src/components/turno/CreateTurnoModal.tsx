@@ -195,12 +195,13 @@ export default function CreateTurnoModal({
         setLoadingPago(false);
         return;
       }
+      
+      window.location.href = result.data.checkoutUrl;
       const servicio = servicios.find(s => s.id === selectedServicioId);
       const barbero = barberos.find(b => b.id === selectedBarberoId);
 
       enviarMensajeWhatsApp(turnoCreado, servicio?.nombre || "N/A", barbero?.nombre || "N/A",turnoCreado.horarioReservado || new Date() , "Pagado");
       // Redirigir a Mercado Pago
-      window.location.href = result.data.checkoutUrl;
     } catch {
       setErrorPago("Error inesperado al iniciar el pago");
       setLoadingPago(false);
