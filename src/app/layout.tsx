@@ -41,7 +41,12 @@ export default async function RootLayout({
     <html lang="es">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <LayoutComponent session={session} config={config}>
-          <AppGate>
+          <AppGate
+            barberiaNombre={config?.name}
+            logoUrl={config?.logo}
+            primaryColor={config?.primaryColor}
+            secondaryColor={config?.secondaryColor}
+          >
             {children}
             <Toaster />
           </AppGate>

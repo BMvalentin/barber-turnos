@@ -4,48 +4,14 @@ import { useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User, Mail, Phone, Settings,
-  ShieldCheck, Scissors, Calendar
+  ShieldCheck, Calendar
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { updateProfile } from "@/actions/user-dashboard";
 import { useSession } from "next-auth/react";
 import TurnoList from "@/components/turno/TurnoList";
-
-/* --- FOOTER ADAPTADO AL ANCHO TOTAL --- */
-function Footer() {
-  const currentYear = new Date().getFullYear();
-  return (
-    <footer className="w-full py-10 border-t border-amber-900/30 bg-black mt-auto">
-      <div className="container mx-auto px-6 md:px-12">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <Scissors className="w-5 h-5 text-amber-500" />
-            </div>
-            <span className="font-bold text-white tracking-widest uppercase text-xl">
-              Barber<span className="text-amber-500">Shop</span>
-            </span>
-          </div>
-
-          <p className="text-sm text-amber-100/30 text-center font-light tracking-wide">
-            Excelencia en barbería tradicional.{" "}Santa Clara del Mar.{" "}{currentYear}
-          </p>
-
-          <div className="flex gap-10">
-            <a href="#" className="text-[10px] uppercase tracking-[0.2em] text-amber-100/40 hover:text-amber-500 transition-colors">
-              Términos
-            </a>
-            <a href="#" className="text-[10px] uppercase tracking-[0.2em] text-amber-100/40 hover:text-amber-500 transition-colors">
-              Privacidad
-            </a>
-          </div>
-
-        </div>
-      </div>
-    </footer>
-  );
-}
+// Importa tu footer centralizado si decides renderizarlo aquí de manera local:
+// import { Footer } from "@/components/Footer";
 
 export default function DashboardPanel({ user, turnos, session }: { user: any; turnos: any[]; session: any }) {
   const { update } = useSession();
@@ -70,7 +36,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    
+
     const prefix = formData.get("prefix") as string;
     const telefonoNum = formData.get("telefono") as string;
     if (prefix && telefonoNum) {
@@ -96,7 +62,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
 
   return (
     <div className="flex flex-col min-h-screen bg-neutral-950 w-full font-sans">
-      
+
       {/* MODAL OBLIGATORIO DE TELÉFONO */}
       {!hasPhone && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
@@ -108,7 +74,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
             </p>
             <form onSubmit={handleFormSubmit} className="space-y-6">
               <input type="hidden" name="name" value={user.name || ''} />
-              
+
               <div className="space-y-3">
                 <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] flex items-center gap-2">
                   <Phone className="w-3.5 h-3.5" /> WhatsApp / Teléfono
@@ -304,7 +270,12 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
                     Historial de <span className="text-amber-500">Turnos</span>
                   </h2>
                 </div>
-                <TurnoList turnos={turnos} session={session} />
+                <TurnoList 
+                  turnos={turnos}
+                  session={session}
+                  totalPages={1}
+                  currentPage={1} 
+                />
               </div>
             </motion.div>
           )}

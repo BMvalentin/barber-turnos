@@ -6,39 +6,42 @@ import { Scissors } from "lucide-react";
 type FooterProps = {
   openPrivacy: () => void;
   openTerms: () => void;
-  barberiaNombre?: string;
+  barberiaNombre?: string | null;
   logoUrl?: string | null;
-  primaryColor?: string;
-  secondaryColor?: string;
+  primaryColor?: string | null;
+  secondaryColor?: string | null;
+  descripcion?: string | null;
+  localidad?: string | null;    
 };
 
 export function Footer({ 
   openPrivacy, 
   openTerms, 
-  barberiaNombre = "MAYORAZ",
+  barberiaNombre,
   logoUrl,
-  primaryColor = "#d97706", 
-  secondaryColor = "#78350f" 
+  primaryColor, 
+  secondaryColor,
+  descripcion,
+  localidad
 }: FooterProps) {
   return (
     <footer 
-      className="py-8 border-t mx-auto bg-zinc-950 relative z-10"
+      className="py-8 border-t mx-auto bg-zinc-950 relative z-10 w-full"
       style={{
-        ["--primary" as any]: primaryColor,
-        ["--secondary" as any]: secondaryColor,
+        ["--primary" as any]: primaryColor || undefined,
+        ["--secondary" as any]: secondaryColor || undefined,
         borderColor: "color-mix(in srgb, var(--secondary) 40%, transparent)"
       }}
     >
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           
-          {/* LOGO Y NOMBRE */}
           <div className="flex items-center gap-3">
             {logoUrl ? (
               <div className="relative w-9 h-9 rounded-lg overflow-hidden border border-zinc-800">
                 <Image 
                   src={logoUrl} 
-                  alt={barberiaNombre} 
+                  alt={barberiaNombre || "Barbería"} 
                   fill 
                   className="object-cover" 
                 />
@@ -59,15 +62,13 @@ export function Footer({
             </span>
           </div>
           
-          {/* TEXTO CENTRAL */}
           <p className="text-sm text-zinc-400 text-center font-light">
-            Cortes con estilo.{" "}Barbería en Santa Clara.{" "}{new Date().getFullYear()} 
+            {descripcion} {descripcion && localidad ? "•" : ""} {localidad ? `Barbería en ${localidad}.` : ""} {new Date().getFullYear()} 
           </p>
 
-          {/* ENLACES SECUNDARIOS */}
           <div className="flex gap-8">
             <button 
-              className="text-sm text-zinc-400 hover:text-white transition-colors font-medium" 
+              className="text-sm text-zinc-400 hover:text-white transition-colors font-medium cursor-pointer bg-transparent border-none" 
               onClick={(e) => {
                 e.preventDefault();
                 openTerms();
@@ -76,7 +77,7 @@ export function Footer({
               Términos
             </button>
             <button 
-              className="text-sm text-zinc-400 hover:text-white transition-colors font-medium" 
+              className="text-sm text-zinc-400 hover:text-white transition-colors font-medium cursor-pointer bg-transparent border-none" 
               onClick={(e) => {
                 e.preventDefault();
                 openPrivacy();
