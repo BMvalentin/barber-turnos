@@ -1,7 +1,10 @@
-import HomeClient from "@/components/HomeClient";
+import { prisma } from "@/lib/prisma";
+import HomeClient from "@/components/HomeClient"; // O donde tengas tu HomeClient
 
-void function onclick() { console.log("Booking clicked"); }
+export default async function Page() {
+  const config = await prisma.pageConfig.findUnique({
+    where: { id: 1 },
+  });
 
-export default async function HomePage() {
-  return <HomeClient/>;
+  return <HomeClient config={config} />;
 }

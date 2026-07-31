@@ -208,7 +208,7 @@ model PageConfig {
   updatedAt            DateTime                  @updatedAt
 
   //general
-  name            String
+  name                String
   description          String?                   @db.Text
   slogan               String?
   logo                 String?                   @db.Text

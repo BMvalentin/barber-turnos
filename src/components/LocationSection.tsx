@@ -3,9 +3,18 @@ import { motion } from "framer-motion";
 import { MapPin, Phone, Clock, Scissors } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getHorariosCompactos } from "@/actions/margenesHorario.actions";
-export function LocationSection() {
+
+interface LocationSectionProps {
+  config?: {
+    primaryColor?: string | null;
+  } | null;
+}
+
+export function LocationSection({ config }: LocationSectionProps) {
   const [cargando, setCargando] = useState(true);
   const [horarios, setHorarios] = useState(["Cargando..."]);
+
+  const primaryColor = config?.primaryColor || "#d97706"; // Amber por defecto
 
   useEffect(() => {
     try {
@@ -21,9 +30,10 @@ export function LocationSection() {
     } finally {
       setCargando(false);
     }
-  }, [])
+  }, []);
+
   return (
-    <section id="ubicacion" className="py-20 md:py-32 bg-linear-to-b from-black/90 to-black  justify-center items-center mx-auto border-y border-amber-900/20">
+    <section id="ubicacion" className="py-20 md:py-32 bg-linear-to-b from-black/90 to-black justify-center items-center mx-auto border-y border-amber-900/20">
       <div className="container justify-around items-center mx-auto px-4">
 
         {/* HEADER DE LA SECCIÓN */}
@@ -34,11 +44,17 @@ export function LocationSection() {
           transition={{ duration: 0.5 }}
           className="text-center mb-16 justify-around items-center"
         >
-          <div className="inline-flex items-center justify-center p-2 mb-4 rounded-full bg-amber-500/10 border border-amber-500/20">
-            <Scissors className="w-5 h-5 text-amber-500" />
+          <div 
+            className="inline-flex items-center justify-center p-2 mb-4 rounded-full border"
+            style={{ 
+              backgroundColor: `${primaryColor}15`, 
+              borderColor: `${primaryColor}30` 
+            }}
+          >
+            <Scissors className="w-5 h-5" style={{ color: primaryColor }} />
           </div>
           <h2 className="font-display text-3xl md:text-5xl font-bold mb-4 text-white">
-            Nuestra <span className="text-amber-500 text-shadow-amber">Ubicación</span>
+            Nuestra <span className="italic" style={{ color: primaryColor }}>Ubicación</span>
           </h2>
         </motion.div>
 
@@ -54,33 +70,42 @@ export function LocationSection() {
           >
             {/* DIRECCIÓN */}
             <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-amber-500/50 transition-colors group">
-              <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
-                <MapPin className="w-6 h-6 text-amber-500" />
+              <div 
+                className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
+                style={{ backgroundColor: `${primaryColor}15` }}
+              >
+                <MapPin className="w-6 h-6" style={{ color: primaryColor }} />
               </div>
               <div>
-                <h3 className="font-semibold text-amber-500 mb-1">Dirección</h3>
+                <h3 className="font-semibold mb-1" style={{ color: primaryColor }}>Dirección</h3>
                 <p className="text-amber-100/80">Av. Montreal 695, Santa Clara del Mar</p>
               </div>
             </div>
 
             {/* TELÉFONO */}
             <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-amber-500/50 transition-colors group">
-              <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
-                <Phone className="w-6 h-6 text-amber-500" />
+              <div 
+                className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
+                style={{ backgroundColor: `${primaryColor}15` }}
+              >
+                <Phone className="w-6 h-6" style={{ color: primaryColor }} />
               </div>
               <div>
-                <h3 className="font-semibold text-amber-500 mb-1">Turnos y Consultas</h3>
+                <h3 className="font-semibold mb-1" style={{ color: primaryColor }}>Turnos y Consultas</h3>
                 <p className="text-amber-100/80">+54 9 2233 42-7022</p>
               </div>
             </div>
 
             {/* HORARIOS */}
             <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-amber-500/50 transition-colors group">
-              <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
-                <Clock className="w-6 h-6 text-amber-500" />
+              <div 
+                className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
+                style={{ backgroundColor: `${primaryColor}15` }}
+              >
+                <Clock className="w-6 h-6" style={{ color: primaryColor }} />
               </div>
               <div>
-                <h3 className="font-semibold text-amber-500 mb-1">Horarios</h3>
+                <h3 className="font-semibold mb-1" style={{ color: primaryColor }}>Horarios</h3>
                 {cargando ? (
                   <p className="text-amber-100/80">Cargando horarios...</p>
                 ) : (

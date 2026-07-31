@@ -5,6 +5,7 @@ import LayoutComponent from "@/components/LayoutComponent";
 import { auth } from "@/auth";
 import AppGate from "@/components/AppGate";
 import { Toaster } from "@/components/ui/toaster";
+import { prisma } from "@/lib/prisma";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,12 +33,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
+  const config = await prisma.pageConfig.findUnique({
+    where: { id: 1 },
+  });
 
   return (
     <html lang="es">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {/* Pasa sesión al componente de cliente */}
-        <LayoutComponent session={session}>
+        <LayoutComponent session={session} config={config}>
           <AppGate>
             {children}
             <Toaster />
