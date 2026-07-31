@@ -43,7 +43,7 @@ model barbero {
 
 model servicio {
   id          String             @id @default(cuid())
-  descripcion String?
+  descripcion String?            @db.Text
   nombre      String
   srcImage    String?
   estado      Boolean            @default(true)
