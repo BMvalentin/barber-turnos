@@ -92,7 +92,7 @@ function PanelConfiguracion({
       </div>
 
       <p className="text-xs text-amber-200/50 pt-1">
-        Agregá estas variables al <code className="text-amber-400">.env</code> y
+        Agregá estas variables al <code className="text-[var(--page-primary-80)]">.env</code> y
         reiniciá el servidor.
       </p>
 
@@ -102,12 +102,12 @@ function PanelConfiguracion({
             URI de redirección (registrala en tu app de MP):
           </p>
           <div className="flex items-center gap-2 bg-black/40 border border-amber-900/30 rounded-lg px-3 py-2">
-            <code className="text-xs text-amber-400 flex-1 truncate">
+            <code className="text-xs text-[var(--page-primary-80)] flex-1 truncate">
               {configuracion.uriRedireccion}
             </code>
             <button
               onClick={copiarUri}
-              className="text-amber-200/50 hover:text-amber-400 transition-colors flex-shrink-0"
+              className="text-amber-200/50 hover:text-[var(--page-primary-80)] transition-colors flex-shrink-0"
               title="Copiar URI"
             >
               {copiado ? (
@@ -253,7 +253,7 @@ export default function MercadoPagoConnectionPanel({
 
           <div className="flex items-center gap-2 flex-wrap justify-end">
             {estado.bloqueada && (
-              <span className="flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              <span className="flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full bg-[var(--page-primary)]/20 text-[var(--page-primary-80)] border border-[var(--page-primary)]/30">
                 <Lock className="h-3 w-3" />
                 BLOQUEADA
               </span>
@@ -297,11 +297,11 @@ export default function MercadoPagoConnectionPanel({
 
         <div className="pt-4 border-t border-amber-900/30">
           {estado.bloqueada ? (
-            <div className="flex items-start gap-3 p-4 bg-amber-500/5 border border-amber-500/20 rounded-lg">
-              <Lock className="h-4 w-4 text-amber-400 mt-0.5 flex-shrink-0" />
+            <div className="flex items-start gap-3 p-4 bg-[var(--page-primary)]/5 border border-[var(--page-primary)]/20 rounded-lg">
+              <Lock className="h-4 w-4 text-[var(--page-primary-80)] mt-0.5 flex-shrink-0" />
               <p className="text-xs text-amber-200/70 leading-relaxed">
                 Esta conexión está{" "}
-                <strong className="text-amber-400">
+                <strong className="text-[var(--page-primary-80)]">
                   bloqueada por seguridad
                 </strong>{" "}
                 para evitar que se cambien los tokens sin autorización. Si

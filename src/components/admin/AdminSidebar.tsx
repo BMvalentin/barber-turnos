@@ -51,23 +51,23 @@ function SidebarItem({
       onClick={onNavigate}
       title={collapsed ? item.title : undefined}
       className={`
-        flex items-center gap-3 rounded-lg text-sm font-semibold transition-colors duration-200 group overflow-hidden whitespace-nowrap
-        px-3 py-2.5
+        flex items-center gap-3 rounded-lg text-sm font-semibold transition-colors duration-200 group overflow-hidden whitespace-nowrap py-2.5
+        ${collapsed ? "justify-center px-0" : "px-3"}
         ${isActive
-          ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-inner"
-          : "text-amber-200/70 hover:bg-amber-500/10 hover:text-amber-400"}
+          ? "bg-[var(--page-primary)]/20 text-[var(--page-primary-80)] border border-[var(--page-primary)]/30 shadow-inner"
+          : "text-white hover:bg-[var(--page-primary)]/10 hover:text-[var(--page-primary-80)]"}
       `}
     >
       <Icon
         className={`h-5 w-5 shrink-0 transition-colors ${
           isActive
-            ? "text-amber-400"
-            : "text-amber-200/70 group-hover:text-amber-400"
+            ? "text-[var(--page-primary-80)]"
+            : "text-white group-hover:text-[var(--page-primary-80)]"
         }`}
       />
       <span
         className={`transition-opacity duration-300 ${
-          collapsed ? "opacity-0" : "opacity-100"
+          collapsed ? "hidden" : "opacity-100"
         }`}
       >
         {item.title}
@@ -89,7 +89,7 @@ export default function AdminSidebar({
     <>
       {/* Botón flotante para móvil */}
       <button
-        className="lg:hidden fixed bottom-6 right-6 z-50 bg-amber-500 text-black p-3 rounded-full shadow-lg shadow-amber-500/20"
+        className="lg:hidden fixed bottom-6 right-6 z-50 bg-[var(--page-primary)] text-black p-3 rounded-full shadow-lg shadow-[var(--page-primary)]/20"
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -118,7 +118,7 @@ export default function AdminSidebar({
           onClick={onToggle}
           aria-label={collapsed ? "Expandir panel" : "Colapsar panel"}
           title={collapsed ? "Expandir panel" : "Colapsar panel"}
-          className="hidden lg:flex absolute -right-3 top-4 z-10 h-6 w-6 items-center justify-center rounded-full border border-amber-900/40 bg-black/80 text-amber-200/80 shadow-lg shadow-black/40 backdrop-blur transition-colors duration-200 hover:border-amber-500/60 hover:text-amber-400"
+          className="hidden lg:flex absolute -right-3 top-4 z-10 h-6 w-6 items-center justify-center rounded-full border border-amber-900/40 bg-black/80 text-white shadow-lg shadow-black/40 backdrop-blur transition-colors duration-200 hover:border-[var(--page-primary)]/60 hover:text-[var(--page-primary-80)]"
         >
           {collapsed ? (
             <ChevronsRight className="h-4 w-4" />
@@ -129,7 +129,7 @@ export default function AdminSidebar({
         {/* Header */}
         <div className="relative p-4 overflow-hidden">
           <Scissors
-            className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-amber-500 transition-opacity duration-300 ${
+            className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-[var(--page-primary)] transition-opacity duration-300 ${
               collapsed ? "opacity-100" : "opacity-0"
             }`}
           />
@@ -141,7 +141,7 @@ export default function AdminSidebar({
             <h1 className="text-xl font-bold text-white whitespace-nowrap">
               Admin Panel
             </h1>
-            <p className="text-xs text-amber-200/60 mt-1 whitespace-nowrap">
+            <p className="text-xs text-white mt-1 whitespace-nowrap">
               Gestión de barbería
             </p>
           </div>

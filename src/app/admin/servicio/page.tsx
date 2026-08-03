@@ -1,13 +1,11 @@
 import { getServicios } from "@/actions/servicio-actions";
 import { getBarberos } from "@/actions/barbero.actions";
-import { getPageConfig } from "@/actions/configPage";
 import ServicioList from "@/components/servicio/ServicioList";
 
 export default async function ServiciosPage() {
-  const [resultServicios, resultBarberos, config] = await Promise.all([
+  const [resultServicios, resultBarberos] = await Promise.all([
     getServicios(),
     getBarberos(),
-    getPageConfig(), // Obtenemos la configuración de la BD como veníamos haciendo
   ]);
 
   const servicios = resultServicios.success
@@ -16,8 +14,6 @@ export default async function ServiciosPage() {
   const barberos = resultBarberos.success
     ? JSON.parse(JSON.stringify(resultBarberos.data))
     : [];
-
-  const primaryColor = config?.primaryColor || "#d97706";
 
   return (
     <div className="min-h-screen p-6">
@@ -41,7 +37,6 @@ export default async function ServiciosPage() {
           <ServicioList
             servicios={servicios}
             barberos={barberos}
-            config={{ primaryColor }}
           />
         </div>
       </div>

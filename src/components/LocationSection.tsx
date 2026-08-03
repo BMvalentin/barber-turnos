@@ -4,17 +4,9 @@ import { MapPin, Phone, Clock, Scissors } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getHorariosCompactos } from "@/actions/margenesHorario.actions";
 
-interface LocationSectionProps {
-  config?: {
-    primaryColor?: string | null;
-  } | null;
-}
-
-export function LocationSection({ config }: LocationSectionProps) {
+export function LocationSection() {
   const [cargando, setCargando] = useState(true);
   const [horarios, setHorarios] = useState(["Cargando..."]);
-
-  const primaryColor = config?.primaryColor || "#d97706"; // Amber por defecto
 
   useEffect(() => {
     try {
@@ -47,14 +39,14 @@ export function LocationSection({ config }: LocationSectionProps) {
           <div 
             className="inline-flex items-center justify-center p-2 mb-4 rounded-full border"
             style={{ 
-              backgroundColor: `${primaryColor}15`, 
-              borderColor: `${primaryColor}30` 
+              backgroundColor: "var(--page-primary-15)", 
+              borderColor: "var(--page-primary-30)" 
             }}
           >
-            <Scissors className="w-5 h-5" style={{ color: primaryColor }} />
+            <Scissors className="w-5 h-5" style={{ color: "var(--page-primary)" }} />
           </div>
           <h2 className="font-display text-3xl md:text-5xl font-bold mb-4 text-white">
-            Nuestra <span className="italic" style={{ color: primaryColor }}>Ubicación</span>
+            Nuestra <span className="italic" style={{ color: "var(--page-primary)" }}>Ubicación</span>
           </h2>
         </motion.div>
 
@@ -69,43 +61,43 @@ export function LocationSection({ config }: LocationSectionProps) {
             className="space-y-6 items-center justify-center w-full md:max-w-[35vw] mx-auto"
           >
             {/* DIRECCIÓN */}
-            <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-amber-500/50 transition-colors group">
+            <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-[var(--page-primary)]/50 transition-colors group">
               <div 
                 className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
-                style={{ backgroundColor: `${primaryColor}15` }}
+                style={{ backgroundColor: "var(--page-primary-15)" }}
               >
-                <MapPin className="w-6 h-6" style={{ color: primaryColor }} />
+                <MapPin className="w-6 h-6" style={{ color: "var(--page-primary)" }} />
               </div>
               <div>
-                <h3 className="font-semibold mb-1" style={{ color: primaryColor }}>Dirección</h3>
+                <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary)" }}>Dirección</h3>
                 <p className="text-amber-100/80">Av. Montreal 695, Santa Clara del Mar</p>
               </div>
             </div>
 
             {/* TELÉFONO */}
-            <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-amber-500/50 transition-colors group">
+            <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-[var(--page-primary)]/50 transition-colors group">
               <div 
                 className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
-                style={{ backgroundColor: `${primaryColor}15` }}
+                style={{ backgroundColor: "var(--page-primary-15)" }}
               >
-                <Phone className="w-6 h-6" style={{ color: primaryColor }} />
+                <Phone className="w-6 h-6" style={{ color: "var(--page-primary)" }} />
               </div>
               <div>
-                <h3 className="font-semibold mb-1" style={{ color: primaryColor }}>Turnos y Consultas</h3>
+                <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary)" }}>Turnos y Consultas</h3>
                 <p className="text-amber-100/80">+54 9 2233 42-7022</p>
               </div>
             </div>
 
             {/* HORARIOS */}
-            <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-amber-500/50 transition-colors group">
+            <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-[var(--page-primary)]/50 transition-colors group">
               <div 
                 className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
-                style={{ backgroundColor: `${primaryColor}15` }}
+                style={{ backgroundColor: "var(--page-primary-15)" }}
               >
-                <Clock className="w-6 h-6" style={{ color: primaryColor }} />
+                <Clock className="w-6 h-6" style={{ color: "var(--page-primary)" }} />
               </div>
               <div>
-                <h3 className="font-semibold mb-1" style={{ color: primaryColor }}>Horarios</h3>
+                <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary)" }}>Horarios</h3>
                 {cargando ? (
                   <p className="text-amber-100/80">Cargando horarios...</p>
                 ) : (

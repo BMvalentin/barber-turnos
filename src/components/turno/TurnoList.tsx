@@ -37,13 +37,11 @@ interface Props {
   session: any;
   totalPages: number;
   currentPage: number;
-  primaryColor?: string;
-  secondaryColor?: string;
 }
 
 type AccionConfirmacion = "cancelar" | "completar" | "confirmar";
 
-export default function TurnoList({ turnos, session, primaryColor = "#3b82f6", secondaryColor = "#1e3a8a" }: Props) {
+export default function TurnoList({ turnos, session }: Props) {
   const turnosActivos = turnos.filter(
     (t) => t.estado === "PENDIENTE" || t.estado === "CONFIRMADO"
   );
@@ -146,9 +144,9 @@ export default function TurnoList({ turnos, session, primaryColor = "#3b82f6", s
     return (
       <div 
         className="bg-black/40 backdrop-blur-lg border rounded-lg p-8 text-center"
-        style={{ borderColor: `${primaryColor}4D` }}
+        style={{ borderColor: "var(--page-primary-30)" }}
       >
-        <p style={{ color: `${primaryColor}B3` }}>No hay turnos activos (pendientes o confirmados)</p>
+        <p style={{ color: "var(--page-primary-70)" }}>No hay turnos activos (pendientes o confirmados)</p>
       </div>
     );
   }
@@ -158,9 +156,9 @@ export default function TurnoList({ turnos, session, primaryColor = "#3b82f6", s
     <div 
       className="space-y-6 w-full max-w-full overflow-hidden"
       style={{
-        ["--primary" as any]: primaryColor,
-        ["--secondary" as any]: secondaryColor,
-      }}
+        "--primary": "var(--page-primary)",
+        "--secondary": "var(--page-secondary)",
+      } as React.CSSProperties}
     >
       {/* Grid de Turnos */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -213,7 +211,7 @@ function TurnoCard({
   const [isConfirming] = useState(false);
 
   const estadoColors = {
-    PENDIENTE: "bg-amber-500/20 text-amber-500 border-amber-500/50",
+    PENDIENTE: "bg-[var(--page-primary)]/20 text-[var(--page-primary)] border-[var(--page-primary)]/50",
     CONFIRMADO: "bg-green-500/20 text-green-500 border-green-500/50",
     COMPLETADO: "bg-blue-500/20 text-blue-500 border-blue-500/50",
     CANCELADO: "bg-red-500/20 text-red-500 border-red-500/50",

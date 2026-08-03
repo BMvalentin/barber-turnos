@@ -17,8 +17,8 @@ export default async function PaginaConfiguracionMercadoPago() {
       <div className="container mx-auto max-w-3xl">
         <div className="mb-8 flex items-center gap-4">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-amber-500/20 rounded-xl border-2 border-amber-500/30">
-              <CreditCard className="h-8 w-8 text-amber-500" />
+            <div className="p-3 bg-[var(--page-primary)]/20 rounded-xl border-2 border-[var(--page-primary)]/30">
+              <CreditCard className="h-8 w-8 text-[var(--page-primary)]" />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-white">Mercado Pago</h1>

@@ -4,7 +4,7 @@ import BarberoList from "@/components/barbero/BarberoList";
 import CreateBarberoModal from "@/components/barbero/CreateBarberoModal";
 
 async function getData() {
-  const [servicios, diasLaborales, barberos, config] = await Promise.all([
+  const [servicios, diasLaborales, barberos] = await Promise.all([
     prisma.servicio.findMany({
       where: { estado: true },
       select: { id: true, nombre: true },
@@ -33,11 +33,7 @@ async function getData() {
       },
       orderBy: { nombre: "asc" },
     }),
-    // Ojo: Si tu tabla pageConfig usa otro identificador, cámbialo acá (ej: findFirst())
-    prisma.pageConfig.findFirst(), 
   ]);
-
-  console.log("CONFIG OBTENIDA DE DB:", config); // <-- Mírame en la terminal del servidor
 
   const serializedBarberos = barberos.map(barbero => ({
     ...barbero,
@@ -52,13 +48,11 @@ async function getData() {
     }))
   }));
 
-  return { servicios, diasLaborales, barberos: serializedBarberos, config };
+  return { servicios, diasLaborales, barberos: serializedBarberos };
 }
 
 export default async function BarberosPage() {
-  const { servicios, diasLaborales, barberos, config } = await getData();
-
-  const primaryColor = config?.primaryColor || "#d97706";
+  const { servicios, diasLaborales, barberos } = await getData();
 
   return (
     <div className="min-h-screen p-6">
@@ -73,7 +67,7 @@ export default async function BarberosPage() {
               <h1 className="text-3xl font-bold text-white">
                 Gestión de Barberos
               </h1>
-              <p style={{ color: `${primaryColor}CC` }}>
+              <p style={{ color: "var(--page-primary-80)" }}>
                 Administra los barberos y sus horarios
               </p>
             </div>
@@ -83,7 +77,6 @@ export default async function BarberosPage() {
           <CreateBarberoModal
             servicios={servicios}
             diasLaborales={diasLaborales}
-            config={config}
           />
         </div>
 
@@ -92,7 +85,6 @@ export default async function BarberosPage() {
           barberos={barberos} 
           servicios={servicios} 
           diasLaborales={diasLaborales} 
-          config={config}
         />
 
       </div>
