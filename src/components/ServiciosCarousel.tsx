@@ -1,10 +1,14 @@
 import { getServiciosCarrusel } from "@/actions/servicio-actions";
 import { ImageCarousel } from "./ImageCarousel";
+import { prisma } from "@/lib/prisma";
 
 export async function ServiciosCarousel() {
-  const res = await getServiciosCarrusel(); // ✅ Aquí SÍ puedes usar await
+  const config = await prisma.pageConfig.findUnique({
+    where: { id: 1 },
+  });
+
+  const res = await getServiciosCarrusel();
   const servicios = res.success ? res.data : [];
 
-  // Pasamos los datos al componente de cliente
-  return <ImageCarousel servicios={servicios} />;
+  return <ImageCarousel servicios={servicios} config={config} />;
 }
