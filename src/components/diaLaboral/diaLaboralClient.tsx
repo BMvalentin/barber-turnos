@@ -27,6 +27,9 @@ export type DiaLaboral = {
 
 type DiaLaboralClientProps = {
   initialData: DiaLaboral[];
+  isLoading?: boolean;
+  primaryColor?: string;
+  secondaryColor?: string;
 };
 
 const DIAS_SEMANA = [
@@ -39,7 +42,12 @@ const DIAS_SEMANA = [
   "Sábado",
 ];
 
-export function DiaLaboralClient({ initialData }: DiaLaboralClientProps) {
+export function DiaLaboralClient({
+  initialData: diasLaborales,
+  isLoading = false,
+  primaryColor = "#3b82f6",
+  secondaryColor = "#1e3a8a",
+}: DiaLaboralClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isHorariosDialogOpen, setIsHorariosDialogOpen] = useState(false);
@@ -126,9 +134,11 @@ export function DiaLaboralClient({ initialData }: DiaLaboralClientProps) {
   return (
     <>
       <DiaLaboralList
-        diasLaborales={initialData}
-        isLoading={isPending}
+        diasLaborales={diasLaborales}
+        isLoading={isLoading}
         onAsignarHorarios={handleAsignarHorarios}
+        primaryColor={primaryColor}
+        secondaryColor={secondaryColor}
       />
 
       {/* Diálogo para asignar horarios */}
@@ -137,7 +147,8 @@ export function DiaLaboralClient({ initialData }: DiaLaboralClientProps) {
         onOpenChange={setIsHorariosDialogOpen}
       >
         <DialogContent
-          className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto bg-black/95 backdrop-blur-xl border border-amber-900/30"
+          className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto bg-black/95 backdrop-blur-xl"
+          style={{ border: `1px solid ${secondaryColor}50` }}
           onInteractOutside={(evento) => {
             // Evita que Radix cierre este diálogo cuando la interacción
             // viene del modal de confirmación (montado vía portal en body)
@@ -156,14 +167,15 @@ export function DiaLaboralClient({ initialData }: DiaLaboralClientProps) {
                 margenes={margenes}
                 onSuccess={handleHorariosSuccess}
                 onDelete={handleDeleteMargen}
+                primaryColor={primaryColor}   
+                secondaryColor={secondaryColor} 
               />
             )}
           </div>
-
         </DialogContent>
       </Dialog>
-      {/* Modal de confirmación, renderizado dentro del Dialog de Radix
-              para que quede dentro de su zona interactiva y no bloquee los clicks */}
+
+      {/* Modal de confirmación, renderizado dentro del Dialog de Radix */}
       {mostrarConfirmacion && (
         <ConfirmDialog
           title="Eliminar horario"

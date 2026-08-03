@@ -7,13 +7,10 @@ import BarberoList from "@/components/barbero/BarberoList";
 import CreateBarberoModal from "@/components/barbero/CreateBarberoModal";
 
 async function getData() {
-  const [servicios, diasLaborales, barberos] = await Promise.all([
+  const [servicios, diasLaborales, barberos, config] = await Promise.all([
     prisma.servicio.findMany({
       where: { estado: true },
-      select: {
-        id: true,
-        nombre: true,
-      },
+      select: { id: true, nombre: true },
       orderBy: { nombre: "asc" },
     }),
     prisma.dia_laboral.findMany({
@@ -29,26 +26,21 @@ async function getData() {
     prisma.barbero.findMany({
       where: { estado: true }, 
       include: {
-        servicios: {
-          include: {
-            servicio: true,
-          },
-        },
+        servicios: { include: { servicio: true } },
         horarios: {
           include: {
             margenLaboral: true,
-            dia: {
-              select: {
-                id: true,
-                dia: true,
-              },
-            },
+            dia: { select: { id: true, dia: true } },
           },
         },
       },
       orderBy: { nombre: "asc" },
     }),
+    // Ojo: Si tu tabla pageConfig usa otro identificador, cámbialo acá (ej: findFirst())
+    prisma.pageConfig.findFirst(), 
   ]);
+
+  console.log("CONFIG OBTENIDA DE DB:", config); // <-- Mírame en la terminal del servidor
 
   const serializedBarberos = barberos.map(barbero => ({
     ...barbero,
@@ -63,12 +55,14 @@ async function getData() {
     }))
   }));
 
-  return { servicios, diasLaborales, barberos: serializedBarberos };
+  return { servicios, diasLaborales, barberos: serializedBarberos, config };
 }
 
 export default async function BarberosPage() {
   const session = await auth();
-  const { servicios, diasLaborales, barberos } = await getData();
+  const { servicios, diasLaborales, barberos, config } = await getData();
+
+  const primaryColor = config?.primaryColor || "#d97706";
 
   return (
     <div className="min-h-screen p-6">
@@ -82,10 +76,13 @@ export default async function BarberosPage() {
             {session?.user?.role === "ADMIN" && (
               <Link
                 href="/admin"
-                className="p-2 hover:bg-amber-600/20 rounded-lg transition-all group"
+                className="p-2 rounded-lg transition-all group hover:bg-white/5"
                 title="Volver al Dashboard"
               >
-                <ArrowLeft className="h-6 w-6 text-amber-500 group-hover:text-amber-400 group-hover:-translate-x-1 transition-all" />
+                <ArrowLeft 
+                  className="h-6 w-6 transition-all group-hover:-translate-x-1" 
+                  style={{ color: primaryColor }} 
+                />
               </Link>
             )}
 
@@ -93,16 +90,17 @@ export default async function BarberosPage() {
               <h1 className="text-3xl font-bold text-white">
                 Gestión de Barberos
               </h1>
-              <p className="text-amber-200/70">
+              <p style={{ color: `${primaryColor}CC` }}>
                 Administra los barberos y sus horarios
               </p>
             </div>
           </div>
 
-          {/* DERECHA → BOTÓN MODAL */}
+          {/* DERECHA → BOTÓN MODAL (PASANDO CONFIG) */}
           <CreateBarberoModal
             servicios={servicios}
             diasLaborales={diasLaborales}
+            config={config}
           />
         </div>
 
@@ -111,6 +109,7 @@ export default async function BarberosPage() {
           barberos={barberos} 
           servicios={servicios} 
           diasLaborales={diasLaborales} 
+          config={config}
         />
 
       </div>

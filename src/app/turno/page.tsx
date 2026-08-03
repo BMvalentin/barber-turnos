@@ -1,3 +1,4 @@
+// app/admin/turnos/page.tsx
 import { getTurnos } from "@/actions/turno.actions";
 import TurnoList from "@/components/turno/TurnoList";
 import CreateTurnoModal from "@/components/turno/CreateTurnoModal";
@@ -8,7 +9,6 @@ import { ArrowLeft } from "lucide-react";
 import TurnoManager from "@/components/turno/TurnoManager";
 
 async function getTurnoData() {
-  // Corregido: la desestructuración ahora captura el objeto config correctamente
   const [servicios, barberos, usuarios, relaciones, config] = await Promise.all([
     prisma.servicio.findMany({ where: { estado: true }, orderBy: { nombre: "asc" } }),
     prisma.barbero.findMany({ where: { estado: true }, orderBy: { nombre: "asc" } }),
@@ -34,42 +34,63 @@ export default async function TurnoPage() {
 
   const turnosData = (result.success && result.data) ? result.data : [];
 
+  const primaryColor = config?.primaryColor ?? "#3b82f6";
+  const secondaryColor = config?.secondaryColor ?? "#1e3a8a";
+
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-black to-amber-950/30 p-2 sm:p-6 pt-24 md:pt-24 overflow-x-hidden">
+    <div
+      className="min-h-screen w-full p-2 sm:p-6 pt-24 md:pt-24 overflow-x-hidden"
+      style={{
+        background: `linear-gradient(to bottom right, #000000, ${secondaryColor}30)`,
+      }}
+    >
       <div className="container mx-auto max-w-7xl">
         <div className="mb-8 flex flex-col gap-6">
-          
+
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               {session?.user?.role === "ADMIN" && (
-                <Link href="/admin" className="p-2 hover:bg-amber-600/20 rounded-lg transition-all">
-                  <ArrowLeft className="h-6 w-6 text-amber-500" />
+                <Link
+                  href="/admin"
+                  className="p-2 rounded-lg transition-all hover:bg-opacity-20"
+                  style={{ backgroundColor: `${primaryColor}15` }}
+                >
+                  <ArrowLeft className="h-6 w-6" style={{ color: primaryColor }} />
                 </Link>
               )}
-              <h1 className="text-3xl font-bold text-white">Gestión de Turnos</h1>
+              <h1
+                className="text-3xl font-bold"
+                style={{ color: primaryColor }}
+              >
+                Gestión de Turnos
+              </h1>
             </div>
-            
-            <CreateTurnoModal 
-              session={session} 
-              initialServicios={servicios} 
-              initialBarberos={barberos} 
-              initialUsuarios={usuarios} 
-              initialRelaciones={relaciones} 
-              whatsappPhone={config?.whatsapp || ""} 
+
+            <CreateTurnoModal
+              session={session}
+              initialServicios={servicios}
+              initialBarberos={barberos}
+              initialUsuarios={usuarios}
+              initialRelaciones={relaciones}
+              whatsappPhone={config?.whatsapp || ""}
+              primaryColor={primaryColor}
+              secondaryColor={secondaryColor}
             />
           </div>
 
           {session?.user?.role === "ADMIN" ? (
-            <TurnoManager 
-              initialTurnos={turnosData} 
-              session={session} 
+            <TurnoManager
+              initialTurnos={turnosData}
+              session={session}
             />
           ) : (
-            <TurnoList 
-              session={session} 
-              turnos={turnosData} 
-              totalPages={1} 
-              currentPage={1} 
+            <TurnoList
+              session={session}
+              turnos={turnosData}
+              totalPages={1}
+              currentPage={1}
+              primaryColor={primaryColor}
+              secondaryColor={secondaryColor}
             />
           )}
         </div>
