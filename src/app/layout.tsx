@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import LayoutComponent from "@/components/LayoutComponent";
 import { auth } from "@/auth";
 import AppGate from "@/components/AppGate";
 import { Toaster } from "@/components/ui/toaster";
-import { prisma } from "@/lib/prisma";
+import { getPageConfig } from "@/actions/configPage";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,15 +18,43 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Mayoraz - Turnos Barberia",
-  description: "Mayoraz - Reserva tu turno en línea de manera fácil y rápida. Santa clara, Buenos Aires.",
-  icons: {
-    icon: "/images/logopng.png",
-    shortcut: "/images/logopng.png",
-    apple: "/images/logopng.png",
-  },
-};
+const DEFAULT_TITLE = "Mayoraz - Turnos Barberia";
+const DEFAULT_DESCRIPTION =
+  "Mayoraz - Reserva tu turno en línea de manera fácil y rápida. Santa clara, Buenos Aires.";
+const DEFAULT_ICON = "/images/logopng.png";
+
+// cache() evita repetir la query: generateMetadata y RootLayout la comparten
+const getCachedPageConfig = cache(async () => await getPageConfig());
+
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await getCachedPageConfig();
+
+  const title = config?.metaTitle || config?.name || DEFAULT_TITLE;
+  const description =
+    config?.metaDescription || config?.description || DEFAULT_DESCRIPTION;
+  const icon = config?.favicon || DEFAULT_ICON;
+
+  return {
+    title,
+    description,
+    icons: {
+      icon,
+      shortcut: icon,
+      apple: icon,
+    },
+    openGraph: {
+      title,
+      description,
+      images: config?.logo ? [{ url: config.logo }] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: config?.logo ? [config.logo] : [],
+    },
+  };
+}
 
 export default async function RootLayout({
   children,
@@ -33,9 +62,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
-  const config = await prisma.pageConfig.findUnique({
-    where: { id: 1 },
-  });
+  const config = await getCachedPageConfig();
 
   return (
     <html lang="es">

@@ -4,10 +4,14 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Calendar, MapPin, Scissors, ChevronRight } from "lucide-react";
 
+const DEFAULT_BACKGROUND =
+  "https://images.unsplash.com/photo-1593702275687-f8b402bf1fb5?q=80&w=2070&auto=format&fit=crop";
+
 interface HeroProps {
   config?: {
     slogan?: string | null;
     description?: string | null;
+    backgroundImage?: string | null;
     primaryColor?: string | null;
     secondaryColor?: string | null;
   } | null;
@@ -15,6 +19,7 @@ interface HeroProps {
 
 export function Hero({ config }: HeroProps) {
   const primaryColor = config?.primaryColor || "#d97706";
+  const backgroundImage = config?.backgroundImage || DEFAULT_BACKGROUND;
   
   // Usamos el slogan de la config, o un texto por defecto si está vacío
   const slogan = config?.slogan || "Corte Impecable - Actitud y Estilo";
@@ -30,7 +35,7 @@ export function Hero({ config }: HeroProps) {
       
       <div 
         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-40 mix-blend-luminosity"
-        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1593702275687-f8b402bf1fb5?q=80&w=2070&auto=format&fit=crop')" }}
+        style={{ backgroundImage: `url('${backgroundImage}')` }}
       />
       
       <div className="absolute inset-0 z-0 bg-gradient-to-b from-zinc-950/80 via-zinc-950/60 to-zinc-950" />

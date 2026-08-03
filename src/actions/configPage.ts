@@ -10,6 +10,7 @@ interface PageConfigData {
   slogan?: string;
   logo?: string;
   favicon?: string;
+  backgroundImage?: string;
   primaryColor?: string;
   secondaryColor?: string;
   whatsapp?: string;
@@ -28,7 +29,9 @@ export async function updateWhatsappConfig(whatsapp: string) {
   return { success: true };
 }
 
-export async function updatePageConfig(data: PageConfigData) {
+export async function updatePageConfig(
+  data: PageConfigData
+): Promise<{ success: boolean; error?: string }> {
   try {
     const cleanWhatsapp = data.whatsapp ? data.whatsapp.replace(/\D/g, "") : undefined;
 
@@ -40,6 +43,7 @@ export async function updatePageConfig(data: PageConfigData) {
         ...(data.slogan !== undefined && { slogan: data.slogan }),
         ...(data.logo !== undefined && { logo: data.logo }),
         ...(data.favicon !== undefined && { favicon: data.favicon }),
+        ...(data.backgroundImage !== undefined && { backgroundImage: data.backgroundImage }),
         ...(data.primaryColor !== undefined && { primaryColor: data.primaryColor }),
         ...(data.secondaryColor !== undefined && { secondaryColor: data.secondaryColor }),
         ...(cleanWhatsapp !== undefined && { whatsapp: cleanWhatsapp }),
@@ -51,6 +55,7 @@ export async function updatePageConfig(data: PageConfigData) {
         slogan: data.slogan || "",
         logo: data.logo || "",
         favicon: data.favicon || "",
+        backgroundImage: data.backgroundImage || "",
         primaryColor: data.primaryColor || "#000000",
         secondaryColor: data.secondaryColor || "#ffffff",
         whatsapp: cleanWhatsapp || "",
