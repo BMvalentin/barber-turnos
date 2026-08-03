@@ -1,5 +1,7 @@
 // app/pago/success/page.tsx
 import { confirmarPagoTurno } from "@/actions/mercadopago-actions";
+import RedireccionWhatsApp from "@/components/pago/RedireccionWhatsApp";
+import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { CheckCircle2, Calendar, ArrowRight } from "lucide-react";
 
@@ -18,18 +20,22 @@ export default async function PagoSuccessPage({
   const turnoId = searchParams.turnoId;
   const paymentId = searchParams.payment_id || searchParams.collection_id;
 
-  let turnoConfirmado = false;
+  // Confirmamos el turno desde la back_url (respaldo al webhook) y
+  // obtenemos el WhatsApp del negocio para redirigir al cliente
+  const [result, config] = await Promise.all([
+    turnoId
+      ? confirmarPagoTurno(turnoId, paymentId)
+      : Promise.resolve({ success: false, error: "Sin turno", data: undefined }),
+    prisma.pageConfig.findUnique({ where: { id: 1 } }),
+  ]);
 
-  if (turnoId) {
-    // Confirmamos el turno desde la back_url (respaldo al webhook)
-    const result = await confirmarPagoTurno(turnoId, paymentId);
-    turnoConfirmado = result.success;
-  }
+  const turnoConfirmado = result.success === true;
+  const datosTurno = result.success ? result.data : null;
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center space-y-6">
-        
+
         {/* Ícono de éxito */}
         <div className="flex justify-center">
           <div className="w-24 h-24 rounded-full bg-green-500/20 border-2 border-green-500/40 flex items-center justify-center">
@@ -67,22 +73,32 @@ export default async function PagoSuccessPage({
         )}
 
         {/* Acciones */}
-        <div className="flex flex-col gap-3">
-          <Link
-            href="/dashboard"
-            className="flex items-center justify-center gap-2 w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
-          >
-            <Calendar className="w-5 h-5" />
-            Ver mis turnos
-          </Link>
-          <Link
-            href="/"
-            className="flex items-center justify-center gap-2 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium py-3 rounded-2xl transition-all text-sm"
-          >
-            Volver al inicio
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
+        {turnoConfirmado && datosTurno && config?.whatsapp ? (
+          <RedireccionWhatsApp
+            numeroWhatsApp={config.whatsapp}
+            servicioNombre={datosTurno.servicio?.nombre}
+            barberoNombre={datosTurno.barbero?.nombre}
+            clienteNombre={datosTurno.user?.name}
+            horarioReservado={datosTurno.horarioReservado}
+          />
+        ) : (
+          <div className="flex flex-col gap-3">
+            <Link
+              href="/dashboard"
+              className="flex items-center justify-center gap-2 w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
+            >
+              <Calendar className="w-5 h-5" />
+              Ver mis turnos
+            </Link>
+            <Link
+              href="/"
+              className="flex items-center justify-center gap-2 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium py-3 rounded-2xl transition-all text-sm"
+            >
+              Volver al inicio
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
