@@ -51,21 +51,27 @@ function SidebarItem({
       onClick={onNavigate}
       title={collapsed ? item.title : undefined}
       className={`
-        flex items-center gap-3 rounded-lg text-sm font-semibold transition-all duration-200 group
-        ${collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2.5"}
+        flex items-center gap-3 rounded-lg text-sm font-semibold transition-colors duration-200 group overflow-hidden whitespace-nowrap
+        px-3 py-2.5
         ${isActive
           ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-inner"
           : "text-amber-200/70 hover:bg-amber-500/10 hover:text-amber-400"}
       `}
     >
       <Icon
-        className={`h-5 w-5 transition-colors ${
+        className={`h-5 w-5 shrink-0 transition-colors ${
           isActive
             ? "text-amber-400"
             : "text-amber-200/70 group-hover:text-amber-400"
         }`}
       />
-      {!collapsed && <span>{item.title}</span>}
+      <span
+        className={`transition-opacity duration-300 ${
+          collapsed ? "opacity-0" : "opacity-100"
+        }`}
+      >
+        {item.title}
+      </span>
     </Link>
   );
 }
@@ -121,17 +127,24 @@ export default function AdminSidebar({
           )}
         </button>
         {/* Header */}
-        <div className="p-4">
-          {collapsed ? (
-            <Scissors className="h-6 w-6 text-amber-500 mx-auto" />
-          ) : (
-            <>
-              <h1 className="text-xl font-bold text-white">Admin Panel</h1>
-              <p className="text-xs text-amber-200/60 mt-1">
-                Gestión de barbería
-              </p>
-            </>
-          )}
+        <div className="relative p-4 overflow-hidden">
+          <Scissors
+            className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-amber-500 transition-opacity duration-300 ${
+              collapsed ? "opacity-100" : "opacity-0"
+            }`}
+          />
+          <div
+            className={`transition-opacity duration-300 ${
+              collapsed ? "opacity-0" : "opacity-100"
+            }`}
+          >
+            <h1 className="text-xl font-bold text-white whitespace-nowrap">
+              Admin Panel
+            </h1>
+            <p className="text-xs text-amber-200/60 mt-1 whitespace-nowrap">
+              Gestión de barbería
+            </p>
+          </div>
         </div>
 
         {/* Menu */}
