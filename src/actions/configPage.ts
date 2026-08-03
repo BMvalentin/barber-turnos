@@ -14,6 +14,8 @@ interface PageConfigData {
   primaryColor?: string;
   secondaryColor?: string;
   whatsapp?: string;
+  mapsUrl?: string;
+  address?: string;
 }
 
 export async function updateWhatsappConfig(whatsapp: string) {
@@ -46,6 +48,8 @@ export async function updatePageConfig(
         ...(data.backgroundImage !== undefined && { backgroundImage: data.backgroundImage }),
         ...(data.primaryColor !== undefined && { primaryColor: data.primaryColor }),
         ...(data.secondaryColor !== undefined && { secondaryColor: data.secondaryColor }),
+        ...(data.mapsUrl !== undefined && { mapsUrl: data.mapsUrl }),
+        ...(data.address !== undefined && { address: data.address }),
         ...(cleanWhatsapp !== undefined && { whatsapp: cleanWhatsapp }),
       },
       create: {
@@ -59,6 +63,8 @@ export async function updatePageConfig(
         primaryColor: data.primaryColor || "#000000",
         secondaryColor: data.secondaryColor || "#ffffff",
         whatsapp: cleanWhatsapp || "",
+        mapsUrl: data.mapsUrl || "",
+        address: data.address || "",
       },
     });
 
@@ -74,7 +80,6 @@ export async function updatePageConfig(
 
 export async function getPageConfig() {
   try {
-    // Buscamos la configuración (asumiendo que usas un registro único o con ID 1)
     const config = await prisma.pageConfig.findFirst() || await prisma.pageConfig.findUnique({
       where: { id: 1 },
     });

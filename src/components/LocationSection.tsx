@@ -1,3 +1,4 @@
+// components/LocationSection.tsx
 "use client";
 import { motion } from "framer-motion";
 import { MapPin, Phone, Clock, Scissors } from "lucide-react";
@@ -7,6 +8,9 @@ import { getHorariosCompactos } from "@/actions/margenesHorario.actions";
 interface LocationSectionProps {
   config?: {
     primaryColor?: string | null;
+    mapsUrl?: string | null;
+    address?: string | null;
+    whatsapp?: string | null;
   } | null;
 }
 
@@ -14,7 +18,12 @@ export function LocationSection({ config }: LocationSectionProps) {
   const [cargando, setCargando] = useState(true);
   const [horarios, setHorarios] = useState(["Cargando..."]);
 
-  const primaryColor = config?.primaryColor || "#d97706"; // Amber por defecto
+  const primaryColor = config?.primaryColor || "#d97706";
+  const mapsUrl = config?.mapsUrl ||"";
+  const whatsappNumber = config?.whatsapp || "";
+  
+  // Dirección dinámica con fallback por defecto
+  const addressText = config?.address || "";
 
   useEffect(() => {
     try {
@@ -78,7 +87,7 @@ export function LocationSection({ config }: LocationSectionProps) {
               </div>
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: primaryColor }}>Dirección</h3>
-                <p className="text-amber-100/80">Av. Montreal 695, Santa Clara del Mar</p>
+                <p className="text-amber-100/80">{addressText}</p>
               </div>
             </div>
 
@@ -92,7 +101,7 @@ export function LocationSection({ config }: LocationSectionProps) {
               </div>
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: primaryColor }}>Turnos y Consultas</h3>
-                <p className="text-amber-100/80">+54 9 2233 42-7022</p>
+                <p className="text-amber-100/80">{whatsappNumber}</p>
               </div>
             </div>
 
@@ -131,7 +140,7 @@ export function LocationSection({ config }: LocationSectionProps) {
             <div className="absolute inset-0 bg-amber-950/5 pointer-events-none group-hover:bg-transparent transition-colors z-10" />
 
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1324.8929986865355!2d-57.511028187691245!3d-37.833506131747065!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9584d1ff53f35b6f%3A0x8e8b9a62a9991a2a!2z8J2RtPCdkoLwnZKa8J2SkPCdkpPwnZKC8J2Sm-KAmfCdkpQg8J2Sg_CdkoLwnZKT8J2Sg_CdkobwnZKT8J2SlPCdkonwnZKQ8J2SkQ!5e0!3m2!1ses-419!2sar!4v1783711718406!5m2!1ses-419!2sar"
+              src={mapsUrl}
               width="100%"
               height="100%"
               style={{ border: 0, filter: "grayscale(0.8) invert(0.9) contrast(1.2)" }}
