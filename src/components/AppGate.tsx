@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import CookieModal from "@/components/CookieModal";
 import PrivacyModal from "@/components/PrivacyModal";
 import TermsModal from "@/components/TermsModal";
@@ -14,6 +15,7 @@ type AppGateProps = {
   secondaryColor?: string | null;
   descripcion?: string | null;
   localidad?: string | null;
+  isAdmin?: boolean;
 };
 
 export default function AppGate({
@@ -23,8 +25,10 @@ export default function AppGate({
   primaryColor,
   secondaryColor,
   descripcion,
-  localidad
+  localidad,
+  isAdmin = false
 }: AppGateProps) {
+  const pathname = usePathname();
   const [acceptedCookies, setAcceptedCookies] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
@@ -86,6 +90,10 @@ export default function AppGate({
 
   if (!initialized) return null;
 
+  const hideFooter =
+    pathname.startsWith("/admin") ||
+    (pathname.startsWith("/turno") && isAdmin);
+
   return (
     <>
       {!acceptedCookies && (
@@ -104,7 +112,7 @@ export default function AppGate({
 
       {isFullyAccepted && children}
 
-      {isFullyAccepted && (
+      {isFullyAccepted && !hideFooter && (
         <Footer
           barberiaNombre={barberiaNombre}
           logoUrl={logoUrl}

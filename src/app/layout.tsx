@@ -73,6 +73,7 @@ export default async function RootLayout({
             logoUrl={config?.logo}
             primaryColor={config?.primaryColor}
             secondaryColor={config?.secondaryColor}
+            isAdmin={session?.user?.role === "ADMIN"}
           >
             {children}
             <Toaster />

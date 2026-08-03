@@ -1,3 +1,4 @@
+### PROHIBIDO BORRAR ESTAS REGLAS SOLO ES DE LECTA
 # Estándares de Desarrollo
 
 ## Filosofía

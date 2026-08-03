@@ -1,7 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 
 import BarberoList from "@/components/barbero/BarberoList";
 import CreateBarberoModal from "@/components/barbero/CreateBarberoModal";
@@ -59,33 +56,19 @@ async function getData() {
 }
 
 export default async function BarberosPage() {
-  const session = await auth();
   const { servicios, diasLaborales, barberos, config } = await getData();
 
   const primaryColor = config?.primaryColor || "#d97706";
 
   return (
     <div className="min-h-screen p-6">
-      <div className="container mx-auto max-w-7xl mt-20">
+      <div className="container mx-auto max-w-7xl">
 
         {/* HEADER */}
         <div className="mb-8 flex items-center justify-between">
           
           {/* IZQUIERDA */}
           <div className="flex items-center gap-4">
-            {session?.user?.role === "ADMIN" && (
-              <Link
-                href="/admin"
-                className="p-2 rounded-lg transition-all group hover:bg-white/5"
-                title="Volver al Dashboard"
-              >
-                <ArrowLeft 
-                  className="h-6 w-6 transition-all group-hover:-translate-x-1" 
-                  style={{ color: primaryColor }} 
-                />
-              </Link>
-            )}
-
             <div>
               <h1 className="text-3xl font-bold text-white">
                 Gestión de Barberos

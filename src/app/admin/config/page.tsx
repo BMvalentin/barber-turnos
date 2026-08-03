@@ -11,7 +11,7 @@ export default async function ConfigPage() {
   const secondaryColor = config?.secondaryColor ?? "#1e3a8a";
 
   return (
-    <div className="container mx-auto p-6 max-w-3xl mt-12 mb-12">
+    <div className="container mx-auto p-6 max-w-3xl">
       <h1 
         className="text-2xl font-bold mb-6"
         style={{ color: primaryColor }}

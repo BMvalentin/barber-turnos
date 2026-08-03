@@ -148,13 +148,13 @@ export default async function AdminDashboard() {
             title="Barberos"
             value={stats.totalBarberos}
             icon={Users}
-            href="/barbero"
+            href="/admin/barbero"
           />
           <StatCard
             title="Servicios"
             value={stats.totalServicios}
             icon={Scissors}
-            href="/servicio"
+            href="/admin/servicio"
           />
           <StatCard
             title="Total Turnos"

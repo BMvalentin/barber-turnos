@@ -4,8 +4,6 @@ import TurnoList from "@/components/turno/TurnoList";
 import CreateTurnoModal from "@/components/turno/CreateTurnoModal";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import TurnoManager from "@/components/turno/TurnoManager";
 
 async function getTurnoData() {
@@ -49,15 +47,6 @@ export default async function TurnoPage() {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {session?.user?.role === "ADMIN" && (
-                <Link
-                  href="/admin"
-                  className="p-2 rounded-lg transition-all hover:bg-opacity-20"
-                  style={{ backgroundColor: `${primaryColor}15` }}
-                >
-                  <ArrowLeft className="h-6 w-6" style={{ color: primaryColor }} />
-                </Link>
-              )}
               <h1
                 className="text-3xl font-bold"
                 style={{ color: primaryColor }}

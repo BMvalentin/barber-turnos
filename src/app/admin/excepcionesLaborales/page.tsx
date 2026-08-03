@@ -1,8 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import ExcepcionesClient from "@/components/excepcionesLaborales/ExcepcionesClient";
-import { Calendar, ArrowLeft } from "lucide-react";
-import Link from "next/link";
-import { auth } from "@/auth";
+import { Calendar } from "lucide-react";
 import { getBarberos } from "@/actions/barbero.actions";
 import { getPageConfig } from "@/actions/configPage";
 
@@ -26,8 +24,6 @@ async function getExcepciones() {
 }
 
 export default async function ExcepcionesLaboralesPage() {
-  const session = await auth();
-  
   // Obtenemos los colores configurados desde la base de datos
   const config = await getPageConfig();
   const primaryColor = config?.primaryColor || "#3b82f6";
@@ -39,24 +35,8 @@ export default async function ExcepcionesLaboralesPage() {
   return (
     <div className="min-h-screen p-6">
       <div className="container mx-auto max-w-7xl mt-20">
-        {/* Header con flecha de regreso */}
+        {/* Header */}
         <div className="mb-8 flex items-center gap-4">
-          {session?.user?.role === "ADMIN" && (
-            <Link
-              href="/admin"
-              className="p-2 rounded-lg transition-all group hover:opacity-80"
-              style={{
-                backgroundColor: "transparent",
-              }}
-              title="Volver al Dashboard"
-            >
-              <ArrowLeft 
-                className="h-6 w-6 group-hover:-translate-x-1 transition-all" 
-                style={{ color: primaryColor }} 
-              />
-            </Link>
-          )}
-
           <div className="flex items-center gap-4">
             <div 
               className="p-3 rounded-xl border-2"
