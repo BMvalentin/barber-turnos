@@ -28,8 +28,6 @@ type HorariosListProps = {
   margenes: MargenLaboral[];
   onSuccess: () => void;
   onDelete: (id: string) => void;
-  primaryColor: string;
-  secondaryColor: string;
 };
 
 export function HorariosList({
@@ -38,8 +36,6 @@ export function HorariosList({
   margenes,
   onSuccess,
   onDelete,
-  primaryColor,
-  secondaryColor,
 }: HorariosListProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMargen, setEditingMargen] = useState<MargenLaboral | null>(null);
@@ -65,15 +61,15 @@ export function HorariosList({
       {/* HEADER */}
       <div
         className="flex items-center justify-between pb-4 border-b"
-        style={{ borderColor: `${secondaryColor}40` }}
+        style={{ borderColor: `var(--page-secondary-40)` }}
       >
         <div className="flex items-center gap-3">
           <div
             className="p-2 rounded-xl"
             style={{
-              backgroundColor: `${primaryColor}20`,
-              color: primaryColor,
-              border: `1px solid ${primaryColor}40`
+              backgroundColor: `var(--page-primary-20)`,
+              color: "var(--page-primary)",
+              border: `1px solid var(--page-primary-40)`
             }}
           >
             <Clock className="h-5 w-5" />
@@ -86,9 +82,9 @@ export function HorariosList({
               <Badge
                 className="border text-xs px-2.5 py-0.5"
                 style={{
-                  backgroundColor: `${primaryColor}20`,
-                  color: primaryColor,
-                  borderColor: `${primaryColor}60`,
+                  backgroundColor: `var(--page-primary-20)`,
+                  color: "var(--page-primary)",
+                  borderColor: `var(--page-primary-60)`,
                 }}
               >
                 {margenes.length}
@@ -102,8 +98,8 @@ export function HorariosList({
           size="sm"
           className="text-white shadow-md hover:opacity-90 transition-all mr-6"
           style={{
-            backgroundColor: primaryColor,
-            border: `1px solid ${secondaryColor}`,
+            backgroundColor: "var(--page-primary)",
+            border: `1px solid var(--page-secondary)`,
           }}
         >
           <Plus className="h-4 w-4 mr-1.5" />
@@ -116,11 +112,11 @@ export function HorariosList({
         <div
           className="rounded-xl p-10 text-center backdrop-blur-lg shadow-xl"
           style={{
-            backgroundColor: `${secondaryColor}15`,
-            border: `1px solid ${secondaryColor}40`
+            backgroundColor: `var(--page-secondary-15)`,
+            border: `1px solid var(--page-secondary-40)`
           }}
         >
-          <Clock className="h-10 w-10 mx-auto mb-3 opacity-60" style={{ color: primaryColor }} />
+          <Clock className="h-10 w-10 mx-auto mb-3 opacity-60" style={{ color: "var(--page-primary)" }} />
           <p className="text-white font-medium">No hay horarios</p>
         </div>
       ) : (
@@ -133,16 +129,16 @@ export function HorariosList({
                   : "opacity-60"
                 }`}
               style={{
-                backgroundColor: margen.estado ? `${secondaryColor}18` : `${secondaryColor}08`,
-                borderColor: margen.estado ? `${secondaryColor}60` : `${secondaryColor}20`,
+                backgroundColor: margen.estado ? `var(--page-secondary-18)` : `var(--page-secondary-08)`,
+                borderColor: margen.estado ? `var(--page-secondary-60)` : `var(--page-secondary-20)`,
               }}
             >
               <div className="flex items-center gap-4">
                 <div
                   className="p-2 rounded-lg"
                   style={{
-                    backgroundColor: `${primaryColor}20`,
-                    color: primaryColor,
+                    backgroundColor: `var(--page-primary-20)`,
+                    color: "var(--page-primary)",
                   }}
                 >
                   <Clock className="h-5 w-5" />
@@ -153,7 +149,7 @@ export function HorariosList({
                     <span className="font-mono text-lg text-white">
                       {margen.desde}
                     </span>
-                    <span style={{ color: primaryColor }}>→</span>
+                    <span style={{ color: "var(--page-primary)" }}>→</span>
                     <span className="font-mono text-lg text-white">
                       {margen.hasta}
                     </span>
@@ -180,7 +176,7 @@ export function HorariosList({
                   size="sm"
                   className="text-white hover:opacity-95"
                   style={{
-                    backgroundColor: primaryColor,
+                    backgroundColor: "var(--page-primary)",
                   }}
                   onClick={() => handleEdit(margen)}
                 >
@@ -206,9 +202,9 @@ export function HorariosList({
           <div
             className="backdrop-blur-xl rounded-xl p-6 space-y-6 shadow-2xl"
             style={{
-              backgroundColor: `${secondaryColor}25`,
-              border: `1px solid ${secondaryColor}70`,
-              boxShadow: `0 25px 50px -12px ${secondaryColor}44`
+              backgroundColor: `var(--page-secondary-25)`,
+              border: `1px solid var(--page-secondary-70)`,
+              boxShadow: `0 25px 50px -12px var(--page-secondary-44)`
             }}
           >
             <DialogHeader>
@@ -222,8 +218,6 @@ export function HorariosList({
               initialData={editingMargen}
               onSuccess={handleSuccess}
               onCancel={() => setIsDialogOpen(false)}
-              primaryColor={primaryColor}
-              secondaryColor={secondaryColor}
             />
           </div>
         </DialogContent>

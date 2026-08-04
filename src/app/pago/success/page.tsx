@@ -61,7 +61,7 @@ export default async function PagoSuccessPage({
             </p>
             <p className="text-sm text-zinc-300">
               <span className="text-zinc-500">ID de pago:</span>{" "}
-              <span className="font-mono text-amber-400">{paymentId}</span>
+              <span className="font-mono text-[var(--page-primary-80)]">{paymentId}</span>
             </p>
             {turnoId && (
               <p className="text-sm text-zinc-300">
@@ -73,32 +73,22 @@ export default async function PagoSuccessPage({
         )}
 
         {/* Acciones */}
-        {turnoConfirmado && datosTurno && config?.whatsapp ? (
-          <RedireccionWhatsApp
-            numeroWhatsApp={config.whatsapp}
-            servicioNombre={datosTurno.servicio?.nombre}
-            barberoNombre={datosTurno.barbero?.nombre}
-            clienteNombre={datosTurno.user?.name}
-            horarioReservado={datosTurno.horarioReservado}
-          />
-        ) : (
-          <div className="flex flex-col gap-3">
-            <Link
-              href="/dashboard"
-              className="flex items-center justify-center gap-2 w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
-            >
-              <Calendar className="w-5 h-5" />
-              Ver mis turnos
-            </Link>
-            <Link
-              href="/"
-              className="flex items-center justify-center gap-2 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium py-3 rounded-2xl transition-all text-sm"
-            >
-              Volver al inicio
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        )}
+        <div className="flex flex-col gap-3">
+          <Link
+            href="/dashboard"
+            className="flex items-center justify-center gap-2 w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
+          >
+            <Calendar className="w-5 h-5" />
+            Ver mis turnos
+          </Link>
+          <Link
+            href="/"
+            className="flex items-center justify-center gap-2 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium py-3 rounded-2xl transition-all text-sm"
+          >
+            Volver al inicio
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
       </div>
     </div>
   );

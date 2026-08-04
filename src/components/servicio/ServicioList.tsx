@@ -67,11 +67,9 @@ const defaultFilters: FilterState = {
 export default function ServicioList({
   servicios,
   barberos,
-  config, // 👈 Añadido si recibes la configuración de colores global
 }: {
   servicios: Servicio[];
   barberos: Barbero[];
-  config?: { primaryColor?: string }; // Ajusta según tu tipo de config
 }) {
   const ITEMS_PER_PAGE = 8;
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -82,9 +80,6 @@ export default function ServicioList({
 
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [itemAEliminar, setItemAEliminar] = useState<string | null>(null);
-
-  // Color primario parametrizado (respeta el config o usa el ámbar por defecto)
-  const primaryColor = config?.primaryColor || "#d97706";
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -247,7 +242,7 @@ export default function ServicioList({
           </p>
           <p
             className="text-3xl font-semibold"
-            style={{ color: primaryColor }}
+            style={{ color: "var(--page-primary)" }}
           >
             {activeServicesCount}
           </p>
@@ -272,7 +267,7 @@ export default function ServicioList({
           <div>
             <p
               className="text-[10px] font-bold uppercase tracking-wider mb-1"
-              style={{ color: primaryColor }}
+              style={{ color: "var(--page-primary)" }}
             >
               Catálogo
             </p>
@@ -286,9 +281,9 @@ export default function ServicioList({
               <button
                 onClick={() => setShowFilterPanel((v) => !v)}
                 style={{
-                  borderColor: showFilterPanel || activeFilterCount > 0 ? primaryColor : "#2C261D",
-                  color: showFilterPanel || activeFilterCount > 0 ? primaryColor : "#E4E0D9",
-                  backgroundColor: showFilterPanel || activeFilterCount > 0 ? `${primaryColor}15` : "#1C1812"
+                  borderColor: showFilterPanel || activeFilterCount > 0 ? "var(--page-primary)" : "#2C261D",
+                  color: showFilterPanel || activeFilterCount > 0 ? "var(--page-primary)" : "#E4E0D9",
+                  backgroundColor: showFilterPanel || activeFilterCount > 0 ? "var(--page-primary-15)" : "#1C1812"
                 }}
                 className="flex items-center gap-2 px-4 py-2 border text-[10px] font-bold uppercase tracking-wider rounded transition-colors hover:bg-[#2C261D]"
               >
@@ -297,7 +292,7 @@ export default function ServicioList({
                 {activeFilterCount > 0 && (
                   <span
                     className="text-black text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none"
-                    style={{ backgroundColor: primaryColor }}
+                    style={{ backgroundColor: "var(--page-primary)" }}
                   >
                     {activeFilterCount}
                   </span>
@@ -314,7 +309,7 @@ export default function ServicioList({
                     <div className="shrink-0">
                       <div className="flex items-center justify-between px-5 py-4 border-b border-[#2C261D]">
                         <div className="flex items-center gap-2">
-                          <Filter className="w-4 h-4" style={{ color: primaryColor }} />
+                          <Filter className="w-4 h-4" style={{ color: "var(--page-primary)" }} />
                           <span className="text-xs font-bold text-[#E4E0D9] uppercase tracking-wider">
                             Filtros
                           </span>
@@ -324,7 +319,7 @@ export default function ServicioList({
                             <button
                               onClick={resetFilters}
                               className="text-[10px] font-bold text-[#8E8675] uppercase tracking-wider transition-colors"
-                              style={{ color: primaryColor }}
+                              style={{ color: "var(--page-primary)" }}
                             >
                               Limpiar
                             </button>
@@ -353,7 +348,7 @@ export default function ServicioList({
                             onChange={(e) => updateFilter("search", e.target.value)}
                             placeholder="Nombre o descripción..."
                             className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg pl-9 pr-4 py-2.5 text-[#E4E0D9] text-sm outline-none transition-colors placeholder:text-[#8E8675]/50"
-                            style={{ color: primaryColor }}
+                            style={{ color: "var(--page-primary)" }}
                           />
                         </div>
                       </div>
@@ -375,9 +370,9 @@ export default function ServicioList({
                                 key={opt.value || "todos"}
                                 onClick={() => updateFilter("estado", opt.value)}
                                 style={{
-                                  backgroundColor: isSelected ? primaryColor : "#1C1812",
+                                  backgroundColor: isSelected ? "var(--page-primary)" : "#1C1812",
                                   color: isSelected ? "#000" : "#8E8675",
-                                  borderColor: isSelected ? primaryColor : "#2C261D"
+                                  borderColor: isSelected ? "var(--page-primary)" : "#2C261D"
                                 }}
                                 className="flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider border transition-colors"
                               >
@@ -474,7 +469,7 @@ export default function ServicioList({
 
             <Button
               className="flex items-center gap-2 px-4 py-2 text-white hover:opacity-90"
-              style={{ backgroundColor: primaryColor }}
+              style={{ backgroundColor: "var(--page-primary)" }}
               onClick={() => setShowCreateModal(true)}
             >
               <Plus className="w-4 h-4" /> Nuevo Servicio
@@ -489,35 +484,30 @@ export default function ServicioList({
               <FilterTag
                 label={`"${filters.search}"`}
                 onRemove={() => updateFilter("search", "")}
-                primaryColor={primaryColor}
               />
             )}
             {filters.estado !== "" && (
               <FilterTag
                 label={filters.estado === "true" ? "Activos" : "Inactivos"}
                 onRemove={() => updateFilter("estado", "")}
-                primaryColor={primaryColor}
               />
             )}
             {filters.precioMin && (
               <FilterTag
                 label={`Precio ≥ $${filters.precioMin}`}
                 onRemove={() => updateFilter("precioMin", "")}
-                primaryColor={primaryColor}
               />
             )}
             {filters.precioMax && (
               <FilterTag
                 label={`Precio ≤ $${filters.precioMax}`}
                 onRemove={() => updateFilter("precioMax", "")}
-                primaryColor={primaryColor}
               />
             )}
             {filters.duracionMax && (
               <FilterTag
                 label={`≤ ${filters.duracionMax} min`}
                 onRemove={() => updateFilter("duracionMax", "")}
-                primaryColor={primaryColor}
               />
             )}
             <button
@@ -541,7 +531,7 @@ export default function ServicioList({
               <button
                 onClick={resetFilters}
                 className="mt-4 text-[10px] font-bold uppercase tracking-wider hover:underline"
-                style={{ color: primaryColor }}
+                style={{ color: "var(--page-primary)" }}
               >
                 Limpiar filtros
               </button>
@@ -563,7 +553,6 @@ export default function ServicioList({
                   servicio={servicio}
                   barberos={barberos}
                   onEliminar={handleEliminar}
-                  primaryColor={primaryColor}
                 />
               ))}
             </div>
@@ -583,7 +572,7 @@ export default function ServicioList({
                   &lt;
                 </button>
                 <div className="flex items-center gap-1">
-                  <span className="font-bold px-2" style={{ color: primaryColor }}>
+                  <span className="font-bold px-2" style={{ color: "var(--page-primary)" }}>
                     {currentPage}
                   </span>
                   <span className="text-[#8E8675]">/</span>
@@ -617,7 +606,6 @@ export default function ServicioList({
   <CreateServicioForm
     barberos={barberos}
     onClose={() => setShowCreateModal(false)}
-    config={config}
   />
 )}
     </div>
@@ -627,19 +615,17 @@ export default function ServicioList({
 function FilterTag({
   label,
   onRemove,
-  primaryColor,
 }: {
   label: string;
   onRemove: () => void;
-  primaryColor: string;
 }) {
   return (
     <span
       className="inline-flex items-center gap-1.5 px-2.5 py-1 border text-[10px] font-bold uppercase tracking-wider rounded"
       style={{
-        backgroundColor: `${primaryColor}15`,
-        borderColor: `${primaryColor}40`,
-        color: primaryColor,
+        backgroundColor: "var(--page-primary-15)",
+        borderColor: "var(--page-primary-40)",
+        color: "var(--page-primary)",
       }}
     >
       {label}
@@ -657,12 +643,10 @@ function ServicioRow({
   servicio,
   barberos,
   onEliminar,
-  primaryColor,
 }: {
   servicio: Servicio;
   barberos: Barbero[];
   onEliminar: (id: string) => void;
-  primaryColor: string;
 }) {
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -672,7 +656,7 @@ function ServicioRow({
         <div className="md:col-span-6 flex items-start md:items-center gap-4">
           <div
             className="w-10 h-10 rounded-lg bg-[#251f15] border border-[#2C261D] flex items-center justify-center flex-shrink-0"
-            style={{ color: primaryColor }}
+            style={{ color: "var(--page-primary)" }}
           >
             {servicio.srcImage ? (
               <img
@@ -706,7 +690,7 @@ function ServicioRow({
 
         <div
           className="hidden md:flex col-span-2 justify-center font-semibold text-sm"
-          style={{ color: primaryColor }}
+          style={{ color: "var(--page-primary)" }}
         >
           ${servicio.precio}
         </div>
@@ -716,7 +700,7 @@ function ServicioRow({
             onClick={() => setShowEditModal(true)}
             title="Editar servicio"
             className="text-[#8E8675] transition-colors p-1"
-            style={{ color: primaryColor }}
+            style={{ color: "var(--page-primary)" }}
           >
             <SquarePen className="w-5 h-5" />
           </button>
@@ -733,7 +717,7 @@ function ServicioRow({
           <div className="flex items-center gap-4">
             <span
               className="font-semibold text-sm"
-              style={{ color: primaryColor }}
+              style={{ color: "var(--page-primary)" }}
             >
               ${servicio.precio}
             </span>
