@@ -188,11 +188,9 @@ export default function CreateTurnoModal({
         setLoadingPago(false);
         return;
       }
-      
-      const servicio = servicios.find(s => s.id === selectedServicioId);
-      const barbero = barberos.find(b => b.id === selectedBarberoId);
 
-      enviarMensajeWhatsApp(turnoCreado, servicio?.nombre || "N/A", barbero?.nombre || "N/A", turnoCreado.horarioReservado || new Date(), "Pagado");
+      // El mensaje de WhatsApp al barbero se envía recién cuando el pago
+      // se confirma en el servidor (webhook/back_url), desde /pago/success
       window.location.href = result.data.checkoutUrl;
     } catch {
       setErrorPago("Error inesperado al iniciar el pago");

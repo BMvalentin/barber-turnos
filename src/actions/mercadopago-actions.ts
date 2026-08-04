@@ -144,17 +144,31 @@ export async function confirmarPagoTurno(
       return { success: false, error: "ID de turno inválido" };
     }
 
+    const incluirRelaciones = {
+      user: { select: { name: true } },
+      servicio: { select: { nombre: true } },
+      barbero: { select: { nombre: true } },
+    } as const;
+
     const turno = await prisma.turno.findUnique({
       where: { id: turnoId },
+      include: incluirRelaciones,
     });
 
     if (!turno) {
       return { success: false, error: "Turno no encontrado" };
     }
 
-    // Si ya está confirmado, no hacer nada
+    // Si ya está confirmado (por el webhook), no hacer nada
     if (turno.estado === "CONFIRMADO") {
-      return { success: true, data: turno };
+      return {
+        success: true,
+        data: {
+          ...turno,
+          precioCongelado: Number(turno.precioCongelado),
+          seniaCongelada: Number(turno.seniaCongelada),
+        },
+      };
     }
 
     // Actualizar turno
@@ -165,6 +179,7 @@ export async function confirmarPagoTurno(
         // mpPaymentId solo si el campo existe en el schema
         ...(paymentId ? { mpPaymentId: paymentId } as any : {}),
       },
+      include: incluirRelaciones,
     });
 
     revalidatePath("/dashboard");

@@ -1,5 +1,7 @@
 // app/pago/success/page.tsx
 import { confirmarPagoTurno } from "@/actions/mercadopago-actions";
+import RedireccionWhatsApp from "@/components/pago/RedireccionWhatsApp";
+import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { CheckCircle2, Calendar, ArrowRight } from "lucide-react";
 
@@ -18,18 +20,22 @@ export default async function PagoSuccessPage({
   const turnoId = searchParams.turnoId;
   const paymentId = searchParams.payment_id || searchParams.collection_id;
 
-  let turnoConfirmado = false;
+  // Confirmamos el turno desde la back_url (respaldo al webhook) y
+  // obtenemos el WhatsApp del negocio para redirigir al cliente
+  const [result, config] = await Promise.all([
+    turnoId
+      ? confirmarPagoTurno(turnoId, paymentId)
+      : Promise.resolve({ success: false, error: "Sin turno", data: undefined }),
+    prisma.pageConfig.findUnique({ where: { id: 1 } }),
+  ]);
 
-  if (turnoId) {
-    // Confirmamos el turno desde la back_url (respaldo al webhook)
-    const result = await confirmarPagoTurno(turnoId, paymentId);
-    turnoConfirmado = result.success;
-  }
+  const turnoConfirmado = result.success === true;
+  const datosTurno = result.success ? result.data : null;
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center space-y-6">
-        
+
         {/* Ícono de éxito */}
         <div className="flex justify-center">
           <div className="w-24 h-24 rounded-full bg-green-500/20 border-2 border-green-500/40 flex items-center justify-center">
