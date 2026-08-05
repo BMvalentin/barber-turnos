@@ -145,7 +145,7 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
             </p>
             <p className="text-sm text-zinc-300">
               <span className="text-zinc-500">ID de pago:</span>{" "}
-              <span className="font-mono text-amber-400">{paymentId}</span>
+              <span className="font-mono text-[var(--page-primary-80)]">{paymentId}</span>
             </p>
             <p className="text-sm text-zinc-300">
               <span className="text-zinc-500">Turno:</span>{" "}
@@ -172,7 +172,7 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
             <>
               <Link
                 href="/dashboard"
-                className="flex items-center justify-center gap-2 w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
+                className="flex items-center justify-center gap-2 w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
               >
                 <Calendar className="w-5 h-5" />
                 Ver mis turnos
@@ -190,7 +190,7 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
           {mostrarPendiente && (
             <Link
               href="/dashboard"
-              className="flex items-center justify-center gap-2 w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
+              className="flex items-center justify-center gap-2 w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
             >
               Ver mis turnos
               <ArrowRight className="w-5 h-5" />
@@ -201,7 +201,7 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
             <>
               <Link
                 href={`/turno?retry=${turnoId}`}
-                className="flex items-center justify-center gap-2 w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
+                className="flex items-center justify-center gap-2 w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
               >
                 <RefreshCw className="w-5 h-5" />
                 Intentar de nuevo

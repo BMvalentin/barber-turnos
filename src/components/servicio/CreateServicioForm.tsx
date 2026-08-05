@@ -20,23 +20,14 @@ type Barbero = {
   estado: boolean;
 };
 
-// Definimos el tipo de configuración que llega de la BD
-type PageConfig = {
-  primaryColor?: string | null;
-  secondaryColor?: string | null;
-  [key: string]: any;
-};
-
 type CreateServicioFormProps = {
   barberos: Barbero[];
   onClose: () => void;
-  config?: PageConfig | null; // <-- Añadimos config aquí
 };
 
 export default function CreateServicioForm({
   barberos,
   onClose,
-  config,
 }: CreateServicioFormProps) {
   const [isPending, setIsPending] = useState(false);
   const [state, setState] = useState<ActionState>(initialState);
@@ -46,10 +37,6 @@ export default function CreateServicioForm({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [srcImage, setSrcImage] = useState("");
   const [uploadError, setUploadError] = useState<string | null>(null);
-
-  // Definimos los colores basados en la base de datos o valores por defecto
-  const primaryColor = config?.primaryColor || "#d97706"; // Color por defecto (amber-600)
-  const secondaryColor = config?.secondaryColor || "#2C261D";
 
   useEffect(() => {
     if (state.success) {
@@ -105,12 +92,12 @@ export default function CreateServicioForm({
     <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto">
       <div 
         className="bg-black/60 border rounded-xl w-full max-w-4xl shadow-2xl relative flex flex-col max-h-[90vh]"
-        style={{ borderColor: secondaryColor }}
+        style={{ borderColor: "var(--page-secondary)" }}
       >
         {/* Header Modal */}
         <div 
           className="flex justify-between items-center gap-4 p-6 border-b"
-          style={{ borderColor: secondaryColor }}
+          style={{ borderColor: "var(--page-secondary)" }}
         >
           <div>
             <h2 className="text-xl font-bold text-[#E4E0D9]">Nuevo Servicio</h2>
@@ -123,7 +110,7 @@ export default function CreateServicioForm({
             <button
               onClick={onClose}
               className="rounded-sm ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none p-1 text-white hover:cursor-pointer"
-              style={{ backgroundColor: primaryColor }}
+              style={{ backgroundColor: "var(--page-primary)" }}
             >
               <X className="h-4 w-4" />
             </button>
@@ -154,12 +141,12 @@ export default function CreateServicioForm({
             {/* Información General */}
             <div 
               className="bg-black/70 border rounded-xl p-6"
-              style={{ borderColor: secondaryColor }}
+              style={{ borderColor: "var(--page-secondary)" }}
             >
               <div className="flex justify-between items-center mb-6">
                 <h3 
                   className="text-xs font-bold uppercase tracking-wider"
-                  style={{ color: primaryColor }}
+                  style={{ color: "var(--page-primary)" }}
                 >
                   Información General
                 </h3>
@@ -170,7 +157,7 @@ export default function CreateServicioForm({
                   <select
                     name="estado"
                     className="bg-black/70 border text-[#E4E0D9] text-xs rounded px-2 py-1 outline-none"
-                    style={{ borderColor: secondaryColor }}
+                    style={{ borderColor: "var(--page-secondary)" }}
                   >
                     <option value="true">Activo</option>
                     <option value="false">Inactivo</option>
@@ -184,8 +171,7 @@ export default function CreateServicioForm({
                   name="nombre"
                   placeholder="Ej: Corte Clásico"
                   errors={state.errors?.nombre}
-                  primaryColor={primaryColor}
-                  secondaryColor={secondaryColor}
+                  
                   required
                 />
 
@@ -196,7 +182,7 @@ export default function CreateServicioForm({
                     </label>
                     <span 
                       className={`text-[9px] font-bold uppercase`}
-                      style={{ color: descripcion.length > 450 ? primaryColor : '#8E8675' }}
+                      style={{ color: descripcion.length > 450 ? "var(--page-primary)" : '#8E8675' }}
                     >
                       {descripcion.length} / 500
                     </span>
@@ -208,7 +194,7 @@ export default function CreateServicioForm({
                     rows={3}
                     className={`w-full bg-black/70 border rounded-lg px-4 py-3 text-[#E4E0D9] outline-none transition-colors resize-none`}
                     style={{ 
-                      borderColor: state.errors?.descripcion ? '#ef4444' : secondaryColor,
+                      borderColor: state.errors?.descripcion ? '#ef4444' : "var(--page-secondary)",
                     }}
                     placeholder="Detalla qué incluye el servicio..."
                   />
@@ -228,7 +214,7 @@ export default function CreateServicioForm({
                         src={previewUrl || srcImage}
                         alt="Vista previa"
                         className="h-32 w-32 object-cover rounded-lg border"
-                        style={{ borderColor: secondaryColor }}
+                        style={{ borderColor: "var(--page-secondary)" }}
                       />
 
                       <button
@@ -244,15 +230,15 @@ export default function CreateServicioForm({
                       className={`relative flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg cursor-pointer transition ${
                         isPending ? "opacity-50 pointer-events-none" : ""
                       }`}
-                      style={{ borderColor: secondaryColor }}
+                      style={{ borderColor: "var(--page-secondary)" }}
                     >
                       {isPending ? (
-                        <span className="text-sm" style={{ color: primaryColor }}>
+                        <span className="text-sm" style={{ color: "var(--page-primary)" }}>
                           Subiendo...
                         </span>
                       ) : (
                         <>
-                          <Upload className="h-6 w-6" style={{ color: primaryColor }} />
+                          <Upload className="h-6 w-6" style={{ color: "var(--page-primary)" }} />
                           <span className="text-sm text-[#8E8675]">
                             Hacé clic para subir una imagen
                           </span>
@@ -281,11 +267,11 @@ export default function CreateServicioForm({
             {/* Detalles Técnicos & Precios */}
             <div 
               className="bg-black/70 border rounded-xl p-6"
-              style={{ borderColor: secondaryColor }}
+              style={{ borderColor: "var(--page-secondary)" }}
             >
               <h3 
                 className="text-xs font-bold uppercase tracking-wider mb-6"
-                style={{ color: primaryColor }}
+                style={{ color: "var(--page-primary)" }}
               >
                 Precio & Detalles
               </h3>
@@ -298,8 +284,7 @@ export default function CreateServicioForm({
                   defaultValue="30"
                   unit="MIN"
                   errors={state.errors?.duracion}
-                  primaryColor={primaryColor}
-                  secondaryColor={secondaryColor}
+                  
                   required
                 />
 
@@ -310,8 +295,7 @@ export default function CreateServicioForm({
                   step="0.01"
                   icon={DollarSign}
                   errors={state.errors?.precio}
-                  primaryColor={primaryColor}
-                  secondaryColor={secondaryColor}
+                  
                   required
                 />
 
@@ -322,8 +306,7 @@ export default function CreateServicioForm({
                   defaultValue="0"
                   unit="%"
                   errors={state.errors?.descuento}
-                  primaryColor={primaryColor}
-                  secondaryColor={secondaryColor}
+                  
                 />
 
                 <InputField
@@ -333,8 +316,7 @@ export default function CreateServicioForm({
                   defaultValue="0"
                   icon={DollarSign}
                   errors={state.errors?.senia}
-                  primaryColor={primaryColor}
-                  secondaryColor={secondaryColor}
+                  
                 />
               </div>
             </div>
@@ -347,7 +329,7 @@ export default function CreateServicioForm({
 
             <div 
               className="flex justify-end gap-4 pt-4 border-t"
-              style={{ borderColor: secondaryColor }}
+              style={{ borderColor: "var(--page-secondary)" }}
             >
               <button
                 type="button"
@@ -357,7 +339,7 @@ export default function CreateServicioForm({
               >
                 Cancelar
               </button>
-              <SubmitButton pending={isPending} primaryColor={primaryColor} />
+              <SubmitButton pending={isPending} />
             </div>
           </form>
         </div>
@@ -366,17 +348,11 @@ export default function CreateServicioForm({
   );
 }
 
-function SubmitButton({
-  pending,
-  primaryColor,
-}: {
-  pending: boolean;
-  primaryColor: string;
-}) {
+function SubmitButton({ pending }: { pending: boolean }) {
   return (
     <Button 
       className="font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 text-white"
-      style={{ backgroundColor: primaryColor }}
+      style={{ backgroundColor: "var(--page-primary)" }}
       type="submit"
       disabled={pending}
     >
@@ -390,8 +366,6 @@ interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   icon?: React.ElementType;
   errors?: string[];
   unit?: string;
-  primaryColor: string;
-  secondaryColor: string;
 }
 
 function InputField({
@@ -400,14 +374,12 @@ function InputField({
   unit,
   errors,
   required,
-  primaryColor,
-  secondaryColor,
   ...props
 }: InputFieldProps) {
   return (
     <div className="space-y-2">
       <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider">
-        {label} {required && <span style={{ color: primaryColor }}>*</span>}
+        {label} {required && <span style={{ color: "var(--page-primary)" }}>*</span>}
       </label>
       <div className="relative">
         {Icon && (
@@ -419,7 +391,7 @@ function InputField({
             unit ? "pr-14" : "pr-4"
           } py-3 text-[#E4E0D9] text-sm outline-none transition-colors`}
           style={{
-            borderColor: errors ? "#ef4444" : secondaryColor,
+            borderColor: errors ? "#ef4444" : "var(--page-secondary)",
           }}
         />
         {unit && (

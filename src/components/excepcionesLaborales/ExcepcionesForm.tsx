@@ -12,7 +12,7 @@ const initialState = {
   error: undefined,
 };
 
-function SubmitButton({ primaryColor, secondaryColor }: { primaryColor: string; secondaryColor: string }) {
+function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
@@ -21,8 +21,8 @@ function SubmitButton({ primaryColor, secondaryColor }: { primaryColor: string; 
       disabled={pending}
       className="w-full text-white shadow-md hover:opacity-95 transition-all"
       style={{
-        backgroundColor: primaryColor,
-        border: `1px solid ${secondaryColor}`,
+        backgroundColor: "var(--page-primary)",
+        border: "1px solid var(--page-secondary)",
       }}
     >
       {pending ? "Guardando..." : "Crear Excepción"}
@@ -37,11 +37,9 @@ type Barbero = {
 
 type ExcepcionFormProps = {
   barberos: Barbero[];
-  primaryColor: string;
-  secondaryColor: string;
 };
 
-export default function ExcepcionForm({ barberos, primaryColor, secondaryColor }: ExcepcionFormProps) {
+export default function ExcepcionForm({ barberos }: ExcepcionFormProps) {
   const router = useRouter();
   const [state, formAction] = useActionState(createExcepcion, initialState);
 
@@ -68,8 +66,8 @@ export default function ExcepcionForm({ barberos, primaryColor, secondaryColor }
     <form action={formAction} className="space-y-4">
       {/* Motivo */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold" style={{ color: `${primaryColor}cc` }}>
-          Motivo <span style={{ color: primaryColor }}>*</span>
+        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-80)" }}>
+          Motivo <span style={{ color: "var(--page-primary)" }}>*</span>
         </label>
         <input
           type="text"
@@ -78,21 +76,21 @@ export default function ExcepcionForm({ barberos, primaryColor, secondaryColor }
           placeholder="Ej: Feriado Nacional"
           className="w-full rounded-lg px-3 py-2 bg-black/60 text-white focus:outline-none transition-all placeholder:text-zinc-500"
           style={{
-            border: `1px solid ${secondaryColor}60`,
+            border: "1px solid var(--page-secondary-60)",
           }}
         />
       </div>
 
       {/* Adjudicar a Barbero */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold" style={{ color: `${primaryColor}cc` }}>
+        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-80)" }}>
           ¿A quién afecta?
         </label>
         <select
           name="barberoId"
           className="w-full rounded-lg px-3 py-2 bg-black/60 text-white focus:outline-none transition-all"
           style={{
-            border: `1px solid ${secondaryColor}60`,
+            border: "1px solid var(--page-secondary-60)",
           }}
         >
           <option value="">🌎 Toda la barbería (Global)</option>
@@ -106,8 +104,8 @@ export default function ExcepcionForm({ barberos, primaryColor, secondaryColor }
 
       {/* Fecha Desde */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold" style={{ color: `${primaryColor}cc` }}>
-          Desde <span style={{ color: primaryColor }}>*</span>
+        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-80)" }}>
+          Desde <span style={{ color: "var(--page-primary)" }}>*</span>
         </label>
         <input
           type="datetime-local"
@@ -115,15 +113,15 @@ export default function ExcepcionForm({ barberos, primaryColor, secondaryColor }
           required
           className="w-full rounded-lg px-3 py-2 bg-black/60 text-white focus:outline-none transition-all [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
           style={{
-            border: `1px solid ${secondaryColor}60`,
+            border: "1px solid var(--page-secondary-60)",
           }}
         />
       </div>
 
       {/* Fecha Hasta */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold" style={{ color: `${primaryColor}cc` }}>
-          Hasta <span style={{ color: primaryColor }}>*</span>
+        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-80)" }}>
+          Hasta <span style={{ color: "var(--page-primary)" }}>*</span>
         </label>
         <input
           type="datetime-local"
@@ -131,7 +129,7 @@ export default function ExcepcionForm({ barberos, primaryColor, secondaryColor }
           required
           className="w-full rounded-lg px-3 py-2 bg-black/60 text-white focus:outline-none transition-all [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
           style={{
-            border: `1px solid ${secondaryColor}60`,
+            border: "1px solid var(--page-secondary-60)",
           }}
         />
       </div>
@@ -142,7 +140,7 @@ export default function ExcepcionForm({ barberos, primaryColor, secondaryColor }
         </div>
       )}
 
-      <SubmitButton primaryColor={primaryColor} secondaryColor={secondaryColor} />
+      <SubmitButton />
     </form>
   );
 }

@@ -39,7 +39,7 @@ export default async function PagoFailurePage({
           {turnoId && (
             <Link
               href={`/turno?retry=${turnoId}`}
-              className="flex items-center justify-center gap-2 w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
+              className="flex items-center justify-center gap-2 w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
             >
               <RefreshCw className="w-5 h-5" />
               Intentar de nuevo
@@ -91,7 +91,7 @@ export default async function PagoFailurePage({
 
 //         <Link
 //           href="/dashboard"
-//           className="flex items-center justify-center gap-2 w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
+//           className="flex items-center justify-center gap-2 w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
 //         >
 //           Ver mis turnos
 //           <ArrowRight className="w-5 h-5" />

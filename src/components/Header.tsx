@@ -12,8 +12,6 @@ interface HeaderProps {
   config?: {
     name?: string | null;
     logo?: string | null;
-    primaryColor?: string | null;
-    secondaryColor?: string | null;
   } | null;
 }
 
@@ -25,16 +23,13 @@ export function Header({ session, config }: HeaderProps) {
   const firstName = words[0];
   const lastName = words.slice(1).join(" ");
 
-  const primaryColor = config?.primaryColor || "#d97706";
-  const secondaryColor = config?.secondaryColor || "#000000";
-
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       className="fixed top-0 left-0 right-0 z-50 backdrop-blur-2xl shadow-md w-full shadow-black text-white"
       style={{
-        background: `linear-gradient(to bottom right, ${secondaryColor}cc, #000000cc)`,
+        background: `linear-gradient(to bottom right, var(--page-secondary-80), #000000cc)`,
       }}
     >
       <div className="container flex items-center justify-between h-16 mx-auto px-4 select-none">
@@ -48,10 +43,10 @@ export function Header({ session, config }: HeaderProps) {
               className="w-7 h-7 object-contain rounded-full" 
             />
           ) : (
-            <Scissors className="w-6 h-6" style={{ color: primaryColor }} />
+            <Scissors className="w-6 h-6" style={{ color: "var(--page-primary)" }} />
           )}
           <span>{` ${firstName} `}</span>
-          <span style={{ color: primaryColor }}>{`${lastName}`}</span>
+          <span style={{ color: "var(--page-primary)" }}>{`${lastName}`}</span>
         </Link>
 
         {/* DESKTOP NAV & AUTH */}
@@ -74,7 +69,7 @@ export function Header({ session, config }: HeaderProps) {
             <Link href={session ? "/turno" : "/login"} className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
               <Button 
                 size="sm"
-                style={{ backgroundColor: primaryColor, color: "#ffffff" }}
+                style={{ backgroundColor: "var(--page-primary)", color: "#ffffff" }}
               >
                 Turnos
               </Button>
@@ -82,7 +77,7 @@ export function Header({ session, config }: HeaderProps) {
           </nav>
 
           {session ? (
-            <div className="flex items-center gap-4 border-l pl-6" style={{ borderColor: `${primaryColor}40` }}>
+            <div className="flex items-center gap-4 border-l pl-6" style={{ borderColor: "var(--page-primary-40)" }}>
               <span className="text-sm">
                 <Link className="flex flex-row items-center" href="/dashboard">
                   <Image src={session.user?.image || "/images/avatar-default.svg"} alt="" className="rounded-full" width={32} height={32} />
@@ -94,11 +89,11 @@ export function Header({ session, config }: HeaderProps) {
               </form>
             </div>
           ) : (
-            <div className="border-l pl-6" style={{ borderColor: `${primaryColor}40` }}>
+            <div className="border-l pl-6" style={{ borderColor: "var(--page-primary-40)" }}>
               <Link href="/login">
                 <Button 
                   size="sm"
-                  style={{ backgroundColor: primaryColor, color: "#ffffff" }}
+                  style={{ backgroundColor: "var(--page-primary)", color: "#ffffff" }}
                 >
                   <DoorOpen className="w-4 h-4 mr-2" /> Iniciar Sesión
                 </Button>
@@ -110,7 +105,7 @@ export function Header({ session, config }: HeaderProps) {
         {/* MOBILE TOGGLE */}
         <button
           className="md:hidden relative z-50 p-2"
-          style={{ color: primaryColor }}
+          style={{ color: "var(--page-primary)" }}
           onClick={() => setIsOpen(!isOpen)}
         >
           {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -125,7 +120,7 @@ export function Header({ session, config }: HeaderProps) {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="md:hidden border-t bg-black/95 backdrop-blur-xl overflow-hidden"
-            style={{ borderColor: `${primaryColor}30` }}
+            style={{ borderColor: "var(--page-primary-30)" }}
           >
             <div className="flex flex-col px-6 py-6 space-y-4">
               <Link href="/#servicios" onClick={() => setIsOpen(false)} className="text-base text-gray-300 hover:text-white transition-colors py-2">
@@ -136,22 +131,22 @@ export function Header({ session, config }: HeaderProps) {
               </Link>
 
               {session?.user?.role === "ADMIN" && (
-                <Link href="/admin" onClick={() => setIsOpen(false)} className="text-base font-medium transition-colors py-2" style={{ color: primaryColor }}>
+                <Link href="/admin" onClick={() => setIsOpen(false)} className="text-base font-medium transition-colors py-2" style={{ color: "var(--page-primary)" }}>
                   Administrador
                 </Link>
               )}
 
               <div className="pt-2">
                 <Link href={session ? "/turno" : "/login"} onClick={() => setIsOpen(false)}>
-                  <Button variant="amarillo" className="w-full" style={{ backgroundColor: primaryColor, color: "#fff" }}>Turnos</Button>
+                  <Button variant="amarillo" className="w-full" style={{ backgroundColor: "var(--page-primary)", color: "#fff" }}>Turnos</Button>
                 </Link>
               </div>
 
-              <div className="border-t pt-6 mt-4" style={{ borderColor: `${primaryColor}30` }}>
+              <div className="border-t pt-6 mt-4" style={{ borderColor: "var(--page-primary-30)" }}>
                 {session ? (
                   <div className="flex flex-col gap-4">
                     <Link href="/dashboard" onClick={() => setIsOpen(false)} className="flex items-center gap-3 py-2">
-                      <Image src={session.user?.image || "/images/avatar-default.svg"} alt="" className="rounded-full border" style={{ borderColor: `${primaryColor}80` }} width={40} height={40} />
+                      <Image src={session.user?.image || "/images/avatar-default.svg"} alt="" className="rounded-full border" style={{ borderColor: "var(--page-primary-80)" }} width={40} height={40} />
                       <span className="text-base font-medium text-white">{session.user?.name}</span>
                     </Link>
                     <form action={handleSignOut} className="w-full">
@@ -160,7 +155,7 @@ export function Header({ session, config }: HeaderProps) {
                   </div>
                 ) : (
                   <Link href="/login" onClick={() => setIsOpen(false)} className="w-full">
-                    <Button variant="outline" className="w-full bg-transparent" style={{ borderColor: primaryColor, color: primaryColor }}>
+                    <Button variant="outline" className="w-full bg-transparent" style={{ borderColor: "var(--page-primary)", color: "var(--page-primary)" }}>
                       <DoorOpen className="w-4 h-4 mr-2" /> Iniciar Sesión
                     </Button>
                   </Link>

@@ -26,8 +26,6 @@ type DiaLaboralListProps = {
   diasLaborales: DiaLaboral[];
   isLoading: boolean;
   onAsignarHorarios: (dia: DiaLaboral) => void;
-  primaryColor: string;
-  secondaryColor: string;
 };
 
 const DIAS_SEMANA: Record<number, { nombre: string; emoji: string }> = {
@@ -44,8 +42,6 @@ export function DiaLaboralList({
   diasLaborales,
   isLoading,
   onAsignarHorarios,
-  primaryColor,
-  secondaryColor,
 }: DiaLaboralListProps) {
   if (isLoading) {
     return (
@@ -54,7 +50,7 @@ export function DiaLaboralList({
           <div 
             key={i} 
             className="bg-black/40 backdrop-blur-lg rounded-xl p-6"
-            style={{ border: `1px solid ${secondaryColor}30` }}
+            style={{ border: `1px solid var(--page-secondary-30)` }}
           >
             <Skeleton className="h-6 w-32 bg-white/10" />
             <Skeleton className="h-4 w-24 mt-2 bg-white/10" />
@@ -69,13 +65,13 @@ export function DiaLaboralList({
     return (
       <div 
         className="bg-black/40 backdrop-blur-lg rounded-xl p-16 text-center"
-        style={{ border: `1px solid ${secondaryColor}30` }}
+        style={{ border: `1px solid var(--page-secondary-30)` }}
       >
-        <Clock className="h-16 w-16 mx-auto mb-4" style={{ color: `${primaryColor}50` }} />
+        <Clock className="h-16 w-16 mx-auto mb-4" style={{ color: `var(--page-primary-50)` }} />
         <h3 className="text-xl font-semibold mb-2 text-white">
           No hay días laborales configurados
         </h3>
-        <p style={{ color: `${primaryColor}b3` }}>
+        <p style={{ color: `var(--page-primary-70)` }}>
           Los días de la semana aparecerán aquí una vez configurados
         </p>
       </div>
@@ -96,7 +92,7 @@ export function DiaLaboralList({
               dia.estado ? "" : "opacity-60"
             }`}
             style={{
-              borderColor: dia.estado ? `${secondaryColor}50` : "#374151",
+              borderColor: dia.estado ? `var(--page-secondary-50)` : "#374151",
             }}
           >
             <div className="p-6 space-y-4">
@@ -104,14 +100,14 @@ export function DiaLaboralList({
                 <div className="flex items-center gap-3">
                   <div 
                     className="w-2 h-16 rounded-full shadow-sm" 
-                    style={{ backgroundColor: primaryColor }} 
+                    style={{ backgroundColor: "var(--page-primary)" }} 
                   />
                   <div>
                     <h3 className="text-2xl font-bold text-white flex items-center gap-2">
                       <span>{diaInfo.emoji}</span>
                       {diaInfo.nombre}
                     </h3>
-                    <p className="text-xs mt-1" style={{ color: `${primaryColor}b3` }}>
+                    <p className="text-xs mt-1" style={{ color: `var(--page-primary-70)` }}>
                       Día {dia.dia} de la semana
                     </p>
                   </div>
@@ -135,9 +131,9 @@ export function DiaLaboralList({
                   <Badge 
                     className="gap-1 border"
                     style={{
-                      backgroundColor: `${primaryColor}20`,
-                      color: primaryColor,
-                      borderColor: `${primaryColor}50`,
+                      backgroundColor: `var(--page-primary-20)`,
+                      color: "var(--page-primary)",
+                      borderColor: `var(--page-primary-50)`,
                     }}
                   >
                     <Clock className="h-3 w-3" />
@@ -150,9 +146,9 @@ export function DiaLaboralList({
               {horariosActivos.length > 0 && (
                 <div 
                   className="space-y-2 pt-3"
-                  style={{ borderTop: `1px solid ${secondaryColor}30` }}
+                  style={{ borderTop: `1px solid var(--page-secondary-30)` }}
                 >
-                  <p className="text-xs font-semibold flex items-center gap-1" style={{ color: primaryColor }}>
+                  <p className="text-xs font-semibold flex items-center gap-1" style={{ color: "var(--page-primary)" }}>
                     <Clock className="h-3 w-3" />
                     Horarios activos:
                   </p>
@@ -161,16 +157,16 @@ export function DiaLaboralList({
                       <div
                         key={margen.id}
                         className="flex items-center gap-2 text-sm bg-black/60 px-3 py-2 rounded-lg border transition-colors hover:bg-black/80"
-                        style={{ borderColor: `${secondaryColor}30` }}
+                        style={{ borderColor: `var(--page-secondary-30)` }}
                       >
-                        <Clock className="h-3 w-3 shrink-0" style={{ color: primaryColor }} />
+                        <Clock className="h-3 w-3 shrink-0" style={{ color: "var(--page-primary)" }} />
                         <span className="font-mono text-white font-semibold">
                           {margen.desde} → {margen.hasta}
                         </span>
                       </div>
                     ))}
                     {horariosActivos.length > 3 && (
-                      <p className="text-xs pl-2" style={{ color: `${primaryColor}b3` }}>
+                      <p className="text-xs pl-2" style={{ color: `var(--page-primary-70)` }}>
                         +{horariosActivos.length - 3} más...
                       </p>
                     )}
@@ -182,9 +178,9 @@ export function DiaLaboralList({
               {cantidadHorarios === 0 && (
                 <div 
                   className="pt-3"
-                  style={{ borderTop: `1px solid ${secondaryColor}30` }}
+                  style={{ borderTop: `1px solid var(--page-secondary-30)` }}
                 >
-                  <p className="text-xs italic" style={{ color: `${primaryColor}b3` }}>
+                  <p className="text-xs italic" style={{ color: `var(--page-primary-70)` }}>
                     Sin horarios asignados
                   </p>
                 </div>
@@ -193,8 +189,8 @@ export function DiaLaboralList({
               <Button
                 className="w-full font-medium transition-all shadow-sm hover:opacity-90 active:scale-[0.98] text-white"
                 style={{
-                  backgroundColor: primaryColor,
-                  border: `1px solid ${secondaryColor}50`,
+                  backgroundColor: "var(--page-primary)",
+                  border: `1px solid var(--page-secondary-50)`,
                 }}
                 onClick={() => onAsignarHorarios(dia)}
               >
