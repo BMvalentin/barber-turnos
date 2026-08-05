@@ -21,11 +21,9 @@ type Excepcion = {
 
 type ExcepcionesListProps = {
   excepciones: Excepcion[];
-  primaryColor: string;
-  secondaryColor: string;
 };
 
-export default function ExcepcionesList({ excepciones, primaryColor, secondaryColor }: ExcepcionesListProps) {
+export default function ExcepcionesList({ excepciones }: ExcepcionesListProps) {
   const router = useRouter();
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [elementoAEliminar, setElementoAEliminar] = useState<string | null>(null);
@@ -70,8 +68,8 @@ export default function ExcepcionesList({ excepciones, primaryColor, secondaryCo
   if (!excepciones.length) {
     return (
       <div className="text-center py-8">
-        <Calendar className="h-16 w-16 mx-auto mb-4 opacity-30" style={{ color: primaryColor }} />
-        <p style={{ color: `${primaryColor}b3` }}>
+        <Calendar className="h-16 w-16 mx-auto mb-4 opacity-30" style={{ color: "var(--page-primary)" }} />
+        <p style={{ color: "var(--page-primary-70)" }}>
           No hay excepciones registradas
         </p>
       </div>
@@ -85,13 +83,13 @@ export default function ExcepcionesList({ excepciones, primaryColor, secondaryCo
           key={excepcion.id}
           className="bg-black/60 rounded-lg p-3 sm:p-4 transition-all space-y-3"
           style={{
-            border: `1px solid ${secondaryColor}40`,
+            border: `1px solid var(--page-secondary-40)`,
           }}
         >
           {/* Cabecera */}
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <Calendar className="h-4 w-4 shrink-0" style={{ color: primaryColor }} />
+              <Calendar className="h-4 w-4 shrink-0" style={{ color: "var(--page-primary)" }} />
               <p className="text-white font-semibold truncate">{excepcion.motivo}</p>
             </div>
 
@@ -99,15 +97,15 @@ export default function ExcepcionesList({ excepciones, primaryColor, secondaryCo
               <span 
                 className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] whitespace-nowrap"
                 style={{
-                  backgroundColor: `${primaryColor}15`,
-                  color: primaryColor,
-                  border: `1px solid ${primaryColor}30`
+                  backgroundColor: `var(--page-primary-15)`,
+                  color: "var(--page-primary)",
+                  border: `1px solid var(--page-primary-30)`
                 }}
               >
                 <User className="h-3 w-3" /> {excepcion.barbero.nombre}
               </span>
             ) : (
-              <span className="bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full text-[10px] border border-blue-500/20">
+              <span className="bg-[var(--page-primary)]/10 text-[var(--page-primary)] px-2 py-0.5 rounded-full text-[10px] border border-[var(--page-primary)]/20">
                 Global
               </span>
             )}
@@ -118,12 +116,12 @@ export default function ExcepcionesList({ excepciones, primaryColor, secondaryCo
             <div 
               className="p-2 rounded"
               style={{
-                backgroundColor: `${secondaryColor}15`,
-                border: `1px solid ${secondaryColor}30`,
+                backgroundColor: `var(--page-secondary-15)`,
+                border: `1px solid var(--page-secondary-30)`,
               }}
             >
-              <p className="uppercase mb-0.5" style={{ color: `${primaryColor}80` }}>Desde</p>
-              <p className="font-mono font-medium" style={{ color: primaryColor }}>
+              <p className="uppercase mb-0.5" style={{ color: "var(--page-primary-80)" }}>Desde</p>
+              <p className="font-mono font-medium" style={{ color: "var(--page-primary)" }}>
                 {new Date(excepcion.desde).toLocaleDateString('es-AR')}
               </p>
               <p className="text-white">
@@ -133,12 +131,12 @@ export default function ExcepcionesList({ excepciones, primaryColor, secondaryCo
             <div 
               className="p-2 rounded"
               style={{
-                backgroundColor: `${secondaryColor}15`,
-                border: `1px solid ${secondaryColor}30`,
+                backgroundColor: `var(--page-secondary-15)`,
+                border: `1px solid var(--page-secondary-30)`,
               }}
             >
-              <p className="uppercase mb-0.5" style={{ color: `${primaryColor}80` }}>Hasta</p>
-              <p className="font-mono font-medium" style={{ color: primaryColor }}>
+              <p className="uppercase mb-0.5" style={{ color: "var(--page-primary-80)" }}>Hasta</p>
+              <p className="font-mono font-medium" style={{ color: "var(--page-primary)" }}>
                 {new Date(excepcion.hasta).toLocaleDateString('es-AR')}
               </p>
               <p className="text-white">
