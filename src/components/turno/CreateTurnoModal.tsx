@@ -40,6 +40,9 @@ type TurnoCreado = {
   id: string;
   precioCongelado: number;
   seniaCongelada: number;
+  servicioNombre?: string;
+  barberoNombre?: string;
+  horarioReservado?: Date | string;
 };
 
 type Props = {
@@ -48,6 +51,7 @@ type Props = {
   initialBarberos?: BarberoData[];
   initialUsuarios?: UsuarioData[];
   initialRelaciones?: RelacionData[];
+  whatsappPhone: string;
 };
 
 const initialState = {
@@ -62,12 +66,39 @@ export default function CreateTurnoModal({
   initialBarberos = [],
   initialUsuarios = [],
   initialRelaciones = [],
+  whatsappPhone,
 }: Props) {
+
+  const enviarMensajeWhatsApp = (
+    turno: TurnoCreado,
+    servicioNombre: string,
+    barberoNombre: string,
+    fecha: Date | string, 
+    estado: "Pagado" | "Pendiente de pago"
+  ) => {
+    const fechaObj = new Date(fecha);
+    
+    const fechaFormateada = fechaObj.toLocaleString('es-AR', {
+      day: '2-digit', 
+      month: '2-digit', 
+      hour: '2-digit', 
+      minute: '2-digit'
+    });
+
+    const mensaje = `Hola! Confirmé mi turno:
+    📅 Fecha: ${fechaFormateada}
+    ✂️ Servicio: ${servicioNombre}
+    💈 Barbero: ${barberoNombre}
+    Estado: ${estado}`;
+
+    const url = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, "_blank");
+  };
+
   const [isOpen, setIsOpen] = useState(false);
   const [state, formAction] = useActionState(createTurno, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // sessionId único por instancia del modal — no cambia entre renders
   const [sessionId] = useState(() => crypto.randomUUID());
 
   const [servicios, setServicios] = useState<ServicioData[]>(initialServicios);
@@ -78,13 +109,10 @@ export default function CreateTurnoModal({
 
   const [selectedServicioId, setSelectedServicioId] = useState("");
   const [selectedBarberoId, setSelectedBarberoId] = useState("");
-  // Cliente para el cual se está creando el turno: si es USER, es él mismo;
-  // si es ADMIN, es el que elige en el <select name="userId">
   const [selectedUserId, setSelectedUserId] = useState(
     session?.user?.role === "USER" ? session?.user?.id ?? "" : ""
   );
 
-  // Estado del modal de pago
   const [turnoCreado, setTurnoCreado] = useState<TurnoCreado | null>(null);
   const [showPagoModal, setShowPagoModal] = useState(false);
   const [loadingPago, setLoadingPago] = useState(false);
@@ -127,23 +155,25 @@ export default function CreateTurnoModal({
 
   useEffect(() => {
     if (state.success && state.data) {
-      // Guardar el turno creado y mostrar modal de pago
-      setTurnoCreado({
-        id: state.data.id,
-        precioCongelado: state.data.precioCongelado,
-        seniaCongelada: state.data.seniaCongelada,
-      });
+      const nombreServicio = servicios.find(s => s.id === selectedServicioId)?.nombre || "N/A";
+      const nombreBarbero = barberos.find(b => b.id === selectedBarberoId)?.nombre || "N/A";
+
+      const nuevoTurnoData: TurnoCreado = {
+        ...state.data,
+        servicioNombre: nombreServicio,
+        barberoNombre: nombreBarbero
+      };
+
+      setTurnoCreado(nuevoTurnoData);
+
       setIsOpen(false);
       setShowPagoModal(true);
       formRef.current?.reset();
       setSelectedServicioId("");
       setSelectedBarberoId("");
       setSelectedUserId(session?.user?.role === "USER" ? session?.user?.id ?? "" : "");
-    } else if (state.error) {
-      // El error se muestra dentro del form, no hace falta alert
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
+  }, [state.success, state.data, servicios, barberos, selectedServicioId, selectedBarberoId, session]);
 
   const handlePagarSenia = async () => {
     if (!turnoCreado) return;
@@ -159,7 +189,8 @@ export default function CreateTurnoModal({
         return;
       }
 
-      // Redirigir a Mercado Pago
+      // El mensaje de WhatsApp al barbero se envía recién cuando el pago
+      // se confirma en el servidor (webhook/back_url), desde /pago/success
       window.location.href = result.data.checkoutUrl;
     } catch {
       setErrorPago("Error inesperado al iniciar el pago");
@@ -168,12 +199,12 @@ export default function CreateTurnoModal({
   };
 
   const handlePagarDespues = () => {
+    enviarMensajeWhatsApp(turnoCreado!, turnoCreado?.servicioNombre || "N/A", turnoCreado?.barberoNombre || "N/A", turnoCreado?.horarioReservado || new Date(), "Pendiente de pago");
     setShowPagoModal(false);
     setTurnoCreado(null);
     setErrorPago(null);
   };
 
-  // ─── Filtro cruzado barbero ↔ servicio ────────────────────────────────
   const serviciosFiltrados = selectedBarberoId
     ? servicios.filter((s) =>
         relaciones.some(
@@ -192,7 +223,6 @@ export default function CreateTurnoModal({
 
   const handleBarberoChange = (nuevoBarberoId: string) => {
     setSelectedBarberoId(nuevoBarberoId);
-    // Si el servicio ya elegido no aplica a este barbero, se limpia
     if (
       selectedServicioId &&
       nuevoBarberoId &&
@@ -206,7 +236,6 @@ export default function CreateTurnoModal({
 
   const handleServicioChange = (nuevoServicioId: string) => {
     setSelectedServicioId(nuevoServicioId);
-    // Si el barbero ya elegido no ofrece este servicio, se limpia
     if (
       selectedBarberoId &&
       nuevoServicioId &&
@@ -219,52 +248,60 @@ export default function CreateTurnoModal({
   };
 
   return (
-    <>
+    <div 
+      style={{
+        "--primary": "var(--page-primary)",
+        "--secondary": "var(--page-secondary)",
+      } as React.CSSProperties}
+    >
       {/* Botón para abrir modal */}
-      <Button className="flex items-center gap-2 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white"
+      <Button 
+        className="flex items-center gap-2 px-6 py-3 text-white font-medium shadow-lg transition-all hover:opacity-90"
+        style={{ backgroundColor: "var(--primary)" }}
         onClick={() => setIsOpen(true)}
       >
         <Plus className="h-5 w-5" />
         Nuevo Turno
       </Button>
-      {/* ===================== */}
-      {/* MODAL CREAR TURNO     */}
-      {/* ===================== */}
+
+      {/* MODAL CREAR TURNO */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-black/95 backdrop-blur-xl border border-amber-900/30 rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          {/* Contenedor más claro y con mejor separación visual (bg-zinc-900 en vez de black/95) */}
+          <div className="bg-zinc-900 border border-zinc-700/80 rounded-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto shadow-2xl">
+            
             {/* Header */}
-            <div className="sticky top-0 bg-black/95 border-b border-amber-900/30 p-6 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white">Nuevo Turno</h2>
+            <div className="sticky top-0 bg-zinc-900/95 backdrop-blur border-b border-zinc-800 p-6 flex items-center justify-between z-10">
+              <h2 className="text-2xl font-bold text-white tracking-wide">Nuevo Turno</h2>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-amber-200/70 hover:text-white transition-colors"
+                className="text-zinc-400 hover:text-white bg-zinc-800/60 hover:bg-zinc-800 p-2 rounded-full transition-colors"
               >
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Content */}
             {loadingData ? (
-              <div className="p-8 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto"></div>
-                <p className="text-amber-200/70 mt-4">Cargando datos...</p>
+              <div className="p-12 text-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 mx-auto" style={{ borderColor: "var(--primary)" }}></div>
+                <p className="text-zinc-400 mt-4 text-sm">Cargando opciones disponibles...</p>
               </div>
             ) : (
-              <form ref={formRef} action={formAction} className="p-6 space-y-6">
+              <form ref={formRef} action={formAction} className="p-6 md:p-8 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                   {/* CLIENTE */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-amber-200/70">
-                      Cliente <span className="text-amber-500">*</span>
+                    <label className="text-sm font-medium text-zinc-300">
+                      Cliente <span style={{ color: "var(--primary)" }}>*</span>
                     </label>
 
                     {session?.user?.role === "USER" ? (
                       <>
                         <select
                           disabled
-                          className="w-full p-2.5 border border-amber-900/30 rounded-lg bg-black/60 text-amber-200/50"
+                          className="w-full p-3 border border-zinc-700 rounded-xl bg-zinc-800/50 text-zinc-400 text-sm"
                         >
                           <option>
                             {session?.user?.name || "Usuario"} ({session?.user?.email})
@@ -283,7 +320,8 @@ export default function CreateTurnoModal({
                         required
                         value={selectedUserId}
                         onChange={(e) => setSelectedUserId(e.target.value)}
-                        className="w-full p-2.5 border border-amber-900/30 rounded-lg bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                        className="w-full p-3 border border-zinc-700 rounded-xl bg-zinc-800 text-white text-sm focus:outline-none focus:ring-2"
+                        style={{ outlineColor: "var(--primary)" }}
                       >
                         <option value="">-- Seleccionar Cliente --</option>
                         {usuarios.map((u) => (
@@ -297,15 +335,16 @@ export default function CreateTurnoModal({
 
                   {/* BARBERO */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-amber-200/70">
-                      Barbero <span className="text-amber-500">*</span>
+                    <label className="text-sm font-medium text-zinc-300">
+                      Barbero <span style={{ color: "var(--primary)" }}>*</span>
                     </label>
                     <select
                       name="barberoId"
                       required
                       value={selectedBarberoId}
                       onChange={(e) => handleBarberoChange(e.target.value)}
-                      className="w-full p-2.5 border border-amber-900/30 rounded-lg bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full p-3 border border-zinc-700 rounded-xl bg-zinc-800 text-white text-sm focus:outline-none focus:ring-2"
+                      style={{ outlineColor: "var(--primary)" }}
                     >
                       <option value="">-- Seleccionar Barbero --</option>
                       {barberosFiltrados.map((b) => (
@@ -315,67 +354,76 @@ export default function CreateTurnoModal({
                       ))}
                     </select>
                     {barberosFiltrados.length === 0 && (
-                      <p className="text-xs text-amber-400">
+                      <p className="text-xs text-[var(--page-primary-80)]">
                         {selectedServicioId
                           ? "Ningún barbero ofrece este servicio."
-                          : "No hay barberos disponibles. Crea barberos primero."}
+                          : "No hay barberos disponibles."}
                       </p>
                     )}
                   </div>
 
                   {/* SERVICIO */}
                   <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium text-amber-200/70">
-                      Servicio <span className="text-amber-500">*</span>
+                    <label className="text-sm font-medium text-zinc-300">
+                      Servicio <span style={{ color: "var(--primary)" }}>*</span>
                     </label>
                     <select
                       name="servicioId"
                       required
                       value={selectedServicioId}
                       onChange={(e) => handleServicioChange(e.target.value)}
-                      className="w-full p-2.5 border border-amber-900/30 rounded-lg bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      className="w-full p-3 border border-zinc-700 rounded-xl bg-zinc-800 text-white text-sm focus:outline-none focus:ring-2"
+                      style={{ outlineColor: "var(--primary)" }}
                     >
                       <option value="">-- Seleccionar Servicio --</option>
-                      {serviciosFiltrados.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.nombre}
-                          {s.precio && ` - $${s.precio.toString()}`}
-                          {s.duracion && ` (${s.duracion} min)`}
-                          {s.descripcion && ` - ${s.descripcion}`}
-                        </option>
-                      ))}
+
+                      {serviciosFiltrados.map((s) => {
+                        const descripcionCorta = s.descripcion && s.descripcion.length > 50
+                          ? s.descripcion.substring(0, 50) + "..."
+                          : s.descripcion;
+
+                        return (
+                          <option key={s.id} value={s.id}>
+                            {s.nombre}
+                            {s.precio && ` - $${s.precio.toString()}`}
+                            {s.duracion && ` (${s.duracion} min)`}
+                            {descripcionCorta && ` - ${descripcionCorta}`}
+                          </option>
+                        );
+                      })}
                     </select>
-                    {serviciosFiltrados.length === 0 && (
-                      <p className="text-xs text-amber-400">
-                        {selectedBarberoId
-                          ? "Este barbero no tiene servicios asignados."
-                          : "No hay servicios disponibles. Crea servicios primero."}
+
+                    {selectedServicioId && servicios.find(s => s.id === selectedServicioId)?.descripcion && (
+                      <p className="text-xs text-zinc-400 italic p-3 rounded-lg bg-zinc-800/40 border-l-2" style={{ borderColor: "var(--primary)" }}>
+                        {servicios.find(s => s.id === selectedServicioId)?.descripcion}
                       </p>
                     )}
                   </div>
                 </div>
 
                 {/* FECHA Y HORA */}
-                <SeleccionadorHorario
-                  name="horarioReservado"
-                  servicioId={selectedServicioId}
-                  barberoId={selectedBarberoId}
-                  sessionId={sessionId}
-                  userId={selectedUserId}
-                />
+                <div className="bg-zinc-950/60 p-4 rounded-xl border border-zinc-800">
+                  <SeleccionadorHorario
+                    name="horarioReservado"
+                    servicioId={selectedServicioId}
+                    barberoId={selectedBarberoId}
+                    sessionId={sessionId}
+                    userId={selectedUserId}
+                  />
+                </div>
 
                 {state.error && (
-                  <div className="p-3 bg-amber-500/10 text-amber-400 rounded-lg text-sm border border-amber-500/50">
+                  <div className="p-4 bg-red-500/10 text-red-400 rounded-xl text-sm border border-red-500/30">
                     {state.error}
                   </div>
                 )}
 
-                {/* Botones */}
-                <div className="flex justify-end gap-3 pt-4 border-t border-amber-900/30">
+                {/* Botones de acción inferior */}
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800">
                   <button
                     type="button"
                     onClick={() => setIsOpen(false)}
-                    className="px-6 py-2 border border-amber-900/30 text-amber-200/70 rounded-lg hover:bg-black/60 transition-colors font-semibold"
+                    className="px-6 py-2.5 border border-zinc-700 text-zinc-300 rounded-xl hover:bg-zinc-800 transition-colors font-medium text-sm"
                   >
                     Cancelar
                   </button>
@@ -387,31 +435,26 @@ export default function CreateTurnoModal({
         </div>
       )}
 
-      {/* ===================== */}
-      {/* MODAL DE PAGO (SEÑA)  */}
-      {/* ===================== */}
+      {/* MODAL DE PAGO (SEÑA) */}
       {showPagoModal && turnoCreado && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-900 border border-amber-500/20 rounded-2xl w-full max-w-md shadow-2xl shadow-amber-900/20 overflow-hidden">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
 
-            {/* Header del modal de pago */}
-            <div className="bg-gradient-to-r from-amber-600/20 to-amber-500/10 border-b border-amber-500/20 p-6 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
-                <CheckCircle2 className="w-5 h-5 text-amber-400" />
+            <div className="border-b border-zinc-800 p-6 flex items-center gap-3" style={{ backgroundColor: "color-mix(in srgb, var(--primary) 12%, transparent)" }}>
+              <div className="w-10 h-10 rounded-full border border-zinc-700 flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "color-mix(in srgb, var(--primary) 20%, transparent)" }}>
+                <CheckCircle2 className="w-5 h-5" style={{ color: "var(--primary)" }} />
               </div>
               <div>
                 <h2 className="text-lg font-bold text-white">¡Turno Reservado!</h2>
-                <p className="text-sm text-amber-200/60">Tu lugar está aparatado. Aboná la seña para confirmarlo.</p>
+                <p className="text-xs text-zinc-300">Aboná la seña para confirmar tu lugar.</p>
               </div>
             </div>
 
-            {/* Detalle de precios */}
             <div className="p-6 space-y-4">
-              {/* Card de la seña */}
-              <div className="bg-black/40 border border-amber-500/30 rounded-xl p-4 space-y-3">
+              <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <Scissors className="w-4 h-4 text-amber-400" />
-                  <span className="text-xs font-semibold text-amber-400 uppercase tracking-widest">
+                  <Scissors className="w-4 h-4" style={{ color: "var(--primary)" }} />
+                  <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--primary)" }}>
                     Detalle del pago
                   </span>
                 </div>
@@ -423,32 +466,29 @@ export default function CreateTurnoModal({
                   </span>
                 </div>
 
-                <div className="border-t border-zinc-700/50 pt-3 flex items-center justify-between">
+                <div className="border-t border-zinc-800 pt-3 flex items-center justify-between">
                   <div>
                     <span className="text-sm font-semibold text-white">Seña requerida</span>
-                    <p className="text-xs text-zinc-500 mt-0.5">
-                      El resto se abona en el local
-                    </p>
+                    <p className="text-xs text-zinc-500 mt-0.5">El resto se abona en el local</p>
                   </div>
-                  <span className="text-2xl font-black text-amber-400">
+                  <span className="text-2xl font-black" style={{ color: "var(--primary)" }}>
                     ${turnoCreado.seniaCongelada.toLocaleString("es-AR")}
                   </span>
                 </div>
               </div>
 
-              {/* Error de pago */}
               {errorPago && (
                 <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-400">
                   {errorPago}
                 </div>
               )}
 
-              {/* Botón pagar seña */}
               <button
                 id="btn-pagar-senia"
                 onClick={handlePagarSenia}
                 disabled={loadingPago}
-                className="w-full flex items-center justify-center gap-3 bg-amber-500 hover:bg-amber-400 disabled:bg-amber-500/50 disabled:cursor-not-allowed text-zinc-950 font-black py-4 rounded-xl transition-all text-sm uppercase tracking-widest shadow-lg shadow-amber-500/20 hover:shadow-amber-400/30"
+                className="w-full flex items-center justify-center gap-3 disabled:opacity-50 text-zinc-950 font-black py-3.5 rounded-xl transition-all text-sm uppercase tracking-wider shadow-lg hover:opacity-90"
+                style={{ backgroundColor: "var(--primary)" }}
               >
                 {loadingPago ? (
                   <>
@@ -463,25 +503,20 @@ export default function CreateTurnoModal({
                 )}
               </button>
 
-              {/* Botón pagar después */}
               <button
                 id="btn-pagar-despues"
                 onClick={handlePagarDespues}
                 disabled={loadingPago}
-                className="w-full flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-400 hover:text-zinc-200 font-medium py-3 rounded-xl transition-all text-sm"
+                className="w-full flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-300 font-medium py-3 rounded-xl transition-all text-sm"
               >
                 <Clock className="w-4 h-4" />
-                Pagar después (turno pendiente)
+                Pagar después (dejar pendiente)
               </button>
-
-              <p className="text-center text-xs text-zinc-600">
-                Serás redirigido a Mercado Pago para completar el pago de forma segura.
-              </p>
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -492,8 +527,8 @@ function SubmitButton() {
     <Button
       type="submit"
       disabled={pending}
-      className="px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white"
-
+      className="px-6 py-2.5 text-white font-medium rounded-xl shadow-md transition-all hover:opacity-90 text-sm"
+      style={{ backgroundColor: "var(--primary)" }}
     >
       {pending ? "Procesando..." : "Confirmar Reserva"}
     </Button>

@@ -19,7 +19,11 @@ function SubmitButton() {
     <Button
       type="submit"
       disabled={pending}
-      className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+      className="w-full text-white shadow-md hover:opacity-95 transition-all"
+      style={{
+        backgroundColor: "var(--page-primary)",
+        border: "1px solid var(--page-secondary)",
+      }}
     >
       {pending ? "Guardando..." : "Crear Excepción"}
     </Button>
@@ -31,7 +35,11 @@ type Barbero = {
   nombre: string;
 };
 
-export default function ExcepcionForm({ barberos }: { barberos: Barbero[] }) {
+type ExcepcionFormProps = {
+  barberos: Barbero[];
+};
+
+export default function ExcepcionForm({ barberos }: ExcepcionFormProps) {
   const router = useRouter();
   const [state, formAction] = useActionState(createExcepcion, initialState);
 
@@ -58,26 +66,32 @@ export default function ExcepcionForm({ barberos }: { barberos: Barbero[] }) {
     <form action={formAction} className="space-y-4">
       {/* Motivo */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-amber-200/70">
-          Motivo <span className="text-amber-500">*</span>
+        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-80)" }}>
+          Motivo <span style={{ color: "var(--page-primary)" }}>*</span>
         </label>
         <input
           type="text"
           name="motivo"
           required
           placeholder="Ej: Feriado Nacional"
-          className="w-full border border-amber-900/30 rounded-lg px-3 py-2 bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 placeholder:text-amber-200/30"
+          className="w-full rounded-lg px-3 py-2 bg-black/60 text-white focus:outline-none transition-all placeholder:text-zinc-500"
+          style={{
+            border: "1px solid var(--page-secondary-60)",
+          }}
         />
       </div>
 
       {/* Adjudicar a Barbero */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-amber-200/70">
+        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-80)" }}>
           ¿A quién afecta?
         </label>
         <select
           name="barberoId"
-          className="w-full border border-amber-900/30 rounded-lg px-3 py-2 bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+          className="w-full rounded-lg px-3 py-2 bg-black/60 text-white focus:outline-none transition-all"
+          style={{
+            border: "1px solid var(--page-secondary-60)",
+          }}
         >
           <option value="">🌎 Toda la barbería (Global)</option>
           {barberos.map((b) => (
@@ -90,27 +104,33 @@ export default function ExcepcionForm({ barberos }: { barberos: Barbero[] }) {
 
       {/* Fecha Desde */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-amber-200/70">
-          Desde <span className="text-amber-500">*</span>
+        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-80)" }}>
+          Desde <span style={{ color: "var(--page-primary)" }}>*</span>
         </label>
         <input
           type="datetime-local"
           name="desde"
           required
-          className="w-full border border-amber-900/30 rounded-lg px-3 py-2 bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+          className="w-full rounded-lg px-3 py-2 bg-black/60 text-white focus:outline-none transition-all [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+          style={{
+            border: "1px solid var(--page-secondary-60)",
+          }}
         />
       </div>
 
       {/* Fecha Hasta */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-amber-200/70">
-          Hasta <span className="text-amber-500">*</span>
+        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-80)" }}>
+          Hasta <span style={{ color: "var(--page-primary)" }}>*</span>
         </label>
         <input
           type="datetime-local"
           name="hasta"
           required
-          className="w-full border border-amber-900/30 rounded-lg px-3 py-2 bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+          className="w-full rounded-lg px-3 py-2 bg-black/60 text-white focus:outline-none transition-all [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+          style={{
+            border: "1px solid var(--page-secondary-60)",
+          }}
         />
       </div>
 

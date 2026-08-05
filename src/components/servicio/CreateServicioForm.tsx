@@ -90,9 +90,15 @@ export default function CreateServicioForm({
 
   return (
     <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto">
-      <div className="bg-black/60 border border-[#2C261D] rounded-xl w-full max-w-4xl shadow-2xl relative flex flex-col max-h-[90vh]">
+      <div 
+        className="bg-black/60 border rounded-xl w-full max-w-4xl shadow-2xl relative flex flex-col max-h-[90vh]"
+        style={{ borderColor: "var(--page-secondary)" }}
+      >
         {/* Header Modal */}
-        <div className="flex justify-between items-center gap-4 p-6 border-b border-[#2C261D]">
+        <div 
+          className="flex justify-between items-center gap-4 p-6 border-b"
+          style={{ borderColor: "var(--page-secondary)" }}
+        >
           <div>
             <h2 className="text-xl font-bold text-[#E4E0D9]">Nuevo Servicio</h2>
             <p className="text-[#8E8675] text-xs mt-1">
@@ -100,13 +106,15 @@ export default function CreateServicioForm({
             </p>
           </div>
           {/* Acciones del Header */}
-            <div className="flex items-center gap-4">
-              <button
-                onClick={onClose}
-                className="rounded-sm ring-offset-background transition-opacity data-[state=open]:bg-accent data-[state=open]:text-muted-foreground hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none bg-amber-600 hover:bg-amber-700 p-1 text-white hover:cursor-pointer">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onClose}
+              className="rounded-sm ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none p-1 text-white hover:cursor-pointer"
+              style={{ backgroundColor: "var(--page-primary)" }}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
         {/* Formulario */}
         <div className="overflow-y-auto p-6 flex-1">
@@ -131,9 +139,15 @@ export default function CreateServicioForm({
             className="space-y-6"
           >
             {/* Información General */}
-            <div className="bg-black/70 border border-[#2C261D] rounded-xl p-6">
+            <div 
+              className="bg-black/70 border rounded-xl p-6"
+              style={{ borderColor: "var(--page-secondary)" }}
+            >
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xs font-bold text-[#E8B031] uppercase tracking-wider">
+                <h3 
+                  className="text-xs font-bold uppercase tracking-wider"
+                  style={{ color: "var(--page-primary)" }}
+                >
                   Información General
                 </h3>
                 <div className="flex items-center gap-2">
@@ -142,7 +156,8 @@ export default function CreateServicioForm({
                   </span>
                   <select
                     name="estado"
-                    className="bg-black/70 border border-[#2C261D] text-[#E4E0D9] text-xs rounded px-2 py-1 outline-none"
+                    className="bg-black/70 border text-[#E4E0D9] text-xs rounded px-2 py-1 outline-none"
+                    style={{ borderColor: "var(--page-secondary)" }}
                   >
                     <option value="true">Activo</option>
                     <option value="false">Inactivo</option>
@@ -156,6 +171,7 @@ export default function CreateServicioForm({
                   name="nombre"
                   placeholder="Ej: Corte Clásico"
                   errors={state.errors?.nombre}
+                  
                   required
                 />
 
@@ -164,7 +180,10 @@ export default function CreateServicioForm({
                     <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider">
                       Descripción
                     </label>
-                    <span className={`text-[9px] font-bold uppercase ${descripcion.length > 450 ? 'text-[#E8B031]' : 'text-[#8E8675]'}`}>
+                    <span 
+                      className={`text-[9px] font-bold uppercase`}
+                      style={{ color: descripcion.length > 450 ? "var(--page-primary)" : '#8E8675' }}
+                    >
                       {descripcion.length} / 500
                     </span>
                   </div>
@@ -173,7 +192,10 @@ export default function CreateServicioForm({
                     value={descripcion}
                     onChange={(e) => setDescripcion(e.target.value.slice(0, 500))}
                     rows={3}
-                    className={`w-full bg-black/70 border ${state.errors?.descripcion ? 'border-red-500' : 'border-[#2C261D]'} rounded-lg px-4 py-3 text-[#E4E0D9] outline-none focus:border-[#E8B031] transition-colors resize-none`}
+                    className={`w-full bg-black/70 border rounded-lg px-4 py-3 text-[#E4E0D9] outline-none transition-colors resize-none`}
+                    style={{ 
+                      borderColor: state.errors?.descripcion ? '#ef4444' : "var(--page-secondary)",
+                    }}
                     placeholder="Detalla qué incluye el servicio..."
                   />
                   {state.errors?.descripcion && (
@@ -191,7 +213,8 @@ export default function CreateServicioForm({
                       <img
                         src={previewUrl || srcImage}
                         alt="Vista previa"
-                        className="h-32 w-32 object-cover rounded-lg border border-[#2C261D]"
+                        className="h-32 w-32 object-cover rounded-lg border"
+                        style={{ borderColor: "var(--page-secondary)" }}
                       />
 
                       <button
@@ -204,16 +227,18 @@ export default function CreateServicioForm({
                     </div>
                   ) : (
                     <label
-                      className={`relative flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-[#2C261D] rounded-lg cursor-pointer hover:border-[#E8B031] transition ${isPending ? "opacity-50 pointer-events-none" : ""
-                        }`}
+                      className={`relative flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg cursor-pointer transition ${
+                        isPending ? "opacity-50 pointer-events-none" : ""
+                      }`}
+                      style={{ borderColor: "var(--page-secondary)" }}
                     >
                       {isPending ? (
-                        <span className="text-[#E8B031] text-sm">
+                        <span className="text-sm" style={{ color: "var(--page-primary)" }}>
                           Subiendo...
                         </span>
                       ) : (
                         <>
-                          <Upload className="h-6 w-6 text-[#E8B031]" />
+                          <Upload className="h-6 w-6" style={{ color: "var(--page-primary)" }} />
                           <span className="text-sm text-[#8E8675]">
                             Hacé clic para subir una imagen
                           </span>
@@ -240,8 +265,14 @@ export default function CreateServicioForm({
             </div>
 
             {/* Detalles Técnicos & Precios */}
-            <div className="bg-black/70 border border-[#2C261D] rounded-xl p-6">
-              <h3 className="text-xs font-bold text-[#E8B031] uppercase tracking-wider mb-6">
+            <div 
+              className="bg-black/70 border rounded-xl p-6"
+              style={{ borderColor: "var(--page-secondary)" }}
+            >
+              <h3 
+                className="text-xs font-bold uppercase tracking-wider mb-6"
+                style={{ color: "var(--page-primary)" }}
+              >
                 Precio & Detalles
               </h3>
 
@@ -253,6 +284,7 @@ export default function CreateServicioForm({
                   defaultValue="30"
                   unit="MIN"
                   errors={state.errors?.duracion}
+                  
                   required
                 />
 
@@ -263,6 +295,7 @@ export default function CreateServicioForm({
                   step="0.01"
                   icon={DollarSign}
                   errors={state.errors?.precio}
+                  
                   required
                 />
 
@@ -273,6 +306,7 @@ export default function CreateServicioForm({
                   defaultValue="0"
                   unit="%"
                   errors={state.errors?.descuento}
+                  
                 />
 
                 <InputField
@@ -282,6 +316,7 @@ export default function CreateServicioForm({
                   defaultValue="0"
                   icon={DollarSign}
                   errors={state.errors?.senia}
+                  
                 />
               </div>
             </div>
@@ -292,11 +327,15 @@ export default function CreateServicioForm({
               </div>
             )}
 
-            <div className="flex justify-end gap-4 pt-4 border-t border-[#2C261D]">
+            <div 
+              className="flex justify-end gap-4 pt-4 border-t"
+              style={{ borderColor: "var(--page-secondary)" }}
+            >
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-3 hover:cursor-pointer rounded-lg font-bold text-xs uppercase tracking-wider text-[#E4E0D9] hover:bg-[#2C261D] transition-colors"
+                className="px-6 py-3 hover:cursor-pointer rounded-lg font-bold text-xs uppercase tracking-wider text-[#E4E0D9] transition-colors"
+                style={{ backgroundColor: 'transparent' }}
               >
                 Cancelar
               </button>
@@ -309,15 +348,11 @@ export default function CreateServicioForm({
   );
 }
 
-
-function SubmitButton({
-  pending,
-}: {
-  pending: boolean;
-}) {
-
+function SubmitButton({ pending }: { pending: boolean }) {
   return (
-    <Button className="font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white"
+    <Button 
+      className="font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 text-white"
+      style={{ backgroundColor: "var(--page-primary)" }}
       type="submit"
       disabled={pending}
     >
@@ -344,7 +379,7 @@ function InputField({
   return (
     <div className="space-y-2">
       <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider">
-        {label} {required && <span className="text-[#E8B031]">*</span>}
+        {label} {required && <span style={{ color: "var(--page-primary)" }}>*</span>}
       </label>
       <div className="relative">
         {Icon && (
@@ -352,9 +387,12 @@ function InputField({
         )}
         <input
           {...props}
-          className={`w-full bg-black/70 border ${errors ? "border-red-500" : "border-[#2C261D]"
-            } rounded-lg ${Icon ? "pl-11" : "pl-4"} ${unit ? "pr-14" : "pr-4"
-            } py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-colors`}
+          className={`w-full bg-black/70 border rounded-lg ${Icon ? "pl-11" : "pl-4"} ${
+            unit ? "pr-14" : "pr-4"
+          } py-3 text-[#E4E0D9] text-sm outline-none transition-colors`}
+          style={{
+            borderColor: errors ? "#ef4444" : "var(--page-secondary)",
+          }}
         />
         {unit && (
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#8E8675] uppercase">

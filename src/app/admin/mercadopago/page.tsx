@@ -1,6 +1,5 @@
 import { Suspense } from "react";
-import { ArrowLeft, CreditCard } from "lucide-react";
-import Link from "next/link";
+import { CreditCard } from "lucide-react";
 import {
   obtenerEstadoConexionMP,
   obtenerEstadoConfiguracionOAuth,
@@ -15,19 +14,11 @@ export default async function PaginaConfiguracionMercadoPago() {
 
   return (
     <div className="min-h-screen p-6">
-      <div className="container mx-auto max-w-3xl mt-20">
+      <div className="container mx-auto max-w-3xl">
         <div className="mb-8 flex items-center gap-4">
-          <Link
-            href="/admin"
-            className="p-2 hover:bg-amber-600/20 rounded-lg transition-all group"
-            title="Volver al Dashboard"
-          >
-            <ArrowLeft className="h-6 w-6 text-amber-500 group-hover:text-amber-400 group-hover:-translate-x-1 transition-all" />
-          </Link>
-
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-amber-500/20 rounded-xl border-2 border-amber-500/30">
-              <CreditCard className="h-8 w-8 text-amber-500" />
+            <div className="p-3 bg-[var(--page-primary)]/20 rounded-xl border-2 border-[var(--page-primary)]/30">
+              <CreditCard className="h-8 w-8 text-[var(--page-primary)]" />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-white">Mercado Pago</h1>

@@ -3,13 +3,14 @@
 import { useState } from "react";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 import CreateBarberoForm from "@/components/barbero/CreateBarberoForm";
 
 type Props = {
@@ -22,17 +23,34 @@ export default function CreateBarberoModal({ servicios, diasLaborales }: Props) 
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      
+
       <DialogTrigger asChild>
-        <Button className="bg-amber-600 hover:bg-amber-700 text-white">
+        <Button
+          className="text-white shadow-lg transition-all hover:opacity-90"
+          style={{ backgroundColor: "var(--page-primary)" }}
+        >
           + Ingresar Barbero
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-2xl p-0 bg-transparent border-none animate-in fade-in zoom-in-95 duration-200">
-        
-        <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl p-6 space-y-6 shadow-2xl shadow-amber-900/20">
-          
+      <DialogContent className="max-w-2xl p-0 bg-transparent border-none animate-in fade-in zoom-in-95 duration-200 [&>button]:hidden">
+        <div
+          className="bg-black/40 backdrop-blur-lg rounded-xl p-6 space-y-6 shadow-2xl border relative"
+          style={{
+            borderColor: "var(--page-primary-40)",
+            boxShadow: "0 25px 50px -12px var(--page-primary-15)"
+          }}
+        >
+
+          {/* AQUÍ ESTÁ LA X: Usamos DialogClose con el color primario */}
+          <DialogClose
+            className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none p-1 z-10"
+            style={{ color: "var(--page-primary)" }}
+          >
+            <X className="h-5 w-5" />
+            <span className="sr-only">Cerrar</span>
+          </DialogClose>
+
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-white">
               Nuevo Barbero

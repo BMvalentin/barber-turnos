@@ -4,48 +4,14 @@ import { useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User, Mail, Phone, Settings,
-  ShieldCheck, Scissors, Calendar
+  ShieldCheck, Calendar
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { updateProfile } from "@/actions/user-dashboard";
 import { useSession } from "next-auth/react";
 import TurnoList from "@/components/turno/TurnoList";
-
-/* --- FOOTER ADAPTADO AL ANCHO TOTAL --- */
-function Footer() {
-  const currentYear = new Date().getFullYear();
-  return (
-    <footer className="w-full py-10 border-t border-amber-900/30 bg-black mt-auto">
-      <div className="container mx-auto px-6 md:px-12">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <Scissors className="w-5 h-5 text-amber-500" />
-            </div>
-            <span className="font-bold text-white tracking-widest uppercase text-xl">
-              Barber<span className="text-amber-500">Shop</span>
-            </span>
-          </div>
-
-          <p className="text-sm text-amber-100/30 text-center font-light tracking-wide">
-            Excelencia en barbería tradicional.{" "}Santa Clara del Mar.{" "}{currentYear}
-          </p>
-
-          <div className="flex gap-10">
-            <a href="#" className="text-[10px] uppercase tracking-[0.2em] text-amber-100/40 hover:text-amber-500 transition-colors">
-              Términos
-            </a>
-            <a href="#" className="text-[10px] uppercase tracking-[0.2em] text-amber-100/40 hover:text-amber-500 transition-colors">
-              Privacidad
-            </a>
-          </div>
-
-        </div>
-      </div>
-    </footer>
-  );
-}
+// Importa tu footer centralizado si decides renderizarlo aquí de manera local:
+// import { Footer } from "@/components/Footer";
 
 export default function DashboardPanel({ user, turnos, session }: { user: any; turnos: any[]; session: any }) {
   const { update } = useSession();
@@ -70,7 +36,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    
+
     const prefix = formData.get("prefix") as string;
     const telefonoNum = formData.get("telefono") as string;
     if (prefix && telefonoNum) {
@@ -96,11 +62,11 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
 
   return (
     <div className="flex flex-col min-h-screen bg-neutral-950 w-full font-sans">
-      
+
       {/* MODAL OBLIGATORIO DE TELÉFONO */}
       {!hasPhone && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-          <div className="bg-neutral-900 border border-amber-500/30 rounded-3xl w-full max-w-md p-6 shadow-2xl shadow-amber-900/20">
+          <div className="bg-neutral-900 border border-[var(--page-primary)]/30 rounded-3xl w-full max-w-md p-6 shadow-2xl shadow-amber-900/20">
             <h2 className="text-2xl font-black text-white uppercase tracking-widest mb-2">Atención</h2>
             <p className="text-amber-100/60 mb-6 text-sm">
               Para poder reservar un turno necesitamos tu número de teléfono.
@@ -108,14 +74,14 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
             </p>
             <form onSubmit={handleFormSubmit} className="space-y-6">
               <input type="hidden" name="name" value={user.name || ''} />
-              
+
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                <label className="text-[10px] font-black text-[var(--page-primary)] uppercase tracking-[0.2em] flex items-center gap-2">
                   <Phone className="w-3.5 h-3.5" /> WhatsApp / Teléfono
                 </label>
-                <div className="flex bg-black/40 border border-amber-900/30 rounded-2xl overflow-hidden focus-within:ring-1 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all">
-                  <div className="flex items-center justify-center px-2 bg-amber-500/10 border-r border-amber-900/30">
-                    <select name="prefix" defaultValue={defaultPrefix} className="bg-transparent text-amber-500 font-bold outline-none cursor-pointer pr-2 text-sm">
+                <div className="flex bg-black/40 border border-amber-900/30 rounded-2xl overflow-hidden focus-within:ring-1 focus-within:ring-[var(--page-primary)] focus-within:border-[var(--page-primary)] transition-all">
+                  <div className="flex items-center justify-center px-2 bg-[var(--page-primary)]/10 border-r border-amber-900/30">
+                    <select name="prefix" defaultValue={defaultPrefix} className="bg-transparent text-[var(--page-primary)] font-bold outline-none cursor-pointer pr-2 text-sm">
                       <option value="+54 9" className="bg-neutral-900 text-white">🇦🇷 +54 9</option>
                       <option value="+598" className="bg-neutral-900 text-white">🇺🇾 +598</option>
                       <option value="+56" className="bg-neutral-900 text-white">🇨🇱 +56</option>
@@ -146,7 +112,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
               <Button
                 disabled={isPending}
                 type="submit"
-                className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black uppercase tracking-widest px-10 rounded-2xl h-14 transition-all shadow-lg shadow-amber-500/10 active:scale-95"
+                className="w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-black font-black uppercase tracking-widest px-10 rounded-2xl h-14 transition-all shadow-lg shadow-[var(--page-primary)]/10 active:scale-95"
               >
                 {isPending ? "Guardando..." : "Guardar Teléfono"}
               </Button>
@@ -161,7 +127,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
         <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-amber-900/20 pb-8">
           <div>
             <h1 className="text-4xl font-bold text-white tracking-tighter uppercase">
-              Hola, <span className="text-amber-500">{user.name?.split(' ')[0] || 'Usuario'}</span>
+              Hola, <span className="text-[var(--page-primary)]">{user.name?.split(' ')[0] || 'Usuario'}</span>
             </h1>
             <p className="text-amber-100/50 mt-2 font-light">
               Gestioná tu perfil y tus reservas.
@@ -169,16 +135,16 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
           </div>
 
           {/* TABS DESKTOP & MOBILE */}
-          <div className="flex bg-amber-500/10 p-1 rounded-2xl w-full md:w-fit border border-amber-500/20">
+          <div className="flex bg-[var(--page-primary)]/10 p-1 rounded-2xl w-full md:w-fit border border-[var(--page-primary)]/20">
             <button
               onClick={() => setActiveTab('perfil')}
-              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'perfil' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'text-amber-500 hover:bg-amber-500/10'}`}
+              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'perfil' ? 'bg-[var(--page-primary)] text-black shadow-lg shadow-[var(--page-primary)]/20' : 'text-[var(--page-primary)] hover:bg-[var(--page-primary)]/10'}`}
             >
               <User className="w-4 h-4" /> Mi Perfil
             </button>
             <button
               onClick={() => setActiveTab('turnos')}
-              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'turnos' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'text-amber-500 hover:bg-amber-500/10'}`}
+              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'turnos' ? 'bg-[var(--page-primary)] text-black shadow-lg shadow-[var(--page-primary)]/20' : 'text-[var(--page-primary)] hover:bg-[var(--page-primary)]/10'}`}
             >
               <Calendar className="w-4 h-4" /> Mis Turnos
             </button>
@@ -196,9 +162,9 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
               transition={{ duration: 0.3 }}
               className="bg-neutral-900/40 rounded-3xl border border-amber-900/20 overflow-hidden backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
             >
-              <div className="p-6 md:p-8 border-b border-amber-900/10 bg-amber-500/5">
+              <div className="p-6 md:p-8 border-b border-amber-900/10 bg-[var(--page-primary)]/5">
                 <h2 className="text-lg font-bold flex items-center gap-3 text-white uppercase tracking-widest">
-                  <Settings className="w-5 h-5 text-amber-500" />
+                  <Settings className="w-5 h-5 text-[var(--page-primary)]" />
                   Detalles de usuario
                 </h2>
               </div>
@@ -207,7 +173,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
 
                 {/* Email */}
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <label className="text-[10px] font-black text-[var(--page-primary)] uppercase tracking-[0.2em] flex items-center gap-2">
                     <Mail className="w-3.5 h-3.5" /> Correo Electrónico
                   </label>
                   <div className="p-4 bg-black/40 border border-amber-900/10 rounded-2xl text-amber-100/20 text-sm font-mono italic">
@@ -217,7 +183,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
 
                 {/* Nombre */}
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <label className="text-[10px] font-black text-[var(--page-primary)] uppercase tracking-[0.2em] flex items-center gap-2">
                     <User className="w-3.5 h-3.5" /> Nombre y Apellido
                   </label>
                   <input
@@ -225,18 +191,18 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
                     defaultValue={user.name}
                     type="text"
                     required
-                    className="w-full p-4 bg-black/40 border border-amber-900/30 rounded-2xl text-white focus:ring-1 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                    className="w-full p-4 bg-black/40 border border-amber-900/30 rounded-2xl text-white focus:ring-1 focus:ring-[var(--page-primary)] focus:border-[var(--page-primary)] outline-none transition-all"
                   />
                 </div>
 
                 {/* TELÉFONO (WhatsApp) */}
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <label className="text-[10px] font-black text-[var(--page-primary)] uppercase tracking-[0.2em] flex items-center gap-2">
                     <Phone className="w-3.5 h-3.5" /> WhatsApp / Teléfono
                   </label>
-                  <div className="flex bg-black/40 border border-amber-900/30 rounded-2xl overflow-hidden focus-within:ring-1 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all">
-                    <div className="flex items-center justify-center px-2 bg-amber-500/10 border-r border-amber-900/30">
-                      <select name="prefix" defaultValue={defaultPrefix} className="bg-transparent text-amber-500 font-bold outline-none cursor-pointer pr-2 text-sm">
+                  <div className="flex bg-black/40 border border-amber-900/30 rounded-2xl overflow-hidden focus-within:ring-1 focus-within:ring-[var(--page-primary)] focus-within:border-[var(--page-primary)] transition-all">
+                    <div className="flex items-center justify-center px-2 bg-[var(--page-primary)]/10 border-r border-amber-900/30">
+                      <select name="prefix" defaultValue={defaultPrefix} className="bg-transparent text-[var(--page-primary)] font-bold outline-none cursor-pointer pr-2 text-sm">
                         <option value="+54 9" className="bg-neutral-900 text-white">🇦🇷 +54 9</option>
                         <option value="+598" className="bg-neutral-900 text-white">🇺🇾 +598</option>
                         <option value="+56" className="bg-neutral-900 text-white">🇨🇱 +56</option>
@@ -280,7 +246,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
                     <Button
                       disabled={isPending}
                       type="submit"
-                      className="bg-amber-500 hover:bg-amber-400 text-black font-black uppercase tracking-widest px-10 rounded-2xl h-14 w-full md:w-auto transition-all shadow-lg shadow-amber-500/10 active:scale-95"
+                      className="bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-black font-black uppercase tracking-widest px-10 rounded-2xl h-14 w-full md:w-auto transition-all shadow-lg shadow-[var(--page-primary)]/10 active:scale-95"
                     >
                       {isPending ? "Guardando..." : "Actualizar Perfil"}
                     </Button>
@@ -301,10 +267,15 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
               <div className="bg-neutral-900/40 rounded-3xl border border-amber-900/20 overflow-hidden backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-4 md:p-8 min-h-[500px]">
                 <div className="mb-6 pb-6 border-b border-amber-900/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <h2 className="text-xl font-bold text-white tracking-widest uppercase">
-                    Historial de <span className="text-amber-500">Turnos</span>
+                    Historial de <span className="text-[var(--page-primary)]">Turnos</span>
                   </h2>
                 </div>
-                <TurnoList turnos={turnos} session={session} />
+                <TurnoList 
+                  turnos={turnos}
+                  session={session}
+                  totalPages={1}
+                  currentPage={1} 
+                />
               </div>
             </motion.div>
           )}

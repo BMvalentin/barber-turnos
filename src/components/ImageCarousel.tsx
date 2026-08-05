@@ -1,5 +1,4 @@
 "use client";
-
 import { motion } from "framer-motion";
 import Autoplay from "embla-carousel-autoplay"
 import {
@@ -11,7 +10,11 @@ import {
 } from "@/components/ui/carousel";
 import Image from "next/image";
 
-export function ImageCarousel({ servicios }: { servicios: any[] }) {
+interface ImageCarouselProps {
+  servicios: any[];
+}
+
+export function ImageCarousel({ servicios }: ImageCarouselProps) {
   if (!servicios || servicios.length === 0) return null;
 
   return (
@@ -25,7 +28,7 @@ export function ImageCarousel({ servicios }: { servicios: any[] }) {
           className="text-center mb-8"
         >
           <h2 className="text-3xl font-black text-white uppercase tracking-tighter">
-            Nuestros <span className="text-amber-500 italic">Servicios</span>
+            Nuestros <span className="italic" style={{ color: "var(--page-primary)" }}>Servicios</span>
           </h2>
         </motion.div>
 
@@ -64,7 +67,7 @@ export function ImageCarousel({ servicios }: { servicios: any[] }) {
                               ${servicio.precio}
                             </span>
 
-                            <h2 className="text-xl font-bold text-amber-500 leading-none">
+                            <h2 className="text-xl font-bold leading-none" style={{ color: "var(--page-primary)" }}>
                               $
                               {Math.round(
                                 servicio.precio - (servicio.precio * servicio.descuento) / 100
@@ -76,7 +79,7 @@ export function ImageCarousel({ servicios }: { servicios: any[] }) {
                             </span>
                           </>
                         ) : (
-                          <h2 className="text-lg font-bold text-amber-500">
+                          <h2 className="text-lg font-bold" style={{ color: "var(--page-primary)" }}>
                             ${servicio.precio}
                           </h2>
                         )}
@@ -87,9 +90,13 @@ export function ImageCarousel({ servicios }: { servicios: any[] }) {
               ))}
             </CarouselContent>
 
-            {/* Flechas con z-index alto para asegurar que sean clickeables */}
-            <CarouselPrevious className="absolute left-2 z-50 h-8 w-8 bg-zinc-900 text-white hover:bg-amber-500" />
-            <CarouselNext className="absolute right-2 z-50 h-8 w-8 bg-zinc-900 text-white hover:bg-amber-500" />
+            {/* Flechas con hover dinámico usando el color primario */}
+            <CarouselPrevious 
+              className="absolute left-2 z-50 h-8 w-8 bg-zinc-900 text-white border-white/10 hover:text-white" 
+            />
+            <CarouselNext 
+              className="absolute right-2 z-50 h-8 w-8 bg-zinc-900 text-white border-white/10 hover:text-white" 
+            />
           </Carousel>
         </motion.div>
       </div>

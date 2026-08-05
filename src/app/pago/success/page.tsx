@@ -1,5 +1,7 @@
 // app/pago/success/page.tsx
 import { confirmarPagoTurno } from "@/actions/mercadopago-actions";
+import RedireccionWhatsApp from "@/components/pago/RedireccionWhatsApp";
+import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { CheckCircle2, Calendar, ArrowRight } from "lucide-react";
 
@@ -18,18 +20,22 @@ export default async function PagoSuccessPage({
   const turnoId = searchParams.turnoId;
   const paymentId = searchParams.payment_id || searchParams.collection_id;
 
-  let turnoConfirmado = false;
+  // Confirmamos el turno desde la back_url (respaldo al webhook) y
+  // obtenemos el WhatsApp del negocio para redirigir al cliente
+  const [result, config] = await Promise.all([
+    turnoId
+      ? confirmarPagoTurno(turnoId, paymentId)
+      : Promise.resolve({ success: false, error: "Sin turno", data: undefined }),
+    prisma.pageConfig.findUnique({ where: { id: 1 } }),
+  ]);
 
-  if (turnoId) {
-    // Confirmamos el turno desde la back_url (respaldo al webhook)
-    const result = await confirmarPagoTurno(turnoId, paymentId);
-    turnoConfirmado = result.success;
-  }
+  const turnoConfirmado = result.success === true;
+  const datosTurno = result.success ? result.data : null;
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center space-y-6">
-        
+
         {/* Ícono de éxito */}
         <div className="flex justify-center">
           <div className="w-24 h-24 rounded-full bg-green-500/20 border-2 border-green-500/40 flex items-center justify-center">
@@ -55,7 +61,7 @@ export default async function PagoSuccessPage({
             </p>
             <p className="text-sm text-zinc-300">
               <span className="text-zinc-500">ID de pago:</span>{" "}
-              <span className="font-mono text-amber-400">{paymentId}</span>
+              <span className="font-mono text-[var(--page-primary-80)]">{paymentId}</span>
             </p>
             {turnoId && (
               <p className="text-sm text-zinc-300">
@@ -70,7 +76,7 @@ export default async function PagoSuccessPage({
         <div className="flex flex-col gap-3">
           <Link
             href="/dashboard"
-            className="flex items-center justify-center gap-2 w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
+            className="flex items-center justify-center gap-2 w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
           >
             <Calendar className="w-5 h-5" />
             Ver mis turnos

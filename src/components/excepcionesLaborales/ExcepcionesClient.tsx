@@ -25,7 +25,7 @@ type Barbero = {
 type ExcepcionesClientProps = {
   excepciones: Excepcion[];
   barberos: Barbero[];
-};
+}
 
 export default function ExcepcionesClient({ excepciones, barberos }: ExcepcionesClientProps) {
   return (
@@ -34,7 +34,9 @@ export default function ExcepcionesClient({ excepciones, barberos }: Excepciones
       <div className="lg:col-span-1">
         <div className="bg-black/40 backdrop-blur-lg rounded-xl shadow-lg border border-amber-900/30 p-6 sticky top-8">
           <h2 className="text-xl font-semibold mb-4 text-white">Nueva Excepción</h2>
-          <ExcepcionForm barberos={barberos} />
+          <ExcepcionForm
+            barberos={barberos}
+          />
         </div>
       </div>
 

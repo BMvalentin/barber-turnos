@@ -48,7 +48,7 @@ type Barbero = {
 
 type FilterState = {
   search: string;
-  estado: string; // "" = todos, "true" = activo, "false" = inactivo
+  estado: string;
   precioMin: string;
   precioMax: string;
   duracionMax: string;
@@ -78,7 +78,6 @@ export default function ServicioList({
   const [currentPage, setCurrentPage] = useState(1);
   const filterPanelRef = useRef<HTMLDivElement>(null);
 
-  // Estado para el modal de confirmación
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [itemAEliminar, setItemAEliminar] = useState<string | null>(null);
 
@@ -97,7 +96,6 @@ export default function ServicioList({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showFilterPanel]);
 
-  // Filtrado y ordenamiento
   const serviciosFiltrados = servicios
     .filter((s) => {
       if (filters.search.trim()) {
@@ -106,24 +104,19 @@ export default function ServicioList({
         const matchDesc = s.descripcion?.toLowerCase().includes(q) ?? false;
         if (!matchNombre && !matchDesc) return false;
       }
-
       if (filters.estado !== "") {
         const activo = filters.estado === "true";
         if (s.estado !== activo) return false;
       }
-
       if (filters.precioMin !== "" && s.precio < parseFloat(filters.precioMin))
         return false;
-
       if (filters.precioMax !== "" && s.precio > parseFloat(filters.precioMax))
         return false;
-
       if (
         filters.duracionMax !== "" &&
         s.duracion > parseInt(filters.duracionMax)
       )
         return false;
-
       return true;
     })
     .sort((a, b) => {
@@ -144,7 +137,6 @@ export default function ServicioList({
       }
     });
 
-  // Paginación
   const totalPages = Math.max(
     1,
     Math.ceil(serviciosFiltrados.length / ITEMS_PER_PAGE)
@@ -191,7 +183,6 @@ export default function ServicioList({
       )
       : 0;
 
-  // Manejadores del modal de confirmación
   const handleEliminar = (id: string) => {
     setItemAEliminar(id);
     setMostrarConfirmacion(true);
@@ -204,9 +195,7 @@ export default function ServicioList({
 
   const confirmarEliminacion = async () => {
     if (!itemAEliminar) return;
-
     const idAEliminar = itemAEliminar;
-
     setMostrarConfirmacion(false);
     setItemAEliminar(null);
 
@@ -215,7 +204,6 @@ export default function ServicioList({
 
     try {
       const result = await deleteservicio(formData);
-
       if (!result.success) {
         toast({
           title: "Error al eliminar",
@@ -226,18 +214,15 @@ export default function ServicioList({
         });
         return;
       }
-
       toast({
         title: "Servicio eliminado",
         description: "El servicio ha sido eliminado correctamente.",
         variant: "default",
         duration: 4000,
       });
-
       window.location.reload();
     } catch (error) {
       console.error(error);
-
       toast({
         title: "Error al eliminar",
         description: "Ocurrió un error inesperado.",
@@ -255,7 +240,10 @@ export default function ServicioList({
           <p className="text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
             Servicios Activos
           </p>
-          <p className="text-3xl font-semibold text-amber-600">
+          <p
+            className="text-3xl font-semibold"
+            style={{ color: "var(--page-primary)" }}
+          >
             {activeServicesCount}
           </p>
         </div>
@@ -277,7 +265,10 @@ export default function ServicioList({
       <div>
         <div className="flex flex-col sm:flex-row justify-between items-start mb-4">
           <div>
-            <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-1">
+            <p
+              className="text-[10px] font-bold uppercase tracking-wider mb-1"
+              style={{ color: "var(--page-primary)" }}
+            >
               Catálogo
             </p>
             <h2 className="text-2xl font-bold text-[#E4E0D9]">
@@ -289,15 +280,20 @@ export default function ServicioList({
             <div className="relative" ref={filterPanelRef}>
               <button
                 onClick={() => setShowFilterPanel((v) => !v)}
-                className={`flex items-center gap-2 px-4 py-2 border text-[10px] font-bold uppercase tracking-wider rounded transition-colors ${showFilterPanel || activeFilterCount > 0
-                    ? "border-amber-600 text-amber-600 bg-amber-600/10"
-                    : "border-[#2C261D] text-[#E4E0D9] bg-[#1C1812] hover:bg-[#2C261D]"
-                  }`}
+                style={{
+                  borderColor: showFilterPanel || activeFilterCount > 0 ? "var(--page-primary)" : "#2C261D",
+                  color: showFilterPanel || activeFilterCount > 0 ? "var(--page-primary)" : "#E4E0D9",
+                  backgroundColor: showFilterPanel || activeFilterCount > 0 ? "var(--page-primary-15)" : "#1C1812"
+                }}
+                className="flex items-center gap-2 px-4 py-2 border text-[10px] font-bold uppercase tracking-wider rounded transition-colors hover:bg-[#2C261D]"
               >
                 <SlidersHorizontal className="w-4 h-4" />
                 Filtrar
                 {activeFilterCount > 0 && (
-                  <span className="bg-amber-600 text-black text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                  <span
+                    className="text-black text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none"
+                    style={{ backgroundColor: "var(--page-primary)" }}
+                  >
                     {activeFilterCount}
                   </span>
                 )}
@@ -309,50 +305,25 @@ export default function ServicioList({
                     className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 sm:hidden"
                     onClick={() => setShowFilterPanel(false)}
                   />
-                  <div
-                    className="
-                      fixed inset-x-0 bottom-0 z-50
-                      h-[85dvh]
-                      bg-black
-                      border-t border-[#2C261D]
-                      rounded-t-3xl
-                      shadow-2xl
-                      flex flex-col
-                      sm:absolute
-                      sm:right-0
-                      sm:top-full
-                      sm:bottom-auto
-                      sm:inset-x-auto
-                      sm:mt-2
-                      sm:w-80
-                      sm:h-auto
-                      sm:rounded-xl
-                      sm:border
-                      sm:border-[#2C261D]
-                      sm:bg-black/90
-                      sm:overflow-hidden
-                    "
-                  >
-                    {/* Header */}
+                  <div className="fixed inset-x-0 bottom-0 z-50 h-[85dvh] bg-black border-t border-[#2C261D] rounded-t-3xl shadow-2xl flex flex-col sm:absolute sm:right-0 sm:top-full sm:bottom-auto sm:inset-x-auto sm:mt-2 sm:w-80 sm:h-auto sm:rounded-xl sm:border sm:border-[#2C261D] sm:bg-black/90 sm:overflow-hidden">
                     <div className="shrink-0">
                       <div className="flex items-center justify-between px-5 py-4 border-b border-[#2C261D]">
                         <div className="flex items-center gap-2">
-                          <Filter className="w-4 h-4 text-amber-600" />
+                          <Filter className="w-4 h-4" style={{ color: "var(--page-primary)" }} />
                           <span className="text-xs font-bold text-[#E4E0D9] uppercase tracking-wider">
                             Filtros
                           </span>
                         </div>
-
                         <div className="flex items-center gap-3">
                           {activeFilterCount > 0 && (
                             <button
                               onClick={resetFilters}
-                              className="text-[10px] font-bold text-[#8E8675] hover:text-amber-600 uppercase tracking-wider transition-colors"
+                              className="text-[10px] font-bold text-[#8E8675] uppercase tracking-wider transition-colors"
+                              style={{ color: "var(--page-primary)" }}
                             >
                               Limpiar
                             </button>
                           )}
-
                           <button
                             onClick={() => setShowFilterPanel(false)}
                             className="text-[#8E8675] hover:text-[#E4E0D9] transition-colors"
@@ -363,23 +334,21 @@ export default function ServicioList({
                       </div>
                     </div>
 
-                    {/* Contenido scrolleable */}
                     <div className="flex-1 overflow-y-auto p-5 space-y-5">
                       {/* Búsqueda */}
                       <div>
                         <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
                           Buscar
                         </label>
-
                         <div className="relative">
                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#8E8675]" />
-
                           <input
                             type="text"
                             value={filters.search}
                             onChange={(e) => updateFilter("search", e.target.value)}
                             placeholder="Nombre o descripción..."
-                            className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg pl-9 pr-4 py-2.5 text-[#E4E0D9] text-sm outline-none focus:border-amber-600 transition-colors placeholder:text-[#8E8675]/50"
+                            className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg pl-9 pr-4 py-2.5 text-[#E4E0D9] text-sm outline-none transition-colors placeholder:text-[#8E8675]/50"
+                            style={{ color: "var(--page-primary)" }}
                           />
                         </div>
                       </div>
@@ -389,25 +358,28 @@ export default function ServicioList({
                         <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
                           Estado
                         </label>
-
                         <div className="flex gap-2">
                           {[
                             { value: "", label: "Todos" },
                             { value: "true", label: "Activo" },
                             { value: "false", label: "Inactivo" },
-                          ].map((opt) => (
-                            <button
-                              key={opt.value || "todos"}
-                              onClick={() => updateFilter("estado", opt.value)}
-                              className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${
-                                filters.estado === opt.value
-                                  ? "bg-amber-600 text-black"
-                                  : "bg-[#1C1812] border border-[#2C261D] text-[#8E8675] hover:border-amber-600 hover:text-[#E4E0D9]"
-                              }`}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
+                          ].map((opt) => {
+                            const isSelected = filters.estado === opt.value;
+                            return (
+                              <button
+                                key={opt.value || "todos"}
+                                onClick={() => updateFilter("estado", opt.value)}
+                                style={{
+                                  backgroundColor: isSelected ? "var(--page-primary)" : "#1C1812",
+                                  color: isSelected ? "#000" : "#8E8675",
+                                  borderColor: isSelected ? "var(--page-primary)" : "#2C261D"
+                                }}
+                                className="flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider border transition-colors"
+                              >
+                                {opt.label}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -416,37 +388,28 @@ export default function ServicioList({
                         <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
                           Rango de Precio
                         </label>
-
                         <div className="flex gap-2 items-center">
                           <div className="relative flex-1">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8E8675] text-xs">
-                              $
-                            </span>
-
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8E8675] text-xs">$</span>
                             <input
                               type="number"
                               value={filters.precioMin}
                               onChange={(e) => updateFilter("precioMin", e.target.value)}
                               placeholder="Mín"
                               min="0"
-                              className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg pl-7 pr-3 py-2.5 text-[#E4E0D9] text-sm outline-none focus:border-amber-600 transition-colors placeholder:text-[#8E8675]/50"
+                              className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg pl-7 pr-3 py-2.5 text-[#E4E0D9] text-sm outline-none transition-colors placeholder:text-[#8E8675]/50"
                             />
                           </div>
-
                           <span className="text-[#8E8675] text-xs font-bold">—</span>
-
                           <div className="relative flex-1">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8E8675] text-xs">
-                              $
-                            </span>
-
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8E8675] text-xs">$</span>
                             <input
                               type="number"
                               value={filters.precioMax}
                               onChange={(e) => updateFilter("precioMax", e.target.value)}
                               placeholder="Máx"
                               min="0"
-                              className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg pl-7 pr-3 py-2.5 text-[#E4E0D9] text-sm outline-none focus:border-amber-600 transition-colors placeholder:text-[#8E8675]/50"
+                              className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg pl-7 pr-3 py-2.5 text-[#E4E0D9] text-sm outline-none transition-colors placeholder:text-[#8E8675]/50"
                             />
                           </div>
                         </div>
@@ -457,7 +420,6 @@ export default function ServicioList({
                         <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
                           Duración Máxima
                         </label>
-
                         <div className="relative">
                           <input
                             type="number"
@@ -465,9 +427,8 @@ export default function ServicioList({
                             onChange={(e) => updateFilter("duracionMax", e.target.value)}
                             placeholder="ej: 60"
                             min="1"
-                            className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg px-4 pr-14 py-2.5 text-[#E4E0D9] text-sm outline-none focus:border-amber-600 transition-colors placeholder:text-[#8E8675]/50"
+                            className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg px-4 pr-14 py-2.5 text-[#E4E0D9] text-sm outline-none transition-colors placeholder:text-[#8E8675]/50"
                           />
-
                           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#8E8675] uppercase">
                             min
                           </span>
@@ -479,12 +440,11 @@ export default function ServicioList({
                         <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
                           Ordenar Por
                         </label>
-
                         <div className="relative">
                           <select
                             value={filters.ordenPor}
                             onChange={(e) => updateFilter("ordenPor", e.target.value)}
-                            className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg px-4 py-2.5 text-[#E4E0D9] text-sm outline-none focus:border-amber-600 transition-colors appearance-none cursor-pointer"
+                            className="w-full bg-[#1C1812] border border-[#2C261D] rounded-lg px-4 py-2.5 text-[#E4E0D9] text-sm outline-none transition-colors appearance-none cursor-pointer"
                           >
                             <option value="reciente">Más reciente</option>
                             <option value="nombre">Nombre A→Z</option>
@@ -492,17 +452,14 @@ export default function ServicioList({
                             <option value="precio_desc">Precio: mayor a menor</option>
                             <option value="duracion">Duración</option>
                           </select>
-
                           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8675] pointer-events-none" />
                         </div>
                       </div>
                     </div>
 
-                    {/* Footer */}
                     <div className="shrink-0 px-5 py-4 border-t border-[#2C261D] bg-[#1C1812]/50">
                       <p className="text-[10px] text-[#8E8675] text-center">
-                        {serviciosFiltrados.length} de {servicios.length} servicios
-                        encontrados
+                        {serviciosFiltrados.length} de {servicios.length} servicios encontrados
                       </p>
                     </div>
                   </div>
@@ -510,7 +467,9 @@ export default function ServicioList({
               )}
             </div>
 
-            <Button className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white"
+            <Button
+              className="flex items-center gap-2 px-4 py-2 text-white hover:opacity-90"
+              style={{ backgroundColor: "var(--page-primary)" }}
               onClick={() => setShowCreateModal(true)}
             >
               <Plus className="w-4 h-4" /> Nuevo Servicio
@@ -571,7 +530,8 @@ export default function ServicioList({
             {activeFilterCount > 0 && (
               <button
                 onClick={resetFilters}
-                className="mt-4 text-[10px] font-bold text-amber-600 uppercase tracking-wider hover:underline"
+                className="mt-4 text-[10px] font-bold uppercase tracking-wider hover:underline"
+                style={{ color: "var(--page-primary)" }}
               >
                 Limpiar filtros
               </button>
@@ -579,7 +539,6 @@ export default function ServicioList({
           </div>
         ) : (
           <div className="bg-black/70 border border-[#2C261D] rounded-xl overflow-hidden">
-            {/* Table Header */}
             <div className="hidden md:grid md:grid-cols-12 gap-4 p-4 border-b border-[#2C261D] bg-[#14110C]/50 text-[11px] font-bold text-[#8E8675] uppercase tracking-wider">
               <div className="col-span-6">Servicio</div>
               <div className="col-span-2 text-center">Duración</div>
@@ -593,7 +552,7 @@ export default function ServicioList({
                   key={servicio.id}
                   servicio={servicio}
                   barberos={barberos}
-                  onEliminar={handleEliminar} // 👈 AHORA SÍ
+                  onEliminar={handleEliminar}
                 />
               ))}
             </div>
@@ -612,15 +571,13 @@ export default function ServicioList({
                 >
                   &lt;
                 </button>
-
                 <div className="flex items-center gap-1">
-                  <span className="text-amber-600 font-bold px-2">
+                  <span className="font-bold px-2" style={{ color: "var(--page-primary)" }}>
                     {currentPage}
                   </span>
                   <span className="text-[#8E8675]">/</span>
                   <span className="text-[#8E8675] px-2">{totalPages}</span>
                 </div>
-
                 <button
                   onClick={() =>
                     setCurrentPage((p) => Math.min(totalPages, p + 1))
@@ -636,7 +593,6 @@ export default function ServicioList({
         )}
       </div>
 
-      {/* Modal de confirmación (fuera de la tabla) */}
       {mostrarConfirmacion && (
         <ConfirmDialog
           title="Eliminar servicio"
@@ -646,17 +602,15 @@ export default function ServicioList({
         />
       )}
 
-      {showCreateModal && (
-        <CreateServicioForm
-          barberos={barberos}
-          onClose={() => setShowCreateModal(false)}
-        />
-      )}
+     {showCreateModal && (
+  <CreateServicioForm
+    barberos={barberos}
+    onClose={() => setShowCreateModal(false)}
+  />
+)}
     </div>
   );
 }
-
-// ---- Subcomponentes ----
 
 function FilterTag({
   label,
@@ -666,7 +620,14 @@ function FilterTag({
   onRemove: () => void;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-600/10 border border-amber-600/30 text-amber-600 text-[10px] font-bold uppercase tracking-wider rounded">
+    <span
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 border text-[10px] font-bold uppercase tracking-wider rounded"
+      style={{
+        backgroundColor: "var(--page-primary-15)",
+        borderColor: "var(--page-primary-40)",
+        color: "var(--page-primary)",
+      }}
+    >
       {label}
       <button
         onClick={onRemove}
@@ -692,9 +653,11 @@ function ServicioRow({
   return (
     <>
       <div className="flex flex-col md:grid md:grid-cols-12 gap-4 p-4 md:items-center hover:bg-[#14110C]/80 transition-colors group">
-        {/* Servicio */}
         <div className="md:col-span-6 flex items-start md:items-center gap-4">
-          <div className="w-10 h-10 rounded-lg bg-[#251f15] border border-[#2C261D] flex items-center justify-center flex-shrink-0 text-amber-600">
+          <div
+            className="w-10 h-10 rounded-lg bg-[#251f15] border border-[#2C261D] flex items-center justify-center flex-shrink-0"
+            style={{ color: "var(--page-primary)" }}
+          >
             {servicio.srcImage ? (
               <img
                 src={servicio.srcImage}
@@ -720,27 +683,27 @@ function ServicioRow({
           </div>
         </div>
 
-        {/* Info adicional para desktop */}
         <div className="hidden md:flex col-span-2 justify-center items-center gap-1 text-[#8E8675] text-sm">
           <Clock className="w-3 h-3" />
           {servicio.duracion} min
         </div>
 
-        <div className="hidden md:flex col-span-2 justify-center font-semibold text-amber-600 text-sm">
+        <div
+          className="hidden md:flex col-span-2 justify-center font-semibold text-sm"
+          style={{ color: "var(--page-primary)" }}
+        >
           ${servicio.precio}
         </div>
 
-        {/* Acciones para desktop */}
         <div className="hidden md:flex col-span-2 justify-end gap-2 items-center">
           <button
             onClick={() => setShowEditModal(true)}
             title="Editar servicio"
-            className="text-[#8E8675] hover:text-amber-600 transition-colors p-1"
+            className="text-[#8E8675] transition-colors p-1"
+            style={{ color: "var(--page-primary)" }}
           >
             <SquarePen className="w-5 h-5" />
           </button>
-
-          {/* Eliminar sin confirm nativo */}
           <button
             onClick={() => onEliminar(servicio.id)}
             title="Eliminar servicio"
@@ -750,10 +713,12 @@ function ServicioRow({
           </button>
         </div>
 
-        {/* Vista mobile */}
         <div className="flex md:hidden items-center justify-between mt-2 pt-3 border-t border-[#2C261D]/50">
           <div className="flex items-center gap-4">
-            <span className="font-semibold text-amber-600 text-sm">
+            <span
+              className="font-semibold text-sm"
+              style={{ color: "var(--page-primary)" }}
+            >
               ${servicio.precio}
             </span>
             <span className="flex items-center gap-1 text-[#8E8675] text-sm">
@@ -764,11 +729,10 @@ function ServicioRow({
             <button
               onClick={() => setShowEditModal(true)}
               title="Editar servicio"
-              className="text-[#8E8675] hover:text-amber-600 transition-colors p-1.5 bg-[#1C1812] rounded border border-[#2C261D]"
+              className="text-[#8E8675] transition-colors p-1.5 bg-[#1C1812] rounded border border-[#2C261D]"
             >
               <SquarePen className="w-4 h-4" />
             </button>
-
             <button
               onClick={() => onEliminar(servicio.id)}
               title="Eliminar servicio"

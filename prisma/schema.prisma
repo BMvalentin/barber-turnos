@@ -43,7 +43,7 @@ model barbero {
 
 model servicio {
   id          String             @id @default(cuid())
-  descripcion String?
+  descripcion String?            @db.Text
   nombre      String
   srcImage    String?
   estado      Boolean            @default(true)
@@ -199,6 +199,37 @@ model SlotLock {
 
   @@index([barberoId, horarioReservado])
   @@index([expiresAt])
+}
+
+model PageConfig {
+  id                 Int      @id @default(1)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  description        String?  @db.Text
+  slogan             String?
+  logo               String?  @db.Text
+  favicon            String?  @db.Text
+  primaryColor       String?  @default("#000000")
+  secondaryColor     String?  @default("#FFFFFF")
+  address            String?
+  city               String?
+  province           String?
+  country            String?
+  postalCode         String?
+  mapsUrl            String?  @db.Text
+  currency           String   @default("ARS")
+  language           String   @default("es")
+  maintenanceMode    Boolean  @default(false)
+  metaTitle          String?
+  metaDescription    String?  @db.Text
+  termsAndConditions String?  @db.Text
+  privacyPolicy      String?  @db.Text
+  email              String?
+  instagram          String?  @db.Text
+  name               String
+  phone              String?
+  whatsapp           String?
+  backgroundImage    String?  @db.Text
 }
 
 enum user_role {

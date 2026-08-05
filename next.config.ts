@@ -8,6 +8,13 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   serverExternalPackages: ['@prisma/client', 'prisma'],
+  experimental: {
+    serverActions: {
+      // El default es 1 MB y corta la subida de imágenes de configuración
+      // antes de que la action pueda validar el tamaño.
+      bodySizeLimit: '6mb',
+    },
+  },
   images: {
     remotePatterns: [
       {

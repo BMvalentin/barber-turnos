@@ -9,70 +9,92 @@ import Image from "next/image";
 
 interface HeaderProps {
   session: any;
+  config?: {
+    name?: string | null;
+    logo?: string | null;
+  } | null;
 }
 
-export function Header({ session }: HeaderProps) {
+export function Header({ session, config }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const businessName = config?.name || "";
+  const words = businessName.split(" ");
+  const firstName = words[0];
+  const lastName = words.slice(1).join(" ");
 
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="fixed top-0 left-0 right-0 z-50 bg-linear-to-br from-black/70 to-amber-950/20 backdrop-blur-2xl
-                shadow-md w-full shadow-black text-white"
+      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-2xl shadow-md w-full shadow-black text-white"
+      style={{
+        background: `linear-gradient(to bottom right, var(--page-secondary-80), #000000cc)`,
+      }}
     >
       <div className="container flex items-center justify-between h-16 mx-auto px-4 select-none">
         <Link href="/#home" className="flex items-center gap-2 relative z-50">
-          <Scissors className="w-6 h-6 text-amber-500" /><span>{' MAYORAZ '}</span><span className="text-amber-500">{'BARBER'}</span>
+          {config?.logo ? (
+            <Image 
+              src={config.logo} 
+              alt={businessName} 
+              width={28} 
+              height={28} 
+              className="w-7 h-7 object-contain rounded-full" 
+            />
+          ) : (
+            <Scissors className="w-6 h-6" style={{ color: "var(--page-primary)" }} />
+          )}
+          <span>{` ${firstName} `}</span>
+          <span style={{ color: "var(--page-primary)" }}>{`${lastName}`}</span>
         </Link>
-        
+
         {/* DESKTOP NAV & AUTH */}
         <div className="hidden md:flex items-center gap-8">
           <nav className="flex items-center gap-8">
             <Link href="/#servicios" className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <Button variant="link" size="sm">
-                Servicios
-              </Button>
-            </Link>
-
-            <Link href="/#nosotros" className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <Button variant="link" size="sm">
-                Nosotros
-              </Button>
+              <Button variant="link" size="sm">Servicios</Button>
             </Link>
 
             <Link href="/#ubicacion" className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <Button variant="link" size="sm">
-                Ubicación
-              </Button>
+              <Button variant="link" size="sm">Ubicación</Button>
             </Link>
 
             {session?.user?.role === "ADMIN" && (
               <Link href="/admin" className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
-                <Button variant="link" size="sm">
-                  Administrador
-                </Button>
+                <Button variant="link" size="sm">Administrador</Button>
               </Link>
             )}
 
             <Link href={session ? "/turno" : "/login"} className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <Button variant="amarillo" size="sm">
-                  Turnos
+              <Button 
+                size="sm"
+                style={{ backgroundColor: "var(--page-primary)", color: "#ffffff" }}
+              >
+                Turnos
               </Button>
             </Link>
           </nav>
 
           {session ? (
-            <div className="flex items-center gap-4 border-l border-amber-900/50 pl-6">
-              <span className="text-sm"><Link className="flex flex-row items-center" href="/dashboard"><Image src={session.user?.image || "/images/avatar-default.svg"} alt="" className="rounded-full" width={32} height={32}/><Button variant="link" size="sm">{session.user?.name}</Button></Link></span>
+            <div className="flex items-center gap-4 border-l pl-6" style={{ borderColor: "var(--page-primary-40)" }}>
+              <span className="text-sm">
+                <Link className="flex flex-row items-center" href="/dashboard">
+                  <Image src={session.user?.image || "/images/avatar-default.svg"} alt="" className="rounded-full" width={32} height={32} />
+                  <Button variant="link" size="sm">{session.user?.name}</Button>
+                </Link>
+              </span>
               <form action={handleSignOut}>
                 <Button variant="rojo" size="sm" type="submit">Salir</Button>
               </form>
             </div>
           ) : (
-            <div className="border-l border-amber-900/50 pl-6">
+            <div className="border-l pl-6" style={{ borderColor: "var(--page-primary-40)" }}>
               <Link href="/login">
-                <Button variant="amarillo" size="sm">
+                <Button 
+                  size="sm"
+                  style={{ backgroundColor: "var(--page-primary)", color: "#ffffff" }}
+                >
                   <DoorOpen className="w-4 h-4 mr-2" /> Iniciar Sesión
                 </Button>
               </Link>
@@ -81,8 +103,9 @@ export function Header({ session }: HeaderProps) {
         </div>
 
         {/* MOBILE TOGGLE */}
-        <button 
-          className="md:hidden relative z-50 text-amber-500 p-2"
+        <button
+          className="md:hidden relative z-50 p-2"
+          style={{ color: "var(--page-primary)" }}
           onClick={() => setIsOpen(!isOpen)}
         >
           {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -96,36 +119,34 @@ export function Header({ session }: HeaderProps) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-amber-900/30 bg-black/95 backdrop-blur-xl overflow-hidden"
+            className="md:hidden border-t bg-black/95 backdrop-blur-xl overflow-hidden"
+            style={{ borderColor: "var(--page-primary-30)" }}
           >
             <div className="flex flex-col px-6 py-6 space-y-4">
               <Link href="/#servicios" onClick={() => setIsOpen(false)} className="text-base text-gray-300 hover:text-white transition-colors py-2">
                 Servicios
               </Link>
-              <Link href="/#nosotros" onClick={() => setIsOpen(false)} className="text-base text-gray-300 hover:text-white transition-colors py-2">
-                Nosotros
-              </Link>
               <Link href="/#ubicacion" onClick={() => setIsOpen(false)} className="text-base text-gray-300 hover:text-white transition-colors py-2">
                 Ubicación
               </Link>
-              
+
               {session?.user?.role === "ADMIN" && (
-                <Link href="/admin" onClick={() => setIsOpen(false)} className="text-base text-amber-500 hover:text-amber-400 font-medium transition-colors py-2">
+                <Link href="/admin" onClick={() => setIsOpen(false)} className="text-base font-medium transition-colors py-2" style={{ color: "var(--page-primary)" }}>
                   Administrador
                 </Link>
               )}
 
               <div className="pt-2">
                 <Link href={session ? "/turno" : "/login"} onClick={() => setIsOpen(false)}>
-                  <Button variant="amarillo" className="w-full">Turnos</Button>
+                  <Button variant="amarillo" className="w-full" style={{ backgroundColor: "var(--page-primary)", color: "#fff" }}>Turnos</Button>
                 </Link>
               </div>
 
-              <div className="border-t border-amber-900/30 pt-6 mt-4">
+              <div className="border-t pt-6 mt-4" style={{ borderColor: "var(--page-primary-30)" }}>
                 {session ? (
                   <div className="flex flex-col gap-4">
                     <Link href="/dashboard" onClick={() => setIsOpen(false)} className="flex items-center gap-3 py-2">
-                      <Image src={session.user?.image || "/images/avatar-default.svg"} alt="" className="rounded-full border border-amber-500/50" width={40} height={40}/>
+                      <Image src={session.user?.image || "/images/avatar-default.svg"} alt="" className="rounded-full border" style={{ borderColor: "var(--page-primary-80)" }} width={40} height={40} />
                       <span className="text-base font-medium text-white">{session.user?.name}</span>
                     </Link>
                     <form action={handleSignOut} className="w-full">
@@ -134,7 +155,7 @@ export function Header({ session }: HeaderProps) {
                   </div>
                 ) : (
                   <Link href="/login" onClick={() => setIsOpen(false)} className="w-full">
-                    <Button variant="outline" className="w-full bg-transparent border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black">
+                    <Button variant="outline" className="w-full bg-transparent" style={{ borderColor: "var(--page-primary)", color: "var(--page-primary)" }}>
                       <DoorOpen className="w-4 h-4 mr-2" /> Iniciar Sesión
                     </Button>
                   </Link>

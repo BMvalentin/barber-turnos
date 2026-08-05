@@ -10,7 +10,7 @@ type HorarioBarbero = {
   margenLaboralId: string;
   dia: {
     id: string;
-    dia: string; // "Lunes" | "Martes" | ... (enum dias_laborales)
+    dia: string;
   };
   margenLaboral: {
     desde: string;
@@ -33,7 +33,6 @@ type Barbero = {
   horarios?: HorarioBarbero[];
 };
 
-// Orden fijo para que los días no aparezcan salteados / desordenados
 const ORDEN_DIAS = [
   "Lunes",
   "Martes",
@@ -53,11 +52,15 @@ export default function BarberoList({
   servicios?: any[];
   diasLaborales?: any[];
 }) {
+
   if (!barberos.length) {
     return (
-      <div className="bg-black/40 p-8 text-center rounded-lg">
-        <User className="h-16 w-16 text-amber-500/30 mx-auto mb-4" />
-        <p className="text-amber-200/70">No hay barberos disponibles</p>
+      <div 
+        className="bg-black/40 p-8 text-center rounded-lg border"
+        style={{ borderColor: `var(--page-primary-30)` }}
+      >
+        <User className="h-16 w-16 mx-auto mb-4" style={{ color: `var(--page-primary-50)` }} />
+        <p style={{ color: `var(--page-primary-70)` }}>No hay barberos disponibles</p>
       </div>
     );
   }
@@ -107,9 +110,12 @@ function BarberoCard({
 
   return (
     <>
-      <div className="bg-black/40 border border-amber-900/30 rounded-xl overflow-hidden">
+      <div 
+        className="bg-black/40 rounded-xl overflow-hidden border transition-all"
+        style={{ borderColor: `var(--page-primary-40)` }}
+      >
         {/* IMAGEN */}
-        <div className="h-48">
+        <div className="h-48 border-b" style={{ borderColor: `var(--page-primary-20)` }}>
           {barbero.srcImage ? (
             <img
               src={barbero.srcImage}
@@ -117,36 +123,37 @@ function BarberoCard({
             />
           ) : (
             <div className="flex items-center justify-center h-full">
-              <User className="h-12 w-12 text-amber-500/30" />
+              <User className="h-12 w-12" style={{ color: `var(--page-primary-50)` }} />
             </div>
           )}
         </div>
 
         <div className="p-4 space-y-3">
-          <h3 className="text-white font-bold">{barbero.nombre}</h3>
+          <h3 className="text-white font-bold text-lg">{barbero.nombre}</h3>
 
           {/* SERVICIOS */}
           <div>
-            <p className="text-xs text-amber-400 mb-1">Servicios:</p>
+            <p className="text-xs mb-1 font-semibold" style={{ color: "var(--page-primary)" }}>Servicios:</p>
             <div className="flex flex-wrap gap-1">
               {barbero.servicios?.length ? (
                 barbero.servicios.map((s) => (
                   <span
                     key={s.servicio.id}
-                    className="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded"
+                    className="text-xs px-2 py-1 rounded"
+                    style={{ backgroundColor: `var(--page-primary-20)`, color: "var(--page-primary)" }}
                   >
                     {s.servicio.nombre}
                   </span>
                 ))
               ) : (
-                <span className="text-xs text-gray-400">Sin servicios</span>
+                <span className="text-xs text-zinc-500">Sin servicios</span>
               )}
             </div>
           </div>
 
           {/* HORARIOS AGRUPADOS POR DÍA */}
           <div>
-            <p className="text-xs text-amber-400 mb-1">Horarios:</p>
+            <p className="text-xs mb-1 font-semibold" style={{ color: "var(--page-primary)" }}>Horarios:</p>
             {diasConHorario.length ? (
               <div className="space-y-1.5">
                 {diasConHorario.map((dia) => (
@@ -164,7 +171,8 @@ function BarberoCard({
                         .map((h) => (
                           <span
                             key={h.margenLaboralId}
-                            className="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded"
+                            className="text-xs px-2 py-1 rounded"
+                            style={{ backgroundColor: `var(--page-primary-20)`, color: "var(--page-primary)" }}
                           >
                             {h.margenLaboral.desde} - {h.margenLaboral.hasta}
                           </span>
@@ -174,14 +182,15 @@ function BarberoCard({
                 ))}
               </div>
             ) : (
-              <span className="text-xs text-gray-400">Sin horarios</span>
+              <span className="text-xs text-zinc-500">Sin horarios</span>
             )}
           </div>
 
           {/* BOTONES */}
-          <div className="flex gap-2 pt-3 border-t border-amber-900/30">
+          <div className="flex gap-2 pt-3 border-t" style={{ borderColor: `var(--page-primary-20)` }}>
             <Button
-              className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
+              className="flex-1 text-white transition-all hover:opacity-90"
+              style={{ backgroundColor: "var(--page-primary)" }}
               onClick={() => setOpen(true)}
             >
               Editar
@@ -189,7 +198,7 @@ function BarberoCard({
 
             <form action={deleteBarbero}>
               <input type="hidden" name="id" value={barbero.id} />
-              <Button className="px-3 py-2 bg-red-500/20 text-red-400 rounded">
+              <Button className="px-3 py-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded">
                 Baja
               </Button>
             </form>

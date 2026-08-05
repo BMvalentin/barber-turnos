@@ -35,7 +35,11 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
     <Button
       type="submit"
       disabled={pending}
-      className="bg-amber-600 hover:bg-amber-700 text-white"
+      className="text-white shadow-md hover:opacity-95 transition-all"
+      style={{
+        backgroundColor: "var(--page-primary)",
+        border: "1px solid var(--page-secondary)",
+      }}
     >
       {pending ? (
         <>
@@ -90,33 +94,42 @@ export function HorariosForm({
 
       {/* HORAS */}
       <div className="space-y-1">
-        <p className="text-xs text-amber-200/60 font-medium">Apertura → Cierre</p>
+        <p className="text-xs font-medium" style={{ color: "var(--page-primary-80)" }}>
+          Apertura → Cierre
+        </p>
         <div className="grid grid-cols-2 gap-3">
           <input
             type="time"
             name="desde"
             value={desde}
             onChange={(e) => setDesde(e.target.value)}
-            className="border border-amber-900/30 rounded-lg px-3 py-2 bg-black/60 text-white focus:ring-2 focus:ring-amber-500"
+            className="rounded-lg px-3 py-2 bg-black/60 text-white focus:outline-none transition-all"
+            style={{
+              border: `1px solid var(--page-secondary-60)`,
+            }}
           />
           <input
             type="time"
             name="hasta"
             value={hasta}
             onChange={(e) => setHasta(e.target.value)}
-            className="border border-amber-900/30 rounded-lg px-3 py-2 bg-black/60 text-white focus:ring-2 focus:ring-amber-500"
+            className="rounded-lg px-3 py-2 bg-black/60 text-white focus:outline-none transition-all"
+            style={{
+              border: `1px solid var(--page-secondary-60)`,
+            }}
           />
         </div>
       </div>
 
       {/* ESTADO */}
-      <label className="flex items-center gap-2 text-amber-200/70">
+      <label className="flex items-center gap-2 text-zinc-300 cursor-pointer select-none">
         <input
           type="checkbox"
           name="estado"
           defaultChecked={initialData?.estado ?? true}
           value="true"
-          className="w-4 h-4 text-amber-500"
+          className="w-4 h-4 rounded accent-current"
+          style={{ accentColor: "var(--page-primary)" }}
         />
         Activo
       </label>
@@ -127,17 +140,23 @@ export function HorariosForm({
       )}
 
       {/* BOTONES */}
-      <div className="flex justify-end gap-2 pt-3 border-t border-amber-900/30">
+      <div 
+        className="flex justify-end gap-2 pt-3 border-t"
+        style={{ borderColor: "var(--page-secondary-40)" }}
+      >
         <Button
           type="button"
+          variant="ghost"
           onClick={onCancel}
-          className="bg-black/60 text-white border border-amber-900/30 hover:bg-amber-500/10 hover:text-amber-400 transition-all"
+          className="text-zinc-400 hover:text-white hover:bg-white/5 transition-all"
         >
           <XCircle className="mr-2 h-4 w-4" />
           Cancelar
         </Button>
 
-        <SubmitButton isEdit={!!initialData} />
+        <SubmitButton 
+          isEdit={!!initialData} 
+        />
       </div>
     </form>
   );

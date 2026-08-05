@@ -1,12 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import CookieModal from "@/components/CookieModal";
 import PrivacyModal from "@/components/PrivacyModal";
 import TermsModal from "@/components/TermsModal";
 import { Footer } from "./Footer";
 
-export default function AppGate({ children }: { children: React.ReactNode }) {
+type AppGateProps = {
+  children: React.ReactNode;
+  barberiaNombre?: string | null;
+  logoUrl?: string | null;
+  descripcion?: string | null;
+  localidad?: string | null;
+  isAdmin?: boolean;
+};
+
+export default function AppGate({
+  children,
+  barberiaNombre,
+  logoUrl,
+  descripcion,
+  localidad,
+  isAdmin = false
+}: AppGateProps) {
+  const pathname = usePathname();
   const [acceptedCookies, setAcceptedCookies] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
@@ -15,7 +33,6 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
 
   const [initialized, setInitialized] = useState(false);
 
-  // 🔍 Inicialización robusta
   useEffect(() => {
     const cookies = localStorage.getItem("cookiesAcknowledged");
     const terms = localStorage.getItem("termsAccepted");
@@ -24,7 +41,6 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
     if (cookies) setAcceptedCookies(true);
     if (terms) setAcceptedTerms(true);
 
-    // 🔁 reconstrucción del flujo según estado previo
     if (cookies) {
       if (!privacySeen) {
         setTimeout(() => setPrivacyOpen(true), 500);
@@ -36,7 +52,6 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
     setInitialized(true);
   }, []);
 
-  // ✅ aceptar cookies
   const handleAcceptCookies = () => {
     localStorage.setItem("cookiesAcknowledged", "true");
     setAcceptedCookies(true);
@@ -53,17 +68,14 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
     }, 1000);
   };
 
-  // ✅ cerrar privacy
   const handleClosePrivacy = () => {
     setPrivacyOpen(false);
 
-    // si no aceptó terms → abrirlo sí o sí
     if (!localStorage.getItem("termsAccepted")) {
       setTimeout(() => setTermsOpen(true), 300);
     }
   };
 
-  // ✅ aceptar terms
   const handleAcceptTerms = () => {
     localStorage.setItem("termsAccepted", "true");
     setAcceptedTerms(true);
@@ -72,34 +84,36 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
 
   const isFullyAccepted = acceptedCookies && acceptedTerms;
 
-  // ⛔ evitar flicker antes de cargar estado
   if (!initialized) return null;
+
+  const hideFooter =
+    pathname.startsWith("/admin") ||
+    (pathname.startsWith("/turno") && isAdmin);
 
   return (
     <>
-      {/* 🔒 COOKIES BLOQUEAN TODO */}
       {!acceptedCookies && (
         <CookieModal onAccept={handleAcceptCookies} />
       )}
 
-      {/* 🔐 PRIVACY */}
       <PrivacyModal
         isOpen={privacyOpen}
         onClose={handleClosePrivacy}
       />
 
-      {/* 📜 TERMS */}
       <TermsModal
         isOpen={termsOpen}
         onClose={handleAcceptTerms}
       />
 
-      {/* 🚫 APP BLOQUEADA HASTA ACEPTAR TODO */}
       {isFullyAccepted && children}
 
-      {/* Footer solo si todo está aceptado */}
-      {isFullyAccepted && (
+      {isFullyAccepted && !hideFooter && (
         <Footer
+          barberiaNombre={barberiaNombre}
+          logoUrl={logoUrl}
+          descripcion={descripcion}
+          localidad={localidad}
           openPrivacy={() => setPrivacyOpen(true)}
           openTerms={() => setTermsOpen(true)}
         />

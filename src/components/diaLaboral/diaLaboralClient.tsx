@@ -27,6 +27,7 @@ export type DiaLaboral = {
 
 type DiaLaboralClientProps = {
   initialData: DiaLaboral[];
+  isLoading?: boolean;
 };
 
 const DIAS_SEMANA = [
@@ -39,7 +40,10 @@ const DIAS_SEMANA = [
   "Sábado",
 ];
 
-export function DiaLaboralClient({ initialData }: DiaLaboralClientProps) {
+export function DiaLaboralClient({
+  initialData: diasLaborales,
+  isLoading = false,
+}: DiaLaboralClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isHorariosDialogOpen, setIsHorariosDialogOpen] = useState(false);
@@ -126,8 +130,8 @@ export function DiaLaboralClient({ initialData }: DiaLaboralClientProps) {
   return (
     <>
       <DiaLaboralList
-        diasLaborales={initialData}
-        isLoading={isPending}
+        diasLaborales={diasLaborales}
+        isLoading={isLoading}
         onAsignarHorarios={handleAsignarHorarios}
       />
 
@@ -137,7 +141,8 @@ export function DiaLaboralClient({ initialData }: DiaLaboralClientProps) {
         onOpenChange={setIsHorariosDialogOpen}
       >
         <DialogContent
-          className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto bg-black/95 backdrop-blur-xl border border-amber-900/30"
+          className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto bg-black/95 backdrop-blur-xl"
+          style={{ border: "1px solid var(--page-secondary-50)" }}
           onInteractOutside={(evento) => {
             // Evita que Radix cierre este diálogo cuando la interacción
             // viene del modal de confirmación (montado vía portal en body)
@@ -159,11 +164,10 @@ export function DiaLaboralClient({ initialData }: DiaLaboralClientProps) {
               />
             )}
           </div>
-
         </DialogContent>
       </Dialog>
-      {/* Modal de confirmación, renderizado dentro del Dialog de Radix
-              para que quede dentro de su zona interactiva y no bloquee los clicks */}
+
+      {/* Modal de confirmación, renderizado dentro del Dialog de Radix */}
       {mostrarConfirmacion && (
         <ConfirmDialog
           title="Eliminar horario"

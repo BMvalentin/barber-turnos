@@ -64,7 +64,6 @@ export default function CreateBarberoForm({
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  // ✅ VALIDACIÓN EN TIEMPO REAL
   const handleNombreChange = (value: string) => {
     setNombre(value);
 
@@ -98,12 +97,10 @@ export default function CreateBarberoForm({
       return;
     }
 
-    // Limpiar errores y estado previo
     setUploadError(null);
     setSrcImage("");
     setSelectedFile(file);
 
-    // Crear URL temporal para previsualización
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
   };
@@ -125,23 +122,21 @@ export default function CreateBarberoForm({
       return;
     }
 
-    let finalImageUrl = srcImage; // mantiene valor previo (útil en edición, pero acá siempre "")
+    let finalImageUrl = srcImage;
 
-    // Si el usuario seleccionó un archivo, lo subimos AHORA
     if (selectedFile) {
       setUploading(true);
       try {
         const uploadResult = await uploadBarberImages([selectedFile], "barberia/barberos");
         if (uploadResult.success && uploadResult.images.length > 0) {
           finalImageUrl = uploadResult.images[0];
-          // limpiar la vista previa local
           if (previewUrl) URL.revokeObjectURL(previewUrl);
           setPreviewUrl(null);
           setSelectedFile(null);
         } else {
           setUploadError("Error al subir la imagen");
           setUploading(false);
-          return; // no continuar si falla la subida
+          return;
         }
       } catch (err) {
         setUploadError("Error al subir la imagen");
@@ -152,7 +147,6 @@ export default function CreateBarberoForm({
       }
     }
 
-    // Ahora creamos el barbero con la URL definitiva
     startTransition(async () => {
       const result = await createBarbero({
         nombre: nombre.trim(),
@@ -167,7 +161,7 @@ export default function CreateBarberoForm({
           description: "El barbero se ha creado correctamente.",
           variant: "default",
           duration: 4000,
-        })
+        });
 
         setNombre("");
         setSrcImage("");
@@ -189,26 +183,32 @@ export default function CreateBarberoForm({
       }
     });
   };
+
   useEffect(() => {
     return () => {
-      console.log(diasLaborales)
+      console.log(diasLaborales);
     };
   }, []);
+
   return (
-    <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl p-6 space-y-6">
-
-
+    <div 
+      className="bg-black/40 backdrop-blur-lg rounded-xl p-6 space-y-6 border"
+      style={{ borderColor: `var(--page-primary-30)` }}
+    >
       {/* NOMBRE */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-amber-200/70">
-          Nombre <span className="text-amber-500">*</span>
+        <label className="text-sm font-semibold" style={{ color: `var(--page-primary-70)` }}>
+          Nombre <span style={{ color: "var(--page-primary)" }}>*</span>
         </label>
 
         <input
           type="text"
           value={nombre}
           onChange={(e) => handleNombreChange(e.target.value)}
-          className="w-full border border-amber-900/30 rounded-lg px-3 py-2 bg-black/60 text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+          className="w-full rounded-lg px-3 py-2 bg-black/65 text-white focus:outline-none transition-colors border"
+          style={{ 
+            borderColor: `var(--page-primary-40)`,
+          }}
           placeholder="Ingrese el nombre del barbero"
         />
 
@@ -219,8 +219,8 @@ export default function CreateBarberoForm({
 
       {/* IMAGEN */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-amber-200/70">
-          Foto del barbero <span className="text-amber-200/50 text-xs">(Opcional)</span>
+        <label className="text-sm font-semibold" style={{ color: `var(--page-primary-70)` }}>
+          Foto del barbero <span className="text-zinc-500 text-xs">(Opcional)</span>
         </label>
 
         {previewUrl || srcImage ? (
@@ -228,7 +228,8 @@ export default function CreateBarberoForm({
             <img
               src={previewUrl || srcImage}
               alt="Vista previa"
-              className="h-32 w-32 object-cover rounded-lg border border-amber-500/50"
+              className="h-32 w-32 object-cover rounded-lg border"
+              style={{ borderColor: `var(--page-primary-80)` }}
             />
             <button
               type="button"
@@ -240,15 +241,17 @@ export default function CreateBarberoForm({
           </div>
         ) : (
           <label
-            className={`relative flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-amber-900/40 rounded-lg cursor-pointer hover:border-amber-500/50 transition ${uploading ? "opacity-50 pointer-events-none" : ""
-              }`}
+            className={`relative flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg cursor-pointer transition ${
+              uploading ? "opacity-50 pointer-events-none" : ""
+            }`}
+            style={{ borderColor: `var(--page-primary-50)` }}
           >
             {uploading ? (
-              <span className="text-amber-400 text-sm">Subiendo...</span>
+              <span className="text-sm" style={{ color: "var(--page-primary)" }}>Subiendo...</span>
             ) : (
               <>
-                <Upload className="h-6 w-6 text-amber-500" />
-                <span className="text-sm text-amber-200/70">
+                <Upload className="h-6 w-6" style={{ color: "var(--page-primary)" }} />
+                <span className="text-sm text-zinc-300">
                   Hacé clic para subir una imagen
                 </span>
               </>
@@ -270,29 +273,32 @@ export default function CreateBarberoForm({
         <button
           type="button"
           onClick={() => setShowServicios(!showServicios)}
-          className="w-full flex items-center justify-between p-3 bg-black/60 border border-amber-900/30 rounded-lg hover:bg-amber-500/10 transition"
+          className="w-full flex items-center justify-between p-3 bg-black/60 rounded-lg transition border"
+          style={{ borderColor: `var(--page-primary-30)` }}
         >
           <div className="flex flex-col items-start">
-            <span className="text-sm font-semibold text-amber-200/70">
+            <span className="text-sm font-semibold" style={{ color: `var(--page-primary-70)` }}>
               Servicios disponibles
             </span>
-            <span className="text-xs text-amber-400">
+            <span className="text-xs" style={{ color: "var(--page-primary)" }}>
               {selectedServicios.length} seleccionados
             </span>
           </div>
 
           {showServicios ? (
-            <ChevronUp className="h-4 w-4 text-amber-500" />
+            <ChevronUp className="h-4 w-4" style={{ color: "var(--page-primary)" }} />
           ) : (
-            <ChevronDown className="h-4 w-4 text-amber-500" />
+            <ChevronDown className="h-4 w-4" style={{ color: "var(--page-primary)" }} />
           )}
         </button>
 
         {showServicios && (
-          <div className="p-4 bg-black/60 border border-amber-900/30 rounded-lg space-y-2 max-h-60 overflow-y-auto">
-
+          <div 
+            className="p-4 bg-black/60 rounded-lg space-y-2 max-h-60 overflow-y-auto border"
+            style={{ borderColor: `var(--page-primary-30)` }}
+          >
             {selectedServicios.length === 0 && (
-              <p className="text-xs text-amber-500/60 italic">
+              <p className="text-xs italic" style={{ color: `var(--page-primary-80)` }}>
                 No seleccionaste ningún servicio
               </p>
             )}
@@ -306,7 +312,7 @@ export default function CreateBarberoForm({
             {servicios.map((servicio) => (
               <label
                 key={servicio.id}
-                className="flex items-center gap-2 p-2 hover:bg-amber-500/10 rounded cursor-pointer"
+                className="flex items-center gap-2 p-2 rounded cursor-pointer transition hover:bg-white/5"
               >
                 <input
                   type="checkbox"
@@ -327,27 +333,31 @@ export default function CreateBarberoForm({
         <button
           type="button"
           onClick={() => setShowHorarios(!showHorarios)}
-          className="w-full flex items-center justify-between p-3 bg-black/60 border border-amber-900/30 rounded-lg hover:bg-amber-500/10 transition"
+          className="w-full flex items-center justify-between p-3 bg-black/65 rounded-lg transition border"
+          style={{ borderColor: `var(--page-primary-30)` }}
         >
           <div className="flex flex-col items-start">
-            <span className="text-sm font-semibold text-amber-200/70">
+            <span className="text-sm font-semibold" style={{ color: `var(--page-primary-70)` }}>
               Horarios disponibles
             </span>
-            <span className="text-xs text-amber-400">
+            <span className="text-xs" style={{ color: "var(--page-primary)" }}>
               {selectedHorarios.length} seleccionados
             </span>
           </div>
 
           {showHorarios ? (
-            <ChevronUp className="h-4 w-4 text-amber-500" />
+            <ChevronUp className="h-4 w-4" style={{ color: "var(--page-primary)" }} />
           ) : (
-            <ChevronDown className="h-4 w-4 text-amber-500" />
+            <ChevronDown className="h-4 w-4" style={{ color: "var(--page-primary)" }} />
           )}
         </button>
         {showHorarios && (
-          <div className="p-4 bg-black/60 border border-amber-900/30 rounded-lg space-y-4 max-h-80 overflow-y-auto">
+          <div 
+            className="p-4 bg-black/60 rounded-lg space-y-4 max-h-80 overflow-y-auto border"
+            style={{ borderColor: `var(--page-primary-30)` }}
+          >
             {selectedHorarios.length === 0 && (
-              <p className="text-xs text-amber-500/60 italic">
+              <p className="text-xs italic" style={{ color: `var(--page-primary-80)` }}>
                 No seleccionaste horarios
               </p>
             )}
@@ -359,7 +369,7 @@ export default function CreateBarberoForm({
               )
               .map((dia) => (
                 <div key={dia.id} className="space-y-2">
-                  <p className="text-sm font-semibold text-amber-400">
+                  <p className="text-sm font-semibold" style={{ color: "var(--page-primary)" }}>
                     {dia.dia}:
                   </p>
 
@@ -390,7 +400,8 @@ export default function CreateBarberoForm({
       <Button
         onClick={handleSubmit}
         disabled={isPending || uploading || !!error}
-        className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+        className="w-full text-white shadow-lg transition-all"
+        style={{ backgroundColor: "var(--page-primary)" }}
       >
         {isPending || uploading ? "Guardando..." : "Crear Barbero"}
       </Button>
