@@ -52,6 +52,8 @@ type Props = {
   initialUsuarios?: UsuarioData[];
   initialRelaciones?: RelacionData[];
   whatsappPhone: string;
+  primaryColor?: string;
+  secondaryColor?: string;
 };
 
 const initialState = {
@@ -67,6 +69,8 @@ export default function CreateTurnoModal({
   initialUsuarios = [],
   initialRelaciones = [],
   whatsappPhone,
+  primaryColor = "#d97706",
+  secondaryColor = "#78350f",
 }: Props) {
 
   const enviarMensajeWhatsApp = (
@@ -250,9 +254,9 @@ export default function CreateTurnoModal({
   return (
     <div 
       style={{
-        "--primary": "var(--page-primary)",
-        "--secondary": "var(--page-secondary)",
-      } as React.CSSProperties}
+        ["--primary" as any]: primaryColor,
+        ["--secondary" as any]: secondaryColor,
+      }}
     >
       {/* Botón para abrir modal */}
       <Button 
@@ -354,7 +358,7 @@ export default function CreateTurnoModal({
                       ))}
                     </select>
                     {barberosFiltrados.length === 0 && (
-                      <p className="text-xs text-[var(--page-primary-80)]">
+                      <p className="text-xs text-amber-400">
                         {selectedServicioId
                           ? "Ningún barbero ofrece este servicio."
                           : "No hay barberos disponibles."}
@@ -427,7 +431,7 @@ export default function CreateTurnoModal({
                   >
                     Cancelar
                   </button>
-                  <SubmitButton />
+                  <SubmitButton primaryColor={primaryColor} />
                 </div>
               </form>
             )}
@@ -520,7 +524,7 @@ export default function CreateTurnoModal({
   );
 }
 
-function SubmitButton() {
+function SubmitButton({ primaryColor }: { primaryColor: string }) {
   const { pending } = useFormStatus();
 
   return (
@@ -528,7 +532,7 @@ function SubmitButton() {
       type="submit"
       disabled={pending}
       className="px-6 py-2.5 text-white font-medium rounded-xl shadow-md transition-all hover:opacity-90 text-sm"
-      style={{ backgroundColor: "var(--primary)" }}
+      style={{ backgroundColor: primaryColor }}
     >
       {pending ? "Procesando..." : "Confirmar Reserva"}
     </Button>

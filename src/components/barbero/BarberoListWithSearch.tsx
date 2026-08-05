@@ -24,7 +24,7 @@ export default function BarberoListWithSearch({ barberos }: Props) {
       {/* Buscador */}
       <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl p-4">
         <div className="flex items-center gap-3">
-          <Search className="h-5 w-5 text-[var(--page-primary)]" />
+          <Search className="h-5 w-5 text-amber-500" />
           <input
             type="text"
             placeholder="Buscar barbero por nombre..."
@@ -35,7 +35,7 @@ export default function BarberoListWithSearch({ barberos }: Props) {
           {searchTerm && (
             <button
               onClick={() => setSearchTerm("")}
-              className="text-xs text-[var(--page-primary-80)] hover:text-[var(--page-primary)] px-3 py-1 bg-[var(--page-primary)]/10 rounded-lg transition-colors"
+              className="text-xs text-amber-400 hover:text-amber-300 px-3 py-1 bg-amber-500/10 rounded-lg transition-colors"
             >
               Limpiar
             </button>

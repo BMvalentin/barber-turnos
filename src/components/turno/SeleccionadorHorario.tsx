@@ -372,7 +372,7 @@ export default function SeleccionadorHorario({
           /* Estado: faltan datos */
           <div className="p-5 bg-black/60 border border-[#2C261D] rounded-xl border-dashed">
             <p className="text-[11px] text-[#8E8675] flex items-center gap-2">
-              <span className="text-[var(--page-primary)]">ℹ️</span> Seleccione servicio,
+              <span className="text-amber-500">ℹ️</span> Seleccione servicio,
               barbero y fecha para ver disponibilidad
             </p>
           </div>

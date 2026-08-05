@@ -1,24 +1,47 @@
 import { Suspense } from "react";
-import { Calendar } from "lucide-react";
+import { Calendar, ArrowLeft } from "lucide-react";
 import { DiaLaboralClient } from "@/components/diaLaboral/diaLaboralClient";
 import { getDiasLaborales } from "@/actions/diaLaboral.actions";
+import { getPageConfig} from "@/actions/configPage";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
+import { auth } from "@/auth";
 
 export default async function DiaLaboralPage() {
+  const session = await auth();
+  
+  // 1. Obtenemos los colores configurados desde la base de datos
+  const config = await getPageConfig(); 
+  const primaryColor = config?.primaryColor || "#3b82f6"; // Ejemplo: color hexadecimal de la BD
+  const secondaryColor = config?.secondaryColor || "#1e3a8a";
+
   return (
     <div className="min-h-screen p-6">
-      <div className="container mx-auto max-w-7xl">
-        {/* Header */}
+      <div className="container mx-auto max-w-7xl mt-20">
+        {/* Header con flecha de regreso */}
         <div className="mb-8 flex items-center gap-4">
+          {session?.user?.role === "ADMIN" && (
+            <Link
+              href="/admin"
+              className="p-2 rounded-lg transition-all group hover:opacity-80"
+              title="Volver al Dashboard"
+            >
+              <ArrowLeft 
+                className="h-6 w-6 group-hover:-translate-x-1 transition-all" 
+                style={{ color: primaryColor }} 
+              />
+            </Link>
+          )}
+
           <div className="flex items-center gap-4">
             <div 
               className="p-3 rounded-xl border-2"
               style={{ 
-                backgroundColor: "var(--page-primary-20)",
-                borderColor: "var(--page-primary-40)" 
+                backgroundColor: `${primaryColor}20`,
+                borderColor: `${primaryColor}40` 
               }}
             >
-              <Calendar className="h-8 w-8" style={{ color: "var(--page-primary)" }} />
+              <Calendar className="h-8 w-8" style={{ color: primaryColor }} />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-white">
@@ -31,28 +54,28 @@ export default async function DiaLaboralPage() {
           </div>
         </div>
 
-        <Suspense fallback={<LoadingSkeleton />}>
-          <DiaLaboralContent />
+        <Suspense fallback={<LoadingSkeleton secondaryColor={secondaryColor} />}>
+          <DiaLaboralContent primaryColor={primaryColor} secondaryColor={secondaryColor} />
         </Suspense>
       </div>
     </div>
   );
 }
 
-async function DiaLaboralContent() {
+async function DiaLaboralContent({ primaryColor, secondaryColor }: { primaryColor: string; secondaryColor: string }) {
   const diasLaborales = await getDiasLaborales();
 
-  return <DiaLaboralClient initialData={diasLaborales} />;
+  return <DiaLaboralClient initialData={diasLaborales} primaryColor={primaryColor} secondaryColor={secondaryColor} />;
 }
 
-function LoadingSkeleton() {
+function LoadingSkeleton({ secondaryColor }: { secondaryColor: string }) {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {[...Array(7)].map((_, i) => (
         <div 
           key={i} 
           className="bg-black/40 backdrop-blur-lg rounded-xl p-6 space-y-4 animate-pulse"
-          style={{ border: "1px solid var(--page-secondary-30)" }}
+          style={{ border: `1px solid ${secondaryColor}30` }}
         >
           <div className="flex items-start gap-3">
             <Skeleton className="w-2 h-12 rounded-full bg-white/10" />

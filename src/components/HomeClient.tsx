@@ -16,7 +16,7 @@ export default function HomeClient({ config }: HomeClientProps) {
         <Hero config={config} />
         <ServiciosCarousel />
         {/* <AboutSection /> */}
-        <LocationSection />
+        <LocationSection config={config}/>
       </main>
     </div>
   );

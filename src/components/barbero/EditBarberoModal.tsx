@@ -21,6 +21,9 @@ type EditBarberoModalProps = {
   servicios: any[];
   diasLaborales: any[];
   onClose: () => void;
+  config?: {
+    primaryColor?: string | null;
+  } | null;
 };
 
 const ORDEN_DIAS = [
@@ -38,6 +41,7 @@ export default function EditBarberoModal({
   servicios,
   diasLaborales,
   onClose,
+  config,
 }: EditBarberoModalProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -59,6 +63,11 @@ export default function EditBarberoModal({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Aseguramos que siempre haya un color hexadecimal válido
+  const primaryColor = config?.primaryColor && config.primaryColor.startsWith("#") 
+    ? config.primaryColor 
+    : "#d97706";
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -147,17 +156,17 @@ export default function EditBarberoModal({
       <div 
         className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-black/70 rounded-xl p-6 space-y-6 shadow-2xl"
         style={{ 
-          borderColor: "var(--page-primary)",
+          borderColor: primaryColor,
           borderWidth: "1px",
           borderStyle: "solid"
         }}
       >
-        <div className="flex justify-between items-center border-b pb-4" style={{ borderColor: `var(--page-primary-40)` }}>
+        <div className="flex justify-between items-center border-b pb-4" style={{ borderColor: `${primaryColor}40` }}>
           <h2 className="text-2xl font-bold text-white">Editar Barbero</h2>
           <button 
             onClick={onClose} 
             className="rounded-sm transition-opacity hover:opacity-100 focus:outline-none p-1 text-white hover:cursor-pointer"
-            style={{ backgroundColor: "var(--page-primary)" }}
+            style={{ backgroundColor: primaryColor }}
           >
             <X className="h-4 w-4" />
           </button>
@@ -166,7 +175,7 @@ export default function EditBarberoModal({
         <div className="space-y-4">
           {/* Nombre */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold" style={{ color: "var(--page-primary)" }}>
+            <label className="text-sm font-semibold" style={{ color: primaryColor }}>
               Nombre
             </label>
             <input
@@ -175,7 +184,7 @@ export default function EditBarberoModal({
               onChange={(e) => setNombre(e.target.value)}
               className="w-full bg-black/60 rounded-lg p-2 text-white focus:outline-none"
               style={{ 
-                borderColor: `var(--page-primary-60)`,
+                borderColor: `${primaryColor}60`,
                 borderWidth: "1px",
                 borderStyle: "solid" 
               }}
@@ -184,7 +193,7 @@ export default function EditBarberoModal({
 
           {/* Imagen */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold" style={{ color: "var(--page-primary)" }}>
+            <label className="text-sm font-semibold" style={{ color: primaryColor }}>
               Foto del barbero
             </label>
 
@@ -195,7 +204,7 @@ export default function EditBarberoModal({
                   alt="Vista previa"
                   className="h-32 w-32 object-cover rounded-lg"
                   style={{ 
-                    borderColor: "var(--page-primary)",
+                    borderColor: primaryColor,
                     borderWidth: "2px",
                     borderStyle: "solid" 
                   }}
@@ -214,16 +223,16 @@ export default function EditBarberoModal({
                   uploading ? "opacity-50 pointer-events-none" : ""
                 }`}
                 style={{ 
-                  borderColor: "var(--page-primary)",
+                  borderColor: primaryColor,
                   borderWidth: "2px",
                   borderStyle: "dashed" 
                 }}
               >
                 {uploading ? (
-                  <span className="text-sm" style={{ color: "var(--page-primary)" }}>Subiendo...</span>
+                  <span className="text-sm" style={{ color: primaryColor }}>Subiendo...</span>
                 ) : (
                   <>
-                    <Upload className="h-6 w-6" style={{ color: "var(--page-primary)" }} />
+                    <Upload className="h-6 w-6" style={{ color: primaryColor }} />
                     <span className="text-sm text-zinc-300">
                       Hacé clic para subir una imagen
                     </span>
@@ -250,21 +259,21 @@ export default function EditBarberoModal({
               onClick={() => setShowServicios(!showServicios)}
               className="w-full flex justify-between items-center p-3 bg-black/65 rounded-lg"
               style={{ 
-                borderColor: `var(--page-primary-50)`,
+                borderColor: `${primaryColor}50`,
                 borderWidth: "1px",
                 borderStyle: "solid" 
               }}
             >
-              <span style={{ color: "var(--page-primary)", fontWeight: 600 }}>
+              <span style={{ color: primaryColor, fontWeight: 600 }}>
                 Servicios ({selectedServicios.length})
               </span>
-              {showServicios ? <ChevronUp style={{ color: "var(--page-primary)" }} /> : <ChevronDown style={{ color: "var(--page-primary)" }} />}
+              {showServicios ? <ChevronUp style={{ color: primaryColor }} /> : <ChevronDown style={{ color: primaryColor }} />}
             </button>
             {showServicios && (
               <div 
                 className="p-4 bg-black/40 rounded-lg grid grid-cols-2 gap-2"
                 style={{ 
-                  borderColor: `var(--page-primary-40)`,
+                  borderColor: `${primaryColor}40`,
                   borderWidth: "1px",
                   borderStyle: "solid" 
                 }}
@@ -299,21 +308,21 @@ export default function EditBarberoModal({
               onClick={() => setShowHorarios(!showHorarios)}
               className="w-full flex justify-between items-center p-3 bg-black/65 rounded-lg"
               style={{ 
-                borderColor: `var(--page-primary-50)`,
+                borderColor: `${primaryColor}50`,
                 borderWidth: "1px",
                 borderStyle: "solid" 
               }}
             >
-              <span style={{ color: "var(--page-primary)", fontWeight: 600 }}>
+              <span style={{ color: primaryColor, fontWeight: 600 }}>
                 Horarios ({selectedHorarios.length})
               </span>
-              {showHorarios ? <ChevronUp style={{ color: "var(--page-primary)" }} /> : <ChevronDown style={{ color: "var(--page-primary)" }} />}
+              {showHorarios ? <ChevronUp style={{ color: primaryColor }} /> : <ChevronDown style={{ color: primaryColor }} />}
             </button>
             {showHorarios && (
               <div 
                 className="p-4 bg-black/40 rounded-lg space-y-4 max-h-80 overflow-y-auto"
                 style={{ 
-                  borderColor: `var(--page-primary-40)`,
+                  borderColor: `${primaryColor}40`,
                   borderWidth: "1px",
                   borderStyle: "solid" 
                 }}
@@ -326,7 +335,7 @@ export default function EditBarberoModal({
                   )
                   .map((dia) => (
                     <div key={dia.id} className="space-y-2">
-                      <p className="text-sm font-semibold" style={{ color: "var(--page-primary)" }}>
+                      <p className="text-sm font-semibold" style={{ color: primaryColor }}>
                         {dia.dia}:
                       </p>
 
@@ -373,14 +382,14 @@ export default function EditBarberoModal({
 
         {error && <p className="text-red-400 text-sm">{error}</p>}
 
-        <div className="flex gap-3 pt-4 border-t" style={{ borderColor: `var(--page-primary-40)` }}>
+        <div className="flex gap-3 pt-4 border-t" style={{ borderColor: `${primaryColor}40` }}>
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
             className="flex-1 bg-transparent text-white hover:bg-white/10"
             style={{ 
-              borderColor: `var(--page-primary-60)`,
+              borderColor: `${primaryColor}60`,
               borderWidth: "1px",
               borderStyle: "solid" 
             }}
@@ -392,7 +401,7 @@ export default function EditBarberoModal({
             onClick={handleSubmit}
             disabled={isPending}
             className="flex-1 text-white transition-all hover:opacity-90"
-            style={{ backgroundColor: "var(--page-primary)" }}
+            style={{ backgroundColor: primaryColor }}
           >
             {isPending ? "Guardando..." : "Guardar Cambios"}
           </Button>

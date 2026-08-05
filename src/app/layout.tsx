@@ -65,21 +65,14 @@ export default async function RootLayout({
   const config = await getCachedPageConfig();
 
   return (
-    <html
-      lang="es"
-      style={
-        {
-          "--page-primary": config?.primaryColor,
-          "--page-secondary": config?.secondaryColor,
-        } as React.CSSProperties
-      }
-    >
+    <html lang="es">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <LayoutComponent session={session} config={config}>
           <AppGate
             barberiaNombre={config?.name}
             logoUrl={config?.logo}
-            isAdmin={session?.user?.role === "ADMIN"}
+            primaryColor={config?.primaryColor}
+            secondaryColor={config?.secondaryColor}
           >
             {children}
             <Toaster />

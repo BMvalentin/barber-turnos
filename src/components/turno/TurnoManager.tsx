@@ -24,7 +24,7 @@ export default function TurnoManager({ initialTurnos, session }: { initialTurnos
             <button
               key={f}
               onClick={() => setEstado(f)}
-              className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${estado === f ? "bg-[var(--page-primary)] text-white" : "bg-neutral-900 border border-neutral-700 text-neutral-400 hover:border-[var(--page-primary)]"}`}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${estado === f ? "bg-amber-600 text-white" : "bg-neutral-900 border border-neutral-700 text-neutral-400 hover:border-amber-600"}`}
             >
               {f}
             </button>
@@ -37,7 +37,7 @@ export default function TurnoManager({ initialTurnos, session }: { initialTurnos
           type="date" 
           value={fecha}
           onChange={(e) => setFecha(e.target.value)}
-          className="bg-neutral-900 border border-neutral-700 text-white text-xs rounded-lg px-3 py-1.5 focus:border-[var(--page-primary)] outline-none"
+          className="bg-neutral-900 border border-neutral-700 text-white text-xs rounded-lg px-3 py-1.5 focus:border-amber-500 outline-none"
         />
       </div>
 

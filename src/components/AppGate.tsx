@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
 import CookieModal from "@/components/CookieModal";
 import PrivacyModal from "@/components/PrivacyModal";
 import TermsModal from "@/components/TermsModal";
@@ -11,20 +10,21 @@ type AppGateProps = {
   children: React.ReactNode;
   barberiaNombre?: string | null;
   logoUrl?: string | null;
+  primaryColor?: string | null;
+  secondaryColor?: string | null;
   descripcion?: string | null;
   localidad?: string | null;
-  isAdmin?: boolean;
 };
 
 export default function AppGate({
   children,
   barberiaNombre,
   logoUrl,
+  primaryColor,
+  secondaryColor,
   descripcion,
-  localidad,
-  isAdmin = false
+  localidad
 }: AppGateProps) {
-  const pathname = usePathname();
   const [acceptedCookies, setAcceptedCookies] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
@@ -86,10 +86,6 @@ export default function AppGate({
 
   if (!initialized) return null;
 
-  const hideFooter =
-    pathname.startsWith("/admin") ||
-    (pathname.startsWith("/turno") && isAdmin);
-
   return (
     <>
       {!acceptedCookies && (
@@ -108,10 +104,12 @@ export default function AppGate({
 
       {isFullyAccepted && children}
 
-      {isFullyAccepted && !hideFooter && (
+      {isFullyAccepted && (
         <Footer
           barberiaNombre={barberiaNombre}
           logoUrl={logoUrl}
+          primaryColor={primaryColor}
+          secondaryColor={secondaryColor}
           descripcion={descripcion}
           localidad={localidad}
           openPrivacy={() => setPrivacyOpen(true)}
