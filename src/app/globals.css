@@ -6,6 +6,38 @@
 ========================= */
 
 :root {
+  /* Colores parametrizables desde PageConfig (inyectados en layout.tsx).
+     Defaults centralizados acá: NUNCA hardcodear hex de acento en componentes. */
+  --page-primary: #d97706;
+  --page-secondary: #78350f;
+
+  /* Variantes alfa derivadas (color-mix) usadas como ${primaryColor}XX antes */
+  --page-primary-08: color-mix(in srgb, var(--page-primary) 8%, transparent);
+  --page-primary-15: color-mix(in srgb, var(--page-primary) 15%, transparent);
+  --page-primary-18: color-mix(in srgb, var(--page-primary) 18%, transparent);
+  --page-primary-20: color-mix(in srgb, var(--page-primary) 20%, transparent);
+  --page-primary-25: color-mix(in srgb, var(--page-primary) 25%, transparent);
+  --page-primary-30: color-mix(in srgb, var(--page-primary) 30%, transparent);
+  --page-primary-40: color-mix(in srgb, var(--page-primary) 40%, transparent);
+  --page-primary-44: color-mix(in srgb, var(--page-primary) 44%, transparent);
+  --page-primary-50: color-mix(in srgb, var(--page-primary) 50%, transparent);
+  --page-primary-60: color-mix(in srgb, var(--page-primary) 60%, transparent);
+  --page-primary-70: color-mix(in srgb, var(--page-primary) 70%, transparent);
+  --page-primary-80: color-mix(in srgb, var(--page-primary) 80%, transparent);
+
+  --page-secondary-08: color-mix(in srgb, var(--page-secondary) 8%, transparent);
+  --page-secondary-15: color-mix(in srgb, var(--page-secondary) 15%, transparent);
+  --page-secondary-18: color-mix(in srgb, var(--page-secondary) 18%, transparent);
+  --page-secondary-20: color-mix(in srgb, var(--page-secondary) 20%, transparent);
+  --page-secondary-25: color-mix(in srgb, var(--page-secondary) 25%, transparent);
+  --page-secondary-30: color-mix(in srgb, var(--page-secondary) 30%, transparent);
+  --page-secondary-40: color-mix(in srgb, var(--page-secondary) 40%, transparent);
+  --page-secondary-44: color-mix(in srgb, var(--page-secondary) 44%, transparent);
+  --page-secondary-50: color-mix(in srgb, var(--page-secondary) 50%, transparent);
+  --page-secondary-60: color-mix(in srgb, var(--page-secondary) 60%, transparent);
+  --page-secondary-70: color-mix(in srgb, var(--page-secondary) 70%, transparent);
+  --page-secondary-80: color-mix(in srgb, var(--page-secondary) 80%, transparent);
+
   --background:  43, 100%, 97%;
   --foreground: 210 25% 25%;
 
@@ -193,6 +225,6 @@ h3 {
   width: 5px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2563eb;
+  background: var(--page-primary);
   border-radius: 10px;
 }

@@ -1,9 +1,9 @@
-// app/admin/layout.tsx
+// app/turno/layout.tsx
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import AdminShell from "@/components/admin/AdminShell";
 
-export default async function AdminLayout({
+export default async function TurnoLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -15,7 +15,7 @@ export default async function AdminLayout({
   }
 
   if (session.user.role !== "ADMIN") {
-    redirect("/unauthorized");
+    return <>{children}</>;
   }
 
   return <AdminShell>{children}</AdminShell>;

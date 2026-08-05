@@ -28,8 +28,6 @@ export type DiaLaboral = {
 type DiaLaboralClientProps = {
   initialData: DiaLaboral[];
   isLoading?: boolean;
-  primaryColor?: string;
-  secondaryColor?: string;
 };
 
 const DIAS_SEMANA = [
@@ -45,8 +43,6 @@ const DIAS_SEMANA = [
 export function DiaLaboralClient({
   initialData: diasLaborales,
   isLoading = false,
-  primaryColor = "#3b82f6",
-  secondaryColor = "#1e3a8a",
 }: DiaLaboralClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -137,8 +133,6 @@ export function DiaLaboralClient({
         diasLaborales={diasLaborales}
         isLoading={isLoading}
         onAsignarHorarios={handleAsignarHorarios}
-        primaryColor={primaryColor}
-        secondaryColor={secondaryColor}
       />
 
       {/* Diálogo para asignar horarios */}
@@ -148,7 +142,7 @@ export function DiaLaboralClient({
       >
         <DialogContent
           className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto bg-black/95 backdrop-blur-xl"
-          style={{ border: `1px solid ${secondaryColor}50` }}
+          style={{ border: "1px solid var(--page-secondary-50)" }}
           onInteractOutside={(evento) => {
             // Evita que Radix cierre este diálogo cuando la interacción
             // viene del modal de confirmación (montado vía portal en body)
@@ -167,8 +161,6 @@ export function DiaLaboralClient({
                 margenes={margenes}
                 onSuccess={handleHorariosSuccess}
                 onDelete={handleDeleteMargen}
-                primaryColor={primaryColor}   
-                secondaryColor={secondaryColor} 
               />
             )}
           </div>

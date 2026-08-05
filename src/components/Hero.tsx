@@ -12,13 +12,10 @@ interface HeroProps {
     slogan?: string | null;
     description?: string | null;
     backgroundImage?: string | null;
-    primaryColor?: string | null;
-    secondaryColor?: string | null;
   } | null;
 }
 
 export function Hero({ config }: HeroProps) {
-  const primaryColor = config?.primaryColor || "#d97706";
   const backgroundImage = config?.backgroundImage || DEFAULT_BACKGROUND;
   
   // Usamos el slogan de la config, o un texto por defecto si está vacío
@@ -52,13 +49,13 @@ export function Hero({ config }: HeroProps) {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/80 border border-white/5 backdrop-blur-md mb-6">
             <span 
               className="w-2 h-2 rounded-full animate-pulse" 
-              style={{ backgroundColor: primaryColor }} 
+              style={{ backgroundColor: "var(--page-primary)" }} 
             />
             <span className="text-xs font-bold uppercase tracking-widest text-zinc-300">Solicita tu Turno</span>
           </div>
           
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white uppercase tracking-tighter leading-tight flex flex-wrap text-center items-center justify-center max-w-4xl mx-auto">
-            {firstPart}&nbsp;<span className="italic pr-2" style={{ color: primaryColor }}>{secondPart || "Estilo"}</span>
+            {firstPart}&nbsp;<span className="italic pr-2" style={{ color: "var(--page-primary)" }}>{secondPart || "Estilo"}</span>
           </h1>
           
           <p className="mt-6 text-zinc-400 text-sm md:text-base font-medium max-w-xl mx-auto tracking-wide">
@@ -75,7 +72,7 @@ export function Hero({ config }: HeroProps) {
         >
           <div 
             className="absolute -inset-1 rounded-3xl blur-xl opacity-30 group-hover:opacity-70 transition duration-700" 
-            style={{ background: `linear-gradient(to right, ${primaryColor}, #52525b)` }}
+            style={{ background: `linear-gradient(to right, var(--page-primary), #52525b)` }}
           />
           
           <div className="relative bg-zinc-950/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl">
@@ -83,7 +80,7 @@ export function Hero({ config }: HeroProps) {
             <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/5">
               <div>
                 <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-2">
-                  <Calendar className="w-6 h-6" style={{ color: primaryColor }} />
+                  <Calendar className="w-6 h-6" style={{ color: "var(--page-primary)" }} />
                   Tu Turno
                 </h2>
               </div>
@@ -105,7 +102,7 @@ export function Hero({ config }: HeroProps) {
             <Link href="/turno" className="block w-full">
               <button 
                 className="relative w-full group overflow-hidden text-zinc-950 font-black py-5 rounded-2xl transition-all active:scale-95 shadow-lg"
-                style={{ backgroundColor: primaryColor }}
+                style={{ backgroundColor: "var(--page-primary)" }}
               >
                 <div className="relative z-10 flex items-center justify-center gap-2 uppercase tracking-widest text-sm md:text-base">
                   Reservar Ahora
