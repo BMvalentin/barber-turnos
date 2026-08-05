@@ -16,12 +16,10 @@ import CreateBarberoForm from "@/components/barbero/CreateBarberoForm";
 type Props = {
   servicios: any;
   diasLaborales: any;
-  config?: any;
 };
 
-export default function CreateBarberoModal({ servicios, diasLaborales, config }: Props) {
+export default function CreateBarberoModal({ servicios, diasLaborales }: Props) {
   const [open, setOpen] = useState(false);
-  const primaryColor = config?.primaryColor || "#d97706";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -29,7 +27,7 @@ export default function CreateBarberoModal({ servicios, diasLaborales, config }:
       <DialogTrigger asChild>
         <Button
           className="text-white shadow-lg transition-all hover:opacity-90"
-          style={{ backgroundColor: primaryColor }}
+          style={{ backgroundColor: "var(--page-primary)" }}
         >
           + Ingresar Barbero
         </Button>
@@ -39,15 +37,15 @@ export default function CreateBarberoModal({ servicios, diasLaborales, config }:
         <div
           className="bg-black/40 backdrop-blur-lg rounded-xl p-6 space-y-6 shadow-2xl border relative"
           style={{
-            borderColor: `${primaryColor}40`,
-            boxShadow: `0 25px 50px -12px ${primaryColor}15`
+            borderColor: "var(--page-primary-40)",
+            boxShadow: "0 25px 50px -12px var(--page-primary-15)"
           }}
         >
 
           {/* AQUÍ ESTÁ LA X: Usamos DialogClose con el color primario */}
           <DialogClose
             className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none p-1 z-10"
-            style={{ color: primaryColor }}
+            style={{ color: "var(--page-primary)" }}
           >
             <X className="h-5 w-5" />
             <span className="sr-only">Cerrar</span>
@@ -63,7 +61,6 @@ export default function CreateBarberoModal({ servicios, diasLaborales, config }:
             servicios={servicios}
             diasLaborales={diasLaborales}
             onSuccess={() => setOpen(false)}
-            config={config}
           />
 
         </div>

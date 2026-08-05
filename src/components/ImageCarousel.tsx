@@ -12,15 +12,10 @@ import Image from "next/image";
 
 interface ImageCarouselProps {
   servicios: any[];
-  config?: {
-    primaryColor?: string | null;
-  } | null;
 }
 
-export function ImageCarousel({ servicios, config }: ImageCarouselProps) {
+export function ImageCarousel({ servicios }: ImageCarouselProps) {
   if (!servicios || servicios.length === 0) return null;
-
-  const primaryColor = config?.primaryColor || "#d97706"; // Color por defecto (amber)
 
   return (
     <section id="servicios" className="py-12 bg-zinc-950 border-t border-white/5">
@@ -33,7 +28,7 @@ export function ImageCarousel({ servicios, config }: ImageCarouselProps) {
           className="text-center mb-8"
         >
           <h2 className="text-3xl font-black text-white uppercase tracking-tighter">
-            Nuestros <span className="italic" style={{ color: primaryColor }}>Servicios</span>
+            Nuestros <span className="italic" style={{ color: "var(--page-primary)" }}>Servicios</span>
           </h2>
         </motion.div>
 
@@ -72,7 +67,7 @@ export function ImageCarousel({ servicios, config }: ImageCarouselProps) {
                               ${servicio.precio}
                             </span>
 
-                            <h2 className="text-xl font-bold leading-none" style={{ color: primaryColor }}>
+                            <h2 className="text-xl font-bold leading-none" style={{ color: "var(--page-primary)" }}>
                               $
                               {Math.round(
                                 servicio.precio - (servicio.precio * servicio.descuento) / 100
@@ -84,7 +79,7 @@ export function ImageCarousel({ servicios, config }: ImageCarouselProps) {
                             </span>
                           </>
                         ) : (
-                          <h2 className="text-lg font-bold" style={{ color: primaryColor }}>
+                          <h2 className="text-lg font-bold" style={{ color: "var(--page-primary)" }}>
                             ${servicio.precio}
                           </h2>
                         )}
@@ -98,7 +93,6 @@ export function ImageCarousel({ servicios, config }: ImageCarouselProps) {
             {/* Flechas con hover dinámico usando el color primario */}
             <CarouselPrevious 
               className="absolute left-2 z-50 h-8 w-8 bg-zinc-900 text-white border-white/10 hover:text-white" 
-              style={{ ['--tw-hover-bg' as any]: primaryColor }}
             />
             <CarouselNext 
               className="absolute right-2 z-50 h-8 w-8 bg-zinc-900 text-white border-white/10 hover:text-white" 
