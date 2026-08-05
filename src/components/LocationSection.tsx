@@ -5,9 +5,21 @@ import { MapPin, Phone, Clock, Scissors } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getHorariosCompactos } from "@/actions/margenesHorario.actions";
 
-export function LocationSection() {
+interface LocationSectionProps {
+  config?: {
+    mapsUrl?: string | null;
+    address?: string | null;
+  } | null;
+}
+
+export function LocationSection({ config }: LocationSectionProps) {
   const [cargando, setCargando] = useState(true);
   const [horarios, setHorarios] = useState(["Cargando..."]);
+
+  // Valores dinámicos con respaldo (fallback) por defecto
+  const defaultMapsUrl = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3153.0192837384024!2d-57.4907996!3d-37.8152345!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9584c31bc9e4c9c7%3A0x6b4ef821f5728a3f!2sAv.%20Montreal%20695%2C%20B7609%20Santa%20Clara%20del%20Mar%2C%20Provincia%20de%20Buenos%20Aires!5e0!3m2!1ses-419!2sar!4v1700000000000!5m2!1ses-419!2sar";
+  const mapsUrl = config?.mapsUrl || defaultMapsUrl;
+  const addressText = config?.address || "Av. Montreal 695, Santa Clara del Mar";
 
   useEffect(() => {
     try {
@@ -71,7 +83,7 @@ export function LocationSection() {
               </div>
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary)" }}>Dirección</h3>
-                <p className="text-amber-100/80">Av. Montreal 695, Santa Clara del Mar</p>
+                <p className="text-amber-100/80">{addressText}</p>
               </div>
             </div>
 
