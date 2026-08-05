@@ -148,13 +148,13 @@ export default async function AdminDashboard() {
             title="Barberos"
             value={stats.totalBarberos}
             icon={Users}
-            href="/admin/barbero"
+            href="/barbero"
           />
           <StatCard
             title="Servicios"
             value={stats.totalServicios}
             icon={Scissors}
-            href="/admin/servicio"
+            href="/servicio"
           />
           <StatCard
             title="Total Turnos"
@@ -221,7 +221,7 @@ export default async function AdminDashboard() {
                     </p>
                     {completados > 0 && (
                       <div className="mt-1 pt-1 border-t border-amber-900/50 flex justify-between">
-                        <span className="text-[var(--page-primary)]/80 text-xs">
+                        <span className="text-amber-500/80 text-xs">
                           Total: ${recaudado.toFixed(2)}
                         </span>
                         <span className="text-green-500/80 text-xs">
@@ -239,7 +239,7 @@ export default async function AdminDashboard() {
         {/* AGENDA */}
         <div className="space-y-6">
           <div className="flex items-center gap-2">
-            <Clock className="text-[var(--page-primary)]" />
+            <Clock className="text-amber-500" />
             <h2 className="text-2xl font-bold text-white">Agenda de Hoy</h2>
           </div>
 
@@ -283,7 +283,7 @@ export default async function AdminDashboard() {
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                             t.estado === "CONFIRMADO"
                               ? "bg-green-500/20 text-green-500 border-green-500/30"
-                              : "bg-[var(--page-primary)]/20 text-[var(--page-primary)] border-[var(--page-primary)]/30"
+                              : "bg-amber-500/20 text-amber-500 border-amber-500/30"
                           }`}
                         >
                           {t.estado}
@@ -305,13 +305,13 @@ export default async function AdminDashboard() {
 function StatCard({ title, value, icon: Icon, href }: any) {
   return (
     <Link href={href}>
-      <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl p-6 hover:border-[var(--page-primary)]/50 transition group">
+      <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl p-6 hover:border-amber-500/50 transition group">
         <div className="flex justify-between">
           <div>
             <p className="text-amber-200/70 text-sm">{title}</p>
             <p className="text-3xl text-white font-bold">{value}</p>
           </div>
-          <Icon className="text-[var(--page-primary)]" />
+          <Icon className="text-amber-500" />
         </div>
       </div>
     </Link>
@@ -322,7 +322,7 @@ function DetailCard({ title, icon: Icon, children }: any) {
   return (
     <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl p-5">
       <div className="flex items-center gap-2 mb-4">
-        <Icon className="text-[var(--page-primary)]" />
+        <Icon className="text-amber-500" />
         <h2 className="text-white font-bold">{title}</h2>
       </div>
       <div className="space-y-2">{children}</div>
@@ -332,7 +332,7 @@ function DetailCard({ title, icon: Icon, children }: any) {
 
 function Item({ children }: any) {
   return (
-    <div className="p-3 bg-black/60 border border-amber-900/30 rounded-lg hover:border-[var(--page-primary)]/50 transition">
+    <div className="p-3 bg-black/60 border border-amber-900/30 rounded-lg hover:border-amber-500/50 transition">
       {children}
     </div>
   );

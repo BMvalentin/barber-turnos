@@ -22,13 +22,15 @@ type HorariosFormProps = {
   } | null;
   onSuccess?: () => void;
   onCancel: () => void;
+  primaryColor: string;
+  secondaryColor: string;
 };
 
 const initialState: ActionState = {
   success: false,
 };
 
-function SubmitButton({ isEdit }: { isEdit: boolean }) {
+function SubmitButton({ isEdit, primaryColor, secondaryColor }: { isEdit: boolean; primaryColor: string; secondaryColor: string }) {
   const { pending } = useFormStatus();
 
   return (
@@ -37,8 +39,8 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
       disabled={pending}
       className="text-white shadow-md hover:opacity-95 transition-all"
       style={{
-        backgroundColor: "var(--page-primary)",
-        border: "1px solid var(--page-secondary)",
+        backgroundColor: primaryColor,
+        border: `1px solid ${secondaryColor}`,
       }}
     >
       {pending ? (
@@ -61,6 +63,8 @@ export function HorariosForm({
   initialData,
   onSuccess,
   onCancel,
+  primaryColor,
+  secondaryColor,
 }: HorariosFormProps) {
   const action = initialData ? updateMargenLaboral : createMargenLaboral;
   const [state, formAction] = useActionState(action, initialState);
@@ -94,7 +98,7 @@ export function HorariosForm({
 
       {/* HORAS */}
       <div className="space-y-1">
-        <p className="text-xs font-medium" style={{ color: "var(--page-primary-80)" }}>
+        <p className="text-xs font-medium" style={{ color: `${primaryColor}cc` }}>
           Apertura → Cierre
         </p>
         <div className="grid grid-cols-2 gap-3">
@@ -105,7 +109,7 @@ export function HorariosForm({
             onChange={(e) => setDesde(e.target.value)}
             className="rounded-lg px-3 py-2 bg-black/60 text-white focus:outline-none transition-all"
             style={{
-              border: `1px solid var(--page-secondary-60)`,
+              border: `1px solid ${secondaryColor}60`,
             }}
           />
           <input
@@ -115,7 +119,7 @@ export function HorariosForm({
             onChange={(e) => setHasta(e.target.value)}
             className="rounded-lg px-3 py-2 bg-black/60 text-white focus:outline-none transition-all"
             style={{
-              border: `1px solid var(--page-secondary-60)`,
+              border: `1px solid ${secondaryColor}60`,
             }}
           />
         </div>
@@ -129,7 +133,7 @@ export function HorariosForm({
           defaultChecked={initialData?.estado ?? true}
           value="true"
           className="w-4 h-4 rounded accent-current"
-          style={{ accentColor: "var(--page-primary)" }}
+          style={{ accentColor: primaryColor }}
         />
         Activo
       </label>
@@ -142,7 +146,7 @@ export function HorariosForm({
       {/* BOTONES */}
       <div 
         className="flex justify-end gap-2 pt-3 border-t"
-        style={{ borderColor: "var(--page-secondary-40)" }}
+        style={{ borderColor: `${secondaryColor}40` }}
       >
         <Button
           type="button"
@@ -156,6 +160,8 @@ export function HorariosForm({
 
         <SubmitButton 
           isEdit={!!initialData} 
+          primaryColor={primaryColor} 
+          secondaryColor={secondaryColor} 
         />
       </div>
     </form>

@@ -4,6 +4,8 @@ import TurnoList from "@/components/turno/TurnoList";
 import CreateTurnoModal from "@/components/turno/CreateTurnoModal";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import TurnoManager from "@/components/turno/TurnoManager";
 
 async function getTurnoData() {
@@ -32,11 +34,14 @@ export default async function TurnoPage() {
 
   const turnosData = (result.success && result.data) ? result.data : [];
 
+  const primaryColor = config?.primaryColor ?? "#3b82f6";
+  const secondaryColor = config?.secondaryColor ?? "#1e3a8a";
+
   return (
     <div
       className="min-h-screen w-full p-2 sm:p-6 pt-24 md:pt-24 overflow-x-hidden"
       style={{
-        background: `linear-gradient(to bottom right, #000000, var(--page-secondary-30))`,
+        background: `linear-gradient(to bottom right, #000000, ${secondaryColor}30)`,
       }}
     >
       <div className="container mx-auto max-w-7xl">
@@ -44,9 +49,18 @@ export default async function TurnoPage() {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
+              {session?.user?.role === "ADMIN" && (
+                <Link
+                  href="/admin"
+                  className="p-2 rounded-lg transition-all hover:bg-opacity-20"
+                  style={{ backgroundColor: `${primaryColor}15` }}
+                >
+                  <ArrowLeft className="h-6 w-6" style={{ color: primaryColor }} />
+                </Link>
+              )}
               <h1
                 className="text-3xl font-bold"
-                style={{ color: "var(--page-primary)" }}
+                style={{ color: primaryColor }}
               >
                 Gestión de Turnos
               </h1>
@@ -59,6 +73,8 @@ export default async function TurnoPage() {
               initialUsuarios={usuarios}
               initialRelaciones={relaciones}
               whatsappPhone={config?.whatsapp || ""}
+              primaryColor={primaryColor}
+              secondaryColor={secondaryColor}
             />
           </div>
 
@@ -73,6 +89,8 @@ export default async function TurnoPage() {
               turnos={turnosData}
               totalPages={1}
               currentPage={1}
+              primaryColor={primaryColor}
+              secondaryColor={secondaryColor}
             />
           )}
         </div>

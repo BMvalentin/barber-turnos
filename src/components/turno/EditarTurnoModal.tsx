@@ -133,7 +133,7 @@ export default function EditTurnoModal({ turno, userId = "" }: Props) {
   return (
     <Dialog open={abierto} onOpenChange={setAbierto}>
       <DialogTrigger asChild>
-        <button className="w-full bg-[var(--page-primary)]/10 hover:bg-[var(--page-primary)]/20 text-[var(--page-primary)] border border-[var(--page-primary)]/20 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all">
+        <button className="w-full bg-amber-600/10 hover:bg-amber-600/20 text-amber-500 border border-amber-600/20 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all">
           Editar Turno
         </button>
       </DialogTrigger>
@@ -153,9 +153,9 @@ export default function EditTurnoModal({ turno, userId = "" }: Props) {
             <button
               onClick={() => setAbierto(false)}
               type="button"
-              className="p-2 hover:bg-[var(--page-primary)]/20 rounded-lg transition-all group"
+              className="p-2 hover:bg-amber-600/20 rounded-lg transition-all group"
             >
-              <ArrowLeft className="h-6 w-6 text-[var(--page-primary)] group-hover:text-[var(--page-primary-80)] group-hover:-translate-x-1 transition-all" />
+              <ArrowLeft className="h-6 w-6 text-amber-500 group-hover:text-amber-400 group-hover:-translate-x-1 transition-all" />
             </button>
             <div>
               <DialogHeader>
@@ -171,7 +171,7 @@ export default function EditTurnoModal({ turno, userId = "" }: Props) {
                   className={`w-2 h-2 rounded-full ${turno.estado === "CONFIRMADO"
                       ? "bg-green-500"
                       : turno.estado === "PENDIENTE"
-                        ? "bg-[var(--page-primary)]"
+                        ? "bg-amber-500"
                         : turno.estado === "COMPLETADO"
                           ? "bg-blue-500"
                           : "bg-red-500"
@@ -205,7 +205,7 @@ export default function EditTurnoModal({ turno, userId = "" }: Props) {
               <button
                 type="button"
                 onClick={cargarDatos}
-                className="px-6 py-2 bg-[var(--page-primary)]/20 hover:bg-[var(--page-primary)]/30 text-[var(--page-primary-80)] border border-[var(--page-primary)]/30 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
+                className="px-6 py-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 border border-amber-600/30 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
               >
                 Reintentar
               </button>
@@ -229,7 +229,7 @@ export default function EditTurnoModal({ turno, userId = "" }: Props) {
                     </p>
                     <div className="pt-3 mt-3 border-t border-[#2C261D] flex justify-between items-center text-[11px]">
                       <span className="text-[#8E8675]">Total a pagar:</span>
-                      <span className="font-bold text-[var(--page-primary)] text-sm">
+                      <span className="font-bold text-amber-500 text-sm">
                         ${turno.precioCongelado}
                       </span>
                     </div>
@@ -283,7 +283,7 @@ export default function EditTurnoModal({ turno, userId = "" }: Props) {
                     Nueva Agenda (Opcional)
                   </h3>
 
-                  <div className="p-4 bg-[var(--page-primary)]/5 border border-[var(--page-primary)]/10 rounded-xl mb-6">
+                  <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-xl mb-6">
                     <p className="text-[11px] text-amber-200/50 leading-relaxed italic">
                       Si solo necesitas cambiar el estado del turno, puedes
                       dejar la sección de agenda sin modificar. Tus cambios se

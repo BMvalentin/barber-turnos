@@ -8,6 +8,8 @@ type FooterProps = {
   openTerms: () => void;
   barberiaNombre?: string | null;
   logoUrl?: string | null;
+  primaryColor?: string | null;
+  secondaryColor?: string | null;
   descripcion?: string | null;
   localidad?: string | null;    
 };
@@ -17,6 +19,8 @@ export function Footer({
   openTerms, 
   barberiaNombre,
   logoUrl,
+  primaryColor, 
+  secondaryColor,
   descripcion,
   localidad
 }: FooterProps) {
@@ -24,10 +28,10 @@ export function Footer({
     <footer 
       className="py-8 border-t mx-auto bg-zinc-950 relative z-10 w-full"
       style={{
-        "--primary": "var(--page-primary)",
-        "--secondary": "var(--page-secondary)",
+        ["--primary" as any]: primaryColor || undefined,
+        ["--secondary" as any]: secondaryColor || undefined,
         borderColor: "color-mix(in srgb, var(--secondary) 40%, transparent)"
-      } as React.CSSProperties}
+      }}
     >
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">

@@ -5,9 +5,25 @@ import { MapPin, Phone, Clock, Scissors } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getHorariosCompactos } from "@/actions/margenesHorario.actions";
 
-export function LocationSection() {
+interface LocationSectionProps {
+  config?: {
+    primaryColor?: string | null;
+    mapsUrl?: string | null;
+    address?: string | null;
+    whatsapp?: string | null;
+  } | null;
+}
+
+export function LocationSection({ config }: LocationSectionProps) {
   const [cargando, setCargando] = useState(true);
   const [horarios, setHorarios] = useState(["Cargando..."]);
+
+  const primaryColor = config?.primaryColor || "#d97706";
+  const mapsUrl = config?.mapsUrl ||"";
+  const whatsappNumber = config?.whatsapp || "";
+  
+  // Dirección dinámica con fallback por defecto
+  const addressText = config?.address || "";
 
   useEffect(() => {
     try {
@@ -40,14 +56,14 @@ export function LocationSection() {
           <div 
             className="inline-flex items-center justify-center p-2 mb-4 rounded-full border"
             style={{ 
-              backgroundColor: "var(--page-primary-15)", 
-              borderColor: "var(--page-primary-30)" 
+              backgroundColor: `${primaryColor}15`, 
+              borderColor: `${primaryColor}30` 
             }}
           >
-            <Scissors className="w-5 h-5" style={{ color: "var(--page-primary)" }} />
+            <Scissors className="w-5 h-5" style={{ color: primaryColor }} />
           </div>
           <h2 className="font-display text-3xl md:text-5xl font-bold mb-4 text-white">
-            Nuestra <span className="italic" style={{ color: "var(--page-primary)" }}>Ubicación</span>
+            Nuestra <span className="italic" style={{ color: primaryColor }}>Ubicación</span>
           </h2>
         </motion.div>
 
@@ -62,43 +78,43 @@ export function LocationSection() {
             className="space-y-6 items-center justify-center w-full md:max-w-[35vw] mx-auto"
           >
             {/* DIRECCIÓN */}
-            <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-[var(--page-primary)]/50 transition-colors group">
+            <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-amber-500/50 transition-colors group">
               <div 
                 className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
-                style={{ backgroundColor: "var(--page-primary-15)" }}
+                style={{ backgroundColor: `${primaryColor}15` }}
               >
-                <MapPin className="w-6 h-6" style={{ color: "var(--page-primary)" }} />
+                <MapPin className="w-6 h-6" style={{ color: primaryColor }} />
               </div>
               <div>
-                <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary)" }}>Dirección</h3>
-                <p className="text-amber-100/80">Av. Montreal 695, Santa Clara del Mar</p>
+                <h3 className="font-semibold mb-1" style={{ color: primaryColor }}>Dirección</h3>
+                <p className="text-amber-100/80">{addressText}</p>
               </div>
             </div>
 
             {/* TELÉFONO */}
-            <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-[var(--page-primary)]/50 transition-colors group">
+            <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-amber-500/50 transition-colors group">
               <div 
                 className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
-                style={{ backgroundColor: "var(--page-primary-15)" }}
+                style={{ backgroundColor: `${primaryColor}15` }}
               >
-                <Phone className="w-6 h-6" style={{ color: "var(--page-primary)" }} />
+                <Phone className="w-6 h-6" style={{ color: primaryColor }} />
               </div>
               <div>
-                <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary)" }}>Turnos y Consultas</h3>
-                <p className="text-amber-100/80">+54 9 2233 42-7022</p>
+                <h3 className="font-semibold mb-1" style={{ color: primaryColor }}>Turnos y Consultas</h3>
+                <p className="text-amber-100/80">{whatsappNumber}</p>
               </div>
             </div>
 
             {/* HORARIOS */}
-            <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-[var(--page-primary)]/50 transition-colors group">
+            <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-amber-500/50 transition-colors group">
               <div 
                 className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
-                style={{ backgroundColor: "var(--page-primary-15)" }}
+                style={{ backgroundColor: `${primaryColor}15` }}
               >
-                <Clock className="w-6 h-6" style={{ color: "var(--page-primary)" }} />
+                <Clock className="w-6 h-6" style={{ color: primaryColor }} />
               </div>
               <div>
-                <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary)" }}>Horarios</h3>
+                <h3 className="font-semibold mb-1" style={{ color: primaryColor }}>Horarios</h3>
                 {cargando ? (
                   <p className="text-amber-100/80">Cargando horarios...</p>
                 ) : (

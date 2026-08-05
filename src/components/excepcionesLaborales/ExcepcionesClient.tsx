@@ -25,9 +25,11 @@ type Barbero = {
 type ExcepcionesClientProps = {
   excepciones: Excepcion[];
   barberos: Barbero[];
+  primaryColor: string;
+  secondaryColor: string;
 }
 
-export default function ExcepcionesClient({ excepciones, barberos }: ExcepcionesClientProps) {
+export default function ExcepcionesClient({ excepciones, barberos,primaryColor,secondaryColor }: ExcepcionesClientProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       {/* Formulario de creación */}
@@ -36,6 +38,8 @@ export default function ExcepcionesClient({ excepciones, barberos }: Excepciones
           <h2 className="text-xl font-semibold mb-4 text-white">Nueva Excepción</h2>
           <ExcepcionForm
             barberos={barberos}
+            primaryColor={primaryColor}
+            secondaryColor={secondaryColor}
           />
         </div>
       </div>
@@ -46,7 +50,8 @@ export default function ExcepcionesClient({ excepciones, barberos }: Excepciones
           <h2 className="text-xl font-semibold mb-4 text-white">
             Excepciones Registradas ({excepciones.length})
           </h2>
-          <ExcepcionesList excepciones={excepciones} />
+          <ExcepcionesList excepciones={excepciones}  primaryColor={primaryColor}
+            secondaryColor={secondaryColor} />
         </div>
       </div>
     </div>
