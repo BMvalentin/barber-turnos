@@ -19,7 +19,7 @@ function SubmitButton() {
     <Button
       type="submit"
       disabled={pending}
-      className="w-full text-white shadow-md hover:opacity-95 transition-all"
+      className="w-full text-[var(--page-primary-foreground)] shadow-md hover:opacity-95 transition-all"
       style={{
         backgroundColor: "var(--page-primary)",
         border: "1px solid var(--page-secondary)",

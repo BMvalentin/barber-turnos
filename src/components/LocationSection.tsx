@@ -59,7 +59,7 @@ export function LocationSection({ config }: LocationSectionProps) {
             <Scissors className="w-5 h-5" style={{ color: "var(--page-primary)" }} />
           </div>
           <h2 className="font-display text-3xl md:text-5xl font-bold mb-4 text-white">
-            Nuestra <span className="italic" style={{ color: "var(--page-primary)" }}>Ubicación</span>
+            Nuestra <span className="italic" style={{ color: "var(--page-primary-tinta)" }}>Ubicación</span>
           </h2>
         </motion.div>
 
@@ -82,7 +82,7 @@ export function LocationSection({ config }: LocationSectionProps) {
                 <MapPin className="w-6 h-6" style={{ color: "var(--page-primary)" }} />
               </div>
               <div>
-                <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary)" }}>Dirección</h3>
+                <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary-tinta)" }}>Dirección</h3>
                 <p className="text-amber-100/80">{addressText}</p>
               </div>
             </div>
@@ -96,7 +96,7 @@ export function LocationSection({ config }: LocationSectionProps) {
                 <Phone className="w-6 h-6" style={{ color: "var(--page-primary)" }} />
               </div>
               <div>
-                <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary)" }}>Turnos y Consultas</h3>
+                <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary-tinta)" }}>Turnos y Consultas</h3>
                 <p className="text-amber-100/80">+54 9 2233 42-7022</p>
               </div>
             </div>
@@ -110,7 +110,7 @@ export function LocationSection({ config }: LocationSectionProps) {
                 <Clock className="w-6 h-6" style={{ color: "var(--page-primary)" }} />
               </div>
               <div>
-                <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary)" }}>Horarios</h3>
+                <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary-tinta)" }}>Horarios</h3>
                 {cargando ? (
                   <p className="text-amber-100/80">Cargando horarios...</p>
                 ) : (

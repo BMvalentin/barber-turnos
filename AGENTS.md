@@ -53,3 +53,14 @@ Lo que ya NO debe existir: props `primaryColor`/`secondaryColor` entre component
 - Cron Vercel: `/api/cron/expirar-turnos`, requiere header `CRON_SECRET`.
 - No hay tests. Evitar instalar dependencias nuevas sin justificación (revisar primero si ya existe solución en el repo / React / Next).
 - `any`, `@ts-ignore`, `@ts-nocheck` PROHIBIDOS por CLAUDE.md; preferir `unknown`, tipos de Prisma/Zod, type guards.
+
+## Contraste de texto según color de marca (REGLAS DE SOLO LECTURA)
+
+- Texto/íconos sobre fondo SÓLIDO `var(--page-primary)` o `var(--page-secondary)`: PROHIBIDO hardcodear `text-white`, `text-black`, `text-zinc-950`, `#ffffff`, `#fff` o `#000`. Usar `--page-primary-foreground` / `--page-secondary-foreground` (`text-[var(--page-primary-foreground)]` o `color: var(...)`).
+- Si un wrapper ya aliasea `--primary`/`--secondary` a las vars de página, agregar también `--primary-foreground` → `var(--page-primary-foreground)` en el MISMO objeto style y usar `var(--primary-foreground)`.
+- Texto/íconos de marca sobre fondos SÓLIDOS oscuros (negro, zinc-950/900, paleta dorada oscura como `#1C1812`, gradientes oscuros): usar `--page-primary-tinta` / `--page-secondary-tinta` (el script la aclara automáticamente si el color de marca es muy oscuro).
+- NO aplicar `-tinta` sobre fondos translúcidos de marca (`--page-primary-15/20` y demás variantes alfa): los chips marca-sobre-marca-alfa son intencionales.
+- Única fuente permitida para tomar decisiones de contraste: `src/lib/contraste.ts` (funciones en español: `esColorHexValido`, `calcularLuminanciaRelativa`, `calcularRazonDeContraste`, `elegirColorTexto`, `obtenerTintaLejible`, `mezclarConBlanco`). No crear utilidades paralelas.
+- Nomenclatura: funciones, variables, constantes y archivos nuevos en español (excepto palabras reservadas del sistema/librerías y convenciones universales del stack como `id`, `className`, props de shadcn/radix, hooks `useXxx`). TypeScript estricto, sin `any`, `@ts-ignore` o `@ts-nocheck`.
+- Verificación obligatoria tras cualquier cambio de color/contraste: `npx tsc --noEmit` (el build NO typechequea) en la raíz del proyecto.
+- Si un color de marca nuevo se agrega al panel admin, debe pasar por la validación `/^#[0-9a-fA-F]{6}$/` (existe en `src/actions/configPage.ts` y en `GeneralConfigForm.tsx`).

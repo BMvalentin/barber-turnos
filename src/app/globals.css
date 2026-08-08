@@ -11,6 +11,13 @@
   --page-primary: #d97706;
   --page-secondary: #78350f;
 
+  /* Texto/íconos sobre fondo sólido de marca (decidido por src/lib/contraste.ts) */
+  --page-primary-foreground: #09090b;
+  --page-secondary-foreground: #ffffff;
+  /* Marca legible como texto sobre fondos oscuros */
+  --page-primary-tinta: var(--page-primary);
+  --page-secondary-tinta: var(--page-secondary);
+
   /* Variantes alfa derivadas (color-mix) usadas como ${primaryColor}XX antes */
   --page-primary-08: color-mix(in srgb, var(--page-primary) 8%, transparent);
   --page-primary-15: color-mix(in srgb, var(--page-primary) 15%, transparent);

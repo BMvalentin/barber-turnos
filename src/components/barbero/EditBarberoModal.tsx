@@ -156,7 +156,7 @@ export default function EditBarberoModal({
           <h2 className="text-2xl font-bold text-white">Editar Barbero</h2>
           <button 
             onClick={onClose} 
-            className="rounded-sm transition-opacity hover:opacity-100 focus:outline-none p-1 text-white hover:cursor-pointer"
+            className="rounded-sm transition-opacity hover:opacity-100 focus:outline-none p-1 text-[var(--page-primary-foreground)] hover:cursor-pointer"
             style={{ backgroundColor: "var(--page-primary)" }}
           >
             <X className="h-4 w-4" />
@@ -391,7 +391,7 @@ export default function EditBarberoModal({
             type="button"
             onClick={handleSubmit}
             disabled={isPending}
-            className="flex-1 text-white transition-all hover:opacity-90"
+            className="flex-1 text-[var(--page-primary-foreground)] transition-all hover:opacity-90"
             style={{ backgroundColor: "var(--page-primary)" }}
           >
             {isPending ? "Guardando..." : "Guardar Cambios"}

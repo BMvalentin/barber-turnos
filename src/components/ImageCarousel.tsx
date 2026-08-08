@@ -28,7 +28,7 @@ export function ImageCarousel({ servicios }: ImageCarouselProps) {
           className="text-center mb-8"
         >
           <h2 className="text-3xl font-black text-white uppercase tracking-tighter">
-            Nuestros <span className="italic" style={{ color: "var(--page-primary)" }}>Servicios</span>
+            Nuestros <span className="italic" style={{ color: "var(--page-primary-tinta)" }}>Servicios</span>
           </h2>
         </motion.div>
 
@@ -67,7 +67,7 @@ export function ImageCarousel({ servicios }: ImageCarouselProps) {
                               ${servicio.precio}
                             </span>
 
-                            <h2 className="text-xl font-bold leading-none" style={{ color: "var(--page-primary)" }}>
+                            <h2 className="text-xl font-bold leading-none" style={{ color: "var(--page-primary-tinta)" }}>
                               $
                               {Math.round(
                                 servicio.precio - (servicio.precio * servicio.descuento) / 100
@@ -79,7 +79,7 @@ export function ImageCarousel({ servicios }: ImageCarouselProps) {
                             </span>
                           </>
                         ) : (
-                          <h2 className="text-lg font-bold" style={{ color: "var(--page-primary)" }}>
+                          <h2 className="text-lg font-bold" style={{ color: "var(--page-primary-tinta)" }}>
                             ${servicio.precio}
                           </h2>
                         )}

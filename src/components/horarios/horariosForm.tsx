@@ -35,7 +35,7 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
     <Button
       type="submit"
       disabled={pending}
-      className="text-white shadow-md hover:opacity-95 transition-all"
+      className="text-[var(--page-primary-foreground)] shadow-md hover:opacity-95 transition-all"
       style={{
         backgroundColor: "var(--page-primary)",
         border: "1px solid var(--page-secondary)",

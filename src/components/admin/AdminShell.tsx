@@ -24,7 +24,7 @@ export default function AdminShell({
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-black to-amber-950/90 pt-16">
+    <div className="flex min-h-screen bg-neutral-900 pt-16">
       <AdminSidebar collapsed={collapsed} onToggle={handleToggle} />
 
       <main className="flex-1 min-w-0 p-4 sm:p-8">

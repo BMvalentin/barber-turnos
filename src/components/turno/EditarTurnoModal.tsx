@@ -229,7 +229,7 @@ export default function EditTurnoModal({ turno, userId = "" }: Props) {
                     </p>
                     <div className="pt-3 mt-3 border-t border-[#2C261D] flex justify-between items-center text-[11px]">
                       <span className="text-[#8E8675]">Total a pagar:</span>
-                      <span className="font-bold text-[var(--page-primary)] text-sm">
+                      <span className="font-bold text-[var(--page-primary-tinta)] text-sm">
                         ${turno.precioCongelado}
                       </span>
                     </div>
