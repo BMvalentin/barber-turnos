@@ -96,7 +96,7 @@ export function HorariosList({
         <Button
           onClick={handleCreate}
           size="sm"
-          className="text-white shadow-md hover:opacity-90 transition-all mr-6"
+          className="text-[var(--page-primary-foreground)] shadow-md hover:opacity-90 transition-all mr-6"
           style={{
             backgroundColor: "var(--page-primary)",
             border: `1px solid var(--page-secondary)`,
@@ -174,7 +174,7 @@ export function HorariosList({
               <div className="flex gap-2">
                 <Button
                   size="sm"
-                  className="text-white hover:opacity-95"
+                  className="text-[var(--page-primary-foreground)] hover:opacity-95"
                   style={{
                     backgroundColor: "var(--page-primary)",
                   }}

@@ -24,7 +24,7 @@ export default function TurnoManager({ initialTurnos, session }: { initialTurnos
             <button
               key={f}
               onClick={() => setEstado(f)}
-              className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${estado === f ? "bg-[var(--page-primary)] text-white" : "bg-neutral-900 border border-neutral-700 text-neutral-400 hover:border-[var(--page-primary)]"}`}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${estado === f ? "bg-[var(--page-primary)] text-[var(--page-primary-foreground)]" : "bg-neutral-900 border border-neutral-700 text-neutral-400 hover:border-[var(--page-primary)]"}`}
             >
               {f}
             </button>

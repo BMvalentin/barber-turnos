@@ -55,7 +55,7 @@ export function Hero({ config }: HeroProps) {
           </div>
           
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white uppercase tracking-tighter leading-tight flex flex-wrap text-center items-center justify-center max-w-4xl mx-auto">
-            {firstPart}&nbsp;<span className="italic pr-2" style={{ color: "var(--page-primary)" }}>{secondPart || "Estilo"}</span>
+            {firstPart}&nbsp;<span className="italic pr-2" style={{ color: "var(--page-primary-tinta)" }}>{secondPart || "Estilo"}</span>
           </h1>
           
           <p className="mt-6 text-zinc-400 text-sm md:text-base font-medium max-w-xl mx-auto tracking-wide">
@@ -80,7 +80,7 @@ export function Hero({ config }: HeroProps) {
             <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/5">
               <div>
                 <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-2">
-                  <Calendar className="w-6 h-6" style={{ color: "var(--page-primary)" }} />
+                  <Calendar className="w-6 h-6" style={{ color: "var(--page-primary-tinta)" }} />
                   Tu Turno
                 </h2>
               </div>
@@ -101,7 +101,7 @@ export function Hero({ config }: HeroProps) {
 
             <Link href="/turno" className="block w-full">
               <button 
-                className="relative w-full group overflow-hidden text-zinc-950 font-black py-5 rounded-2xl transition-all active:scale-95 shadow-lg"
+                className="relative w-full group overflow-hidden text-[var(--page-primary-foreground)] font-black py-5 rounded-2xl transition-all active:scale-95 shadow-lg"
                 style={{ backgroundColor: "var(--page-primary)" }}
               >
                 <div className="relative z-10 flex items-center justify-center gap-2 uppercase tracking-widest text-sm md:text-base">

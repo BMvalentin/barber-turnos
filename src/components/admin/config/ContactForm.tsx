@@ -28,7 +28,7 @@ export default function WhatsappForm({ initialValue }: { initialValue: string | 
       <button 
         type="submit"
         disabled={loading}
-        className="bg-[var(--page-primary)] px-4 py-2 rounded-lg font-bold text-black"
+        className="bg-[var(--page-primary)] px-4 py-2 rounded-lg font-bold text-[var(--page-primary-foreground)]"
       >
         {loading ? "Guardando..." : "Guardar Número"}
       </button>

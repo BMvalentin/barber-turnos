@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { updatePageConfig } from "@/actions/configPage";
 import { uploadConfigImage } from "@/actions/upload-images.actions";
 import { Building2, MapPin, Palette, Image as ImageIcon } from "lucide-react";
+import { esColorHexValido, elegirColorTexto, calcularRazonDeContraste } from "@/lib/contraste";
 
 type ImageFieldName = "logo" | "favicon" | "backgroundImage";
 
@@ -161,6 +162,12 @@ export default function GeneralConfigForm({ initialData }: GeneralConfigFormProp
         e.preventDefault();
         setSuccessMessage("");
         setErrorMessage("");
+
+        if (!esColorHexValido(primaryColor) || !esColorHexValido(secondaryColor)) {
+            setSuccessMessage("");
+            setErrorMessage("Color inválido. Usá el formato #RRGGBB (ej.: #d97706).");
+            return;
+        }
 
         startTransition(async () => {
             const res = await updatePageConfig(formData);
@@ -337,6 +344,33 @@ export default function GeneralConfigForm({ initialData }: GeneralConfigFormProp
                         </div>
                     </div>
                 </div>
+
+                {/* Preview de contraste del color primario */}
+                <div className="p-4 rounded-xl border border-amber-900/30 bg-black/40">
+                    <div className="flex items-center gap-4">
+                        <div
+                            className="w-16 h-16 rounded-xl border border-white/10 flex items-center justify-center text-2xl font-black"
+                            style={{ backgroundColor: primaryColor, color: elegirColorTexto(primaryColor) }}
+                        >
+                            Aa
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-sm font-semibold text-white">
+                                {elegirColorTexto(primaryColor) === "#09090b"
+                                    ? "Texto oscuro sobre este fondo"
+                                    : "Texto claro sobre este fondo"}
+                            </p>
+                            <p className="text-xs text-amber-200/60 mt-1">
+                                Contraste{" "}
+                                {calcularRazonDeContraste(primaryColor, elegirColorTexto(primaryColor)).toFixed(1)}
+                                :1{" "}
+                                {calcularRazonDeContraste(primaryColor, elegirColorTexto(primaryColor)) >= 4.5
+                                    ? "· cumple WCAG AA"
+                                    : "· no alcanza WCAG AA"}
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* SECCIÓN 4: IMÁGENES Y BRANDING */}
@@ -385,9 +419,10 @@ export default function GeneralConfigForm({ initialData }: GeneralConfigFormProp
             <button
                 type="submit"
                 disabled={isPending || uploadingField !== null}
-                className="w-full text-white font-semibold py-3 rounded-lg transition-all disabled:opacity-50 shadow-md hover:opacity-95 text-base cursor-pointer"
+                className="w-full font-semibold py-3 rounded-lg transition-all disabled:opacity-50 shadow-md hover:opacity-95 text-base cursor-pointer"
                 style={{
                     backgroundColor: primaryColor,
+                    color: elegirColorTexto(primaryColor),
                     border: `1px solid ${secondaryColor}`,
                 }}
             >

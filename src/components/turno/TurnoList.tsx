@@ -158,6 +158,8 @@ export default function TurnoList({ turnos, session }: Props) {
       style={{
         "--primary": "var(--page-primary)",
         "--secondary": "var(--page-secondary)",
+        "--primary-foreground": "var(--page-primary-foreground)",
+        "--primary-tinta": "var(--page-primary-tinta)",
       } as React.CSSProperties}
     >
       {/* Grid de Turnos */}
@@ -275,7 +277,7 @@ function TurnoCard({
 
         {/* Barbero */}
         <div className="flex items-start gap-2">
-          <div className="h-4 w-4 rounded-full bg-[var(--primary)] flex items-center justify-center text-white text-[10px] font-bold mt-0.5 flex-shrink-0">
+          <div className="h-4 w-4 rounded-full bg-[var(--primary)] flex items-center justify-center text-[var(--primary-foreground)] text-[10px] font-bold mt-0.5 flex-shrink-0">
             {turno.barbero?.nombre?.charAt(0) || "B"}
           </div>
           <div className="flex-1 min-w-0">
@@ -311,7 +313,7 @@ function TurnoCard({
           <div className="flex-1 flex items-center justify-between">
             <div>
               <p className="text-xs text-[var(--secondary)]">Total</p>
-              <p className="font-bold text-[var(--primary)] text-lg">${turno.precioCongelado}</p>
+              <p className="font-bold text-[var(--primary-tinta)] text-lg">${turno.precioCongelado}</p>
             </div>
             {turno.seniaCongelada > 0 && (
               <div className="text-right">

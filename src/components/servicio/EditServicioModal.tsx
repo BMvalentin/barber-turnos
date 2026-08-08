@@ -151,7 +151,7 @@ export default function EditServicioModal({
             <div className="flex items-center gap-4">
               <button
                 onClick={onClose}
-                className="rounded-sm ring-offset-background transition-opacity data-[state=open]:bg-accent data-[state=open]:text-muted-foreground hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] p-1 text-white hover:cursor-pointer">
+                className="rounded-sm ring-offset-background transition-opacity data-[state=open]:bg-accent data-[state=open]:text-muted-foreground hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] p-1 text-[var(--page-primary-foreground)] hover:cursor-pointer">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -341,7 +341,7 @@ function SubmitButton({
     <Button
       type="submit"
       disabled={pending}
-      className="bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-white font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+      className="bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
     >
       {pending ? "Actualizando..." : "Actualizar"}
     </Button>
