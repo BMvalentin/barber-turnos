@@ -7,6 +7,7 @@ import { toZonedTime, fromZonedTime } from "date-fns-tz";
 import { auth } from "@/auth";
 import { MAP_DIA_SEMANA } from "@/lib/constants";
 import { sendTurnoEmail } from "@/lib/email";
+import { construirDatosEmailTurno } from "@/lib/turno-datos-email";
 import { getCachedData } from "@/lib/cache";
 
 const TIMEZONE = "America/Argentina/Buenos_Aires";
@@ -280,17 +281,7 @@ export async function createTurno(
     } catch { /* No bloquear el flujo si falla la limpieza */ }
 
     try {
-      const zoned = toZonedTime(inicio, TIMEZONE);
-      const dayName = new Intl.DateTimeFormat("es-AR", { weekday: "long" }).format(zoned);
-      const timeString = new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(zoned);
-      await sendTurnoEmail(turno.user.email, {
-        clienteNombre: turno.user.name || "Cliente",
-        servicioNombre: turno.servicio.nombre,
-        barberoNombre: turno.barbero.nombre,
-        fechaSemana: dayName,
-        fechaHora: timeString,
-        estado: "CREADO",
-      });
+      await sendTurnoEmail(turno.user.email, construirDatosEmailTurno(turno));
     } catch (e) {
       console.error("Error enviando email de creación:", e);
     }
@@ -558,17 +549,13 @@ export async function actualizarTurno(
       revalidateTag(`turnos-user-${turnoActual.userId}`);
 
       try {
-        const zoned = toZonedTime(turnoActualizado.horarioReservado, TIMEZONE);
-        const dayName = new Intl.DateTimeFormat("es-AR", { weekday: "long" }).format(zoned);
-        const timeString = new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(zoned);
-        await sendTurnoEmail(turnoActualizado.user.email, {
-          clienteNombre: turnoActualizado.user.name || "Cliente",
-          servicioNombre: turnoActualizado.servicio.nombre,
-          barberoNombre: turnoActualizado.barbero.nombre,
-          fechaSemana: dayName,
-          fechaHora: timeString,
-          estado: turnoActualizado.estado === "CANCELADO" ? "CANCELADO" : "ACTUALIZADO",
-        });
+        await sendTurnoEmail(
+          turnoActualizado.user.email,
+          construirDatosEmailTurno(
+            turnoActualizado,
+            turnoActualizado.estado === "CANCELADO" ? "CANCELADO" : "ACTUALIZADO",
+          ),
+        );
       } catch (e) {
         console.error("Error enviando email de actualización:", e);
       }
@@ -594,17 +581,13 @@ export async function actualizarTurno(
       revalidatePath("/admin");
 
       try {
-        const zoned = toZonedTime(turnoActualizado.horarioReservado, TIMEZONE);
-        const dayName = new Intl.DateTimeFormat("es-AR", { weekday: "long" }).format(zoned);
-        const timeString = new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(zoned);
-        await sendTurnoEmail(turnoActualizado.user.email, {
-          clienteNombre: turnoActualizado.user.name || "Cliente",
-          servicioNombre: turnoActualizado.servicio.nombre,
-          barberoNombre: turnoActualizado.barbero.nombre,
-          fechaSemana: dayName,
-          fechaHora: timeString,
-          estado: turnoActualizado.estado === "CANCELADO" ? "CANCELADO" : "ACTUALIZADO",
-        });
+        await sendTurnoEmail(
+          turnoActualizado.user.email,
+          construirDatosEmailTurno(
+            turnoActualizado,
+            turnoActualizado.estado === "CANCELADO" ? "CANCELADO" : "ACTUALIZADO",
+          ),
+        );
       } catch (e) {
         console.error("Error enviando email de estado:", e);
       }
@@ -684,17 +667,10 @@ export async function deleteTurno(prevState: any, formData: FormData) {
     revalidateTag(`turnos-user-${turnoToDelete.userId}`);
 
     try {
-      const zoned = toZonedTime(turnoToDelete.horarioReservado, TIMEZONE);
-      const dayName = new Intl.DateTimeFormat("es-AR", { weekday: "long" }).format(zoned);
-      const timeString = new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(zoned);
-      await sendTurnoEmail(turnoToDelete.user.email, {
-        clienteNombre: turnoToDelete.user.name || "Cliente",
-        servicioNombre: turnoToDelete.servicio.nombre,
-        barberoNombre: turnoToDelete.barbero.nombre,
-        fechaSemana: dayName,
-        fechaHora: timeString,
-        estado: "CANCELADO",
-      });
+      await sendTurnoEmail(
+        turnoToDelete.user.email,
+        construirDatosEmailTurno(turnoToDelete, "CANCELADO"),
+      );
     } catch (e) {
       console.error("Error enviando email de eliminación:", e);
     }

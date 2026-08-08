@@ -6,6 +6,55 @@ Guía de contexto y convenciones para trabajar en este repositorio. Complementa 
 
 App de reserva de turnos para barbería: Next.js 15 (App Router), TypeScript, Tailwind v4, Prisma 7 + MariaDB, Auth.js v5 (beta), Mercado Pago Checkout Pro.
 
+## Reglas globales del proyecto
+
+### Idioma
+
+- Todo el código, comentarios, mensajes de UI y nombres de archivos/carpetas deben estar en **español**.
+- Excepciones (solo cuando el requisito técnico o el uso universal lo exige):
+  - APIs de librerías y del sistema: `useSession`, `signIn`, `PrismaClient`, `fetch`, `Request`, `onDelete`, `GoogleProvider`, etc.
+  - Modelos de base de datos de next-auth: `user`, `account`, `user_role` (nombres exactos exigidos por el adaptador).
+  - Nombres universales compartidos por ambos idiomas: `footer`, `header`, `hero`, `layout`, `page`, `route`, `middleware`, `proxy`, `server.js`, `next.config.ts`.
+  - Paquetes npm y nombres exportados por librerías de terceros (lucide-react, radix-ui, etc.).
+- Regla ESLint activa: `@typescript-eslint/no-explicit-any: error` — prohibido usar `any`.
+
+## Reglas de construcción (PERMANENTES — no eliminar, no saltar)
+
+Estas reglas se agregan a las anteriores y son de cumplimiento obligatorio para TODO código nuevo y
+toda modificación. No pueden borrarse, atenuarse ni saltarse nunca.
+
+1. **Máximo UNA función exportada por archivo de código.** Un archivo (ts/tsx/js/jsx) puede exportar
+   una sola función, componente React o hook. Si se necesitan más, se crean archivos adicionales.
+   - Excluidos: archivos de constantes, tipos e interfaces (no exportan funciones).
+   - Los closures internos de un componente (event handlers, callbacks) no cuentan como funciones del
+     archivo; si un helper deja de ser trivial, se mueve a su propio archivo.
+2. **Tamaño máximo de archivo: 400 líneas (objetivo: 300).** Ningún archivo de código puede superar
+   las 400 líneas. Si lo supera, debe desglosarse en archivos con responsabilidad única.
+3. **Regla del boy scout:** cualquier archivo existente que se modifique y quede fuera de límites
+   (varias funciones exportadas o más de 400 líneas) debe desglosarse en la misma tanda de cambios.
+4. Los documentos `.md` (documentación, planificación) no están sujetos a los límites de líneas.
+
+## Uso de subagentes (OBLIGATORIO)
+
+1. **Desglose obligatorio:** toda tarea o fase que se pueda desglosar en sub-tareas debe
+   ejecutarse mediante subagentes (`task` tool). Nunca ejecutar directamente trabajo que
+   pueda paralelizarse o delegarse.
+2. **Prompts detallados:** cada subagente debe recibir el prompt más detallado y con el mayor
+   contexto posible: objetivo, alcance exacto, archivos involucrados, patrones del proyecto,
+   y TODAS las reglas de comportamiento de este documento (idioma, arquitectura, capas,
+   límites de líneas, una función por archivo, imports con `@/`, etc.).
+3. **Paralelización:** lanzar varios subagentes en paralelo cuando las sub-tareas sean
+   independientes entre sí (un solo mensaje con múltiples llamadas a `task`).
+4. **Agente verificador global:** cuando una fase requiera muchos subagentes (3 o más) o
+   toque código compartido entre ellos, tras completar los subagentes se debe lanzar un
+   agente verificador (`verificador`) que revise TODO el código producido en la fase,
+   detecte fallas, incoherencias, violaciones de las reglas de este documento y archivos
+   fuera de límites, y las repare. El verificador es el último paso de la fase y su
+   aprobación es requisito para dar la fase por terminada.
+5. **Nunca delegar la coordinación:** la orquestación de subagentes, la definición de
+   interfaces entre sub-tareas y la decisión final sobre resultados siempre las hace el
+   agente principal, no los subagentes.
+
 ## Comandos
 
 - `npm run dev` — `next dev --turbopack`
