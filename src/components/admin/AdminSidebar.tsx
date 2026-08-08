@@ -54,15 +54,15 @@ function SidebarItem({
         flex items-center gap-3 rounded-lg text-sm font-semibold transition-colors duration-200 group overflow-hidden whitespace-nowrap py-2.5
         ${collapsed ? "justify-center px-0" : "px-3"}
         ${isActive
-          ? "bg-[var(--page-primary)]/20 text-[var(--page-primary-80)] border border-[var(--page-primary)]/30 shadow-inner"
-          : "text-white hover:bg-[var(--page-primary)]/10 hover:text-[var(--page-primary-80)]"}
+          ? "bg-[var(--page-primary)]/20 text-[var(--page-primary-tinta)] border border-[var(--page-primary)]/30 shadow-inner"
+          : "text-white hover:bg-[var(--page-primary)]/10 hover:text-[var(--page-primary-tinta)]"}
       `}
     >
       <Icon
         className={`h-5 w-5 shrink-0 transition-colors ${
           isActive
-            ? "text-[var(--page-primary-80)]"
-            : "text-white group-hover:text-[var(--page-primary-80)]"
+            ? "text-[var(--page-primary-tinta)]"
+            : "text-white group-hover:text-[var(--page-primary-tinta)]"
         }`}
       />
       <span
@@ -89,7 +89,7 @@ export default function AdminSidebar({
     <>
       {/* Botón flotante para móvil */}
       <button
-        className="lg:hidden fixed bottom-6 right-6 z-50 bg-[var(--page-primary)] text-black p-3 rounded-full shadow-lg shadow-[var(--page-primary)]/20"
+        className="lg:hidden fixed bottom-6 right-6 z-50 bg-[var(--page-primary)] text-[var(--page-primary-foreground)] p-3 rounded-full shadow-lg shadow-[var(--page-primary)]/20"
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -107,7 +107,7 @@ export default function AdminSidebar({
       <aside
         className={`
         fixed left-0 top-16 h-[calc(100vh-4rem)] pt-4 shadow-xl z-40 transition-all duration-300
-        bg-black/90 lg:bg-black/40 backdrop-blur-xl border-r border-amber-900/30 flex flex-col shrink-0
+        bg-black/90 lg:bg-black/60 backdrop-blur-xl border-r border-amber-900/30 flex flex-col shrink-0
         w-60 ${collapsed ? "lg:w-16" : "lg:w-60"}
         lg:sticky lg:translate-x-0
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
@@ -118,7 +118,7 @@ export default function AdminSidebar({
           onClick={onToggle}
           aria-label={collapsed ? "Expandir panel" : "Colapsar panel"}
           title={collapsed ? "Expandir panel" : "Colapsar panel"}
-          className="hidden lg:flex absolute -right-3 top-4 z-10 h-6 w-6 items-center justify-center rounded-full border border-amber-900/40 bg-black/80 text-white shadow-lg shadow-black/40 backdrop-blur transition-colors duration-200 hover:border-[var(--page-primary)]/60 hover:text-[var(--page-primary-80)]"
+          className="hidden lg:flex absolute -right-3 top-4 z-10 h-6 w-6 items-center justify-center rounded-full border border-amber-900/40 bg-black/80 text-white shadow-lg shadow-black/40 backdrop-blur transition-colors duration-200 hover:border-[var(--page-primary)]/60 hover:text-[var(--page-primary-tinta)]"
         >
           {collapsed ? (
             <ChevronsRight className="h-4 w-4" />
@@ -129,7 +129,7 @@ export default function AdminSidebar({
         {/* Header */}
         <div className="relative p-4 overflow-hidden">
           <Scissors
-            className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-[var(--page-primary)] transition-opacity duration-300 ${
+            className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-[var(--page-primary-tinta)] transition-opacity duration-300 ${
               collapsed ? "opacity-100" : "opacity-0"
             }`}
           />

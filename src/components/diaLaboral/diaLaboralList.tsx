@@ -187,7 +187,7 @@ export function DiaLaboralList({
               )}
 
               <Button
-                className="w-full font-medium transition-all shadow-sm hover:opacity-90 active:scale-[0.98] text-white"
+                className="w-full font-medium transition-all shadow-sm hover:opacity-90 active:scale-[0.98] text-[var(--page-primary-foreground)]"
                 style={{
                   backgroundColor: "var(--page-primary)",
                   border: `1px solid var(--page-secondary-50)`,

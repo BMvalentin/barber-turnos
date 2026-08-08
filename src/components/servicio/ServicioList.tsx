@@ -291,7 +291,7 @@ export default function ServicioList({
                 Filtrar
                 {activeFilterCount > 0 && (
                   <span
-                    className="text-black text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none"
+                    className="text-[var(--page-primary-foreground)] text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none"
                     style={{ backgroundColor: "var(--page-primary)" }}
                   >
                     {activeFilterCount}
@@ -371,7 +371,7 @@ export default function ServicioList({
                                 onClick={() => updateFilter("estado", opt.value)}
                                 style={{
                                   backgroundColor: isSelected ? "var(--page-primary)" : "#1C1812",
-                                  color: isSelected ? "#000" : "#8E8675",
+                                  color: isSelected ? "var(--page-primary-foreground)" : "#8E8675",
                                   borderColor: isSelected ? "var(--page-primary)" : "#2C261D"
                                 }}
                                 className="flex-1 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider border transition-colors"
@@ -468,7 +468,7 @@ export default function ServicioList({
             </div>
 
             <Button
-              className="flex items-center gap-2 px-4 py-2 text-white hover:opacity-90"
+              className="flex items-center gap-2 px-4 py-2 text-[var(--page-primary-foreground)] hover:opacity-90"
               style={{ backgroundColor: "var(--page-primary)" }}
               onClick={() => setShowCreateModal(true)}
             >

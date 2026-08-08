@@ -189,7 +189,7 @@ function BarberoCard({
           {/* BOTONES */}
           <div className="flex gap-2 pt-3 border-t" style={{ borderColor: `var(--page-primary-20)` }}>
             <Button
-              className="flex-1 text-white transition-all hover:opacity-90"
+              className="flex-1 text-[var(--page-primary-foreground)] transition-all hover:opacity-90"
               style={{ backgroundColor: "var(--page-primary)" }}
               onClick={() => setOpen(true)}
             >

@@ -139,7 +139,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={isPending}
-                className="w-full mt-4 bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-zinc-950 font-black py-4 rounded-xl transition-all shadow- hover:shadow- flex items-center justify-center gap-3 uppercase tracking-widest text-sm sm:text-base active:scale- disabled:opacity-50"
+                className="w-full mt-4 bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] font-black py-4 rounded-xl transition-all shadow- hover:shadow- flex items-center justify-center gap-3 uppercase tracking-widest text-sm sm:text-base active:scale- disabled:opacity-50"
               >
                 {isPending ? "PROCESANDO..." : (
                   <>

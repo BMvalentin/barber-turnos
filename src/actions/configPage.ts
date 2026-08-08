@@ -1,9 +1,13 @@
 // app/actions/config.ts
 "use server";
 
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
+const esquemaColor = z
+  .string()
+  .regex(/^#[0-9a-fA-F]{6}$/, "Formato de color inválido. Usá #RRGGBB (ej.: #d97706).");
 interface PageConfigData {
   name?: string;
   description?: string;
@@ -35,8 +39,12 @@ export async function updatePageConfig(
   data: PageConfigData
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const cleanWhatsapp = data.whatsapp ? data.whatsapp.replace(/\D/g, "") : undefined;
+    if (data.primaryColor !== undefined && !esquemaColor.safeParse(data.primaryColor).success)
+      return { success: false, error: "Formato de color inválido. Usá #RRGGBB (ej.: #d97706)." };
+    if (data.secondaryColor !== undefined && !esquemaColor.safeParse(data.secondaryColor).success)
+      return { success: false, error: "Formato de color inválido. Usá #RRGGBB (ej.: #d97706)." };
 
+    const cleanWhatsapp = data.whatsapp ? data.whatsapp.replace(/\D/g, "") : undefined;
     await prisma.pageConfig.upsert({
       where: { id: 1 },
       update: {

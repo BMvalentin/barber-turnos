@@ -26,7 +26,7 @@ export default function CreateBarberoModal({ servicios, diasLaborales }: Props) 
 
       <DialogTrigger asChild>
         <Button
-          className="text-white shadow-lg transition-all hover:opacity-90"
+          className="text-[var(--page-primary-foreground)] shadow-lg transition-all hover:opacity-90"
           style={{ backgroundColor: "var(--page-primary)" }}
         >
           + Ingresar Barbero

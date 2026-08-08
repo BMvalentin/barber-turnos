@@ -252,11 +252,13 @@ export default function CreateTurnoModal({
       style={{
         "--primary": "var(--page-primary)",
         "--secondary": "var(--page-secondary)",
+        "--primary-foreground": "var(--page-primary-foreground)",
+        "--primary-tinta": "var(--page-primary-tinta)",
       } as React.CSSProperties}
     >
       {/* Botón para abrir modal */}
       <Button 
-        className="flex items-center gap-2 px-6 py-3 text-white font-medium shadow-lg transition-all hover:opacity-90"
+        className="flex items-center gap-2 px-6 py-3 text-[var(--primary-foreground)] font-medium shadow-lg transition-all hover:opacity-90"
         style={{ backgroundColor: "var(--primary)" }}
         onClick={() => setIsOpen(true)}
       >
@@ -471,7 +473,7 @@ export default function CreateTurnoModal({
                     <span className="text-sm font-semibold text-white">Seña requerida</span>
                     <p className="text-xs text-zinc-500 mt-0.5">El resto se abona en el local</p>
                   </div>
-                  <span className="text-2xl font-black" style={{ color: "var(--primary)" }}>
+                  <span className="text-2xl font-black" style={{ color: "var(--primary-tinta)" }}>
                     ${turnoCreado.seniaCongelada.toLocaleString("es-AR")}
                   </span>
                 </div>
@@ -487,7 +489,7 @@ export default function CreateTurnoModal({
                 id="btn-pagar-senia"
                 onClick={handlePagarSenia}
                 disabled={loadingPago}
-                className="w-full flex items-center justify-center gap-3 disabled:opacity-50 text-zinc-950 font-black py-3.5 rounded-xl transition-all text-sm uppercase tracking-wider shadow-lg hover:opacity-90"
+                className="w-full flex items-center justify-center gap-3 disabled:opacity-50 text-[var(--primary-foreground)] font-black py-3.5 rounded-xl transition-all text-sm uppercase tracking-wider shadow-lg hover:opacity-90"
                 style={{ backgroundColor: "var(--primary)" }}
               >
                 {loadingPago ? (
@@ -527,7 +529,7 @@ function SubmitButton() {
     <Button
       type="submit"
       disabled={pending}
-      className="px-6 py-2.5 text-white font-medium rounded-xl shadow-md transition-all hover:opacity-90 text-sm"
+      className="px-6 py-2.5 text-[var(--primary-foreground)] font-medium rounded-xl shadow-md transition-all hover:opacity-90 text-sm"
       style={{ backgroundColor: "var(--primary)" }}
     >
       {pending ? "Procesando..." : "Confirmar Reserva"}

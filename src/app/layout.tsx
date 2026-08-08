@@ -7,6 +7,7 @@ import { auth } from "@/auth";
 import AppGate from "@/components/AppGate";
 import { Toaster } from "@/components/ui/toaster";
 import { getPageConfig } from "@/actions/configPage";
+import { elegirColorTexto, obtenerTintaLejible } from "@/lib/contraste";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -64,6 +65,16 @@ export default async function RootLayout({
   const session = await auth();
   const config = await getCachedPageConfig();
 
+  // Defaults de color: la fuente única es :root en globals.css
+  const PRIMARIO_POR_DEFECTO = "#d97706";
+  const SECUNDARIO_POR_DEFECTO = "#78350f";
+  const colorPrimario = config?.primaryColor ?? PRIMARIO_POR_DEFECTO;
+  const colorSecundario = config?.secondaryColor ?? SECUNDARIO_POR_DEFECTO;
+  const colorTextoPrimario = elegirColorTexto(colorPrimario);
+  const colorTextoSecundario = elegirColorTexto(colorSecundario);
+  const tintaPrimaria = obtenerTintaLejible(colorPrimario);
+  const tintaSecundaria = obtenerTintaLejible(colorSecundario);
+
   return (
     <html
       lang="es"
@@ -71,6 +82,10 @@ export default async function RootLayout({
         {
           "--page-primary": config?.primaryColor,
           "--page-secondary": config?.secondaryColor,
+          "--page-primary-foreground": colorTextoPrimario,
+          "--page-secondary-foreground": colorTextoSecundario,
+          "--page-primary-tinta": tintaPrimaria,
+          "--page-secondary-tinta": tintaSecundaria,
         } as React.CSSProperties
       }
     >

@@ -109,7 +109,7 @@ export default function CreateServicioForm({
           <div className="flex items-center gap-4">
             <button
               onClick={onClose}
-              className="rounded-sm ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none p-1 text-white hover:cursor-pointer"
+              className="rounded-sm ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none p-1 text-[var(--page-primary-foreground)] hover:cursor-pointer"
               style={{ backgroundColor: "var(--page-primary)" }}
             >
               <X className="h-4 w-4" />
@@ -351,7 +351,7 @@ export default function CreateServicioForm({
 function SubmitButton({ pending }: { pending: boolean }) {
   return (
     <Button 
-      className="font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 text-white"
+      className="font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 text-[var(--page-primary-foreground)]"
       style={{ backgroundColor: "var(--page-primary)" }}
       type="submit"
       disabled={pending}

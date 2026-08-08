@@ -400,7 +400,7 @@ export default function CreateBarberoForm({
       <Button
         onClick={handleSubmit}
         disabled={isPending || uploading || !!error}
-        className="w-full text-white shadow-lg transition-all"
+        className="w-full text-[var(--page-primary-foreground)] shadow-lg transition-all"
         style={{ backgroundColor: "var(--page-primary)" }}
       >
         {isPending || uploading ? "Guardando..." : "Crear Barbero"}

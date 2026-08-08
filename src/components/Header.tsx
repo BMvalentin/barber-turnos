@@ -43,10 +43,10 @@ export function Header({ session, config }: HeaderProps) {
               className="w-7 h-7 object-contain rounded-full" 
             />
           ) : (
-            <Scissors className="w-6 h-6" style={{ color: "var(--page-primary)" }} />
+            <Scissors className="w-6 h-6" style={{ color: "var(--page-primary-tinta)" }} />
           )}
           <span>{` ${firstName} `}</span>
-          <span style={{ color: "var(--page-primary)" }}>{`${lastName}`}</span>
+          <span style={{ color: "var(--page-primary-tinta)" }}>{`${lastName}`}</span>
         </Link>
 
         {/* DESKTOP NAV & AUTH */}
@@ -69,7 +69,7 @@ export function Header({ session, config }: HeaderProps) {
             <Link href={session ? "/turno" : "/login"} className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
               <Button 
                 size="sm"
-                style={{ backgroundColor: "var(--page-primary)", color: "#ffffff" }}
+                style={{ backgroundColor: "var(--page-primary)", color: "var(--page-primary-foreground)" }}
               >
                 Turnos
               </Button>
@@ -93,7 +93,7 @@ export function Header({ session, config }: HeaderProps) {
               <Link href="/login">
                 <Button 
                   size="sm"
-                  style={{ backgroundColor: "var(--page-primary)", color: "#ffffff" }}
+                  style={{ backgroundColor: "var(--page-primary)", color: "var(--page-primary-foreground)" }}
                 >
                   <DoorOpen className="w-4 h-4 mr-2" /> Iniciar Sesión
                 </Button>
@@ -105,7 +105,7 @@ export function Header({ session, config }: HeaderProps) {
         {/* MOBILE TOGGLE */}
         <button
           className="md:hidden relative z-50 p-2"
-          style={{ color: "var(--page-primary)" }}
+          style={{ color: "var(--page-primary-tinta)" }}
           onClick={() => setIsOpen(!isOpen)}
         >
           {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -131,14 +131,14 @@ export function Header({ session, config }: HeaderProps) {
               </Link>
 
               {session?.user?.role === "ADMIN" && (
-                <Link href="/admin" onClick={() => setIsOpen(false)} className="text-base font-medium transition-colors py-2" style={{ color: "var(--page-primary)" }}>
+                <Link href="/admin" onClick={() => setIsOpen(false)} className="text-base font-medium transition-colors py-2" style={{ color: "var(--page-primary-tinta)" }}>
                   Administrador
                 </Link>
               )}
 
               <div className="pt-2">
                 <Link href={session ? "/turno" : "/login"} onClick={() => setIsOpen(false)}>
-                  <Button variant="amarillo" className="w-full" style={{ backgroundColor: "var(--page-primary)", color: "#fff" }}>Turnos</Button>
+                  <Button variant="amarillo" className="w-full" style={{ backgroundColor: "var(--page-primary)", color: "var(--page-primary-foreground)" }}>Turnos</Button>
                 </Link>
               </div>
 
@@ -155,7 +155,7 @@ export function Header({ session, config }: HeaderProps) {
                   </div>
                 ) : (
                   <Link href="/login" onClick={() => setIsOpen(false)} className="w-full">
-                    <Button variant="outline" className="w-full bg-transparent" style={{ borderColor: "var(--page-primary)", color: "var(--page-primary)" }}>
+                    <Button variant="outline" className="w-full bg-transparent" style={{ borderColor: "var(--page-primary)", color: "var(--page-primary-tinta)" }}>
                       <DoorOpen className="w-4 h-4 mr-2" /> Iniciar Sesión
                     </Button>
                   </Link>

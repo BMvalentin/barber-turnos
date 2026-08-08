@@ -46,7 +46,7 @@ export default async function TurnoPage() {
             <div className="flex items-center gap-4">
               <h1
                 className="text-3xl font-bold"
-                style={{ color: "var(--page-primary)" }}
+                style={{ color: "var(--page-primary-tinta)" }}
               >
                 Gestión de Turnos
               </h1>
