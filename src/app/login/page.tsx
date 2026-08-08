@@ -1,14 +1,24 @@
 "use client";
-import { loginAction } from "@/actions/auth-actions";
+import { loginAction } from "@/actions/login.actions";
 import GoogleButton from "@/components/auth/google-button";
 import Link from "next/link";
-import { useActionState, useEffect } from "react"; 
-import { useRouter } from "next/navigation";
+import { Suspense, useActionState, useEffect } from "react"; 
+import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { Mail, Lock, ChevronRight, Scissors } from "lucide-react";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContenido />
+    </Suspense>
+  );
+}
+
+function LoginPageContenido() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const verificado = searchParams.get("verificado") === "true";
   const [state, action, isPending] = useActionState(loginAction, { error: "", success: false });
 
   useEffect(() => {
@@ -16,7 +26,7 @@ export default function LoginPage() {
       router.push("/dashboard");
       router.refresh();
     }
-  },);
+  }, [state, router]);
 
   return (
     <AuthLayout>
@@ -90,6 +100,12 @@ export default function LoginPage() {
                 <span className="bg-zinc-950 px-4 text-zinc-500">O ingresa con Email</span>
               </div>
             </div>
+
+            {verificado && (
+              <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium rounded-xl text-center">
+                ¡Cuenta activada! Ya podés iniciar sesión.
+              </div>
+            )}
 
             <form action={action} className="space-y-6">
               <div className="space-y-2">

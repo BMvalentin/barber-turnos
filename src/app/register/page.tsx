@@ -1,21 +1,34 @@
 "use client";
-import { registerAction } from "@/actions/auth-actions";
+import { registerAction } from "@/actions/registro.actions";
 import GoogleButton from "@/components/auth/google-button";
 import Link from "next/link";
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
-import { User, Mail, Lock, Scissors } from "lucide-react";
+import { User, Mail, Lock, Scissors, Eye, EyeOff } from "lucide-react";
+import type { ActionState } from "@/types/action-state";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [state, action, isPending] = useActionState(registerAction, { error: "", success: false });
+  const [state, action, isPending] = useActionState<ActionState, FormData>(
+    registerAction,
+    { error: "", success: false },
+  );
+  const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [verPassword, setVerPassword] = useState(false);
+  const [verConfirmPassword, setVerConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (state.success) {
-      router.push("/login?registered=true");
+      const aviso = state.aviso ? "&aviso=1" : "";
+      router.push(
+        `/verificar-email?email=${encodeURIComponent(state.email ?? "")}${aviso}`,
+      );
     }
-  },);
+  }, [state, router]);
 
   return (
     <AuthLayout>
@@ -97,6 +110,8 @@ export default function RegisterPage() {
                     type="text"
                     placeholder="John Doe"
                     required
+                    value={nombre}
+                    onChange={(e) => setNombre(e.target.value)}
                     className="w-full bg-zinc-900/50 border border-white/5 rounded-xl py-3.5 pl-12 pr-4 text-white outline-none focus:border-[var(--page-primary)]/50 focus:bg-zinc-900 focus:ring-1 focus:ring-[var(--page-primary)]/50 transition-all placeholder:text-zinc-600 font-medium"
                   />
                 </div>
@@ -111,6 +126,8 @@ export default function RegisterPage() {
                     type="email"
                     placeholder="cliente@correo.com"
                     required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="w-full bg-zinc-900/50 border border-white/5 rounded-xl py-3.5 pl-12 pr-4 text-white outline-none focus:border-[var(--page-primary)]/50 focus:bg-zinc-900 focus:ring-1 focus:ring-[var(--page-primary)]/50 transition-all placeholder:text-zinc-600 font-medium"
                   />
                 </div>
@@ -122,11 +139,45 @@ export default function RegisterPage() {
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary)] transition-colors" />
                   <input
                     name="password"
-                    type="password"
+                    type={verPassword ? "text" : "password"}
                     placeholder="••••••••"
                     required
-                    className="w-full bg-zinc-900/50 border border-white/5 rounded-xl py-3.5 pl-12 pr-4 text-white outline-none focus:border-[var(--page-primary)]/50 focus:bg-zinc-900 focus:ring-1 focus:ring-[var(--page-primary)]/50 transition-all placeholder:text-zinc-600 font-medium"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-zinc-900/50 border border-white/5 rounded-xl py-3.5 pl-12 pr-12 text-white outline-none focus:border-[var(--page-primary)]/50 focus:bg-zinc-900 focus:ring-1 focus:ring-[var(--page-primary)]/50 transition-all placeholder:text-zinc-600 font-medium"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setVerPassword((v) => !v)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-[var(--page-primary)] transition-colors"
+                    aria-label={verPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  >
+                    {verPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text- font-black text-[var(--page-primary)] uppercase tracking- ml-1">Confirmar Contraseña</label>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary)] transition-colors" />
+                  <input
+                    name="confirmPassword"
+                    type={verConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full bg-zinc-900/50 border border-white/5 rounded-xl py-3.5 pl-12 pr-12 text-white outline-none focus:border-[var(--page-primary)]/50 focus:bg-zinc-900 focus:ring-1 focus:ring-[var(--page-primary)]/50 transition-all placeholder:text-zinc-600 font-medium"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setVerConfirmPassword((v) => !v)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-[var(--page-primary)] transition-colors"
+                    aria-label={verConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  >
+                    {verConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                 </div>
               </div>
 

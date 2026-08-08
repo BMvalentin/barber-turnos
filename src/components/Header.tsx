@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { DoorOpen, Scissors, Menu, X } from "lucide-react";
 import Link from "next/link";
-import { handleSignOut } from "@/actions/auth-actions";
+import { handleSignOut } from "@/actions/salir.actions";
 import Image from "next/image";
 
 interface HeaderProps {
