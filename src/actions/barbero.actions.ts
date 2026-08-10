@@ -3,12 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { barberoSchema, updateBarberoSchema} from "@/lib/barbero-zod";
+import type { ActionState } from "@/types/action-state";
 
-export type ActionState = {
-  success?: boolean;
-  error?: string;
-  data?: any;
-};
+export type { ActionState };
 
 /* =========================
    CREATE BARBERO

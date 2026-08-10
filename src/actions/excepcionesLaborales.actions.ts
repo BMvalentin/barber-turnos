@@ -7,10 +7,9 @@ import { fromZonedTime } from "date-fns-tz";
 
 const TIMEZONE = "America/Argentina/Buenos_Aires";
 
-export type ActionState = {
-  success: boolean;
-  error?: string;
-};
+import type { ActionState } from "@/types/action-state";
+
+export type { ActionState };
 
 export async function createExcepcion(
   prevState: ActionState,

@@ -8,6 +8,7 @@ import {
   Clock,
 } from "lucide-react";
 import Link from "next/link";
+import { formatearHora } from "@/lib/utils";
 
 async function getStats() {
   const hoy = new Date();
@@ -34,7 +35,6 @@ async function getStats() {
     totalTurnos,
     turnosPendientes,
     barberos,
-    proximosTurnos,
     serviciosPopulares,
     turnosHoyPorBarbero,
     rendimientoHoyPorBarbero,
@@ -59,20 +59,6 @@ async function getStats() {
         },
       },
       orderBy: { nombre: "asc" },
-      take: 5,
-    }),
-
-    prisma.turno.findMany({
-      where: {
-        estado: { in: ["PENDIENTE", "CONFIRMADO"] },
-        horarioReservado: { gte: new Date() },
-      },
-      include: {
-        user: { select: { name: true, email: true } },
-        barbero: { select: { nombre: true } },
-        servicio: { select: { nombre: true } },
-      },
-      orderBy: { horarioReservado: "asc" },
       take: 5,
     }),
 
@@ -129,7 +115,6 @@ async function getStats() {
     totalTurnos,
     turnosPendientes,
     barberos,
-    proximosTurnos,
     serviciosPopulares,
     turnosHoyPorBarbero,
     rendimientoHoyPorBarbero,
@@ -269,14 +254,7 @@ export default async function AdminDashboard() {
                             {t.servicio?.nombre || "Servicio eliminado"}
                           </p>
                           <p className="text-amber-200/60 text-xs">
-                            {new Date(t.horarioReservado).toLocaleTimeString(
-                              [],
-                              {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: false,
-                              },
-                            )}
+                            {formatearHora(t.horarioReservado)}
                           </p>
                         </div>
                         <span

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { obtenerHorariosDisponibles, obtenerDiasDisponibles } from "@/actions/turno.actions";
 import { useSlotLocks } from "@/hooks/useSlotLocks";
+import { formatearHora } from "@/lib/utils";
 import {
   format,
   startOfMonth,
@@ -182,12 +183,7 @@ export default function SeleccionadorHorario({
   };
 
   // ─── Formatea un slot ISO a "HH:MM hs" ───────────────────────────────────
-  const formatearHora = (slot: string) =>
-    new Date(slot).toLocaleTimeString("es-AR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    }) + " hs";
+  const formatearHorario = (slot: string) => formatearHora(slot) + " hs";
 
   const diasEnGrilla = construirGrillaDelMes();
 
@@ -424,10 +420,10 @@ export default function SeleccionadorHorario({
                       /* Slot bloqueado por otro usuario */
                       <span className="flex items-center justify-center gap-1">
                         <Lock className="w-3 h-3" />
-                        {formatearHora(slot)}
+                        {formatearHorario(slot)}
                       </span>
                     ) : (
-                      formatearHora(slot)
+                      formatearHorario(slot)
                     )}
 
                     {/* Indicador visual de selección activa */}

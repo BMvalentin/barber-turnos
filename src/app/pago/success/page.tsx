@@ -1,7 +1,6 @@
 // app/pago/success/page.tsx
 import { confirmarPagoTurno } from "@/actions/mercadopago-actions";
-import RedireccionWhatsApp from "@/components/pago/RedireccionWhatsApp";
-import { prisma } from "@/lib/prisma";
+import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import Link from "next/link";
 import { CheckCircle2, Calendar, ArrowRight } from "lucide-react";
 
@@ -20,14 +19,10 @@ export default async function PagoSuccessPage({
   const turnoId = searchParams.turnoId;
   const paymentId = searchParams.payment_id || searchParams.collection_id;
 
-  // Confirmamos el turno desde la back_url (respaldo al webhook) y
-  // obtenemos el WhatsApp del negocio para redirigir al cliente
-  const [result, config] = await Promise.all([
-    turnoId
-      ? confirmarPagoTurno(turnoId, paymentId)
-      : Promise.resolve({ success: false, error: "Sin turno", data: undefined }),
-    prisma.pageConfig.findUnique({ where: { id: 1 } }),
-  ]);
+  // Confirmamos el turno desde la back_url (respaldo al webhook)
+  const result = turnoId
+    ? await confirmarPagoTurno(turnoId, paymentId)
+    : { success: false, error: "Sin turno", data: undefined };
 
   const turnoConfirmado = result.success === true;
   const datosTurno = result.success ? result.data : null;
@@ -76,7 +71,7 @@ export default async function PagoSuccessPage({
         <div className="flex flex-col gap-3">
           <Link
             href="/dashboard"
-            className="flex items-center justify-center gap-2 w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
+            className={`flex items-center justify-center gap-2 w-full ${CLASES_BOTON_MARCA} font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm`}
           >
             <Calendar className="w-5 h-5" />
             Ver mis turnos

@@ -11,10 +11,9 @@ export async function handleSignOut() {
 }
 
 // Definimos el tipo de respuesta para mantener consistencia
-export type ActionState = {
-  error?: string;
-  success?: boolean;
-};
+import type { ActionState } from "@/types/action-state";
+
+export type { ActionState };
 
 export const loginAction = async (prevState: ActionState, formData: FormData): Promise<ActionState> => {
   // Extraemos los datos directamente del FormData aquí en el servidor

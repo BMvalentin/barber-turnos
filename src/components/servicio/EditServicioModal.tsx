@@ -3,7 +3,6 @@
 import { actualizarServicio } from "@/actions/servicio-actions"; // Asumimos que esta acción maneja la actualización
 import { useState, useRef, useEffect } from "react";
 import {
-  ArrowLeft,
   DollarSign,
   Percent,
   Clock,
@@ -11,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { CLASES_BOTON_MARCA, CLASES_BOTON_CERRAR } from "@/lib/constants";
 import { Button } from "../ui/button";
 
 const initialState = {
@@ -151,7 +151,7 @@ export default function EditServicioModal({
             <div className="flex items-center gap-4">
               <button
                 onClick={onClose}
-                className="rounded-sm ring-offset-background transition-opacity data-[state=open]:bg-accent data-[state=open]:text-muted-foreground hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] p-1 text-[var(--page-primary-foreground)] hover:cursor-pointer">
+                className={CLASES_BOTON_CERRAR}>
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -312,8 +312,7 @@ export default function EditServicioModal({
             )}
           </div>
 
-          {/* SECCIÓN DE BARBEROS Y BOTÓN ELIMINAR QUITADOS DEL FINAL */}
-        <div className="flex justify-end px-6 py-4 gap-4 border-t border-[#2C261D] bg-black/70 w-full">
+          <div className="flex justify-end px-6 py-4 gap-4 border-t border-[#2C261D] bg-black/70 w-full">
           <button
             type="button"
             onClick={onClose}
@@ -341,7 +340,7 @@ function SubmitButton({
     <Button
       type="submit"
       disabled={pending}
-      className="bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+      className={`${CLASES_BOTON_MARCA} font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2`}
     >
       {pending ? "Actualizando..." : "Actualizar"}
     </Button>

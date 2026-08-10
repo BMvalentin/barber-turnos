@@ -8,11 +8,9 @@ import { obtenerClienteMP } from "@/lib/mercadopago";
 // ============================
 // CONFIGURACIÓN DEL CLIENTE MP
 // ============================
-export type ActionState = {
-  success: boolean;
-  error?: string;
-  data?: any;
-};
+import type { ActionState } from "@/types/action-state";
+
+export type { ActionState };
 
 // ======================================================
 // CREATE PREFERENCE

@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { updateBarbero } from "@/actions/barbero.actions";
 import { ChevronDown, ChevronUp, Upload, X } from "lucide-react";
 import { uploadBarberImages } from "@/actions/upload-images.actions";
+import { ESTILO_FONDO_MARCA } from "@/lib/constants";
 
 type Barbero = {
   id: string;
@@ -157,7 +158,7 @@ export default function EditBarberoModal({
           <button 
             onClick={onClose} 
             className="rounded-sm transition-opacity hover:opacity-100 focus:outline-none p-1 text-[var(--page-primary-foreground)] hover:cursor-pointer"
-            style={{ backgroundColor: "var(--page-primary)" }}
+            style={ESTILO_FONDO_MARCA}
           >
             <X className="h-4 w-4" />
           </button>
@@ -392,7 +393,7 @@ export default function EditBarberoModal({
             onClick={handleSubmit}
             disabled={isPending}
             className="flex-1 text-[var(--page-primary-foreground)] transition-all hover:opacity-90"
-            style={{ backgroundColor: "var(--page-primary)" }}
+            style={ESTILO_FONDO_MARCA}
           >
             {isPending ? "Guardando..." : "Guardar Cambios"}
           </Button>

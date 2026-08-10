@@ -6,12 +6,9 @@ import { servicioSchema } from "@/lib/servicios-zod";
 import { uploadMultipleToCloudinary } from "@/lib/cloudinary-uploader";
 import { serializeData } from "@/lib/utils";
 
-export type ActionState = {
-  error?: string;
-  errors?: Record<string, string[]>;
-  success?: boolean;
-  data?: any;
-};
+import type { ActionState } from "@/types/action-state";
+
+export type { ActionState };
 
 // Función helper para limpiar y validar URLs de imágenes
 function cleanImageUrl(url: string | null): string | null {

@@ -4,6 +4,7 @@ import { deleteservicio } from "@/actions/servicio-actions";
 import { useState, useRef, useEffect } from "react";
 import EditServicioModal from "./EditServicioModal";
 import CreateServicioForm from "./CreateServicioForm";
+import { ESTILO_FONDO_MARCA } from "@/lib/constants";
 import {
   Scissors,
   Clock,
@@ -292,7 +293,7 @@ export default function ServicioList({
                 {activeFilterCount > 0 && (
                   <span
                     className="text-[var(--page-primary-foreground)] text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none"
-                    style={{ backgroundColor: "var(--page-primary)" }}
+                    style={ESTILO_FONDO_MARCA}
                   >
                     {activeFilterCount}
                   </span>
@@ -469,7 +470,7 @@ export default function ServicioList({
 
             <Button
               className="flex items-center gap-2 px-4 py-2 text-[var(--page-primary-foreground)] hover:opacity-90"
-              style={{ backgroundColor: "var(--page-primary)" }}
+              style={ESTILO_FONDO_MARCA}
               onClick={() => setShowCreateModal(true)}
             >
               <Plus className="w-4 h-4" /> Nuevo Servicio

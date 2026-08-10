@@ -71,8 +71,6 @@ export default async function TurnoPage() {
             <TurnoList
               session={session}
               turnos={turnosData}
-              totalPages={1}
-              currentPage={1}
             />
           )}
         </div>

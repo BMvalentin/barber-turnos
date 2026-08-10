@@ -41,7 +41,7 @@ export default function TurnoManager({ initialTurnos, session }: { initialTurnos
         />
       </div>
 
-      <TurnoList session={session} turnos={filteredTurnos} totalPages={1} currentPage={1} />
+      <TurnoList session={session} turnos={filteredTurnos} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 // app/pago/pending/page.tsx
 import Link from "next/link";
+import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import { Clock, ArrowRight } from "lucide-react";
 
 interface SearchParams {
@@ -45,7 +46,7 @@ export default async function PagoPendingPage({
 
         <Link
           href="/dashboard"
-          className="flex items-center justify-center gap-2 w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
+          className={`flex items-center justify-center gap-2 w-full ${CLASES_BOTON_MARCA} font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm`}
         >
           Ver mis turnos
           <ArrowRight className="w-5 h-5" />

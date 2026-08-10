@@ -7,11 +7,10 @@ import {
   ShieldCheck, Calendar
 } from "lucide-react";
 import { Button } from "../ui/button";
+import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import { updateProfile } from "@/actions/user-dashboard";
 import { useSession } from "next-auth/react";
 import TurnoList from "@/components/turno/TurnoList";
-// Importa tu footer centralizado si decides renderizarlo aquí de manera local:
-// import { Footer } from "@/components/Footer";
 
 export default function DashboardPanel({ user, turnos, session }: { user: any; turnos: any[]; session: any }) {
   const { update } = useSession();
@@ -112,7 +111,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
               <Button
                 disabled={isPending}
                 type="submit"
-                className="w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] font-black uppercase tracking-widest px-10 rounded-2xl h-14 transition-all shadow-lg shadow-[var(--page-primary)]/10 active:scale-95"
+                className={`w-full ${CLASES_BOTON_MARCA} font-black uppercase tracking-widest px-10 rounded-2xl h-14 transition-all shadow-lg shadow-[var(--page-primary)]/10 active:scale-95`}
               >
                 {isPending ? "Guardando..." : "Guardar Teléfono"}
               </Button>
@@ -246,7 +245,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
                     <Button
                       disabled={isPending}
                       type="submit"
-                      className="bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] font-black uppercase tracking-widest px-10 rounded-2xl h-14 w-full md:w-auto transition-all shadow-lg shadow-[var(--page-primary)]/10 active:scale-95"
+                      className={`${CLASES_BOTON_MARCA} font-black uppercase tracking-widest px-10 rounded-2xl h-14 w-full md:w-auto transition-all shadow-lg shadow-[var(--page-primary)]/10 active:scale-95`}
                     >
                       {isPending ? "Guardando..." : "Actualizar Perfil"}
                     </Button>
@@ -273,8 +272,6 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
                 <TurnoList 
                   turnos={turnos}
                   session={session}
-                  totalPages={1}
-                  currentPage={1} 
                 />
               </div>
             </motion.div>

@@ -4,6 +4,7 @@ import { Clock, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ESTILO_FONDO_MARCA } from "@/lib/constants";
 
 type MargenLaboral = {
   id: string;
@@ -100,7 +101,7 @@ export function DiaLaboralList({
                 <div className="flex items-center gap-3">
                   <div 
                     className="w-2 h-16 rounded-full shadow-sm" 
-                    style={{ backgroundColor: "var(--page-primary)" }} 
+                    style={ESTILO_FONDO_MARCA} 
                   />
                   <div>
                     <h3 className="text-2xl font-bold text-white flex items-center gap-2">

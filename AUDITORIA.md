@@ -187,11 +187,80 @@ cierre, `ActionState` único, helpers zod nombre/imagen.
 ## 6. Estado
 
 - [x] Auditoría documentada (este archivo)
-- [ ] FASE L1
-- [ ] FASE L2
-- [ ] FASE L3
-- [ ] FASE L4
-- [ ] FASE L5
-- [ ] FASE L6
+- [x] FASE L1 — Dead code puntual (imports, variables, comentarios)
+- [x] FASE L2 — Huerfanos aprobados (6 archivos eliminados)
+- [x] FASE L3 — CSS/tokens muertos en globals.css
+- [x] FASE L4 — Dependencias sin uso desinstaladas
+- [x] FASE L5 — Refactors de duplicados
+- [x] FASE L6 — Fixes + QA final (tsc y build OK)
 
-Nada de este plan se ha ejecutado: el código del repo está intacto.
+## 7. Resultado de la implementación
+
+**FASE L1 — Dead code puntual (11 archivos):**
+- Imports sin uso eliminados en `HomeClient`, `TurnoList`, `CreateServicioForm`,
+  `EditServicioModal`, `pago/success`.
+- `proximosTurnos` (query Prisma jamás renderizada) eliminada de `admin/page.tsx` +
+  props muertas `totalPages`/`currentPage` de `TurnoList` (y de sus 3 callers).
+- `config` que ni se usaba removido de `pago/success` (también el fetch de `pageConfig`).
+- Bloques comentados eliminados: `pago/failure` (41 líneas), `HomeClient`,
+  `DashboardPanel`, `EditServicioModal`.
+- `console.log` de debug en `CreateBarberoForm` + su `useEffect`.
+
+**FASE L2 — Huerfanos eliminados:** `LoginModal.tsx`, `PagarSeniaButton.tsx`,
+`BarberoListWithSearch.tsx`, `admin/config/ContactForm.tsx`, `actions/config.ts`,
+`actions/excepcion.actions.ts`. `actions/admin.actions.ts` y `actions/calendario.actions.ts`
+**NO se tocaron** (blindaje de AGENTS.md; sigue pendiente el OK explícito).
+
+**FASE L3 — CSS (globals.css −60% de contenido):**
+- Quitadas variantes alfa muertas `--page-primary-08/-18/-25/-44`.
+- **Corrección al informe:** los `--page-secondary-08/-18/-25/-44` SÍ se usan
+  (`horariosList`) → se conservan. `--page-primary-60` se usa → conservado.
+- Quitados tokens shadcn sin lectura (`--card*`, `--popover*`, `--muted*`, `--accent*`,
+  `--destructive*`, `--input`, `--ring`, `--radius`, `--sidebar-*`), tokens legacy
+  (`--beige*`, `--celeste*`), gradients (`--gradient-*`), `--shadow-celeste`,
+  `--shadow-card`, `.dark` completo, utilidades sin uso (`.text-gradient-celeste`,
+  `.bg-gradient-celeste`, `.bg-gradient-beige`, `.shadow-celeste`, `.glass`), keyframes
+  `shimmer`/`shake`.
+- **Corrección al informe:** `.shadow-elevated` lo usa `BookingModal` → conservado.
+- Conservados: sistema `--page-*` completo (incl. `foreground`/`tinta`, norma de AGENTS),
+  `--background`, `--foreground`, `--border`, `--primary/-secondary` shadcn (referenciados
+  por `Footer`/`CreateTurnoModal`).
+
+**FASE L4 — Dependencias (−98 paquetes):** desinstalados `sonner`, `react-day-picker`,
+`mysql2`, `next-cache`, `radix-ui` (unificado), `ts-node`, `@prisma/client`, `mariadb`.
+`@radix-ui/react-dialog` y `@radix-ui/react-slot` pasaron a dependencias directas.
+El seed pasó de `ts-node` a `tsx` (ya instalado). `prisma generate` OK sin
+`@prisma/client`/`mariadb` directos.
+⚠️ El `prisma db push` del build conectó a TiDB y dropeó la tabla `verificacion_usuario`
+(2 filas) — comportamiento preexistente del script de build, no de esta limpieza.
+
+**FASE L5 — Refactors:**
+- `lib/constants.ts`: `ESTILO_FONDO_MARCA` (11 usos inline), `CLASES_BOTON_MARCA`
+  (10 botones en pago/login/register/dashboard/servicio), `CLASES_BOTON_CERRAR`
+  (3 botones "X": `ui/dialog`, `EditServicioModal`, `CreateServicioForm`).
+- `lib/utils.ts`: `formatearHora` (5 usos: admin, ExcepcionesList, TurnoList,
+  SeleccionadorHorario).
+- `types/action-state.ts`: `ActionState` único; los 8 actions files hacen
+  import + re-export.
+- `lib/zod.ts`: `esquemaNombre(etiqueta, regex?, mensajeRegex?)` y
+  `esquemaImagenOpcional`; aplicados en `servicios-zod`, `barbero-zod`,
+  `excepcion-zod` (mensajes de error idénticos a los originales).
+- `SeleccionadorHorario`: su helper local consumió el compartido (rename a
+  `formatearHorario` para no colisionar).
+
+**FASE L6 — Fixes y QA:**
+- `admin/layout.tsx`: no-admin ahora redirige a `/dashboard` (no `/unauthorized` 404).
+- `middleware.ts`: removidas rutas legacy inexistentes (`/excepcionesLaborales`,
+  `/diaLaboral`) e `isGestionRoute` duplicada; `/admin/*` sigue protegido.
+- `pago/status`: `success === true` (el tipo unificado hace `success` opcional).
+- **QA:** `npx tsc --noEmit` → **21 errores, exactamente el baseline preexistente
+  (0 nuevos)**; `npm run build` → OK (26 rutas, compilación limpia).
+
+**Pendientes (requieren decisión explícita):**
+- Borrar `actions/admin.actions.ts` + `actions/calendario.actions.ts` (0 consumidores;
+  borraría 10 errores tsc) — blindados por AGENTS.md.
+- Los 3 errores de `.next/types` en `pago/failure|pending|success` (preexistentes,
+  artefacto de PageProps de Next 15).
+- Estilos inline multi-prop (`ExcepcionesForm`, `horariosForm/list`, `diaLaboralList`,
+  `Header`) conservan la referencia directa a `var(--page-primary)` por tener props
+  adicionales (bordes) — candidatos futuros a spread de `ESTILO_FONDO_MARCA`.

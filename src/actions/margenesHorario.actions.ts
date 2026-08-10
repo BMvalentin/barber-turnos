@@ -3,12 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
-export type ActionState = {
-  success: boolean;
-  data?: any;
-  error?: string;
-  warning?: string;
-};
+import type { ActionState } from "@/types/action-state";
+
+export type { ActionState };
 
 /**
  * Valida formato de hora HH:mm

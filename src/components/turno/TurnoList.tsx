@@ -5,9 +5,9 @@ import EditTurnoModal from "./EditarTurnoModal";
 import { Calendar, User, Scissors, DollarSign, Phone } from "lucide-react";
 import { cancelTurno } from "@/actions/user-dashboard";
 import { completedTurno, confirmarTurno } from "@/actions/turno.actions";
-import { crearPreferenciaPago } from "@/actions/mercadopago-actions";
 import { toast } from "@/components/ui/use-toast";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
+import { formatearHora } from "@/lib/utils";
 
 type Turno = {
   id: string;
@@ -35,8 +35,6 @@ type Turno = {
 interface Props {
   turnos: Turno[];
   session: any;
-  totalPages: number;
-  currentPage: number;
 }
 
 type AccionConfirmacion = "cancelar" | "completar" | "confirmar";
@@ -299,10 +297,7 @@ function TurnoCard({
               })}
             </p>
             <p className="text-xs text-[var(--secondary)]">
-              {new Date(turno.horarioReservado).toLocaleTimeString("es-AR", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+              {formatearHora(turno.horarioReservado)}
             </p>
           </div>
         </div>

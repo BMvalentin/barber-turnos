@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Calendar, MapPin, Scissors, ChevronRight } from "lucide-react";
+import { ESTILO_FONDO_MARCA } from "@/lib/constants";
 
 const DEFAULT_BACKGROUND =
   "https://images.unsplash.com/photo-1593702275687-f8b402bf1fb5?q=80&w=2070&auto=format&fit=crop";
@@ -49,7 +50,7 @@ export function Hero({ config }: HeroProps) {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/80 border border-white/5 backdrop-blur-md mb-6">
             <span 
               className="w-2 h-2 rounded-full animate-pulse" 
-              style={{ backgroundColor: "var(--page-primary)" }} 
+style={ESTILO_FONDO_MARCA}
             />
             <span className="text-xs font-bold uppercase tracking-widest text-zinc-300">Solicita tu Turno</span>
           </div>
@@ -102,7 +103,7 @@ export function Hero({ config }: HeroProps) {
             <Link href="/turno" className="block w-full">
               <button 
                 className="relative w-full group overflow-hidden text-[var(--page-primary-foreground)] font-black py-5 rounded-2xl transition-all active:scale-95 shadow-lg"
-                style={{ backgroundColor: "var(--page-primary)" }}
+                style={ESTILO_FONDO_MARCA}
               >
                 <div className="relative z-10 flex items-center justify-center gap-2 uppercase tracking-widest text-sm md:text-base">
                   Reservar Ahora

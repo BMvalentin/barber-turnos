@@ -2,11 +2,12 @@
 
 import { toast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { createBarbero } from "@/actions/barbero.actions";
 import { ChevronDown, ChevronUp, Upload, X } from "lucide-react";
 import { uploadBarberImages } from "@/actions/upload-images.actions";
+import { ESTILO_FONDO_MARCA } from "@/lib/constants";
 
 type Servicio = {
   id: string;
@@ -183,12 +184,6 @@ export default function CreateBarberoForm({
       }
     });
   };
-
-  useEffect(() => {
-    return () => {
-      console.log(diasLaborales);
-    };
-  }, []);
 
   return (
     <div 
@@ -401,7 +396,7 @@ export default function CreateBarberoForm({
         onClick={handleSubmit}
         disabled={isPending || uploading || !!error}
         className="w-full text-[var(--page-primary-foreground)] shadow-lg transition-all"
-        style={{ backgroundColor: "var(--page-primary)" }}
+        style={ESTILO_FONDO_MARCA}
       >
         {isPending || uploading ? "Guardando..." : "Crear Barbero"}
       </Button>

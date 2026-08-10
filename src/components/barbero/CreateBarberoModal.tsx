@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ESTILO_FONDO_MARCA } from "@/lib/constants";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +28,7 @@ export default function CreateBarberoModal({ servicios, diasLaborales }: Props) 
       <DialogTrigger asChild>
         <Button
           className="text-[var(--page-primary-foreground)] shadow-lg transition-all hover:opacity-90"
-          style={{ backgroundColor: "var(--page-primary)" }}
+          style={ESTILO_FONDO_MARCA}
         >
           + Ingresar Barbero
         </Button>

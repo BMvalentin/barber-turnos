@@ -6,6 +6,7 @@ import { Calendar, Trash2, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/use-toast";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
+import { formatearHora } from "@/lib/utils";
 
 type Excepcion = {
   id: string;
@@ -125,7 +126,7 @@ export default function ExcepcionesList({ excepciones }: ExcepcionesListProps) {
                 {new Date(excepcion.desde).toLocaleDateString('es-AR')}
               </p>
               <p className="text-white">
-                {new Date(excepcion.desde).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                {formatearHora(excepcion.desde)}
               </p>
             </div>
             <div 
@@ -140,7 +141,7 @@ export default function ExcepcionesList({ excepciones }: ExcepcionesListProps) {
                 {new Date(excepcion.hasta).toLocaleDateString('es-AR')}
               </p>
               <p className="text-white">
-                {new Date(excepcion.hasta).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                {formatearHora(excepcion.hasta)}
               </p>
             </div>
           </div>

@@ -4,11 +4,9 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { MAP_DIA_SEMANA, REVERSE_MAP_DIA_SEMANA } from "@/lib/constants";
 
-export type ActionState = {
-  success: boolean;
-  data?: any;
-  error?: string;
-};
+import type { ActionState } from "@/types/action-state";
+
+export type { ActionState };
 
 // Crear día laboral
 export async function create(

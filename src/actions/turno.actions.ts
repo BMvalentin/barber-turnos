@@ -20,11 +20,9 @@ const revalidateBarberoCache = (barberoId: string, fecha: string) => {
   revalidatePath("/admin");
 };
 
-export type ActionState = {
-  success: boolean;
-  error?: string;
-  data?: any;
-};
+import type { ActionState } from "@/types/action-state";
+
+export type { ActionState };
 
 /* =========================
    OBTENER DÍAS DISPONIBLES DEL MES

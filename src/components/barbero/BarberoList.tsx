@@ -5,6 +5,7 @@ import EditBarberoModal from "./EditBarberoModal";
 import { deleteBarbero } from "@/actions/barbero.actions";
 import { User } from "lucide-react";
 import { Button } from "../ui/button";
+import { ESTILO_FONDO_MARCA } from "@/lib/constants";
 
 type HorarioBarbero = {
   margenLaboralId: string;
@@ -190,7 +191,7 @@ function BarberoCard({
           <div className="flex gap-2 pt-3 border-t" style={{ borderColor: `var(--page-primary-20)` }}>
             <Button
               className="flex-1 text-[var(--page-primary-foreground)] transition-all hover:opacity-90"
-              style={{ backgroundColor: "var(--page-primary)" }}
+              style={ESTILO_FONDO_MARCA}
               onClick={() => setOpen(true)}
             >
               Editar
