@@ -13,8 +13,6 @@ export async function handleSignOut() {
 // Definimos el tipo de respuesta para mantener consistencia
 import type { ActionState } from "@/types/action-state";
 
-export type { ActionState };
-
 export const loginAction = async (prevState: ActionState, formData: FormData): Promise<ActionState> => {
   // Extraemos los datos directamente del FormData aquí en el servidor
   const data = Object.fromEntries(formData);

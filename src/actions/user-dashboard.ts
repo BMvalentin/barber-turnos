@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { sendTurnoEmail } from "@/lib/email";
 import { toZonedTime } from "date-fns-tz";
+import { requerirSesion, requerirAdmin } from "@/lib/seguridad";
 
 const TIMEZONE = "America/Argentina/Buenos_Aires";
 
@@ -22,6 +23,16 @@ export async function updateProfile(
 
   if (!userId) {
     return { success: false, message: "ID de usuario no encontrado" };
+  }
+
+  // Solo el propio usuario (o un admin) puede editar su perfil
+  const sesion = await requerirSesion();
+  if (!sesion) {
+    return { success: false, message: "No autorizado" };
+  }
+  const esAdmin = sesion.user.role === "ADMIN";
+  if (!esAdmin && userId !== sesion.user.id) {
+    return { success: false, message: "No autorizado" };
   }
 
   if (!telefono || telefono.trim() === "") {
@@ -56,6 +67,12 @@ export async function updateProfile(
 
 export async function getUserTurnos(userId: string) {
   try {
+    // Solo el propio usuario (o un admin) puede ver sus turnos
+    const sesion = await requerirSesion();
+    if (!sesion) return [];
+    const esAdmin = sesion.user.role === "ADMIN";
+    if (!esAdmin && userId !== sesion.user.id) return [];
+
     const turnosRaw = await prisma.turno.findMany({
       where: { userId },
       orderBy: { horarioReservado: "desc" },
@@ -85,6 +102,23 @@ export async function getUserTurnos(userId: string) {
 
 export async function cancelTurno(turnoId: string) {
   try {
+    // Solo el dueño del turno (o un admin) puede cancelarlo
+    const sesion = await requerirSesion();
+    if (!sesion) return { success: false, message: "No autorizado" };
+
+    const turnoExistente = await prisma.turno.findUnique({
+      where: { id: turnoId },
+      select: { userId: true },
+    });
+    if (!turnoExistente) {
+      return { success: false, message: "No se pudo cancelar el turno" };
+    }
+
+    const esAdmin = sesion.user.role === "ADMIN" || (await requerirAdmin());
+    if (!esAdmin && turnoExistente.userId !== sesion.user.id) {
+      return { success: false, message: "No autorizado" };
+    }
+
     const turnoActualizado = await prisma.turno.update({
       where: { id: turnoId },
       data: { estado: "CANCELADO" },

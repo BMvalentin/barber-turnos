@@ -4,14 +4,16 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { barberoSchema, updateBarberoSchema} from "@/lib/barbero-zod";
 import type { ActionState } from "@/types/action-state";
-
-export type { ActionState };
+import { requerirAdmin } from "@/lib/seguridad";
 
 /* =========================
    CREATE BARBERO
 ========================= */
 export async function createBarbero(data: unknown): Promise<ActionState> {
   try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
     const parsed = barberoSchema.safeParse(data);
 
     if (!parsed.success) {
@@ -69,6 +71,9 @@ export async function createBarbero(data: unknown): Promise<ActionState> {
 ========================= */
 export async function updateBarbero(data: any): Promise<ActionState> {
   try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
     const parsed = updateBarberoSchema.safeParse(data);
 
     if (!parsed.success) {
@@ -239,6 +244,9 @@ export async function deleteBarbero(
   formData: FormData
 ): Promise<void> {
   try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return;
+
     const id = formData.get("id");
 
     if (!id || typeof id !== "string") {
@@ -268,6 +276,9 @@ export async function asignarServicioABarbero(
   formData: FormData
 ): Promise<ActionState> {
   try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
     const barberoId = formData.get("barberoId");
     const servicioId = formData.get("servicioId");
 
@@ -300,6 +311,9 @@ export async function removerServicioDeBarbero(
   formData: FormData
 ): Promise<ActionState> {
   try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
     const barberoId = formData.get("barberoId");
     const servicioId = formData.get("servicioId");
 
@@ -328,6 +342,9 @@ export async function asignarHorarioABarbero(
   formData: FormData
 ): Promise<ActionState> {
   try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
     const barberoId = formData.get("barberoId");
     const margenLaboralId = formData.get("margenLaboralId");
 
@@ -369,6 +386,9 @@ export async function removerHorarioDeBarbero(
   formData: FormData
 ): Promise<ActionState> {
   try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
     const id = formData.get("id");
 
     if (!id) {

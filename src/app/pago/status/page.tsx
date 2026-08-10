@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import { confirmarPagoTurno } from "@/actions/mercadopago-actions";
 import { CheckCircle2, Clock, XCircle, Calendar, ArrowRight, RefreshCw, AlertTriangle } from "lucide-react";
@@ -13,6 +15,9 @@ interface StatusPageProps {
 }
 
 export default async function PagoStatusPage({ searchParams }: StatusPageProps) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+
   const { status, turnoId, payment_id, collection_id } = await searchParams;
   
   const paymentId = payment_id || collection_id;
@@ -40,7 +45,8 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
     );
   }
 
-  // Evaluación de seguridad con la API de Mercado Pago
+  // Evaluación de seguridad con la API de Mercado Pago:
+  // solo se muestra éxito si el pago fue verificado correctamente
   const esPagoAprobado = status === "approved";
   let verificadoCorrectamente = false;
 
@@ -49,9 +55,12 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
     verificadoCorrectamente = result.success === true;
   }
 
-  // Mapeo preciso de estados
-  const mostrarExito = esPagoAprobado && (paymentId ? verificadoCorrectamente : true);
-  const mostrarFallo = status === "rejected" || status === "null" || (esPagoAprobado && paymentId && !verificadoCorrectamente);
+  // Mapeo preciso de estados:
+  // - Éxito: solo con pago aprobado Y verificado contra la API de MP
+  // - Fallo: rechazado, nulo, o aprobado sin poder verificar (sin paymentId o verificación fallida)
+  // - Pendiente: procesando
+  const mostrarExito = esPagoAprobado && verificadoCorrectamente;
+  const mostrarFallo = status === "rejected" || status === "null" || (esPagoAprobado && !verificadoCorrectamente);
   const mostrarPendiente = status === "pending" || status === "in_process";
 
   return (

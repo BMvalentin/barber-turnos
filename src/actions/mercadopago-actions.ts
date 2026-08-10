@@ -2,15 +2,14 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { Preference } from "mercadopago";
+import { Payment, Preference } from "mercadopago";
 import { obtenerClienteMP } from "@/lib/mercadopago";
+import { auth } from "@/auth";
 
 // ============================
 // CONFIGURACIÓN DEL CLIENTE MP
 // ============================
 import type { ActionState } from "@/types/action-state";
-
-export type { ActionState };
 
 // ======================================================
 // CREATE PREFERENCE
@@ -34,6 +33,16 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
 
     if (!turno) {
       return { success: false, error: "Turno no encontrado" };
+    }
+
+    // Solo el dueño del turno (o un admin) puede generar su preferencia de pago
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: "No autorizado" };
+    }
+    const esAdmin = session.user.role === "ADMIN";
+    if (!esAdmin && turno.userId !== session.user.id) {
+      return { success: false, error: "No autorizado" };
     }
 
     if (turno.estado === "CONFIRMADO") {
@@ -132,6 +141,8 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
 // ======================================================
 // CONFIRMAR PAGO MANUAL (fallback desde back_url success)
 // Se llama desde la página /pago/success como respaldo
+// Verifica el pago contra la API de Mercado Pago antes de
+// confirmar el turno (nunca confía solo en los query params).
 // ======================================================
 export async function confirmarPagoTurno(
   turnoId: string,
@@ -140,6 +151,11 @@ export async function confirmarPagoTurno(
   try {
     if (!turnoId) {
       return { success: false, error: "ID de turno inválido" };
+    }
+
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: "Iniciá sesión para confirmar tu pago" };
     }
 
     const incluirRelaciones = {
@@ -157,6 +173,12 @@ export async function confirmarPagoTurno(
       return { success: false, error: "Turno no encontrado" };
     }
 
+    // Solo el dueño del turno (o un admin) puede confirmar su pago
+    const esAdmin = session.user.role === "ADMIN";
+    if (!esAdmin && turno.userId !== session.user.id) {
+      return { success: false, error: "No autorizado" };
+    }
+
     // Si ya está confirmado (por el webhook), no hacer nada
     if (turno.estado === "CONFIRMADO") {
       return {
@@ -167,6 +189,35 @@ export async function confirmarPagoTurno(
           seniaCongelada: Number(turno.seniaCongelada),
         },
       };
+    }
+
+    // Sin paymentId no hay forma de verificar el pago: rechazar
+    if (!paymentId) {
+      return {
+        success: false,
+        error: "No se pudo verificar el pago: falta el ID del pago",
+      };
+    }
+
+    // Verificar el pago contra la API de Mercado Pago
+    const mp = await obtenerClienteMP();
+    const payment = new Payment(mp);
+    const datosPago = await payment.get({ id: paymentId });
+
+    const estadoPago = String(datosPago.status ?? "");
+    const referencia = String(datosPago.external_reference ?? "");
+    const montoPago = Number(datosPago.transaction_amount ?? 0);
+
+    if (estadoPago !== "approved") {
+      return { success: false, error: "El pago no está acreditado todavía" };
+    }
+
+    if (referencia !== turnoId) {
+      return { success: false, error: "El pago no corresponde a este turno" };
+    }
+
+    if (montoPago < Number(turno.seniaCongelada)) {
+      return { success: false, error: "El monto del pago no es válido" };
     }
 
     // Actualizar turno
@@ -206,10 +257,16 @@ export async function confirmarPagoTurno(
 // ======================================================
 export async function verificarEstadoPago(turnoId: string): Promise<ActionState> {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: "No autorizado" };
+    }
+
     const turno = await prisma.turno.findUnique({
       where: { id: turnoId },
       select: {
         id: true,
+        userId: true,
         estado: true,
         seniaCongelada: true,
       },
@@ -217,6 +274,11 @@ export async function verificarEstadoPago(turnoId: string): Promise<ActionState>
 
     if (!turno) {
       return { success: false, error: "Turno no encontrado" };
+    }
+
+    const esAdmin = session.user.role === "ADMIN";
+    if (!esAdmin && turno.userId !== session.user.id) {
+      return { success: false, error: "No autorizado" };
     }
 
     return {

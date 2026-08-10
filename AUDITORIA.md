@@ -258,9 +258,71 @@ El seed pasó de `ts-node` a `tsx` (ya instalado). `prisma generate` OK sin
 
 **Pendientes (requieren decisión explícita):**
 - Borrar `actions/admin.actions.ts` + `actions/calendario.actions.ts` (0 consumidores;
-  borraría 10 errores tsc) — blindados por AGENTS.md.
+  borraría 10 errores tsc) — blindados por AGENTS.md. ✅ **Resuelto en §8** (OK del usuario).
 - Los 3 errores de `.next/types` en `pago/failure|pending|success` (preexistentes,
   artefacto de PageProps de Next 15).
 - Estilos inline multi-prop (`ExcepcionesForm`, `horariosForm/list`, `diaLaboralList`,
   `Header`) conservan la referencia directa a `var(--page-primary)` por tener props
   adicionales (bordes) — candidatos futuros a spread de `ESTILO_FONDO_MARCA`.
+
+---
+
+## 8. Ciclo Seguridad (S1–S7) — implementado
+
+**Versiones:** next-auth 5.0.0-beta.30 → **5.0.0-beta.32** (fix GHSA-8fpg-xm3f-6cx3,
+GHSA-7rqj-j65f-68wh, GHSA-x445-f3h2-j279), next 15.2.8 → **15.5.23**, `@auth/core` forzado a
+**0.41.3** vía `overrides`. `npm audit`: **0 críticas** (antes 2); restan 23 vulns de majors
+fuera de alcance (nodemailer→9.0.5, mercadopago→3.3.0, next→16.3.0) + cadena del CLI de
+Prisma (dev) + postcss/sharp (via next).
+
+**S1 — Pago (ex CRÍTICO #1):** `confirmarPagoTurno` exige sesión + titularidad (o ADMIN) y
+verifica el pago contra la API de MP (`status=approved`, `external_reference=turnoId`,
+`transaction_amount >= seniaCongelada`); sin paymentId → error. `crearPreferenciaPago` y
+`verificarEstadoPago` también validan sesión/titularidad. `/pago/success` y `/pago/status`
+redirigen a /login sin sesión; en `/pago/status` el éxito solo se muestra si el pago se
+verificó (antes `?status=approved` sin paymentId mostraba "Seña Pagada" sin confirmar nada).
+
+**S2 — Turnos (fix + correctitud):** `createTurno` exige `auth()`; el `userId` se toma de la
+sesión para usuarios comunes (admin puede delegar); el choque de horarios ahora filtra por
+`barberoId` (dos barberos ya no se bloquean entre sí). Removido el hidden input `userId` de
+`CreateTurnoModal` (USER).
+
+**S3 — Webhook MP:** verificación de firma `X-Signature` (HMAC-SHA256 con
+`MP_WEBHOOK_SECRET`; si no está configurado hace warn y confía en el monto), validación
+`transaction_amount >= seniaCongelada` antes de confirmar y solo confirma turnos PENDIENTE.
+
+**S4 — Autorización sistémica:** nuevo `src/lib/seguridad.ts` con `requerirSesion()` /
+`requerirAdmin()`. Aplicado a todas las mutations: servicio-actions
+(create/actualizar/delete), barbero.actions (7), diaLaboral (3), margenesHorario (3),
+excepcionesLaborales (2), configPage (2), upload-images (2), mercadopago-oauth
+(desconectarMP), turno.actions (confirmar/actualizar/completed/deleteTurno). Cron
+`expirar-turnos`: exige `x-vercel-cron` o `x-cron-secret=CRON_SECRET` en producción.
+
+**S6 — Menores:** removido `allowDangerousEmailAccountLinking` de Google (account linking);
+IDORs cerrados en `user-dashboard` (`updateProfile`, `getUserTurnos`, `cancelTurno` ahora
+validan titularidad); el cron ya no expone emails en la respuesta. Los `target="_blank"`
+ya tenían `rel="noopener noreferrer"`.
+
+**S7 — Blindados eliminados (con OK del usuario):** borrados `actions/admin.actions.ts` +
+`actions/calendario.actions.ts` (0 consumidores). Baseline tsc: **21 → 13 errores**
+(quedan los 3 de `.next/types` pago, `seed.ts` "Mieracoles" y los 9 de EditServicioModal).
+
+**QA final:** `npx tsc --noEmit` = 13 (exactamente el nuevo baseline, 0 nuevos) ·
+`npm run build` = OK (26 rutas).
+
+**Post-QA (bug de runtime Turbopack):** tras el upgrade a next 15.5.23, `next dev --turbopack`
+fallaba con `Export ActionState doesn't exist in target module` en `/` (500). Causa: los
+módulos `"use server"` re-exportaban el tipo (`export type { ActionState }`), que Turbopack
+intenta resolver como export real del módulo de acciones. Fix: eliminados los 8 re-exports
+(`turno`, `servicio`, `mercadopago`, `margenesHorario`, `excepcionesLaborales`, `diaLaboral`,
+`barbero`, `auth`) y movidos los consumidores (`CreateServicioForm.tsx`, `horariosForm.tsx`)
+a `import type { ActionState } from "@/types/action-state"`. Verificado: `tsc` = 13 (baseline)
+y dev server Turbopack compila `/`, `/login`, `/register`, `/admin`, `/dashboard`, `/turno`,
+`/pago/success` sin errores (HTTP 200/307 esperados).
+
+**Pendientes para ciclos futuros:**
+- Setear `MP_WEBHOOK_SECRET` y `CRON_SECRET` en Vercel (env) para activar la firma del
+  webhook y el guard del cron.
+- Resto de audit: nodemailer@9, mercadopago@3, next@16 (majors).
+- Optimización de carga P1–P7 (matcher middleware, next/font, lazy BookingModal, índices
+  Prisma, cache cancelTurno) — planificado.

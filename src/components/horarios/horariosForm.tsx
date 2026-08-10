@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import {
   createMargenLaboral,
   updateMargenLaboral,
-  type ActionState,
 } from "@/actions/margenesHorario.actions";
+import type { ActionState } from "@/types/action-state";
 import { toast } from "@/components/ui/use-toast";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 

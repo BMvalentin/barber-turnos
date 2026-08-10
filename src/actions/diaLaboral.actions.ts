@@ -5,8 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { MAP_DIA_SEMANA, REVERSE_MAP_DIA_SEMANA } from "@/lib/constants";
 
 import type { ActionState } from "@/types/action-state";
-
-export type { ActionState };
+import { requerirAdmin } from "@/lib/seguridad";
 
 // Crear día laboral
 export async function create(
@@ -14,6 +13,9 @@ export async function create(
   formData: FormData
 ): Promise<ActionState> {
   try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
     const dia = parseInt(formData.get("dia") as string);
     const diaEnum = MAP_DIA_SEMANA[dia];
     const estado = formData.get("estado") === "true";
@@ -61,6 +63,9 @@ export async function update(
   formData: FormData
 ): Promise<ActionState> {
   try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
     const id = formData.get("id") as string;
     const dia = parseInt(formData.get("dia") as string);
     const diaEnum = MAP_DIA_SEMANA[dia];
@@ -117,6 +122,8 @@ export async function update(
 // Eliminar día laboral
 export async function deleteDiaLaboral(id: string): Promise<ActionState> {
   try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
 
     // Verificar si existe y tiene márgenes
     const existing = await prisma.dia_laboral.findUnique({

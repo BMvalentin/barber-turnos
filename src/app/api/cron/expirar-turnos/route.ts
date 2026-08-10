@@ -6,15 +6,20 @@ import { prisma } from "@/lib/prisma";
 export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
-  // Permitir únicamente requests del Cron de Vercel en producción
-  if (
-    process.env.NODE_ENV === "production" &&
-    req.headers.get("x-vercel-cron") !== "1"
-  ) {
-    return NextResponse.json(
-      { error: "No autorizado" },
-      { status: 401 }
-    );
+  // Permitir únicamente requests del Cron de Vercel en producción,
+  // o llamadas autenticadas con el header x-cron-secret
+  if (process.env.NODE_ENV === "production") {
+    const esCronVercel = req.headers.get("x-vercel-cron") === "1";
+    const secretoValido =
+      !!process.env.CRON_SECRET &&
+      req.headers.get("x-cron-secret") === process.env.CRON_SECRET;
+
+    if (!esCronVercel && !secretoValido) {
+      return NextResponse.json(
+        { error: "No autorizado" },
+        { status: 401 }
+      );
+    }
   }
 
   try {
@@ -35,13 +40,6 @@ export async function GET(req: NextRequest) {
       select: {
         id: true,
         createdAt: true,
-        seniaCongelada: true,
-        user: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
       },
     });
 
@@ -78,7 +76,6 @@ export async function GET(req: NextRequest) {
       turnos: turnosPendientes.map((t) => ({
         id: t.id,
         creadoEn: t.createdAt,
-        usuario: t.user.email,
       })),
       ejecutadoEn: new Date().toISOString(),
     });

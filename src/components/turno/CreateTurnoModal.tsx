@@ -309,12 +309,6 @@ export default function CreateTurnoModal({
                             {session?.user?.name || "Usuario"} ({session?.user?.email})
                           </option>
                         </select>
-
-                        <input
-                          type="hidden"
-                          name="userId"
-                          value={session?.user?.id}
-                        />
                       </>
                     ) : (
                       <select

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { obtenerConfiguracionMP, eliminarConfiguracionMP } from "@/lib/mercadopago";
+import { requerirAdmin } from "@/lib/seguridad";
 
 export type EstadoConexionMP = {
   conectada: boolean;
@@ -64,6 +65,9 @@ export async function obtenerEstadoConfiguracionOAuth(): Promise<ConfiguracionOA
 /** Desconecta la cuenta de MP. Falla si la configuración está bloqueada. */
 export async function desconectarMP() {
   try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
     await eliminarConfiguracionMP();
     revalidatePath("/admin/mercadopago");
     return { success: true };

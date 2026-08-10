@@ -8,14 +8,16 @@ import { fromZonedTime } from "date-fns-tz";
 const TIMEZONE = "America/Argentina/Buenos_Aires";
 
 import type { ActionState } from "@/types/action-state";
-
-export type { ActionState };
+import { requerirAdmin } from "@/lib/seguridad";
 
 export async function createExcepcion(
   prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
     const rawData = {
       motivo: formData.get("motivo"),
       desde: formData.get("desde"),
@@ -72,6 +74,9 @@ export async function softDeleteExcepcion(
   formData: FormData
 ): Promise<void> {
   try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return;
+
     const id = formData.get("id") as string;
 
     if (!id) {

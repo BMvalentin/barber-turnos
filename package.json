@@ -26,8 +26,8 @@
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.562.0",
     "mercadopago": "^2.12.0",
-    "next": "15.2.8",
-    "next-auth": "^5.0.0-beta.30",
+    "next": "^15.5.23",
+    "next-auth": "^5.0.0-beta.32",
     "nodemailer": "^7.0.13",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -43,11 +43,14 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.2.8",
+    "eslint-config-next": "^15.5.23",
     "prisma": "^7.3.0",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@auth/core": "0.41.3"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

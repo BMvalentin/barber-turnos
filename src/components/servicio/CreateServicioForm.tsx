@@ -1,6 +1,7 @@
 "use client";
 
-import { createServicio, ActionState } from "@/actions/servicio-actions";
+import { createServicio } from "@/actions/servicio-actions";
+import type { ActionState } from "@/types/action-state";
 import { useEffect, useRef, useState } from "react";
 import { DollarSign, Upload, X } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";

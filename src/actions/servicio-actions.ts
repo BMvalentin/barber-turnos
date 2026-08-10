@@ -5,10 +5,9 @@ import { revalidatePath } from "next/cache";
 import { servicioSchema } from "@/lib/servicios-zod";
 import { uploadMultipleToCloudinary } from "@/lib/cloudinary-uploader";
 import { serializeData } from "@/lib/utils";
+import { requerirAdmin } from "@/lib/seguridad";
 
 import type { ActionState } from "@/types/action-state";
-
-export type { ActionState };
 
 // Función helper para limpiar y validar URLs de imágenes
 function cleanImageUrl(url: string | null): string | null {
@@ -127,6 +126,9 @@ export const createServicio = async (
   formData: FormData,
 ): Promise<ActionState> => {
   try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
     const image = formData.get("image") as File | null;
     const rawData = Object.fromEntries(formData.entries());
 
@@ -204,6 +206,9 @@ export const actualizarServicio = async (
   formData: FormData,
 ): Promise<ActionState> => {
   try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
     const id = formData.get("id") as string;
 
     if (!id) {
@@ -310,6 +315,9 @@ export const deleteservicio = async (
   formData: FormData,
 ): Promise<ActionState> => {
   try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
     const id = formData.get("id") as string;
 
     if (!id || id.trim() === "") {

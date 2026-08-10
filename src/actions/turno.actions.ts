@@ -8,6 +8,7 @@ import { auth } from "@/auth";
 import { MAP_DIA_SEMANA } from "@/lib/constants";
 import { sendTurnoEmail } from "@/lib/email";
 import { getCachedData } from "@/lib/cache";
+import { requerirAdmin } from "@/lib/seguridad";
 
 const TIMEZONE = "America/Argentina/Buenos_Aires";
 
@@ -21,8 +22,6 @@ const revalidateBarberoCache = (barberoId: string, fecha: string) => {
 };
 
 import type { ActionState } from "@/types/action-state";
-
-export type { ActionState };
 
 /* =========================
    OBTENER DÍAS DISPONIBLES DEL MES
@@ -169,8 +168,17 @@ export async function createTurno(
   formData: FormData,
 ): Promise<ActionState> {
   try {
+    // Solo usuarios autenticados pueden reservar
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: "Iniciá sesión para reservar un turno" };
+    }
+    const esAdmin = session.user.role === "ADMIN";
+
     const servicioId = formData.get("servicioId") as string;
-    const userId = formData.get("userId") as string;
+    // El admin puede reservar en nombre de un cliente; un usuario común
+    // siempre reserva para sí mismo (nunca se confía en el FormData)
+    const userId = esAdmin ? (formData.get("userId") as string) : session.user.id;
     const barberoId = formData.get("barberoId") as string;
     const horarioStr = formData.get("horarioReservado") as string;
 
@@ -208,6 +216,7 @@ export async function createTurno(
       }),
       prisma.turno.findMany({
         where: {
+          barberoId,
           estado: { in: ["PENDIENTE", "CONFIRMADO"] },
           horarioReservado: { gte: inicioDia, lte: finDia },
         },
@@ -374,6 +383,9 @@ export async function getTurnos(page: number = 1, estadoFiltro?: string, fechaFi
 ========================= */
 export async function confirmarTurno(turnoId: string) {
   try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
     await prisma.turno.update({
       where: { id: turnoId },
       data: { estado: "CONFIRMADO" },
@@ -483,6 +495,9 @@ export async function actualizarTurno(
   try {
     const id = formData.get("id") as string;
     if (!id) return { success: false, error: "ID de turno no proporcionado" };
+
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
 
     const rawEstado = formData.get("estado") as string;
     const rawServicioId = formData.get("servicioId") as string;
@@ -634,6 +649,9 @@ export async function completedTurno(
     const id = formData.get("id") as string;
     if (!id) return { success: false, error: "ID inválido" };
 
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
     const turno = await prisma.turno.update({
       where: { id },
       data: { estado: "COMPLETADO" },
@@ -666,6 +684,9 @@ export async function deleteTurno(prevState: any, formData: FormData) {
   try {
     const id = formData.get("id") as string;
     if (!id) return { success: false, error: "ID inválido" };
+
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
 
     const turnoToDelete = await prisma.turno.findUnique({
       where: { id },

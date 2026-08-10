@@ -15,8 +15,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
-      // Esto permite que si alguien se registró con email, pueda luego entrar con Google si es el mismo correo
-      allowDangerousEmailAccountLinking: true, 
     }),
     Credentials({
       authorize: async (credentials) => {

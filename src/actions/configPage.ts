@@ -4,6 +4,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { requerirAdmin } from "@/lib/seguridad";
 
 const esquemaColor = z
   .string()
@@ -23,6 +24,9 @@ interface PageConfigData {
 }
 
 export async function updateWhatsappConfig(whatsapp: string) {
+  const sesion = await requerirAdmin();
+  if (!sesion) return { success: false, error: "No autorizado" };
+
   const cleanNumber = whatsapp.replace(/\D/g, "");
 
   await prisma.pageConfig.upsert({
@@ -39,6 +43,9 @@ export async function updatePageConfig(
   data: PageConfigData
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
     if (data.primaryColor !== undefined && !esquemaColor.safeParse(data.primaryColor).success)
       return { success: false, error: "Formato de color inválido. Usá #RRGGBB (ej.: #d97706)." };
     if (data.secondaryColor !== undefined && !esquemaColor.safeParse(data.secondaryColor).success)

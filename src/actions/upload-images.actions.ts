@@ -4,6 +4,7 @@ import {
   uploadMultipleToCloudinary,
   uploadToCloudinary,
 } from "@/lib/cloudinary-uploader";
+import { requerirAdmin } from "@/lib/seguridad";
 
 const MAX_CONFIG_IMAGE_BYTES = 2 * 1024 * 1024; // 2 MB
 
@@ -11,6 +12,9 @@ const MAX_CONFIG_IMAGE_BYTES = 2 * 1024 * 1024; // 2 MB
 export async function uploadConfigImage(
   file: File
 ): Promise<{ success: boolean; url?: string; error?: string }> {
+  const sesion = await requerirAdmin();
+  if (!sesion) return { success: false, error: "No autorizado" };
+
   if (!file || file.size === 0) {
     return { success: false, error: "No se recibió ningún archivo." };
   }
@@ -41,7 +45,10 @@ export async function uploadConfigImage(
 export async function uploadBarberImages(
   files: File[],
   folder?: string
-) {
+): Promise<{ success: boolean; images: string[]; error?: string }> {
+  const sesion = await requerirAdmin();
+  if (!sesion) return { success: false, images: [], error: "No autorizado" };
+
   const finalFolder = folder ?? "barbers";
   // Subida múltiple con opciones comunes
   const results = await uploadMultipleToCloudinary(files, {

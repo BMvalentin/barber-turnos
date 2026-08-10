@@ -1,4 +1,6 @@
 // app/pago/success/page.tsx
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 import { confirmarPagoTurno } from "@/actions/mercadopago-actions";
 import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import Link from "next/link";
@@ -16,10 +18,14 @@ export default async function PagoSuccessPage({
 }: {
   searchParams: SearchParams;
 }) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+
   const turnoId = searchParams.turnoId;
   const paymentId = searchParams.payment_id || searchParams.collection_id;
 
   // Confirmamos el turno desde la back_url (respaldo al webhook)
+  // La confirmación verifica el pago contra la API de Mercado Pago
   const result = turnoId
     ? await confirmarPagoTurno(turnoId, paymentId)
     : { success: false, error: "Sin turno", data: undefined };
