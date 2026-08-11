@@ -106,13 +106,6 @@ export async function intercambiarCodigoPorToken(codigo: string, codeVerifier: s
     code_verifier: codeVerifier,   // <--- agregado
   };
 
-  console.log("🔄 Intercambiando código MP por token...");
-  console.log("🔍 Redirect URI enviada:", cuerpo.redirect_uri);
-  console.log("🔍 Cuerpo de la solicitud (menos secret):", {
-    ...cuerpo,
-    client_secret: "***",
-  });
-
   const respuesta = await fetch(URL_TOKEN_MP, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -122,8 +115,7 @@ export async function intercambiarCodigoPorToken(codigo: string, codeVerifier: s
   const datos = await respuesta.json();
 
   if (!respuesta.ok) {
-    console.error("❌ Error intercambiando código MP. Status:", respuesta.status);
-    console.error("📦 Respuesta completa:", JSON.stringify(datos, null, 2));
+    console.error("Error al intercambiar el código de autorización MP. Status:", respuesta.status);
     throw new Error(
       datos?.message ||
       datos?.error_description ||
@@ -178,11 +170,11 @@ export async function guardarConfiguracionMP(
   const fechaExpiracion = datos.expires_in
     ? new Date(Date.now() + datos.expires_in * 1000)
     : null;
-  console.log("💾 Guardando configuración en DB...");
+  console.log("Guardando configuración de MP en DB...");
   console.log("   Datos a guardar:", {
-    accessToken: datos.access_token?.substring(0, 10) + "...",
-    refreshToken: datos.refresh_token ? "present" : "null",
-    publicKey: datos.public_key,
+    accessToken: datos.access_token ? "presente" : "ausente",
+    refreshToken: datos.refresh_token ? "presente" : "ausente",
+    publicKey: datos.public_key ? "presente" : "ausente",
     mpUserId: datos.user_id ? String(datos.user_id) : null,
     liveMode: datos.live_mode,
     expiraEn: fechaExpiracion,
@@ -263,7 +255,7 @@ export async function refrescarTokenMP(): Promise<RespuestaTokenMP> {
   const datos = await respuesta.json();
 
   if (!respuesta.ok) {
-    console.error("❌ Error al refrescar token de MP:", datos);
+    console.error("Error al refrescar el token de MP. Status:", respuesta.status);
     throw new Error("No se pudo renovar la conexión con Mercado Pago");
   }
 

@@ -12,6 +12,8 @@ type MargenLaboral = {
   estado: boolean;
   desde: string;
   hasta: string;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 type DiaLaboral = {

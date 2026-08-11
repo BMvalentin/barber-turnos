@@ -1,7 +1,7 @@
 // app/admin/layout.tsx
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import AdminShell from "@/components/admin/AdminShell";
+import AdminShell from "@/components/panel/navegacion/AdminShell";
 
 export default async function AdminLayout({
   children,

@@ -13,10 +13,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import CreateBarberoForm from "@/components/barbero/CreateBarberoForm";
+import type { ServicioOpcion, DiaLaboral } from "@/types/barbero";
 
 type Props = {
-  servicios: any;
-  diasLaborales: any;
+  servicios: ServicioOpcion[];
+  diasLaborales: DiaLaboral[];
 };
 
 export default function CreateBarberoModal({ servicios, diasLaborales }: Props) {

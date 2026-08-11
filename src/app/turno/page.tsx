@@ -1,5 +1,5 @@
 // app/admin/turnos/page.tsx
-import { getTurnos } from "@/actions/turno.actions";
+import { getTurnos } from "@/actions/turnos/listar.actions";
 import TurnoList from "@/components/turno/TurnoList";
 import CreateTurnoModal from "@/components/turno/CreateTurnoModal";
 import { auth } from "@/auth";

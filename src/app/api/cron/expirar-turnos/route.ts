@@ -1,5 +1,6 @@
 // src/app/api/cron/expirar-turnos/route.ts
 
+import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -10,9 +11,25 @@ export async function GET(req: NextRequest) {
   // o llamadas autenticadas con el header x-cron-secret
   if (process.env.NODE_ENV === "production") {
     const esCronVercel = req.headers.get("x-vercel-cron") === "1";
-    const secretoValido =
-      !!process.env.CRON_SECRET &&
-      req.headers.get("x-cron-secret") === process.env.CRON_SECRET;
+
+    // CRON_SECRET debe setearse como environment variable en Vercel.
+    // La comparación usa timingSafeEqual para evitar ataques de timing;
+    // solo es seguro cuando ambas longitudes coinciden (si difieren → false).
+    let secretoValido = false;
+    if (process.env.CRON_SECRET) {
+      const bufferConfigurado = Buffer.from(process.env.CRON_SECRET);
+      const bufferRecibido = Buffer.from(req.headers.get("x-cron-secret") ?? "");
+      try {
+        if (bufferConfigurado.length === bufferRecibido.length) {
+          secretoValido = crypto.timingSafeEqual(
+            bufferConfigurado,
+            bufferRecibido
+          );
+        }
+      } catch {
+        secretoValido = false;
+      }
+    }
 
     if (!esCronVercel && !secretoValido) {
       return NextResponse.json(
@@ -23,6 +40,11 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    // Limpiar locks de slots expirados
+    await prisma.slotLock.deleteMany({
+      where: { expiresAt: { lt: new Date() } },
+    });
+
     // Límite: turnos creados hace más de 5 minutos
     const limite = new Date(Date.now() - 5 * 60 * 1000);
 
@@ -79,14 +101,16 @@ export async function GET(req: NextRequest) {
       })),
       ejecutadoEn: new Date().toISOString(),
     });
-  } catch (error: any) {
-    console.error("[CRON] Error:", error);
+  } catch (error) {
+    console.error(
+      "[CRON] Error:",
+      error instanceof Error ? error.message : "Error desconocido"
+    );
 
     return NextResponse.json(
       {
         ok: false,
         error: "Error interno al expirar turnos",
-        detalle: error.message,
       },
       { status: 500 }
     );

@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import DashboardPanel from "@/components/dashboard/DashboardPanel";
-import { getUserTurnos } from "@/actions/user-dashboard";
+import { getUserTurnos } from "@/actions/sesion/user-dashboard";
 import { prisma } from "@/lib/prisma";
 
 export default async function DashboardPage() {

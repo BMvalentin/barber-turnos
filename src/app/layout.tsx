@@ -1,22 +1,23 @@
 import type { Metadata } from "next";
 import { cache } from "react";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Outfit, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import LayoutComponent from "@/components/LayoutComponent";
-import { auth } from "@/auth";
-import AppGate from "@/components/AppGate";
+import LayoutComponent from "@/components/comunes/LayoutComponent";
+import AppGate from "@/components/comunes/AppGate";
 import { Toaster } from "@/components/ui/toaster";
-import { getPageConfig } from "@/actions/configPage";
+import { getPageConfig } from "@/actions/configuracion/configPage";
 import { elegirColorTexto, obtenerTintaLejible } from "@/lib/contraste";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const DEFAULT_TITLE = "Mayoraz - Turnos Barberia";
@@ -62,7 +63,6 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
   const config = await getCachedPageConfig();
 
   // Defaults de color: la fuente única es :root en globals.css
@@ -89,13 +89,9 @@ export default async function RootLayout({
         } as React.CSSProperties
       }
     >
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <LayoutComponent session={session} config={config}>
-          <AppGate
-            barberiaNombre={config?.name}
-            logoUrl={config?.logo}
-            isAdmin={session?.user?.role === "ADMIN"}
-          >
+      <body className={`${outfit.variable} ${playfair.variable} antialiased`}>
+        <LayoutComponent session={null} config={config}>
+          <AppGate barberiaNombre={config?.name} logoUrl={config?.logo}>
             {children}
             <Toaster />
           </AppGate>

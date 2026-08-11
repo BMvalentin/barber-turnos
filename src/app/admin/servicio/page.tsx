@@ -1,5 +1,5 @@
-import { getServicios } from "@/actions/servicio-actions";
-import { getBarberos } from "@/actions/barbero.actions";
+import { getServicios } from "@/actions/servicios/servicio-actions";
+import { getBarberos } from "@/actions/barberos/listar.actions";
 import ServicioList from "@/components/servicio/ServicioList";
 
 export default async function ServiciosPage() {

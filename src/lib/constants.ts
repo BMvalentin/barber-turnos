@@ -32,3 +32,6 @@ export const CLASES_BOTON_MARCA =
 /* Botón "X" de cierre de modales (consistente con ui/dialog) */
 export const CLASES_BOTON_CERRAR =
   "rounded-sm ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none p-1 bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] hover:cursor-pointer";
+
+/* TTL de los locks de slots (única fuente; lo usan el hook y las rutas REST) */
+export const TTL_LOCK_SLOT_MS = 5 * 60 * 1000;

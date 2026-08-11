@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import {
   createMargenLaboral,
   updateMargenLaboral,
-} from "@/actions/margenesHorario.actions";
+} from "@/actions/horarios/margenesHorario.actions";
 import type { ActionState } from "@/types/action-state";
-import { toast } from "@/components/ui/use-toast";
+import type { MargenLaboralCreado } from "@/types/horarios";
+import { toast } from "@/hooks/use-toast";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 
 type HorariosFormProps = {
@@ -24,7 +25,7 @@ type HorariosFormProps = {
   onCancel: () => void;
 };
 
-const initialState: ActionState = {
+const initialState: ActionState<MargenLaboralCreado> = {
   success: false,
 };
 

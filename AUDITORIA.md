@@ -2,7 +2,7 @@
 
 > Documento de auditoría (solo lectura). Registra los hallazgos de la auditoría exhaustiva del
 > código muerto, duplicación, CSS sin uso, dependencias huerfanas y bugs residuales, junto con el
-> plan por fases propuesto. **Nada de este plan ha sido implementado todavía.**
+> plan por fases propuesto. **El ciclo de remediación integral (Fases 0-8) se completó — ver §10.**
 
 ---
 
@@ -326,3 +326,214 @@ y dev server Turbopack compila `/`, `/login`, `/register`, `/admin`, `/dashboard
 - Resto de audit: nodemailer@9, mercadopago@3, next@16 (majors).
 - Optimización de carga P1–P7 (matcher middleware, next/font, lazy BookingModal, índices
   Prisma, cache cancelTurno) — planificado.
+
+---
+
+## 9. Auditoría integral 2026-08 (seguridad · performance · calidad · typescript · arquitectura)
+
+> Documento de auditoría (solo lectura). Consolida la auditoría integral realizada en agosto de
+> 2026 por 5 auditores (seguridad, performance, calidad, typescript, arquitectura) con verificación
+> transversal de todos los hallazgos. Resultado: **41 hallazgos numerados** (8 CRÍTICOS, 9 ALTOS,
+> 15 MEDIOS, 9 BAJOS). **Nada de este plan ha sido implementado todavía** — el plan directivo vive
+> en `PENDIENTES.md` (fases 0-8) y el estado se controla en §9.4.
+
+### 9.1 Resumen ejecutivo
+
+- **Seguridad (8 hallazgos, 4 críticos):** el hash bcrypt de passwords sale al cliente (`include:
+  { user: true }` en turnos y user-dashboard), el OAuth de Mercado Pago, los slot-locks y el
+  WebSocket aceptan anónimos, y un GET público expone PII (id+name+email) de todos los usuarios.
+  El ciclo S1-S7 (§8) dejó la base correcta (webhook con firma, cron con guard, autorización
+  sistémica en mutations) — faltan los secrets en Vercel y los fixes críticos de este ciclo.
+- **Performance (7 hallazgos, 3 críticos):** AppGate anula el SSR (la app se sirve sin HTML),
+  el layout raíz es dinámico (auth + Prisma en todas las rutas → imposible ISR) y BookingModal
+  legacy (mock de vehículos, sin BD) viaja en el bundle inicial con framer-motion/embla y CERO
+  `next/dynamic` en todo el repo.
+- **Calidad (9 hallazgos):** errores internos al cliente, dead code confirmado (`getServicioById`,
+  `getBarberoById`, modelo `Configuracion`), catchs que tragan errores sin log, validación manual
+  sin Zod en `createTurno`, logs de debug, naming inconsistente y comentarios obsoletos.
+- **TypeScript (6 hallazgos):** 3 errores NUEVOS de tsc en `pago/{success,pending,failure}`
+  tapados por `typescript.ignoreBuildErrors`, `ActionState.data?: any` que desactiva el tipado del
+  payload, `session: any` en 8 puntos y `catch (error:any)` ×10 que anulan el tipo aumentado de
+  next-auth.
+- **Arquitectura (2 hallazgos):** 6 páginas server con Prisma directo sin capa services (patrón
+  auth repetido ~27 veces e inconsistente) y doble lógica de confirmación de pago divergente
+  (webhook vs `confirmarPagoTurno`).
+- **Lo que está bien (§9.3):** base sólida de server components, caché con `unstable_cache` +
+  tags, sin SQLi/XSS, contraste `-foreground`/`-tinta` del ciclo previo y 0 `@ts-ignore` — no tocar.
+
+### 9.2 Tabla consolidada de hallazgos priorizados
+
+#### CRÍTICA
+
+| # | Área | Hallazgo | Evidencia (archivo:línea) |
+|---|---|---|---|
+| 1 | Seguridad | Hash bcrypt expuesto al cliente: `createTurno`, `actualizarTurno` y acciones de `user-dashboard` usan `include: { user: true }` devolviendo el `...turno` completo; el modelo `user` tiene `password String?`. Fix: select explícito sin password. | `src/actions/turno.actions.ts:~266-311,~560-564,~589-596` · `src/actions/user-dashboard.ts:~76-96` · `prisma/schema.prisma:97` |
+| 2 | Seguridad | OAuth de Mercado Pago sin auth: un anónimo puede conectar SU cuenta de MP; los tokens quedan en `configuracion_mercadopago` y cobran todas las señas. Fix: `requerirAdmin()` + state firmado. | `src/app/api/mercadopago/oauth/start/route.ts:33` · `oauth/callback/route.ts:4` · `src/lib/mercadopago.ts:192-218,~300-314` |
+| 3 | Seguridad | Slot-locks/WS sin auth: aceptan `sessionId`/`userId` arbitrarios (borrado de locks ajenos, DoS de agenda, fuga de `sessionId`/`userId` de terceros en INIT ~L40-49). Fix: sesión obligatoria + `sessionId` server-side. | `src/app/api/slot-locks/route.ts:68-142` · `src/app/api/ws/route.ts:18-96` |
+| 4 | Seguridad | PII: GET público expone `id`+`name`+`email` de TODOS los usuarios. Fix: quitar usuarios del endpoint. | `src/app/api/configuracion-turno/route.ts:31-38` |
+| 5 | Perf | AppGate anula el SSR: devuelve `null` si `!initialized` y envuelve `children` en el layout raíz → la app se sirve sin HTML (client-rendered, LCP dominado por JS, SEO vacío). Fix: renderizar siempre + modales como overlay. | `src/components/AppGate.tsx:87` · `src/app/layout.tsx:94-101` |
+| 6 | Perf | Layout raíz dinámico: `await auth()` + `getCachedPageConfig()` (Prisma) en TODAS las rutas; home con ~3 queries/visita (Prisma directo `page.tsx:5-7`, `getServiciosCarrusel` sin caché) → imposible ISR. Fix: `auth()` a layouts de rutas protegidas + `unstable_cache` con tag. | `src/app/layout.tsx:65-66` · `src/app/page.tsx:5-7` |
+| 7 | Perf | BookingModal legacy activo: mock de reserva de vehículos (sin BD, ~13-52) montado en todas las rutas vía provider + `LayoutComponent`; framer-motion en 8 componentes del bundle inicial, embla en carruseles, CERO `next/dynamic` en todo el repo. Fix: eliminar el mock, lazy-load carruseles/modales. | `src/components/BookingModal.tsx:~13-52` · `src/app/context/Booking.tsx:28` · `src/components/LayoutComponent.tsx:17` |
+| 8 | Calidad/TS | Violaciones sistémicas: 11 archivos > 400 líneas (ServicioList 756, turno.actions 726, MPTestClient 675, CreateTurnoModal 532, SeleccionadorHorario 460, GeneralConfigForm 433, CreateServicioForm 411, barbero.actions 410, CreateBarberoForm 405, EditBarberoModal 404, servicio-actions 404); 82 usos de `any` (0 `@ts-ignore`, ok); 8 de 12 actions > 100 líneas; 17 componentes > 200 líneas; 14 componentes sueltos en raíz de `src/components` y 12 actions en raíz de `src/actions` (viola "carpeta de dominio"); bloque de email duplicado ×5; algoritmo de slots duplicado ×2 dentro de `turno.actions.ts`; catálogo de reserva duplicado ×3. | `src/app/turno/page.tsx:10-16` = `src/app/api/configuracion-turno/route.ts:6-46` = fetch en `CreateTurnoModal.tsx:129-149` |
+
+#### ALTA
+
+| # | Área | Hallazgo | Evidencia (archivo:línea) |
+|---|---|---|---|
+| 9 | Seguridad | Webhook MP fail-open: sin `MP_WEBHOOK_SECRET` (no está en .env) la firma devuelve `true`; mitigado por validación de monto/`external_reference` contra la API (~93-123). Fix: fail-closed en prod + validar ts skew + setear el secret en Vercel. | `src/app/api/mercadopago/webhook/route.ts:17-24` |
+| 10 | Seguridad | Cron: `CRON_SECRET` ausente + comparación `===` (no timing-safe) + ~L89 filtra `error.message`. Fix: `timingSafeEqual` + sin detalle + setear el secret. | `src/app/api/cron/expirar-turnos/route.ts:11-23` |
+| 11 | Perf | Bundle global sin lazy: framer-motion + embla + autoplay en el chunk inicial; modales de edición con AnimatePresence. Recomendación: `next/dynamic(..., { ssr: false })` o lazy. | bundle inicial |
+| 12 | Perf | Locks con carga innecesaria: polling REST 3s (useSlotLocks 139,186, doble armado) + cada GET de slot-locks ejecuta `deleteMany` de limpieza + `findMany` + WS que no difunde (solo responde al emisor) + heartbeat 60s → elegir UN canal (REST-only recomendado, polling 10-15s). | `src/hooks/useSlotLocks.ts:139,186` |
+| 13 | Perf | Imágenes: `next.config.ts:29` `images.unoptimized: true` (sin optimizer/srcset/formatos modernos), 0 usos de `priority` en todo el repo, hero de fondo Unsplash 2070px sin preload (Hero.tsx:8-9,34-37), misma imagen en login/register (~33,55 / ~30,53). Fix: `priority`+preload o URLs Cloudinary `f_auto q_auto`. | `next.config.ts:29` · `Hero.tsx:8-9,34-37` · `login/page.tsx:~33,55` · `register/page.tsx:~30,53` |
+| 14 | TS | 3 errores NUEVOS de tsc (TS2344): `searchParams` tipado síncrono; Next 15.5 exige `Promise` + `await` (patrón correcto en `pago/status/page.tsx:8-15,21`). Solo los tapa `typescript.ignoreBuildErrors`. | `src/app/pago/{success,pending,failure}/page.tsx` · `src/app/pago/status/page.tsx:8-15,21` |
+| 15 | TS | `EditServicioModal.tsx`: 9-10 errores (`useState` sin anotar ~L45 en vez de `useActionState`; `state.errors` no existe ~176,194,197-198,264,277,290,302) + bug de UI: la validación por campo nunca se muestra. | `src/components/servicio/EditServicioModal.tsx` |
+| 16 | Calidad | Errores internos al cliente ("Error interno: " + `error.message`). Fix: mensaje genérico + `console.error` en servidor. | `auth-actions.ts:93` · `servicio-actions.ts:198,306,361` · `mercadopago-actions.ts:136,250` |
+| 17 | Calidad | Dead code confirmado: `getServicioById`, `getBarberoById`, modelo `Configuracion` (0 usos), guardas "campo aún no migrado" ×5, assets carwash en `src/assets`, `package.json` name "lavadero-web", 3 `useState` muertos en TurnoList:209-211. | `servicio-actions.ts:368` · `barbero.actions.ts:192` · `schema.prisma:60-67` · `mercadopago-actions.ts:113-120,229,291-292` · `webhook/route.ts:131,145-149` · `TurnoList.tsx:209-211` |
+
+#### MEDIA
+
+| # | Área | Hallazgo | Evidencia (archivo:línea) |
+|---|---|---|---|
+| 18 | Seguridad | Sin rate limiting en login/register + password mínima 6 (`zod.ts:5`); fix ≥8 (OWASP) + limitador. | `src/lib/zod.ts:5` |
+| 19 | Seguridad | Uploads sin validación real: upload-images 45-67 (sin MIME ni tamaño), 22-28 (solo `file.type`, spoofeable), servicio-actions 153-168 y 255-270 (sin validación) → magic bytes, límite, `resource_type image`, denegar SVG. | `upload-images.actions.ts:45-67,22-28` · `servicio-actions.ts:153-168,255-270` |
+| 20 | Seguridad | Rol ADMIN stale en JWT: `token.role` solo al login/trigger update (auth.config.ts:7-18); `requerirAdmin()` (seguridad.ts:21-25) confía en el token (sesión 30 días). Fix: verificar rol en BD con caché corta. | `auth.config.ts:7-18` · `src/lib/seguridad.ts:21-25` |
+| 21 | Seguridad | Sin headers de seguridad (CSP/HSTS/X-Frame-Options/X-Content-Type-Options) ni en next.config ni en middleware; `images.remotePatterns '**'` http+https. | `next.config.ts:18-30` |
+| 22 | Seguridad | Email HTML sin escape: `email.ts:79` interpola `clienteNombre` (y `name` solo exige 2 chars, zod.ts:8-10). Fix: escapar + regex/max(100). | `src/lib/email.ts:79` · `src/lib/zod.ts:8-10` |
+| 23 | Perf | Nodemailer `await` en el camino crítico de 6 acciones (`sendTurnoEmail` en turno.actions ~289-303,573-587,609-623,705-719; user-dashboard 128-143; mercadopago-actions). Fix: fire-and-forget con `.catch`. | `turno.actions.ts:~289-303,573-587,609-623,705-719` · `user-dashboard.ts:128-143` · `mercadopago-actions.ts` |
+| 24 | Perf | `/api/configuracion-turno` sin auth + payload con todos los usuarios + refetch por apertura de modal (CreateTurnoModal:131, EditarTurnoModal:94) aunque la page ya pasa los datos por props. | `CreateTurnoModal.tsx:131` · `EditarTurnoModal.tsx:94` |
+| 25 | Perf | Doble sistema de fuentes: `@import` Google bloqueante (globals.css:1, Outfit+Playfair) + Geist `next/font` sin uso (layout.tsx:12-20). Fix: unificar `next/font/google`. | `globals.css:1` · `layout.tsx:12-20` |
+| 26 | Calidad | Catchs que tragan errores sin log (turno.actions ~144-146,377-379,395-397,482-484; user-dashboard 63-66,97-100; mercadopago-actions 295-297). | `turno.actions.ts:~144-146,377-379,395-397,482-484` · `user-dashboard.ts:63-66,97-100` · `mercadopago-actions.ts:295-297` |
+| 27 | Calidad | Validación manual sin Zod en el flujo crítico (`createTurno` turno.actions 178-191) + `any` en firmas: `updateBarbero(data:any)` (barbero.actions:72), `deleteTurno(prevState:any)` (turno.actions:683). | `turno.actions.ts:178-191,683` · `barbero.actions.ts:72` |
+| 28 | TS | `ActionState.data?: any` (action-state.ts:8) desactiva el tipado del payload de todas las actions; falta `z.infer` en todo el repo (0 usos); tipos de modelos duplicados a mano (EditServicioModal 22-33, CreateServicioForm 18-23) en vez de `z.infer` o `generated/prisma`. | `src/types/action-state.ts:8` · `EditServicioModal.tsx:22-33` · `CreateServicioForm.tsx:18-23` |
+| 29 | TS | `session: any` en Booking 8, Header 11, LayoutComponent 12-13, DashboardPanel 15, TurnoManager 6, TurnoList 37,204, CreateTurnoModal 49 — anula el tipo aumentado de next-auth (`src/types/next-auth.d.ts`). | `Booking.tsx:8` · `Header.tsx:11` · `LayoutComponent.tsx:12-13` · `DashboardPanel.tsx:15` · `TurnoManager.tsx:6` · `TurnoList.tsx:37,204` · `CreateTurnoModal.tsx:49` |
+| 30 | TS | `catch (error:any)` evitable ×10 + casts `(user as any)` en auth.config 9-12 (evitable; el tipo ya está aumentado) + `PrismaAdapter(prisma) as any` en auth.ts:12 (workaround Prisma 7, documentar). | `auth.config.ts:9-12` · `auth.ts:12` |
+| 31 | Arq | 6 páginas server con queries Prisma directas sin capa services (app/turno/page 9-26, admin/page 13-122 con comisión 50% hardcodeada ~L200, admin/barbero/page 6-52, admin/excepcionesLaborales/page 6-23, admin/config/page 6-8, dashboard/page 11-13); patrón auth repetido ~27 veces (requerirAdmin boilerplate) e inconsistente (turno.actions 172,325 y mercadopago-actions 39,156,260 usan `auth()` directo). | `app/turno/page.tsx:9-26` · `admin/page.tsx:13-122` · `admin/barbero/page.tsx:6-52` · `admin/excepcionesLaborales/page.tsx:6-23` · `admin/config/page.tsx:6-8` · `dashboard/page.tsx:11-13` |
+| 32 | Arq | Doble lógica de confirmación de pago divergente: webhook (webhook/route 100-178) vs `confirmarPagoTurno` back_url (mercadopago-actions 147-253); el webhook no verifica propiedad del turno (~100-103). | `webhook/route.ts:100-178` · `mercadopago-actions.ts:147-253` |
+
+#### BAJA
+
+| # | Área | Hallazgo | Evidencia (archivo:línea) |
+|---|---|---|---|
+| 33 | Calidad | Logs de debug: auth-actions 52-91 (8 `console.log` con emojis y emails), webhook/route 60 (body completo), mercadopago.ts 126,182-190, mercadopago-actions 133 (❌...). | `auth-actions.ts:52-91` · `webhook/route.ts:60` · `mercadopago.ts:126,182-190` · `mercadopago-actions.ts:133` |
+| 34 | Seguridad | `/test-mp` sin control de rol (solo auto-disable `NODE_ENV === "production"`, test-mp/page 8-41) — preservado por decisión previa; proponer `requerirAdmin()`. | `test-mp/page.tsx:8-41` |
+| 35 | Calidad | Build sin lint/typecheck habilitados (next.config 4-9). | `next.config.ts:4-9` |
+| 36 | Calidad | Modelo legacy `Configuracion` (para el 3.1). | `schema.prisma:60-67` |
+| 37 | Calidad | Naming inconsistente: servicio-actions vs turno.actions vs user-dashboard (3 convenciones); funciones en inglés (createTurno, getTurnos, completedTurno, deleteTurno) vs español (obtenerDiasDisponibles, confirmarTurno, actualizarTurno); archivos PascalCase vs camelCase (TurnoList vs horariosList); "deleteservicio" sin camelCase. | `servicio-actions.ts:314` |
+| 38 | Calidad | Comentarios obsoletos: turno.actions 133 (dice "duración del servicio" pero avanza 15 min fijos), mercadopago-actions 112-113 (migración ya existente). | `turno.actions.ts:133` · `mercadopago-actions.ts:112-113` |
+| 39 | Calidad | `useEffect` sin deps en login/page 15-20 y register/page 15-19 (`router.push` repetido); reconexión WS con closure viejo (useSlotLocks 124-127); `useSearchParams` sin Suspense (MercadoPagoConnectionPanel 160). | `login/page.tsx:15-20` · `register/page.tsx:15-19` · `useSlotLocks.ts:124-127` · `MercadoPagoConnectionPanel.tsx:160` |
+| 41 | TS | seed.ts typo "Mieracoles" — bug runtime si se corre; autorizado a corregir. | `prisma/seed.ts:31` |
+
+> Nota: el hallazgo 40 ("no SQL dinámico ni `dangerouslySetInnerHTML` → sin XSS ni SQLi") es un
+> hallazgo positivo y vive en §9.3.
+
+### 9.3 Lo que está bien (no tocar)
+
+- Server components correctos en home/admin/turno/dashboard; `"use client"` solo legítimo.
+- Caché de turnos con `unstable_cache` + tags precisos (`turnos-{barbero}-{fecha}`, etc.) y
+  revalidación dirigida (`turno.actions.ts:17-22,142,480`).
+- `Promise.all` en queries de páginas y acciones.
+- Mercado Pago SDK solo en server; webhook valida monto + `external_reference` contra la API;
+  PKCE + state `httpOnly` en OAuth.
+- Sin `dangerouslySetInnerHTML`, sin `href: javascript:`, `target=_blank` con `rel="noopener
+  noreferrer"`.
+- Sin `$queryRaw`/`$executeRaw` (sin SQLi); bcrypt rounds 10; mensaje de login genérico;
+  middleware `/admin` exige sesión + ADMIN. *Hallazgo 40: no SQL dinámico ni
+  `dangerouslySetInnerHTML` → sin XSS ni SQLi.*
+- Prisma singleton + adapter mariadb (`connectionLimit` 5); secretos en `.gitignore`.
+- Contraste de color con `--foreground`/`-tinta` y `lib/contraste.ts` (ciclo previo OK); imports
+  con `@/`.
+- Lucide named imports; Radix ligero (dialog/slot).
+- Cron protegido con `x-vercel-cron`/`CRON_SECRET` y runtime `nodejs` (aunque falta setear el
+  secret en Vercel).
+- 0 `@ts-ignore`/`@ts-nocheck`.
+
+### 9.4 Estado de remediación
+
+Checklist de fases 0-8 del plan (cerradas en el ciclo 2026-08, certificadas por V0…V8 — ver §10):
+
+- [x] Fase 0 — Seguridad crítica
+- [x] Fase 1 — SSR y performance
+- [x] Fase 2 — Correctitud TS
+- [x] Fase 3 — Dead code y limpieza
+- [x] Fase 4 — Organización por dominios
+- [x] Fase 5 — Desglose boy-scout
+- [x] Fase 6 — Locks de slots
+- [x] Fase 7 — Endurecimiento general
+- [x] Fase 8 — Tipos sin any + QA global
+
+> El plan directivo detallado con subfases, subagentes y gates está en `PENDIENTES.md`. Los
+> errores de types preexistentes (`pago/*`, `seed.ts`, `EditServicioModal` — baseline 13) están
+> autorizados para corrección en Fase 2.
+
+---
+
+## 10. Ciclo de remediación completado (Fases 0-8 + V8 QA global)
+
+Ciclo cerrado en 2026-08-11. Cada fase se ejecutó con subagentes paralelos y se certificó con su
+verificador (V0…V8). El QA global final (V8) corrió los gates de PENDIENTES.md §7 con éxito.
+
+### 10.1 Resultado por fase (resumen de lo remediado)
+
+| Fase | Objetivo | Resultado |
+|---|---|---|
+| 0 — Seguridad crítica | Vectores críticos | Hash bcrypt fuera del cliente (selects explícitos en turnos/dashboard); OAuth de MP con `requerirAdmin()` + state firmado; webhook MP fail-closed + `timingSafeEqual` + sin `error.message` al cliente; PII (usuarios) removida del endpoint público de configuración; slot-locks con sesión obligatoria y `sessionId` derivado en servidor; `/api/ws` sin broadcast eliminado |
+| 1 — SSR y performance | SSR real e ISR | AppGate renderiza SIEMPRE el contenido (modales de cookies/términos/privacidad como overlay); `auth()` movida a layouts de rutas protegidas; `pageConfig` cacheado con tag y revalidado; carrusel y dashboard con `getCachedData`; BookingModal + useBooking + provider eliminados (con OK del usuario); hero con preload/priority (Cloudinary); `matcher` restringido en middleware; fuentes unificadas en `next/font/google` |
+| 2 — Correctitud TS | 0 errores tsc | `searchParams: Promise<…>` en pago/{success,pending,failure}; `EditServicioModal` migrado a `useActionState` con `ActionState` tipado (bug de UI: errores por campo ahora visibles); typo "Mieracoles" → "Miercoles" en seed |
+| 3 — Dead code y limpieza | Basura y huérfanos | Modelo `Configuracion` eliminado del schema; 5 guardas "campo aún no migrado" y sus casts `as any` eliminados; `/test-mp` blindado con `requerirAdmin()`; 8 `console.log` con emojis/emails y logs de bodies/tokens saneados; `getServicioById`, `getBarberoById`, assets carwash y `use-toast` duplicado eliminados; package renombrado a `barber-turnos` |
+| 4 — Organización por dominios | Arquitectura predecible | 12 archivos de `src/actions/` y 14 de `src/components/` movidos a carpetas de dominio (turnos/, barberos/, horarios/, servicios/, panel/, inicio/, comunes/…); todos los imports migrados a `@/` |
+| 5 — Desglose boy-scout | Archivos ≤ límites | `turno.actions.ts` (726) → 4 actions + `src/lib/disponibilidad.ts` (algoritmo de slots único) + bloque de email único en `src/lib/email.ts`; `ServicioList.tsx` (756) desglosado en subcomponentes; modales de turno, MPTestClient, GeneralConfigForm, formularios de servicio/barbero y servicio-actions desglosados |
+| 6 — Locks de slots | Un solo canal | REST-only con polling (10-15s); `/api/ws` eliminado; TTL único en `src/lib/constants.ts` (`TTL_LOCK_SLOT_MS`); zona horaria unificada con `fromZonedTime`; limpieza de locks fuera del GET (cron) |
+| 7 — Endurecimiento general | Capa defensiva | Rate limiting por IP/email en login/register (15 min / 5 intentos) + password ≥ 8; uploads con magic bytes, límite de tamaño, `resource_type: "image"` y SVG/HTML denegados; CSP/HSTS/X-Content-Type-Options/X-Frame-Options/Referrer-Policy en `next.config.ts`; emails escapados + nombre máx. 100; errores internos logueados en servidor con mensaje genérico al cliente; `requerirAdmin()` con rol REAL de BD + caché 60s; envío de email fuera del camino crítico (fire-and-forget) |
+| 8 — Tipos sin `any` | 0 anys | 82 usos de `any` → 1 (`src/auth.ts:12`, workaround Prisma 7 documentado en español); `ActionState<TData>` genérico; `session: any` eliminado (8.2) y cadena de session del formulario de turno tipada con `Session`; `catch (error: any)` y casts eliminados |
+
+### 10.2 Pendientes explícitos (documentados, no silenciados)
+
+- `src/actions/servicios/servicio-actions.ts` (397) y `src/actions/mercadopago/mercadopago-actions.ts`
+  (294) superan el límite de capa acciones (100) — preexistentes.
+- `EditServicioModal.tsx` (392), `EditarTurnoModal.tsx` (386), `TurnoList.tsx` (~379),
+  `BarberoList.tsx` (220), `use-toast.ts` (151 > 150 de hooks) — preexistentes cerca de límites
+  (`useSlotLocks.ts` 138, dentro).
+- `email.ts` (67) y `plantilla-email.ts` (80): 2 exports en `email.ts` (`sendTurnoEmail` +
+  `enviarEmailTurno`) — preexistente.
+- `AboutSection.tsx` — dead code preservado por decisión de coordinación (V4).
+- `README.md` desactualizado (menciona Next 16 y `lavadero-web` en instrucciones de clone) — no
+  tocado (los `.md` de planificación no se tocan); conviene una pasada de docs.
+- `unoptimized: true` mantenido + opcional `f_auto/q_auto` de Cloudinary (decisión documentada en
+  `next.config.ts:28-31`).
+- `MP_WEBHOOK_SECRET` y `CRON_SECRET` obligatorios como env vars en Vercel (fail-closed activo).
+- Registrado por V8 (boy scout): `margenesHorario.actions.ts` (367, 5 exports) y
+  `diaLaboral.actions.ts` (~249, 5 exports) y `cloudinary-uploader.ts` (2 exports) quedaron con
+  varias funciones exportadas — preexistentes (la Fase 5 solo desglosó los >400 líneas); pendiente
+  de desglose futuro.
+
+### 10.3 Decisiones de coordinación tomadas
+
+- **Locks REST-only**: se eliminó `/api/ws` y el `conectarWS` del hook (Fase 6.1); polling como
+  canal único.
+- **Eliminación de BookingModal + useBooking + `/api/ws`**: revierte la decisión previa de
+  AUDITORIA §3.2, confirmada con el usuario (Fases 1.4/6.1).
+- **Blindaje de `/test-mp`**: `requerirAdmin()` además del auto-disable en producción (Fase 3.3).
+- **`unoptimized: true` mantenido**: todo el tráfico de imágenes sale del CDN de Cloudinary con
+  `f_auto/q_auto` opcional; comentario de decisión en `next.config.ts` (Fase 1.5).
+- **`requerirAdmin()` con rol de BD + caché 60s**: caché en módulo (`Map` con expiración), no
+  `unstable_cache` (no disponible dentro de Server Actions); documentado en `src/lib/seguridad.ts`.
+- **V8 QA**: el build falló por `googleLoginAction` no async (`auth-actions.ts:98`) — reparado en
+  esta pasada; la cadena de session del formulario de turno (fuera del alcance de 8.2) se tipó con
+  `Session | null` en el QA global.
+
+### 10.4 QA global final (V8) — gates de PENDIENTES.md §7
+
+1. `npx tsc --noEmit` = **0 errores** ✓
+2. `npm run build` = **OK** (26 rutas, compilación limpia) ✓
+3. `rg "\bany\b" src/` = **1** (solo `src/auth.ts:12`, workaround Prisma 7 documentado) ✓
+4. **Smoke test SSR** (next start -p 3100, luego detenido) ✓:
+   - `/` → 200, 40.6 kB HTML con texto SSR real (nav "Solicita tu Turno", hero "Arte y Precisión
+     en Cada Corte", "Santa Clara, Buenos Aires", `<title>Mayoraz</title>`, colores de PageConfig
+     inyectados, imagen del hero con preload)
+   - `/login` y `/register` → 200 con contenido (formularios con Iniciar sesión / Contraseña / Email)
+   - `/turno` → 307 → `/login?callbackUrl=%2Fturno` (auth sin sesión) ✓
+   - `/admin` → 307 → `/login?callbackUrl=%2Fadmin` (auth sin sesión) ✓
+   - `/pago/status` → 307 → `/login` (por diseño S1: redirige sin sesión; ruta pública alternativa
+     verificada: `/` 200) ✓
+5. **Acta final** emitida por V8 (ver ACTA DEL CICLO en la sesión de QA global) ✓
+6. **AUDITORIA.md actualizado** (esta sección) ✓

@@ -1,5 +1,5 @@
 "use client";
-import { googleLoginAction } from "@/actions/auth-actions";
+import { googleLoginAction } from "@/actions/sesion/auth-actions";
 import { useFormStatus } from "react-dom";
 
 export default function GoogleButton() {

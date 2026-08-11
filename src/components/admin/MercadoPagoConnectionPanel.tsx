@@ -13,12 +13,12 @@ import {
   Copy,
   Check,
 } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import {
   desconectarMP,
   type EstadoConexionMP,
   type ConfiguracionOAuthMP,
-} from "@/actions/mercadopago-oauth.actions";
+} from "@/actions/mercadopago/mercadopago-oauth.actions";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
 interface Props {
   estadoInicial: EstadoConexionMP;

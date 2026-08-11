@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import TurnoList from "./TurnoList";
+import TurnoList, { type Turno } from "./TurnoList";
+import type { Session } from "next-auth";
 
-export default function TurnoManager({ initialTurnos, session }: { initialTurnos: any[], session: any }) {
+export default function TurnoManager({ initialTurnos, session }: { initialTurnos: Turno[]; session: Session | null }) {
   const [estado, setEstado] = useState("TODOS");
   const [fecha, setFecha] = useState("");
 

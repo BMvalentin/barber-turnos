@@ -1,7 +1,9 @@
 "use client";
 
-import { actualizarServicio } from "@/actions/servicio-actions"; // Asumimos que esta acción maneja la actualización
-import { useState, useRef, useEffect } from "react";
+import { actualizarServicio } from "@/actions/servicios/servicio-actions"; // Asumimos que esta acción maneja la actualización
+import { useActionState, useState, useRef, useEffect } from "react";
+import type { ActionState } from "@/types/action-state";
+import type { ServicioCreado } from "@/types/servicio";
 import {
   DollarSign,
   Percent,
@@ -9,13 +11,14 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { CLASES_BOTON_MARCA, CLASES_BOTON_CERRAR } from "@/lib/constants";
 import { Button } from "../ui/button";
 
-const initialState = {
+const initialState: ActionState<ServicioCreado> = {
   success: false,
   error: undefined,
+  errors: undefined,
   data: undefined,
 };
 
@@ -42,8 +45,10 @@ export default function EditServicioModal({
   onClose,
 }: EditServicioModalProps) {
   // Estado para la acción del servidor
-  const [state, setState] = useState(initialState);
-  const [isPending, setIsPending] = useState(false);
+  const [state, formAction, isPending] = useActionState(
+    actualizarServicio,
+    initialState,
+  );
   const formRef = useRef<HTMLFormElement>(null);
 
   // Estados locales para controlar los inputs (opcional, pero útil para validaciones inmediatas si las tuvieras)
@@ -114,17 +119,11 @@ export default function EditServicioModal({
           action={async (formData) => {
             if (isPending) return;
 
-            setIsPending(true);
-
-            try {
-              if (selectedFile) {
-                formData.set("image", selectedFile);
-              }
-              const result = await actualizarServicio(initialState, formData);
-              setState(result);
-            } finally {
-              setIsPending(false);
+            if (selectedFile) {
+              formData.set("image", selectedFile);
             }
+
+            formAction(formData);
           }}
           className="flex flex-col flex-1 overflow-hidden"
         >

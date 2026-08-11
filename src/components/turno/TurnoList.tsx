@@ -3,13 +3,15 @@
 import { useState } from "react";
 import EditTurnoModal from "./EditarTurnoModal";
 import { Calendar, User, Scissors, DollarSign, Phone } from "lucide-react";
-import { cancelTurno } from "@/actions/user-dashboard";
-import { completedTurno, confirmarTurno } from "@/actions/turno.actions";
-import { toast } from "@/components/ui/use-toast";
+import { cancelTurno } from "@/actions/sesion/user-dashboard";
+import { completedTurno } from "@/actions/turnos/completar.actions";
+import { confirmarTurno } from "@/actions/turnos/confirmar.actions";
+import { toast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
 import { formatearHora } from "@/lib/utils";
+import type { Session } from "next-auth";
 
-type Turno = {
+export type Turno = {
   id: string;
   horarioReservado: Date;
   precioCongelado: number;
@@ -34,7 +36,7 @@ type Turno = {
 
 interface Props {
   turnos: Turno[];
-  session: any;
+  session: Session | null;
 }
 
 type AccionConfirmacion = "cancelar" | "completar" | "confirmar";
@@ -201,7 +203,7 @@ function TurnoCard({
   onConfirmRequest,
 }: {
   turno: Turno;
-  session: any;
+  session: Session | null;
   onCancelRequest: (id: string) => void;
   onCompleteRequest: (id: string) => void;
   onConfirmRequest: (id: string) => void;

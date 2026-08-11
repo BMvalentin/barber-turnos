@@ -11,12 +11,20 @@ export const runtime = "nodejs";
  * Verifica la firma X-Signature que envía Mercado Pago.
  * Manifiesto: id:{paymentId};request-id:{x-request-id};ts:{ts};
  * Firma: HMAC-SHA256 del manifiesto con MP_WEBHOOK_SECRET.
- * Si MP_WEBHOOK_SECRET no está configurado, no se puede verificar la firma:
- * devuelve true y se sigue confiando en la validación de monto contra la API.
+ * MP_WEBHOOK_SECRET debe setearse como environment variable en Vercel.
+ * Si no está configurado en producción, se falla CERRADO (false).
+ * En desarrollo se advierte con console.warn y se acepta (fail-open)
+ * para que el flujo local siga funcionando.
  */
 function firmaValida(req: NextRequest, paymentId: string): boolean {
   const secreto = process.env.MP_WEBHOOK_SECRET;
   if (!secreto) {
+    if (process.env.NODE_ENV === "production") {
+      console.error(
+        "❌ MP_WEBHOOK_SECRET no configurado: se rechazó la firma del webhook (fail-closed)."
+      );
+      return false;
+    }
     console.warn(
       "⚠️ MP_WEBHOOK_SECRET no configurado: no se verificó la firma del webhook."
     );
@@ -36,6 +44,18 @@ function firmaValida(req: NextRequest, paymentId: string): boolean {
   const v1 = partes.get("v1") ?? "";
   if (!ts || !v1) return false;
 
+  // Protección contra replay: rechazar timestamps fuera de una ventana de 5 minutos.
+  // Un ts inválido produce NaN, y NaN no supera ningún límite, por eso se
+  // rechaza explícitamente con Number.isNaN antes de comparar el skew.
+  const tsMs = Number(ts) * 1000;
+  const skewMs = Math.abs(Date.now() - tsMs);
+  if (Number.isNaN(tsMs) || skewMs > 5 * 60 * 1000) {
+    console.error(
+      "❌ Firma del webhook con timestamp inválido o fuera de la ventana permitida."
+    );
+    return false;
+  }
+
   const requestId = req.headers.get("x-request-id") ?? "";
   const manifiesto = `id:${paymentId};request-id:${requestId};ts:${ts};`;
   const esperado = crypto
@@ -43,11 +63,17 @@ function firmaValida(req: NextRequest, paymentId: string): boolean {
     .update(manifiesto)
     .digest("hex");
 
+  const bufferEsperado = Buffer.from(esperado);
+  const bufferRecibido = Buffer.from(v1);
+
   try {
-    return crypto.timingSafeEqual(
-      Buffer.from(esperado),
-      Buffer.from(v1)
-    );
+    // timingSafeEqual solo es seguro si ambas longitudes coinciden:
+    // comparar buffers de distinta longitud lanza excepción (la atrapa el catch)
+    // o compara datos no comparables, por eso se rechaza antes de comparar.
+    if (bufferEsperado.length !== bufferRecibido.length) {
+      return false;
+    }
+    return crypto.timingSafeEqual(bufferEsperado, bufferRecibido);
   } catch {
     return false;
   }
@@ -57,7 +83,6 @@ function firmaValida(req: NextRequest, paymentId: string): boolean {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    console.log("📩 Webhook MP recibido:", JSON.stringify(body, null, 2));
 
     // MP puede enviar dos tipos de notificaciones:
     // 1. IPN clásica: { id, topic }
@@ -65,6 +90,8 @@ export async function POST(req: NextRequest) {
     const paymentId =
       body?.data?.id ||      // webhook moderno
       (body?.topic === "payment" ? body?.id : null); // IPN clásica
+
+    console.log("Webhook MP recibido. paymentId:", paymentId);
 
     if (!paymentId) {
       // Puede ser una notificación de otro tipo (merchant_order, etc.)
@@ -128,7 +155,7 @@ export async function POST(req: NextRequest) {
             where: { id: turnoId },
             data: {
               estado: "CONFIRMADO",
-              ...(paymentData.id ? { mpPaymentId: String(paymentData.id) } as any : {}),
+              ...(paymentData.id ? { mpPaymentId: String(paymentData.id) } : {}),
             },
           });
           console.log(`✅ Turno ${turnoId} CONFIRMADO por pago ${paymentData.id}`);
@@ -140,13 +167,11 @@ export async function POST(req: NextRequest) {
 
       case "pending":
       case "in_process": {
-        // Pago pendiente → turno sigue PENDIENTE, guardar el paymentId si el campo existe
-        try {
-          await (prisma.turno as any).update({
-            where: { id: turnoId },
-            data: { mpPaymentId: String(paymentData.id) },
-          });
-        } catch { /* campo aún no migrado */ }
+        // Pago pendiente → turno sigue PENDIENTE, guardar el paymentId
+        await prisma.turno.update({
+          where: { id: turnoId },
+          data: { mpPaymentId: String(paymentData.id) },
+        });
         console.log(`⏳ Pago ${paymentData.id} pendiente para turno ${turnoId}`);
         break;
       }
@@ -178,8 +203,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ received: true }, { status: 200 });
-  } catch (error: any) {
-    console.error("❌ Error en webhook MP:", error);
+  } catch (error) {
+    console.error("❌ Error en webhook MP:", error instanceof Error ? error.message : String(error));
     // Siempre retornar 200 para que MP no reintente indefinidamente
     return NextResponse.json({ received: true }, { status: 200 });
   }

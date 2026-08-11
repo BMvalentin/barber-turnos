@@ -9,15 +9,12 @@ export default auth((req) => {
   const userRole = req.auth?.user?.role;
   const { nextUrl } = req;
 
-  const isApiAuthRoute = nextUrl.pathname.startsWith("/api/auth");
   const isAuthRoute = ["/login", "/register"].includes(nextUrl.pathname);
   const isAdminRoute = nextUrl.pathname.startsWith("/admin");
 
   const isProtectedRoute = ["/dashboard", "/turno", "/admin"].some((route) => 
     nextUrl.pathname.startsWith(route)
   );
-
-  if (isApiAuthRoute) return NextResponse.next();
 
   // 1. .redirect
   if (isAuthRoute) {
@@ -58,3 +55,9 @@ export default auth((req) => {
 
   return NextResponse.next();
 });
+
+// Alcance del JWT: solo las rutas que este middleware realmente protege.
+// /api/auth y el resto de rutas públicas ya no pasan por el JWT (objetivo Fase 1.5).
+export const config = {
+  matcher: ["/admin/:path*", "/turno/:path*", "/dashboard/:path*", "/login", "/register"],
+};

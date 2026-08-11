@@ -8,12 +8,15 @@ interface SearchParams {
   payment_id?: string;
 }
 
+interface PendingPageProps {
+  searchParams: Promise<SearchParams>;
+}
+
 export default async function PagoPendingPage({
   searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
-  const paymentId = searchParams.payment_id;
+}: PendingPageProps) {
+  const { payment_id } = await searchParams;
+  const paymentId = payment_id;
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">

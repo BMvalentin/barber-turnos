@@ -2,9 +2,16 @@
 // ⚠️  SOLO PARA DESARROLLO — eliminá esta ruta antes de producción
 
 import { prisma } from "@/lib/prisma";
-import { MPTestClient } from "./MPTestClient";
+import { redirect } from "next/navigation";
+import { requerirAdmin } from "@/lib/seguridad";
+import { MPTestClient } from "@/components/test-mp/MPTestClient";
 
 export default async function TestMPPage() {
+  const sesion = await requerirAdmin();
+  if (!sesion) {
+    redirect("/login");
+  }
+
   if (process.env.NODE_ENV === "production") {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center text-red-500 font-mono">
@@ -30,8 +37,8 @@ export default async function TestMPPage() {
     horarioReservado: t.horarioReservado.toISOString(),
     precioCongelado: Number(t.precioCongelado),
     seniaCongelada: Number(t.seniaCongelada),
-    mpPreferenceId: (t as any).mpPreferenceId ?? null,
-    mpPaymentId: (t as any).mpPaymentId ?? null,
+    mpPreferenceId: t.mpPreferenceId ?? null,
+    mpPaymentId: t.mpPaymentId ?? null,
     userName: t.user.name,
     userEmail: t.user.email,
     servicioNombre: t.servicio.nombre,

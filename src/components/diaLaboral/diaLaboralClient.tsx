@@ -6,15 +6,16 @@ import { HorariosList } from "@/components/horarios/horariosList";
 import {
   deleteMargenLaboral,
   getMargenesLaborales,
-} from "@/actions/margenesHorario.actions";
+} from "@/actions/horarios/margenesHorario.actions";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
+import type { MargenLaboralCreado } from "@/types/horarios";
 
 export type DiaLaboral = {
   id: string;
@@ -22,7 +23,7 @@ export type DiaLaboral = {
   dia: number;
   createdAt: Date;
   updatedAt: Date;
-  margenes?: any[];
+  margenes?: MargenLaboralCreado[];
 };
 
 type DiaLaboralClientProps = {
@@ -48,7 +49,7 @@ export function DiaLaboralClient({
   const [isPending, startTransition] = useTransition();
   const [isHorariosDialogOpen, setIsHorariosDialogOpen] = useState(false);
   const [selectedDia, setSelectedDia] = useState<DiaLaboral | null>(null);
-  const [margenes, setMargenes] = useState<any[]>([]);
+  const [margenes, setMargenes] = useState<MargenLaboralCreado[]>([]);
 
   // Estado para controlar el modal de confirmación de eliminación
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);

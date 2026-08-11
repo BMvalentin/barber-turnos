@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import EditBarberoModal from "./EditBarberoModal";
-import { deleteBarbero } from "@/actions/barbero.actions";
+import { deleteBarbero } from "@/actions/barberos/eliminar.actions";
 import { User } from "lucide-react";
 import { Button } from "../ui/button";
 import { ESTILO_FONDO_MARCA } from "@/lib/constants";
+import type { ServicioOpcion, DiaLaboral } from "@/types/barbero";
 
 type HorarioBarbero = {
   margenLaboralId: string;
@@ -50,8 +51,8 @@ export default function BarberoList({
   diasLaborales = [],
 }: {
   barberos?: Barbero[];
-  servicios?: any[];
-  diasLaborales?: any[];
+  servicios?: ServicioOpcion[];
+  diasLaborales?: DiaLaboral[];
 }) {
 
   if (!barberos.length) {
@@ -98,8 +99,8 @@ function BarberoCard({
   diasLaborales,
 }: {
   barbero: Barbero;
-  servicios: any[];
-  diasLaborales: any[];
+  servicios: ServicioOpcion[];
+  diasLaborales: DiaLaboral[];
 }) {
   const [open, setOpen] = useState(false);
 

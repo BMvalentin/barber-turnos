@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+/* Fuentes Outfit/Playfair ya no se importan acá (era render-blocking): el layout raíz
+   (subfase 1.2) las define con next/font/google en las variables --font-outfit y
+   --font-playfair, aplicadas en <body>. */
 @import "tailwindcss";
 
 /* =========================
@@ -71,7 +73,7 @@ html {
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-outfit), sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -79,7 +81,7 @@ body {
 h1,
 h2,
 h3 {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-playfair), serif;
 }
 
 /* =========================

@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requerirSesion } from "@/lib/seguridad";
 
 export async function GET() {
+  const sesion = await requerirSesion();
+  if (!sesion) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
   try {
     const [servicios, barberos, usuarios, relaciones] = await Promise.all([
       prisma.servicio.findMany({
@@ -28,14 +34,18 @@ export async function GET() {
         orderBy: { nombre: "asc" },
       }),
 
-      prisma.user.findMany({
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-        orderBy: { name: "asc" },
-      }),
+      // La lista completa de usuarios (PII) es exclusiva de ADMIN: el dropdown
+      // de clientes en los modales de turno solo se usa con rol ADMIN.
+      sesion.user.role === "ADMIN"
+        ? prisma.user.findMany({
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+            orderBy: { name: "asc" },
+          })
+        : [],
       prisma.servicioxbarbero.findMany({
         select: { 
           barberoId: true,

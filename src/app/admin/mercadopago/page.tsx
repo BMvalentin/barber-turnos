@@ -3,7 +3,7 @@ import { CreditCard } from "lucide-react";
 import {
   obtenerEstadoConexionMP,
   obtenerEstadoConfiguracionOAuth,
-} from "@/actions/mercadopago-oauth.actions";
+} from "@/actions/mercadopago/mercadopago-oauth.actions";
 import MercadoPagoConnectionPanel from "@/components/admin/MercadoPagoConnectionPanel";
 
 export default async function PaginaConfiguracionMercadoPago() {

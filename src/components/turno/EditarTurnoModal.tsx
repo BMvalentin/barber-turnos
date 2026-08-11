@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useCallback, useEffect, useState, useRef } from "react";
-import { actualizarTurno } from "@/actions/turno.actions";
+import { actualizarTurno } from "@/actions/turnos/estado.actions";
 import SeleccionadorHorario from "./SeleccionadorHorario";
 import {
   Dialog,

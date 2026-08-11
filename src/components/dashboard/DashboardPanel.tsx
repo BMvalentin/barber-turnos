@@ -8,11 +8,19 @@ import {
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { CLASES_BOTON_MARCA } from "@/lib/constants";
-import { updateProfile } from "@/actions/user-dashboard";
+import { updateProfile } from "@/actions/sesion/user-dashboard";
 import { useSession } from "next-auth/react";
-import TurnoList from "@/components/turno/TurnoList";
+import TurnoList, { type Turno } from "@/components/turno/TurnoList";
+import type { Session } from "next-auth";
 
-export default function DashboardPanel({ user, turnos, session }: { user: any; turnos: any[]; session: any }) {
+type DatosUsuarioPanel = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  telefono?: string | null;
+};
+
+export default function DashboardPanel({ user, turnos, session }: { user: DatosUsuarioPanel; turnos: Turno[]; session: Session | null }) {
   const { update } = useSession();
   const [isPending, startTransition] = useTransition();
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -187,7 +195,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
                   </label>
                   <input
                     name="name"
-                    defaultValue={user.name}
+                    defaultValue={user.name || ""}
                     type="text"
                     required
                     className="w-full p-4 bg-black/40 border border-amber-900/30 rounded-2xl text-white focus:ring-1 focus:ring-[var(--page-primary)] focus:border-[var(--page-primary)] outline-none transition-all"

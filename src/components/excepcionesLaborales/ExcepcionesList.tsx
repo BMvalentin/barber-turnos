@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { softDeleteExcepcion } from "@/actions/excepcionesLaborales.actions";
+import { softDeleteExcepcion } from "@/actions/excepciones/excepcionesLaborales.actions";
 import { Calendar, Trash2, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
 import { formatearHora } from "@/lib/utils";
 

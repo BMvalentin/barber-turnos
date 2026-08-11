@@ -2,7 +2,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { CLASES_BOTON_MARCA } from "@/lib/constants";
-import { confirmarPagoTurno } from "@/actions/mercadopago-actions";
+import { confirmarPagoTurno } from "@/actions/mercadopago/mercadopago-actions";
 import { CheckCircle2, Clock, XCircle, Calendar, ArrowRight, RefreshCw, AlertTriangle } from "lucide-react";
 
 interface StatusPageProps {

@@ -2,13 +2,14 @@
 "use server";
 
 import cloudinary from "@/lib/cloudinary";
+import type { UploadApiResponse } from "cloudinary";
 
 // Tipos
 export interface UploadSingleOptions {
   file: File;
   folder?: string;
   publicId?: string;
-  transformation?: Record<string, any>[];
+  transformation?: Record<string, string | number | boolean>[];
   context?: Record<string, string>;
   tags?: string[];
   resourceType?: "image" | "video" | "raw" | "auto";
@@ -52,7 +53,7 @@ export async function uploadToCloudinary({
       publicId ?? `${Date.now()}-${crypto.randomUUID()}`;
 
     // Promisify de upload_stream
-    const uploadResponse: any = await new Promise((resolve, reject) => {
+    const uploadResponse = await new Promise<UploadApiResponse>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder,
@@ -66,6 +67,7 @@ export async function uploadToCloudinary({
         },
         (error, result) => {
           if (error) return reject(error);
+          if (!result) return reject(new Error("Cloudinary no devolvió resultado"));
           resolve(result);
         }
       );
@@ -77,9 +79,10 @@ export async function uploadToCloudinary({
       url: uploadResponse.secure_url,
       publicId: uploadResponse.public_id,
     };
-  } catch (error: any) {
-    console.error("Error subiendo a Cloudinary:", error);
-    return { success: false, error: error.message ?? "Error desconocido" };
+  } catch (error) {
+    const detalle = error instanceof Error ? error.message : String(error);
+    console.error("Error subiendo a Cloudinary:", detalle);
+    return { success: false, error: detalle || "Error desconocido" };
   }
 }
 

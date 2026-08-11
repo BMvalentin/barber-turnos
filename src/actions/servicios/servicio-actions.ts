@@ -1,0 +1,397 @@
+"use server";
+
+import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+import { getCachedData } from "@/lib/cache";
+import { servicioSchema } from "@/lib/servicios-zod";
+import { uploadMultipleToCloudinary } from "@/lib/cloudinary-uploader";
+import { requerirAdmin } from "@/lib/seguridad";
+import { validarArchivoImagen } from "@/lib/validar-imagen";
+
+import type { ActionState } from "@/types/action-state";
+import type {
+  ServicioCarrusel,
+  ServicioConBarberos,
+  ServicioCreado,
+} from "@/types/servicio";
+
+// Función helper para limpiar y validar URLs de imágenes
+function cleanImageUrl(url: string | null): string | null {
+  if (!url || url.trim() === "") return null;
+
+  let cleaned = url.trim();
+
+  if (cleaned.includes("public\\") || cleaned.includes("public/")) {
+    cleaned = cleaned.replace(/^.*public[\\\/]/, "/");
+  }
+
+  if (cleaned.match(/^[A-Za-z]:\\/)) {
+    console.warn("⚠️ Ruta de Windows detectada, no se guardará:", cleaned);
+    return null;
+  }
+
+  if (!cleaned.startsWith("http") && !cleaned.startsWith("/")) {
+    cleaned = "/" + cleaned;
+  }
+
+  cleaned = cleaned.replace(/\\/g, "/");
+
+  return cleaned;
+}
+
+export const getServicios = async (): Promise<ActionState<ServicioConBarberos[]>> => {
+  try {
+    const servicios = await prisma.servicio.findMany({
+      where: {
+        estado: true,
+      },
+      include: {
+        servicios: {
+          include: {
+            barbero: {
+              select: {
+                id: true,
+                nombre: true,
+                srcImage: true,
+                estado: true,
+                horarios: {
+                  where: {
+                    estado: true,
+                  },
+                  include: {
+                    dia: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    // 💡 SOLUCIÓN: Convertimos todos los Decimal a Number nativo
+    const serviciosPlanos = servicios.map((servicio) => ({
+      ...servicio,
+      precio: Number(servicio.precio),
+      descuento: Number(servicio.descuento),
+      senia: Number(servicio.senia),
+    }));
+
+    return {
+      success: true,
+      data: serviciosPlanos,
+    };
+  } catch (error) {
+    console.error("Error al obtener servicios:", error instanceof Error ? error.message : String(error));
+    return {
+      success: false,
+      error: "Error inesperado al obtener los servicios",
+      data: [],
+    };
+  }
+};
+
+export const getServiciosCarrusel = async (): Promise<ActionState<ServicioCarrusel[]>> => {
+  try {
+    const servicios = await getCachedData(
+      ["servicios-carrusel"],
+      ["servicios"],
+      async () => {
+        const datos = await prisma.servicio.findMany({
+          where: {
+            estado: true,
+          },
+          select: {
+            id: true,
+            nombre: true,
+            descripcion: true,
+            srcImage: true,
+            precio: true,
+            descuento: true,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
+
+        return datos.map((s) => ({
+          ...s,
+          precio: Number(s.precio),
+          descuento: Number(s.descuento),
+        }));
+      },
+      60,
+    );
+
+    return {
+      success: true,
+      data: servicios,
+    };
+  } catch (error) {
+    console.error("Error al obtener servicios para carrusel:", error instanceof Error ? error.message : String(error));
+    return {
+      success: false,
+      error: "Error al cargar los servicios del carrusel",
+      data: [],
+    };
+  }
+};
+
+export const createServicio = async (
+  prevState: ActionState<ServicioCreado>,
+  formData: FormData,
+): Promise<ActionState<ServicioCreado>> => {
+  try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
+    const image = formData.get("image") as File | null;
+    const rawData = Object.fromEntries(formData.entries());
+
+    delete rawData.image;
+
+    // Validar con Zod
+    const validated = servicioSchema.safeParse(rawData);
+
+
+    if (!validated.success) {
+      return {
+        success: false,
+        errors: validated.error.flatten().fieldErrors,
+        error: "Error de validación en los datos del servicio.",
+      };
+    }
+
+    const { nombre, descripcion, srcImage: srcImageRaw, estado, duracion, precio, descuento, senia } = validated.data;
+
+    let srcImage = cleanImageUrl(srcImageRaw || null);
+
+    if (image && image.size > 0) {
+      const validacion = await validarArchivoImagen(image);
+
+      if (!validacion.ok) {
+        return { success: false, error: validacion.error };
+      }
+
+      const upload = await uploadMultipleToCloudinary([image], {
+        folder: "barberia/servicios",
+        resourceType: "image",
+      });
+
+      const uploaded = upload.find((r) => r.success);
+
+      if (!uploaded?.url) {
+        return {
+          success: false,
+          error: "No se pudo subir la imagen.",
+        };
+      }
+
+      srcImage = uploaded.url;
+    }
+
+    const nuevoServicio = await prisma.servicio.create({
+      data: {
+        nombre: nombre.trim(),
+        descripcion: descripcion || null,
+        srcImage: srcImage,
+        estado: estado ?? true,
+        duracion: duracion,
+        precio: precio,
+        descuento: descuento,
+        senia: senia,
+      },
+    });
+
+    revalidatePath("/servicio");
+
+    // 💡 SOLUCIÓN: Convertimos a Number antes de retornar
+    return {
+      success: true,
+      data: {
+        ...nuevoServicio,
+        precio: Number(nuevoServicio.precio),
+        descuento: Number(nuevoServicio.descuento),
+        senia: Number(nuevoServicio.senia),
+      },
+    };
+  } catch (error) {
+    console.error("Error al crear servicio:", error);
+    return {
+      success: false,
+      error: "No se pudo crear el servicio. Intentalo de nuevo.",
+    };
+  }
+};
+
+export const actualizarServicio = async (
+  prevState: ActionState<ServicioCreado>,
+  formData: FormData,
+): Promise<ActionState<ServicioCreado>> => {
+  try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
+    const id = formData.get("id") as string;
+
+    if (!id) {
+      return { 
+        success: false, 
+        error: "ID no proporcionado" 
+      };
+    }
+
+    // 👇 Obtener imagen nueva si existe
+    const image = formData.get("image") as File | null;
+
+    const rawData = Object.fromEntries(formData.entries());
+
+    // No mandar File al zod
+    delete rawData.image;
+
+    const validated = servicioSchema.safeParse(rawData);
+
+    if (!validated.success) {
+      return {
+        success: false,
+        errors: validated.error.flatten().fieldErrors,
+        error: "Error de validación al actualizar.",
+      };
+    }
+
+    const {
+      nombre,
+      descripcion,
+      srcImage: srcImageRaw,
+      estado,
+      duracion,
+      precio,
+      descuento,
+      senia
+    } = validated.data;
+
+
+    let srcImage = cleanImageUrl(srcImageRaw || null);
+
+
+    // 👇 Si seleccionó nueva imagen, reemplaza la anterior
+    if (image && image.size > 0) {
+      const validacion = await validarArchivoImagen(image);
+
+      if (!validacion.ok) {
+        return { success: false, error: validacion.error };
+      }
+
+      const upload = await uploadMultipleToCloudinary([image], {
+        folder: "barberia/servicios",
+        resourceType: "image",
+      });
+
+      const uploaded = upload.find((r) => r.success);
+
+      if (!uploaded?.url) {
+        return {
+          success: false,
+          error: "No se pudo subir la nueva imagen.",
+        };
+      }
+
+      srcImage = uploaded.url;
+    }
+
+
+    const servicioActualizado = await prisma.servicio.update({
+      where: { id },
+      data: {
+        nombre: nombre.trim(),
+        descripcion: descripcion || null,
+        srcImage,
+        estado: estado ?? true,
+        duracion,
+        precio,
+        descuento,
+        senia,
+        updatedAt: new Date(),
+      },
+    });
+
+
+    revalidatePath("/servicio");
+
+
+    return {
+      success: true,
+      data: {
+        ...servicioActualizado,
+        precio: Number(servicioActualizado.precio),
+        descuento: Number(servicioActualizado.descuento),
+        senia: Number(servicioActualizado.senia),
+      },
+    };
+
+  } catch (error) {
+    console.error("Error al actualizar servicio:", error);
+
+    return {
+      success: false,
+      error: "No se pudo actualizar el servicio. Intentalo de nuevo.",
+    };
+  }
+};
+
+export const deleteservicio = async (
+  formData: FormData,
+): Promise<ActionState<{ id: string }>> => {
+  try {
+    const sesion = await requerirAdmin();
+    if (!sesion) return { success: false, error: "No autorizado" };
+
+    const id = formData.get("id") as string;
+
+    if (!id || id.trim() === "") {
+      return {
+        error: "ID del servicio es requerido",
+        success: false,
+      };
+    }
+
+    const servicioConTurnos = await prisma.servicio.findUnique({
+      where: { id },
+      include: {
+        turnos: true,
+      },
+    });
+
+    if (!servicioConTurnos) {
+      return { error: "Servicio no encontrado", success: false };
+    }
+
+    if (servicioConTurnos.turnos.length > 0) {
+      return {
+        error: "No se puede eliminar: tiene turnos asociados",
+        success: false,
+      };
+    }
+
+    await prisma.servicio.update({
+      where: { id },
+      data: {
+        estado: false,
+        updatedAt: new Date(),
+      },
+    });
+
+    revalidatePath("/servicio");
+
+    return { success: true, data: { id } };
+  } catch (error) {
+    console.error("Error al eliminar servicio:", error);
+    return {
+      success: false,
+      error: "No se pudo eliminar el servicio. Intentalo de nuevo.",
+    };
+  }
+};
