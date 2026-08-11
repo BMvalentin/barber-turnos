@@ -2,30 +2,20 @@
 
 import { useState } from "react";
 import { Clock, Plus, Pencil, Trash2, CheckCircle2, XCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button/Button";
+import { Badge } from "@/components/ui/badge/Badge";
+import EmptyState from "@/components/ui/EmptyState";
+import { Dialog } from "@/components/ui/dialog/Dialog";
+import { DialogContent } from "@/components/ui/dialog/DialogContent";
+import { DialogHeader } from "@/components/ui/dialog/DialogHeader";
+import { DialogTitle } from "@/components/ui/dialog/DialogTitle";
 import { HorariosForm } from "@/components/horarios/horariosForm";
-
-type MargenLaboral = {
-  id: string;
-  diaId: string;
-  estado: boolean;
-  desde: string;
-  hasta: string;
-  createdAt: Date;
-  updatedAt: Date;
-};
+import type { MargenLaboralCreado } from "@/types/horarios";
 
 type HorariosListProps = {
   diaId: string;
   diaNombre: string;
-  margenes: MargenLaboral[];
+  margenes: MargenLaboralCreado[];
   onSuccess: () => void;
   onDelete: (id: string) => void;
 };
@@ -38,14 +28,14 @@ export function HorariosList({
   onDelete,
 }: HorariosListProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingMargen, setEditingMargen] = useState<MargenLaboral | null>(null);
+  const [editingMargen, setEditingMargen] = useState<MargenLaboralCreado | null>(null);
 
   const handleCreate = () => {
     setEditingMargen(null);
     setIsDialogOpen(true);
   };
 
-  const handleEdit = (margen: MargenLaboral) => {
+  const handleEdit = (margen: MargenLaboralCreado) => {
     setEditingMargen(margen);
     setIsDialogOpen(true);
   };
@@ -96,7 +86,7 @@ export function HorariosList({
         <Button
           onClick={handleCreate}
           size="sm"
-          className="text-white shadow-md hover:opacity-90 transition-all mr-6"
+          className="text-[var(--page-primary-foreground)] shadow-md hover:opacity-90 transition-all mr-6"
           style={{
             backgroundColor: "var(--page-primary)",
             border: `1px solid var(--page-secondary)`,
@@ -109,16 +99,18 @@ export function HorariosList({
 
       {/* EMPTY */}
       {margenes.length === 0 ? (
-        <div
-          className="rounded-xl p-10 text-center backdrop-blur-lg shadow-xl"
-          style={{
-            backgroundColor: `var(--page-secondary-15)`,
-            border: `1px solid var(--page-secondary-40)`
+        <EmptyState
+          icono={<Clock />}
+          mensaje="No hay horarios"
+          claseContenedor="rounded-xl p-10 backdrop-blur-lg shadow-xl"
+          estiloContenedor={{
+            backgroundColor: "var(--page-secondary-15)",
+            border: "1px solid var(--page-secondary-40)",
           }}
-        >
-          <Clock className="h-10 w-10 mx-auto mb-3 opacity-60" style={{ color: "var(--page-primary)" }} />
-          <p className="text-white font-medium">No hay horarios</p>
-        </div>
+          claseIcono="h-10 w-10 opacity-60"
+          estiloIcono={{ color: "var(--page-primary)" }}
+          claseMensaje="text-white font-medium"
+        />
       ) : (
         <div className="space-y-3">
           {margenes.map((margen) => (
@@ -174,7 +166,7 @@ export function HorariosList({
               <div className="flex gap-2">
                 <Button
                   size="sm"
-                  className="text-white hover:opacity-95"
+                  className="text-[var(--page-primary-foreground)] hover:opacity-95"
                   style={{
                     backgroundColor: "var(--page-primary)",
                   }}

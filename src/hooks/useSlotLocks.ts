@@ -10,8 +10,6 @@ interface UseSlotLocksOptions {
   userId: string;
 }
 
-export type WsEstado = "conectando" | "conectado" | "desconectado";
-
 interface SlotLockEntry {
   slot: string;
   sessionId: string;
@@ -19,7 +17,7 @@ interface SlotLockEntry {
 }
 
 /**
- * Hook de bloqueo de slots en tiempo real.
+ * Hook de bloqueo de slots con polling REST.
  */
 export function useSlotLocks({
   barberoId,
@@ -28,13 +26,9 @@ export function useSlotLocks({
   userId,
 }: UseSlotLocksOptions) {
   const [slotsBlockeados, setSlotsBlockeados] = useState<SlotLockEntry[]>([]);
-  const [wsEstado, setWsEstado] = useState<WsEstado>("desconectado");
 
-  const wsRef = useRef<WebSocket | null>(null);
   const slotActivoRef = useRef<string | null>(null);
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const reconectarRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fechaStr = fecha ? format(fecha, "yyyy-MM-dd") : null;
 
@@ -87,56 +81,9 @@ export function useSlotLocks({
     }
   }, [sessionId, fetchLocks]);
 
-  // ── WebSocket ─────────────────────────────────────
-  const conectarWS = useCallback(() => {
-    // Si estamos en desarrollo, no intentamos conectar
-    if (process.env.NODE_ENV === "development") return;
-    if (!barberoId || !userId) return;
-
-    if (wsRef.current && wsRef.current.readyState !== WebSocket.CLOSED) {
-      wsRef.current.close();
-    }
-
-    try {
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const ws = new WebSocket(`${protocol}//${window.location.host}/api/ws`);
-      wsRef.current = ws;
-      setWsEstado("conectando");
-
-      ws.onopen = () => {
-        setWsEstado("conectado");
-        if (barberoId && fechaStr) {
-          ws.send(JSON.stringify({ type: "INIT", barberoId, fecha: fechaStr }));
-        }
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const msg = JSON.parse(event.data);
-          if (msg.type === "LOCKS_STATE" && Array.isArray(msg.locks)) {
-            setSlotsBlockeados(msg.locks);
-          }
-        } catch {
-          // Ignorar
-        }
-      };
-
-      ws.onclose = () => {
-        setWsEstado("desconectado");
-        reconectarRef.current = setTimeout(conectarWS, 8_000);
-      };
-
-      ws.onerror = () => {
-        ws.close();
-      };
-    } catch {
-      setWsEstado("desconectado");
-    }
-  }, [barberoId, userId, fechaStr]);
-
-  // ── Efecto principal ────────────────────────
+  // ── Efecto principal: polling + heartbeat ────────────────────
   useEffect(() => {
-    pollingRef.current = setInterval(fetchLocks, 3_000);
+    const polling = setInterval(fetchLocks, 10_000);
 
     heartbeatRef.current = setInterval(async () => {
       if (!slotActivoRef.current) return;
@@ -151,13 +98,11 @@ export function useSlotLocks({
       }
     }, 60_000);
 
-    conectarWS();
+    fetchLocks();
 
     return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
+      clearInterval(polling);
       if (heartbeatRef.current) clearInterval(heartbeatRef.current);
-      if (reconectarRef.current) clearTimeout(reconectarRef.current);
-      wsRef.current?.close();
       if (slotActivoRef.current) {
         fetch("/api/slot-locks", {
           method: "DELETE",
@@ -166,49 +111,20 @@ export function useSlotLocks({
         }).catch(() => {});
       }
     };
-  }, [conectarWS, fetchLocks, sessionId]);
-
-  // ── Re-fetch inmediato ─────────────────────
-  useEffect(() => {
-    if (fechaStr && barberoId) {
-      fetchLocks();
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(
-          JSON.stringify({ type: "INIT", barberoId, fecha: fechaStr })
-        );
-      }
-    }
-  }, [fechaStr, barberoId, fetchLocks]);
-
-  // ── Reiniciar polling ───────────────────────────────
-  useEffect(() => {
-    if (pollingRef.current) clearInterval(pollingRef.current);
-    pollingRef.current = setInterval(fetchLocks, 3_000);
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
-    };
-  }, [fetchLocks]);
+  }, [fetchLocks, sessionId]);
 
   const lockSlot = useCallback(
     (slot: string) => {
       slotActivoRef.current = slot;
       crearLockREST(slot);
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(
-          JSON.stringify({ type: "LOCK", barberoId, slot, sessionId, userId })
-        );
-      }
     },
-    [barberoId, userId, sessionId, crearLockREST]
+    [crearLockREST]
   );
 
   const unlockSlot = useCallback(() => {
     slotActivoRef.current = null;
     eliminarLockREST();
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type: "UNLOCK", sessionId }));
-    }
-  }, [sessionId, eliminarLockREST]);
+  }, [eliminarLockREST]);
 
   const isSlotBloqueado = useCallback(
     (slot: string) =>
@@ -218,6 +134,5 @@ export function useSlotLocks({
     [slotsBlockeados, sessionId]
   );
 
-  return { slotsBlockeados, lockSlot, unlockSlot, isSlotBloqueado, wsEstado };
+  return { slotsBlockeados, lockSlot, unlockSlot, isSlotBloqueado };
 }
-

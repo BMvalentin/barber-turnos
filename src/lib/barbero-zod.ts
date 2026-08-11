@@ -1,31 +1,27 @@
 import { z } from "zod";
+import { esquemaNombre, esquemaImagenOpcional } from "@/lib/zod";
 
 /* =========================
    VALIDACIÓN NOMBRE
    (solo letras y espacios)
 ========================= */
-const nombreSchema = z
-  .string()
-  .min(3, "El nombre debe tener al menos 3 caracteres")
-  .max(100, "El nombre es demasiado largo")
-  .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, {
-    message: "El nombre solo puede contener letras",
-  });
+const nombreSchema = esquemaNombre(
+  "nombre",
+  /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/,
+  "El nombre solo puede contener letras"
+);
 
 /* =========================
    CREATE BARBERO
 ========================= */
 export const barberoSchema = z.object({
-  nombre: z.string()
-    .min(3, "El nombre debe tener al menos 3 caracteres")
-    .max(100, "El nombre es demasiado largo")
-    .regex(/^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/, "El nombre no puede tener números ni caracteres especiales"),
+  nombre: esquemaNombre(
+    "nombre",
+    /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/,
+    "El nombre no puede tener números ni caracteres especiales"
+  ),
 
-  srcImage: z.string()
-    .url("La URL de la imagen no es válida")
-    .optional()
-    .nullable()
-    .or(z.literal("")),
+  srcImage: esquemaImagenOpcional,
 
   serviciosIds: z.array(z.string()).optional(),
 
@@ -42,12 +38,7 @@ export const updateBarberoSchema = z.object({
 
   nombre: nombreSchema,
 
-  srcImage: z
-    .string()
-    .url("La URL de la imagen no es válida")
-    .optional()
-    .nullable()
-    .or(z.literal("")),
+  srcImage: esquemaImagenOpcional,
 
   estado: z.boolean().optional(),
 

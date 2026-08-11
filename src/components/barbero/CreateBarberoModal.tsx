@@ -1,21 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { ESTILO_FONDO_MARCA } from "@/lib/constants";
+import { Dialog } from "@/components/ui/dialog/Dialog";
+import { DialogContent } from "@/components/ui/dialog/DialogContent";
+import { DialogHeader } from "@/components/ui/dialog/DialogHeader";
+import { DialogTitle } from "@/components/ui/dialog/DialogTitle";
+import { DialogTrigger } from "@/components/ui/dialog/DialogTrigger";
+import { DialogClose } from "@/components/ui/dialog/DialogClose";
+import { Button } from "@/components/ui/button/Button";
 import { X } from "lucide-react";
 import CreateBarberoForm from "@/components/barbero/CreateBarberoForm";
+import type { ServicioOpcion, DiaLaboral } from "@/types/barbero";
 
 type Props = {
-  servicios: any;
-  diasLaborales: any;
+  servicios: ServicioOpcion[];
+  diasLaborales: DiaLaboral[];
 };
 
 export default function CreateBarberoModal({ servicios, diasLaborales }: Props) {
@@ -26,8 +26,8 @@ export default function CreateBarberoModal({ servicios, diasLaborales }: Props) 
 
       <DialogTrigger asChild>
         <Button
-          className="text-white shadow-lg transition-all hover:opacity-90"
-          style={{ backgroundColor: "var(--page-primary)" }}
+          className="text-[var(--page-primary-foreground)] shadow-lg transition-all hover:opacity-90"
+          style={ESTILO_FONDO_MARCA}
         >
           + Ingresar Barbero
         </Button>

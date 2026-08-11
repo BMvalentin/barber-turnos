@@ -6,10 +6,10 @@ export const authConfig = {
   callbacks: {
     jwt({ token, user, trigger, session }) {
       if (user){
-        token.id = (user as any).id;
-        token.role = (user as any).role;
-        token.telefono = (user as any).telefono;
-        token.image = (user as any).image;
+        token.id = user.id;
+        token.role = user.role;
+        token.telefono = user.telefono;
+        token.image = user.image;
       } 
       if (trigger === "update" && session) {
         token.name = session.name;

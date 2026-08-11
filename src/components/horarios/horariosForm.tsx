@@ -1,15 +1,15 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { useFormStatus } from "react-dom";
-import { Button } from "@/components/ui/button";
-import {
-  createMargenLaboral,
-  updateMargenLaboral,
-  type ActionState,
-} from "@/actions/margenesHorario.actions";
-import { toast } from "@/components/ui/use-toast";
-import { CheckCircle2, Loader2, XCircle } from "lucide-react";
+import { Button } from "@/components/ui/button/Button";
+import { createMargenLaboral } from "@/actions/horarios/crear-margen.actions";
+import { updateMargenLaboral } from "@/actions/horarios/actualizar-margen.actions";
+import type { ActionState } from "@/types/action-state";
+import { ActionStateInicialSimple } from "@/types/action-state";
+import type { MargenLaboralCreado } from "@/types/horarios";
+import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
+import { CheckCircle2, XCircle } from "lucide-react";
+import BotonSubmitFormStatus from "@/components/ui/boton-submit-form-status";
 
 type HorariosFormProps = {
   diaId: string;
@@ -24,37 +24,7 @@ type HorariosFormProps = {
   onCancel: () => void;
 };
 
-const initialState: ActionState = {
-  success: false,
-};
-
-function SubmitButton({ isEdit }: { isEdit: boolean }) {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button
-      type="submit"
-      disabled={pending}
-      className="text-white shadow-md hover:opacity-95 transition-all"
-      style={{
-        backgroundColor: "var(--page-primary)",
-        border: "1px solid var(--page-secondary)",
-      }}
-    >
-      {pending ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Guardando...
-        </>
-      ) : (
-        <>
-          <CheckCircle2 className="mr-2 h-4 w-4" />
-          {isEdit ? "Actualizar" : "Crear"}
-        </>
-      )}
-    </Button>
-  );
-}
+const initialState: ActionState<MargenLaboralCreado> = ActionStateInicialSimple;
 
 export function HorariosForm({
   diaId,
@@ -68,24 +38,18 @@ export function HorariosForm({
   const [desde, setDesde] = useState(initialData?.desde || "08:00");
   const [hasta, setHasta] = useState(initialData?.hasta || "17:00");
 
+  const { retroalimentar } = useRetroalimentacionAccion({
+    mensajeExito: "Horario guardado",
+    descripcionExito: "El horario se ha guardado correctamente.",
+    descripcionError: "Error al guardar el horario",
+    onExito: onSuccess,
+  });
+
   useEffect(() => {
-    if (state.success) {
-      toast({
-        title: "Horario guardado",
-        description: "El horario se ha guardado correctamente.",
-        variant: "default",
-        duration: 4000,
-      });
-      onSuccess?.();
-    } else if (state.error) {
-      toast({
-        title: "Error",
-        description: state.error || "Error al guardar el horario",
-        variant: "destructive",
-        duration: 4000,
-      });
+    if (state.success || state.error) {
+      void retroalimentar(state);
     }
-  }, [state, onSuccess]);
+  }, [state, retroalimentar]);
 
   return (
     <form action={formAction} className="space-y-4">
@@ -154,8 +118,16 @@ export function HorariosForm({
           Cancelar
         </Button>
 
-        <SubmitButton 
-          isEdit={!!initialData} 
+        <BotonSubmitFormStatus
+          texto={
+            <>
+              <CheckCircle2 className="h-4 w-4" />
+              {initialData ? "Actualizar" : "Crear"}
+            </>
+          }
+          textoMientrasCarga="Guardando..."
+          claseAdicional="shadow-md hover:opacity-95"
+          estiloAdicional={{ border: "1px solid var(--page-secondary)" }}
         />
       </div>
     </form>

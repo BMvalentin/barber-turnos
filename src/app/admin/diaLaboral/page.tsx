@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { Calendar } from "lucide-react";
 import { DiaLaboralClient } from "@/components/diaLaboral/diaLaboralClient";
-import { getDiasLaborales } from "@/actions/diaLaboral.actions";
+import { getDiasLaborales } from "@/actions/horarios/listar.actions";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default async function DiaLaboralPage() {

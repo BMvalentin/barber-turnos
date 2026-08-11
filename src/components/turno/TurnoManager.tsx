@@ -2,8 +2,11 @@
 
 import { useState, useMemo } from "react";
 import TurnoList from "./TurnoList";
+import type { TurnoListado } from "@/types/turno";
+import type { Session } from "next-auth";
+import { ESTADOS_TURNO } from "@/lib/constants";
 
-export default function TurnoManager({ initialTurnos, session }: { initialTurnos: any[], session: any }) {
+export default function TurnoManager({ initialTurnos, session }: { initialTurnos: TurnoListado[]; session: Session | null }) {
   const [estado, setEstado] = useState("TODOS");
   const [fecha, setFecha] = useState("");
 
@@ -20,11 +23,11 @@ export default function TurnoManager({ initialTurnos, session }: { initialTurnos
     <div>
       <div className="flex flex-col sm:flex-row gap-4 items-center bg-black/40 p-4 mb-6 rounded-xl border border-amber-900/20">
         <div className="flex flex-wrap gap-2">
-          {["TODOS", "PENDIENTE", "CONFIRMADO", "COMPLETADO", "CANCELADO"].map((f) => (
+          {["TODOS", ...ESTADOS_TURNO].map((f) => (
             <button
               key={f}
               onClick={() => setEstado(f)}
-              className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${estado === f ? "bg-[var(--page-primary)] text-white" : "bg-neutral-900 border border-neutral-700 text-neutral-400 hover:border-[var(--page-primary)]"}`}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${estado === f ? "bg-[var(--page-primary)] text-[var(--page-primary-foreground)]" : "bg-neutral-900 border border-neutral-700 text-neutral-400 hover:border-[var(--page-primary)]"}`}
             >
               {f}
             </button>
@@ -41,7 +44,7 @@ export default function TurnoManager({ initialTurnos, session }: { initialTurnos
         />
       </div>
 
-      <TurnoList session={session} turnos={filteredTurnos} totalPages={1} currentPage={1} />
+      <TurnoList session={session} turnos={filteredTurnos} />
     </div>
   );
 }

@@ -6,14 +6,22 @@ import {
   User, Mail, Phone, Settings,
   ShieldCheck, Calendar
 } from "lucide-react";
-import { Button } from "../ui/button";
-import { updateProfile } from "@/actions/user-dashboard";
+import { Button } from "@/components/ui/button/Button";
+import { CLASES_BOTON_MARCA } from "@/lib/constants";
+import { updateProfile } from "@/actions/sesion/perfil.actions";
 import { useSession } from "next-auth/react";
 import TurnoList from "@/components/turno/TurnoList";
-// Importa tu footer centralizado si decides renderizarlo aquí de manera local:
-// import { Footer } from "@/components/Footer";
+import type { TurnoListado } from "@/types/turno";
+import type { Session } from "next-auth";
 
-export default function DashboardPanel({ user, turnos, session }: { user: any; turnos: any[]; session: any }) {
+type DatosUsuarioPanel = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  telefono?: string | null;
+};
+
+export default function DashboardPanel({ user, turnos, session }: { user: DatosUsuarioPanel; turnos: TurnoListado[]; session: Session | null }) {
   const { update } = useSession();
   const [isPending, startTransition] = useTransition();
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -48,14 +56,14 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
       if (res.success) {
         setStatus('success');
         setMsg("Perfil actualizado correctamente.");
-        if (res.user) {
-          await update({ name: res.user.name, telefono: res.user.telefono });
-          if (res.user.telefono) setHasPhone(true);
+        if (res.data) {
+          await update({ name: res.data.name, telefono: res.data.telefono });
+          if (res.data.telefono) setHasPhone(true);
         }
         setTimeout(() => setStatus('idle'), 3000);
       } else {
         setStatus('error');
-        setMsg(res.message || "Error al actualizar");
+        setMsg(res.error || "Error al actualizar");
       }
     });
   };
@@ -76,7 +84,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
               <input type="hidden" name="name" value={user.name || ''} />
 
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-[var(--page-primary)] uppercase tracking-[0.2em] flex items-center gap-2">
+                <label className="text-[10px] font-black text-[var(--page-primary-tinta)] uppercase tracking-[0.2em] flex items-center gap-2">
                   <Phone className="w-3.5 h-3.5" /> WhatsApp / Teléfono
                 </label>
                 <div className="flex bg-black/40 border border-amber-900/30 rounded-2xl overflow-hidden focus-within:ring-1 focus-within:ring-[var(--page-primary)] focus-within:border-[var(--page-primary)] transition-all">
@@ -112,7 +120,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
               <Button
                 disabled={isPending}
                 type="submit"
-                className="w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-black font-black uppercase tracking-widest px-10 rounded-2xl h-14 transition-all shadow-lg shadow-[var(--page-primary)]/10 active:scale-95"
+                className={`w-full ${CLASES_BOTON_MARCA} font-black uppercase tracking-widest px-10 rounded-2xl h-14 transition-all shadow-lg shadow-[var(--page-primary)]/10 active:scale-95`}
               >
                 {isPending ? "Guardando..." : "Guardar Teléfono"}
               </Button>
@@ -127,7 +135,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
         <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-amber-900/20 pb-8">
           <div>
             <h1 className="text-4xl font-bold text-white tracking-tighter uppercase">
-              Hola, <span className="text-[var(--page-primary)]">{user.name?.split(' ')[0] || 'Usuario'}</span>
+              Hola, <span className="text-[var(--page-primary-tinta)]">{user.name?.split(' ')[0] || 'Usuario'}</span>
             </h1>
             <p className="text-amber-100/50 mt-2 font-light">
               Gestioná tu perfil y tus reservas.
@@ -138,13 +146,13 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
           <div className="flex bg-[var(--page-primary)]/10 p-1 rounded-2xl w-full md:w-fit border border-[var(--page-primary)]/20">
             <button
               onClick={() => setActiveTab('perfil')}
-              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'perfil' ? 'bg-[var(--page-primary)] text-black shadow-lg shadow-[var(--page-primary)]/20' : 'text-[var(--page-primary)] hover:bg-[var(--page-primary)]/10'}`}
+              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'perfil' ? 'bg-[var(--page-primary)] text-[var(--page-primary-foreground)] shadow-lg shadow-[var(--page-primary)]/20' : 'text-[var(--page-primary)] hover:bg-[var(--page-primary)]/10'}`}
             >
               <User className="w-4 h-4" /> Mi Perfil
             </button>
             <button
               onClick={() => setActiveTab('turnos')}
-              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'turnos' ? 'bg-[var(--page-primary)] text-black shadow-lg shadow-[var(--page-primary)]/20' : 'text-[var(--page-primary)] hover:bg-[var(--page-primary)]/10'}`}
+              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'turnos' ? 'bg-[var(--page-primary)] text-[var(--page-primary-foreground)] shadow-lg shadow-[var(--page-primary)]/20' : 'text-[var(--page-primary)] hover:bg-[var(--page-primary)]/10'}`}
             >
               <Calendar className="w-4 h-4" /> Mis Turnos
             </button>
@@ -173,7 +181,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
 
                 {/* Email */}
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-[var(--page-primary)] uppercase tracking-[0.2em] flex items-center gap-2">
+                  <label className="text-[10px] font-black text-[var(--page-primary-tinta)] uppercase tracking-[0.2em] flex items-center gap-2">
                     <Mail className="w-3.5 h-3.5" /> Correo Electrónico
                   </label>
                   <div className="p-4 bg-black/40 border border-amber-900/10 rounded-2xl text-amber-100/20 text-sm font-mono italic">
@@ -183,12 +191,12 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
 
                 {/* Nombre */}
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-[var(--page-primary)] uppercase tracking-[0.2em] flex items-center gap-2">
+                  <label className="text-[10px] font-black text-[var(--page-primary-tinta)] uppercase tracking-[0.2em] flex items-center gap-2">
                     <User className="w-3.5 h-3.5" /> Nombre y Apellido
                   </label>
                   <input
                     name="name"
-                    defaultValue={user.name}
+                    defaultValue={user.name || ""}
                     type="text"
                     required
                     className="w-full p-4 bg-black/40 border border-amber-900/30 rounded-2xl text-white focus:ring-1 focus:ring-[var(--page-primary)] focus:border-[var(--page-primary)] outline-none transition-all"
@@ -197,7 +205,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
 
                 {/* TELÉFONO (WhatsApp) */}
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-[var(--page-primary)] uppercase tracking-[0.2em] flex items-center gap-2">
+                  <label className="text-[10px] font-black text-[var(--page-primary-tinta)] uppercase tracking-[0.2em] flex items-center gap-2">
                     <Phone className="w-3.5 h-3.5" /> WhatsApp / Teléfono
                   </label>
                   <div className="flex bg-black/40 border border-amber-900/30 rounded-2xl overflow-hidden focus-within:ring-1 focus-within:ring-[var(--page-primary)] focus-within:border-[var(--page-primary)] transition-all">
@@ -246,7 +254,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
                     <Button
                       disabled={isPending}
                       type="submit"
-                      className="bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-black font-black uppercase tracking-widest px-10 rounded-2xl h-14 w-full md:w-auto transition-all shadow-lg shadow-[var(--page-primary)]/10 active:scale-95"
+                      className={`${CLASES_BOTON_MARCA} font-black uppercase tracking-widest px-10 rounded-2xl h-14 w-full md:w-auto transition-all shadow-lg shadow-[var(--page-primary)]/10 active:scale-95`}
                     >
                       {isPending ? "Guardando..." : "Actualizar Perfil"}
                     </Button>
@@ -267,14 +275,12 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
               <div className="bg-neutral-900/40 rounded-3xl border border-amber-900/20 overflow-hidden backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-4 md:p-8 min-h-[500px]">
                 <div className="mb-6 pb-6 border-b border-amber-900/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <h2 className="text-xl font-bold text-white tracking-widest uppercase">
-                    Historial de <span className="text-[var(--page-primary)]">Turnos</span>
+                    Historial de <span className="text-[var(--page-primary-tinta)]">Turnos</span>
                   </h2>
                 </div>
                 <TurnoList 
                   turnos={turnos}
                   session={session}
-                  totalPages={1}
-                  currentPage={1} 
                 />
               </div>
             </motion.div>
