@@ -9,14 +9,12 @@ import bcrypt from "bcryptjs";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: PrismaAdapter(prisma) as any, 
+  adapter: PrismaAdapter(prisma) as any, // as any: workaround necesario para Prisma 7 con PrismaAdapter de next-auth v5 (único as any documentado del proyecto — ver PENDIENTES.md §4 FASE 8)
   session: { strategy: "jwt" }, // OAuth funciona mejor con JWT en NextAuth v5 si no quieres sesiones en DB
   providers: [
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
-      // Esto permite que si alguien se registró con email, pueda luego entrar con Google si es el mismo correo
-      allowDangerousEmailAccountLinking: true, 
     }),
     Credentials({
       authorize: async (credentials) => {

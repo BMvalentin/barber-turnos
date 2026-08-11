@@ -1,69 +1,32 @@
-import type { Metadata } from "next";
-import { cache } from "react";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Outfit, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import LayoutComponent from "@/components/LayoutComponent";
-import { auth } from "@/auth";
-import AppGate from "@/components/AppGate";
+import LayoutComponent from "@/components/comunes/LayoutComponent";
+import AppGate from "@/components/comunes/AppGate";
 import { Toaster } from "@/components/ui/toaster";
-import { getPageConfig } from "@/actions/configPage";
-import { elegirColorTexto, obtenerTintaLejible } from "@/lib/contraste";
+import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
+import { elegirColorTexto } from "@/lib/contraste/elegir-color-texto";
+import { obtenerTintaLejible } from "@/lib/contraste/obtener-tinta-lejible";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const DEFAULT_TITLE = "Mayoraz - Turnos Barberia";
-const DEFAULT_DESCRIPTION =
-  "Mayoraz - Reserva tu turno en línea de manera fácil y rápida. Santa clara, Buenos Aires.";
-const DEFAULT_ICON = "/images/logopng.png";
-
-// cache() evita repetir la query: generateMetadata y RootLayout la comparten
-const getCachedPageConfig = cache(async () => await getPageConfig());
-
-export async function generateMetadata(): Promise<Metadata> {
-  const config = await getCachedPageConfig();
-
-  const title = config?.metaTitle || config?.name || DEFAULT_TITLE;
-  const description =
-    config?.metaDescription || config?.description || DEFAULT_DESCRIPTION;
-  const icon = config?.favicon || DEFAULT_ICON;
-
-  return {
-    title,
-    description,
-    icons: {
-      icon,
-      shortcut: icon,
-      apple: icon,
-    },
-    openGraph: {
-      title,
-      description,
-      images: config?.logo ? [{ url: config.logo }] : [],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: config?.logo ? [config.logo] : [],
-    },
-  };
-}
+export { generateMetadata } from "./metadata";
 
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
-  const config = await getCachedPageConfig();
+  const config = await obtenerConfigCacheada();
 
   // Defaults de color: la fuente única es :root en globals.css
   const PRIMARIO_POR_DEFECTO = "#d97706";
@@ -89,13 +52,9 @@ export default async function RootLayout({
         } as React.CSSProperties
       }
     >
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <LayoutComponent session={session} config={config}>
-          <AppGate
-            barberiaNombre={config?.name}
-            logoUrl={config?.logo}
-            isAdmin={session?.user?.role === "ADMIN"}
-          >
+      <body className={`${outfit.variable} ${playfair.variable} antialiased`}>
+        <LayoutComponent session={null} config={config}>
+          <AppGate barberiaNombre={config?.name} logoUrl={config?.logo}>
             {children}
             <Toaster />
           </AppGate>

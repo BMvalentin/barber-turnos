@@ -1,4 +1,22 @@
-export const MAP_DIA_SEMANA: Record<number, string> = {
+import type { CSSProperties } from "react";
+
+/* Zona horaria del negocio */
+export const ZONA_HORARIA = "America/Argentina/Buenos_Aires";
+
+/* Estados de turno (alineados al enum Prisma `turno_estado`) */
+export const ESTADOS_TURNO = ["PENDIENTE", "CONFIRMADO", "COMPLETADO", "CANCELADO"] as const;
+
+/* Estados que cuentan como turnos vigentes/activos */
+export const ESTADOS_TURNO_ACTIVOS = ["PENDIENTE", "CONFIRMADO"] as const;
+
+/* Anticipación mínima (ms) para reservar o reprogramar un turno */
+export const MINIMO_ANTICIPACION_MS = 10 * 60 * 1000;
+
+/* Días de la semana en el orden del enum Prisma `dias_laborales` (Lunes..Domingo), SIN acentos */
+export const DIAS_SEMANA_DB = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"] as const;
+
+/* Índice de JS `getDay()` (0 = Domingo) → nombre del enum Prisma `dias_laborales` */
+export const MAPA_DIA_SEMANA_DB: Record<number, string> = {
   0: "Domingo",
   1: "Lunes",
   2: "Martes",
@@ -8,12 +26,38 @@ export const MAP_DIA_SEMANA: Record<number, string> = {
   6: "Sabado",
 };
 
-export const REVERSE_MAP_DIA_SEMANA: Record<string, number> = {
-  "Domingo": 0,
-  "Lunes": 1,
-  "Martes": 2,
-  "Miercoles": 3,
-  "Jueves": 4,
-  "Viernes": 5,
-  "Sabado": 6,
+/* Nombre del enum Prisma `dias_laborales` → índice de JS `getDay()` (0 = Domingo) */
+export const REVERSE_MAPA_DIA_SEMANA_DB: Record<string, number> = {
+  Domingo: 0,
+  Lunes: 1,
+  Martes: 2,
+  Miercoles: 3,
+  Jueves: 4,
+  Viernes: 5,
+  Sabado: 6,
 };
+
+/* Nombres de días para render de UI, en orden `getDay()` (0 = Domingo), CON acentos */
+export const DIAS_SEMANA = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"] as const;
+
+/* Abreviaturas de días para encabezados de calendario (Dom primero) */
+export const ABREVIATURAS_DIAS = ["DOM", "LUN", "MAR", "MIE", "JUE", "VIE", "SAB"] as const;
+
+/* Selección de usuario básica (id, name, email, telefono) */
+export const SELECCION_USUARIO_BASICA = { id: true, name: true, email: true, telefono: true } as const;
+
+/* Estilo de fondo sólido de marca (botones, íconos, chips) */
+export const ESTILO_FONDO_MARCA: CSSProperties = {
+  backgroundColor: "var(--page-primary)",
+};
+
+/* Trío de clases de marca: fondo sólido + hover + texto legible */
+export const CLASES_BOTON_MARCA =
+  "bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)]";
+
+/* Botón "X" de cierre de modales (consistente con ui/dialog) */
+export const CLASES_BOTON_CERRAR =
+  "rounded-sm ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none p-1 bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] hover:cursor-pointer";
+
+/* TTL de los locks de slots (única fuente; lo usan el hook y las rutas REST) */
+export const TTL_LOCK_SLOT_MS = 5 * 60 * 1000;

@@ -1,26 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { softDeleteExcepcion } from "@/actions/excepcionesLaborales.actions";
+import { softDeleteExcepcion } from "@/actions/excepciones/eliminar.actions";
 import { Calendar, Trash2, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/lib/toast";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
-
-type Excepcion = {
-  id: string;
-  motivo: string;
-  desde: Date;
-  hasta: Date;
-  estado: boolean;
-  barbero?: {
-    id: string;
-    nombre: string;
-  } | null;
-};
+import EmptyState from "@/components/ui/EmptyState";
+import { formatearHora } from "@/lib/utils/formatear-hora";
+import type { ExcepcionLaboral } from "@/types/excepcion";
 
 type ExcepcionesListProps = {
-  excepciones: Excepcion[];
+  excepciones: ExcepcionLaboral[];
 };
 
 export default function ExcepcionesList({ excepciones }: ExcepcionesListProps) {
@@ -67,12 +58,14 @@ export default function ExcepcionesList({ excepciones }: ExcepcionesListProps) {
 
   if (!excepciones.length) {
     return (
-      <div className="text-center py-8">
-        <Calendar className="h-16 w-16 mx-auto mb-4 opacity-30" style={{ color: "var(--page-primary)" }} />
-        <p style={{ color: "var(--page-primary-70)" }}>
-          No hay excepciones registradas
-        </p>
-      </div>
+      <EmptyState
+        icono={<Calendar />}
+        mensaje="No hay excepciones registradas"
+        claseContenedor="py-8"
+        claseIcono="h-16 w-16 opacity-30"
+        estiloIcono={{ color: "var(--page-primary)" }}
+        estiloMensaje={{ color: "var(--page-primary-70)" }}
+      />
     );
   }
 
@@ -125,7 +118,7 @@ export default function ExcepcionesList({ excepciones }: ExcepcionesListProps) {
                 {new Date(excepcion.desde).toLocaleDateString('es-AR')}
               </p>
               <p className="text-white">
-                {new Date(excepcion.desde).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                {formatearHora(excepcion.desde)}
               </p>
             </div>
             <div 
@@ -140,7 +133,7 @@ export default function ExcepcionesList({ excepciones }: ExcepcionesListProps) {
                 {new Date(excepcion.hasta).toLocaleDateString('es-AR')}
               </p>
               <p className="text-white">
-                {new Date(excepcion.hasta).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                {formatearHora(excepcion.hasta)}
               </p>
             </div>
           </div>

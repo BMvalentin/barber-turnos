@@ -6,14 +6,22 @@ import {
   User, Mail, Phone, Settings,
   ShieldCheck, Calendar
 } from "lucide-react";
-import { Button } from "../ui/button";
-import { updateProfile } from "@/actions/user-dashboard";
+import { Button } from "@/components/ui/button/Button";
+import { CLASES_BOTON_MARCA } from "@/lib/constants";
+import { updateProfile } from "@/actions/sesion/perfil.actions";
 import { useSession } from "next-auth/react";
 import TurnoList from "@/components/turno/TurnoList";
-// Importa tu footer centralizado si decides renderizarlo aquí de manera local:
-// import { Footer } from "@/components/Footer";
+import type { TurnoListado } from "@/types/turno";
+import type { Session } from "next-auth";
 
-export default function DashboardPanel({ user, turnos, session }: { user: any; turnos: any[]; session: any }) {
+type DatosUsuarioPanel = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  telefono?: string | null;
+};
+
+export default function DashboardPanel({ user, turnos, session }: { user: DatosUsuarioPanel; turnos: TurnoListado[]; session: Session | null }) {
   const { update } = useSession();
   const [isPending, startTransition] = useTransition();
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -48,14 +56,14 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
       if (res.success) {
         setStatus('success');
         setMsg("Perfil actualizado correctamente.");
-        if (res.user) {
-          await update({ name: res.user.name, telefono: res.user.telefono });
-          if (res.user.telefono) setHasPhone(true);
+        if (res.data) {
+          await update({ name: res.data.name, telefono: res.data.telefono });
+          if (res.data.telefono) setHasPhone(true);
         }
         setTimeout(() => setStatus('idle'), 3000);
       } else {
         setStatus('error');
-        setMsg(res.message || "Error al actualizar");
+        setMsg(res.error || "Error al actualizar");
       }
     });
   };
@@ -112,7 +120,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
               <Button
                 disabled={isPending}
                 type="submit"
-                className="w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] font-black uppercase tracking-widest px-10 rounded-2xl h-14 transition-all shadow-lg shadow-[var(--page-primary)]/10 active:scale-95"
+                className={`w-full ${CLASES_BOTON_MARCA} font-black uppercase tracking-widest px-10 rounded-2xl h-14 transition-all shadow-lg shadow-[var(--page-primary)]/10 active:scale-95`}
               >
                 {isPending ? "Guardando..." : "Guardar Teléfono"}
               </Button>
@@ -188,7 +196,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
                   </label>
                   <input
                     name="name"
-                    defaultValue={user.name}
+                    defaultValue={user.name || ""}
                     type="text"
                     required
                     className="w-full p-4 bg-black/40 border border-amber-900/30 rounded-2xl text-white focus:ring-1 focus:ring-[var(--page-primary)] focus:border-[var(--page-primary)] outline-none transition-all"
@@ -246,7 +254,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
                     <Button
                       disabled={isPending}
                       type="submit"
-                      className="bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] font-black uppercase tracking-widest px-10 rounded-2xl h-14 w-full md:w-auto transition-all shadow-lg shadow-[var(--page-primary)]/10 active:scale-95"
+                      className={`${CLASES_BOTON_MARCA} font-black uppercase tracking-widest px-10 rounded-2xl h-14 w-full md:w-auto transition-all shadow-lg shadow-[var(--page-primary)]/10 active:scale-95`}
                     >
                       {isPending ? "Guardando..." : "Actualizar Perfil"}
                     </Button>
@@ -273,8 +281,6 @@ export default function DashboardPanel({ user, turnos, session }: { user: any; t
                 <TurnoList 
                   turnos={turnos}
                   session={session}
-                  totalPages={1}
-                  currentPage={1} 
                 />
               </div>
             </motion.div>

@@ -1,36 +1,19 @@
 "use client";
 
-import { actualizarServicio } from "@/actions/servicio-actions"; // Asumimos que esta acción maneja la actualización
-import { useState, useRef, useEffect } from "react";
-import {
-  ArrowLeft,
-  DollarSign,
-  Percent,
-  Clock,
-  Upload,
-  X,
-} from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
-import { Button } from "../ui/button";
+import { actualizarServicio } from "@/actions/servicios/actualizar.actions";
+import { useActionState, useState, useRef, useEffect } from "react";
+import { ActionStateInicial } from "@/types/action-state";
+import type { ActionState } from "@/types/action-state";
+import type { Servicio, ServicioCreado } from "@/types/servicio";
+import { DollarSign, Percent, Clock } from "lucide-react";
+import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
+import { useImagenServicio } from "@/hooks/useImagenServicio";
+import ModalBase from "@/components/ui/ModalBase";
+import BotonSubmitPending from "@/components/ui/boton-submit-pending";
+import CampoFormulario from "./CampoFormulario";
+import SeccionImagenServicio from "./SeccionImagenServicio";
 
-const initialState = {
-  success: false,
-  error: undefined,
-  data: undefined,
-};
-
-// Definición local de Servicio para evitar dependencias
-type Servicio = {
-  id: string;
-  nombre: string;
-  descripcion: string | null;
-  srcImage: string | null;
-  estado: boolean;
-  duracion: number;
-  precio: number;
-  descuento: number;
-  senia: number;
-};
+const initialState: ActionState<ServicioCreado> = ActionStateInicial;
 
 interface EditServicioModalProps {
   servicio: Servicio;
@@ -42,122 +25,82 @@ export default function EditServicioModal({
   onClose,
 }: EditServicioModalProps) {
   // Estado para la acción del servidor
-  const [state, setState] = useState(initialState);
-  const [isPending, setIsPending] = useState(false);
+  const [state, formAction, isPending] = useActionState(
+    actualizarServicio,
+    initialState,
+  );
   const formRef = useRef<HTMLFormElement>(null);
+
+  const { retroalimentar } = useRetroalimentacionAccion({
+    mensajeExito: "Servicio actualizado",
+    descripcionExito: "El servicio se ha actualizado correctamente.",
+    onExito: onClose,
+  });
 
   // Estados locales para controlar los inputs (opcional, pero útil para validaciones inmediatas si las tuvieras)
   const [nombre, setNombre] = useState(servicio.nombre);
-  const [srcImage, setSrcImage] = useState(servicio.srcImage || "");
   const [precio, setPrecio] = useState(servicio.precio);
   const [descripcion, setDescripcion] = useState(servicio.descripcion || "");
   const [duracion, setDuracion] = useState(servicio.duracion);
   const [descuento, setDescuento] = useState(servicio.descuento);
   const [senia, setSenia] = useState(servicio.senia);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setPreviewUrl(servicio.srcImage || null);
-  }, [servicio.srcImage]);
+  const {
+    selectedFile,
+    previewUrl,
+    srcImage,
+    uploadError,
+    manejarArchivo,
+    quitarImagen,
+  } = useImagenServicio({
+    previewInicial: servicio.srcImage || null,
+    srcImageInicial: servicio.srcImage || "",
+  });
 
   // Efecto para cerrar el modal si la actualización fue exitosa
   useEffect(() => {
     if (state.success) {
-      toast({
-        title: "Servicio actualizado",
-        description: "El servicio se ha actualizado correctamente.",
-        variant: "default",
-        duration: 4000,
-      });
-      onClose();
+      void retroalimentar(state);
     }
-  }, [state.success, onClose]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      setUploadError("El archivo debe ser una imagen");
-      return;
-    }
-
-    setUploadError(null);
-
-    if (previewUrl?.startsWith("blob:")) {
-      URL.revokeObjectURL(previewUrl);
-    }
-
-    setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-  };
-
-  const handleRemoveImage = () => {
-    if (previewUrl?.startsWith("blob:")) {
-      URL.revokeObjectURL(previewUrl);
-    }
-
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setSrcImage("");
-  };
+  }, [state, retroalimentar]);
 
   return (
-    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto">
-      {/* Contenedor Principal del Modal */}
-      <div className="bg-black/70 backdrop-blur-2xl border border-[#2C261D] rounded-xl w-full max-w-7xl shadow-2xl relative flex flex-col max-h-[95vh]">
-        {/* Formulario envolvente para capturar la acción del botón en el header */}
-        <form
-          ref={formRef}
-          action={async (formData) => {
-            if (isPending) return;
+    <ModalBase
+      onClose={onClose}
+      titulo={
+        <>
+          Editar Servicio:{" "}
+          <span className="font-normal text-[#8E8675]">{servicio.nombre}</span>
+        </>
+      }
+      maxWidth="max-w-7xl"
+      overlayClase="bg-black/90 p-4 sm:p-6 overflow-y-auto"
+      contenedorClase="bg-black/70 backdrop-blur-2xl border border-[#2C261D] rounded-xl relative flex flex-col max-h-[95vh]"
+      headerClase="flex items-center justify-between p-6 border-b border-[#2C261D]"
+      tituloClase="text-2xl font-bold text-[#E4E0D9]"
+    >
+      {/* Formulario envolvente para capturar la acción del botón en el header */}
+      <form
+        ref={formRef}
+        action={async (formData) => {
+          if (isPending) return;
 
-            setIsPending(true);
+          if (selectedFile) {
+            formData.set("image", selectedFile);
+          }
 
-            try {
-              if (selectedFile) {
-                formData.set("image", selectedFile);
-              }
-              const result = await actualizarServicio(initialState, formData);
-              setState(result);
-            } finally {
-              setIsPending(false);
-            }
-          }}
-          className="flex flex-col flex-1 overflow-hidden"
-        >
-          {/* Inputs Ocultos necesarios para la acción */}
-          <input type="hidden" name="id" value={servicio.id} />
-          <input
-            type="hidden"
-            name="srcImage"
-            value={srcImage}
-          />
+          formAction(formData);
+        }}
+        className="flex flex-col flex-1 overflow-hidden"
+      >
+        {/* Inputs Ocultos necesarios para la acción */}
+        <input type="hidden" name="id" value={servicio.id} />
+        <input
+          type="hidden"
+          name="srcImage"
+          value={srcImage}
+        />
 
-          {/* --- HEADER DEL MODAL (Estilo imagen) --- */}
-          <div className="flex items-center justify-between p-6 border-b border-[#2C261D]">
-            <div className="flex items-center gap-6">
-              <h2 className="text-2xl font-bold text-[#E4E0D9]">
-                Editar Servicio:{" "}
-                <span className="font-normal text-[#8E8675]">
-                  {servicio.nombre}
-                </span>
-              </h2>
-            </div>
-
-            {/* Acciones del Header */}
-            <div className="flex items-center gap-4">
-              <button
-                onClick={onClose}
-                className="rounded-sm ring-offset-background transition-opacity data-[state=open]:bg-accent data-[state=open]:text-muted-foreground hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] p-1 text-[var(--page-primary-foreground)] hover:cursor-pointer">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* --- CUERPO DEL FORMULARIO (Scrollable) --- */}
+        {/* --- CUERPO DEL FORMULARIO (Scrollable) --- */}
           <div className="overflow-y-auto p-8 grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
             {/* Columna Izquierda: INFORMACIÓN GENERAL */}
             <div className="space-y-6">
@@ -167,7 +110,7 @@ export default function EditServicioModal({
 
               <div className="space-y-4">
                 {/* Nombre del Servicio */}
-                <InputField
+                <CampoFormulario
                   label="Nombre del Servicio"
                   name="nombre"
                   value={nombre}
@@ -199,49 +142,14 @@ export default function EditServicioModal({
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider">
-                    Imagen del Servicio
-                  </label>
-
-                  {previewUrl ? (
-                    <div className="relative w-fit">
-                      <img
-                        src={previewUrl}
-                        alt="Vista previa"
-                        className="h-32 w-32 object-cover rounded-lg border border-[#2C261D]"
-                      />
-
-                      <button
-                        type="button"
-                        onClick={handleRemoveImage}
-                        className="absolute -top-2 -right-2 p-1 bg-red-600 rounded-full text-white hover:bg-red-700"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="relative flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-[#2C261D] rounded-lg cursor-pointer hover:border-[#E8B031] transition">
-                      <Upload className="h-6 w-6 text-[#E8B031]" />
-                      <span className="text-sm text-[#8E8675]">
-                        Hacé clic para seleccionar una imagen
-                      </span>
-
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                      />
-                    </label>
-                  )}
-
-                  {uploadError && (
-                    <p className="text-red-500 text-sm">
-                      {uploadError}
-                    </p>
-                  )}
-                </div>
+                <SeccionImagenServicio
+                  previewUrl={previewUrl}
+                  srcImage={srcImage}
+                  uploadError={uploadError}
+                  isPending={isPending}
+                  onFileChange={manejarArchivo}
+                  onRemove={quitarImagen}
+                />
               </div>
             </div>
 
@@ -253,7 +161,7 @@ export default function EditServicioModal({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Duración Estimada */}
-                <InputField
+                <CampoFormulario
                   label="Duración Estimada"
                   name="duracion"
                   type="number"
@@ -266,7 +174,7 @@ export default function EditServicioModal({
                 />
 
                 {/* Precio Base */}
-                <InputField
+                <CampoFormulario
                   label="Precio Base"
                   name="precio"
                   type="number"
@@ -279,7 +187,7 @@ export default function EditServicioModal({
                 />
 
                 {/* Descuento */}
-                <InputField
+                <CampoFormulario
                   label="Descuento"
                   name="descuento"
                   type="number"
@@ -291,7 +199,7 @@ export default function EditServicioModal({
                 />
 
                 {/* Seña (Down Payment) */}
-                <InputField
+                <CampoFormulario
                   label="Seña"
                   name="senia"
                   type="number"
@@ -312,8 +220,7 @@ export default function EditServicioModal({
             )}
           </div>
 
-          {/* SECCIÓN DE BARBEROS Y BOTÓN ELIMINAR QUITADOS DEL FINAL */}
-        <div className="flex justify-end px-6 py-4 gap-4 border-t border-[#2C261D] bg-black/70 w-full">
+          <div className="flex justify-end px-6 py-4 gap-4 border-t border-[#2C261D] bg-black/70 w-full">
           <button
             type="button"
             onClick={onClose}
@@ -321,75 +228,15 @@ export default function EditServicioModal({
           >
             Cancelar
           </button>
-          <SubmitButton pending={isPending} />
+          <BotonSubmitPending
+            pendiente={isPending}
+            texto="Actualizar"
+            textoMientrasCarga="Actualizando..."
+            mostrarSpinner={false}
+            claseAdicional="font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg"
+          />
         </div>
         </form>
-      </div>
-    </div>
-  );
-}
-
-// --- COMPONENTES AUXILIARES ---
-
-// Botón de Submit ubicado en el Header
-function SubmitButton({
-  pending,
-}: {
-  pending: boolean;
-}) {
-  return (
-    <Button
-      type="submit"
-      disabled={pending}
-      className="bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
-    >
-      {pending ? "Actualizando..." : "Actualizar"}
-    </Button>
-  );
-}
-
-// Componente reutilizable para los campos de input (Estilo imagen)
-interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label: string;
-  icon?: React.ElementType;
-  errors?: string[];
-  unit?: string;
-}
-
-function InputField({
-  label,
-  icon: Icon,
-  unit,
-  errors,
-  required,
-  ...props
-}: InputFieldProps) {
-  return (
-    <div>
-      <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider mb-2">
-        {label} {required && <span className="text-[#E8B031]">*</span>}
-      </label>
-      <div className="relative">
-        {Icon && (
-          <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60 z-99" />
-        )}
-        <input
-          {...props}
-          className={`w-full bg-black/70 backdrop-blur-2xl border ${errors ? "border-red-500" : "border-[#2C261D]"
-            } rounded-lg ${Icon ? "pl-11" : "pl-4"} ${unit ? "pr-14" : "pr-4"
-            } py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-colors`}
-        />
-        {unit && (
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#8E8675] uppercase">
-            {unit}
-          </span>
-        )}
-      </div>
-      {errors && (
-        <p className="mt-1 text-[10px] text-red-500 font-medium">
-          {errors[0]}
-        </p>
-      )}
-    </div>
+    </ModalBase>
   );
 }

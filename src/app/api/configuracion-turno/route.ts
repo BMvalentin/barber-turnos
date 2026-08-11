@@ -1,49 +1,18 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
+import { esAdmin } from "@/lib/seguridad/es-admin";
+import { obtenerDatosReserva } from "@/lib/consultas/obtener-datos-reserva";
 
 export async function GET() {
+  const sesion = await requerirSesion();
+  if (!sesion) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
   try {
-    const [servicios, barberos, usuarios, relaciones] = await Promise.all([
-      prisma.servicio.findMany({
-        where: { estado: true },
-        select: {
-          id: true,
-          nombre: true,
-          descripcion: true,
-          precio: true,
-          duracion: true,
-          descuento: true,
-          senia: true,
-        },
-        orderBy: { nombre: "asc" },
-      }),
-
-      prisma.barbero.findMany({
-        where: { estado: true },
-        select: {
-          id: true,
-          nombre: true,
-          srcImage: true,
-        },
-        orderBy: { nombre: "asc" },
-      }),
-
-      prisma.user.findMany({
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-        orderBy: { name: "asc" },
-      }),
-      prisma.servicioxbarbero.findMany({
-        select: { 
-          barberoId: true,
-          servicioId: true 
-        },
-      }),
-
-    ]);
+    const { servicios, barberos, usuarios, relaciones } = await obtenerDatosReserva(
+      esAdmin(sesion),
+    );
 
     // Serializar campos Decimal a Number para evitar errores de serialización
     const serializedServicios = servicios.map((s) => ({

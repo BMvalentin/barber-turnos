@@ -1,21 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
+import { TTL_LOCK_SLOT_MS } from "@/lib/constants";
+import { obtenerRangoDelDia } from "@/lib/utils/obtener-rango-del-dia";
 
 export const dynamic = "force-dynamic";
 
-const LOCK_TTL_MS = 5 * 60 * 1000; // 5 minutos
-
 /**
- * GET /api/slot-locks?barberoId=X&fecha=YYYY-MM-DD&sessionId=MINE
- * Devuelve los slots bloqueados por OTROS usuarios (excluye el propio sessionId).
- * También limpia locks expirados de paso.
+ * GET /api/slot-locks?barberoId=X&fecha=YYYY-MM-DD
+ * Devuelve los slots bloqueados por OTROS usuarios (excluye los del usuario
+ * autenticado). No expone sessionId ni userId ajenos. Solo lectura.
  */
 export async function GET(req: NextRequest) {
+  const sesion = await requerirSesion();
+  if (!sesion) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const barberoId = searchParams.get("barberoId");
     const fecha = searchParams.get("fecha");
-    const mySessionId = searchParams.get("sessionId") ?? "";
 
     if (!barberoId || !fecha) {
       return NextResponse.json({ error: "Faltan parámetros" }, { status: 400 });
@@ -23,35 +28,24 @@ export async function GET(req: NextRequest) {
 
     const now = new Date();
 
-    // Limpiar locks expirados
-    await prisma.slotLock.deleteMany({
-      where: { expiresAt: { lt: now } },
-    });
-
-    // Construir rango horario considerando zona horaria local
-    // Usamos strings UTC-3 para abarcar el día completo en Argentina
-    const inicio = new Date(`${fecha}T00:00:00-03:00`);
-    const fin = new Date(`${fecha}T23:59:59-03:00`);
+    // Rango horario del día completo en Argentina
+    const { inicio, fin } = obtenerRangoDelDia(fecha);
 
     const locks = await prisma.slotLock.findMany({
       where: {
         barberoId,
         horarioReservado: { gte: inicio, lte: fin },
         expiresAt: { gt: now },
-        NOT: { sessionId: mySessionId },
+        NOT: { userId: sesion.user.id },
       },
       select: {
         horarioReservado: true,
-        sessionId: true,
-        userId: true,
       },
     });
 
     return NextResponse.json({
       locks: locks.map((l) => ({
         slot: l.horarioReservado.toISOString(),
-        sessionId: l.sessionId,
-        userId: l.userId,
       })),
     });
   } catch (err) {
@@ -62,26 +56,38 @@ export async function GET(req: NextRequest) {
 
 /**
  * POST /api/slot-locks
- * Body: { barberoId, slot (ISO), sessionId, userId }
- * Crea o actualiza el lock del sessionId (upsert).
+ * Body: { barberoId, slot (ISO), sessionId }
+ * Crea el lock del usuario autenticado (máximo 1 lock activo por usuario).
+ * El userId del body se ignora: SIEMPRE se usa el de la sesión.
  */
 export async function POST(req: NextRequest) {
+  const sesion = await requerirSesion();
+  if (!sesion) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
-    const { barberoId, slot, sessionId, userId } = body;
+    const { barberoId, slot, sessionId } = body;
 
-    if (!barberoId || !slot || !sessionId || !userId) {
+    if (!barberoId || !slot || !sessionId) {
       return NextResponse.json({ error: "Faltan campos" }, { status: 400 });
     }
 
     const horarioReservado = new Date(slot);
-    const expiresAt = new Date(Date.now() + LOCK_TTL_MS);
+    const expiresAt = new Date(Date.now() + TTL_LOCK_SLOT_MS);
 
-    // Eliminar lock anterior de esta sesión (cambió de slot)
-    await prisma.slotLock.deleteMany({ where: { sessionId } });
+    // Eliminar lock anterior de este usuario (cambió de slot)
+    await prisma.slotLock.deleteMany({ where: { userId: sesion.user.id } });
 
     await prisma.slotLock.create({
-      data: { barberoId, horarioReservado, userId, sessionId, expiresAt },
+      data: {
+        barberoId,
+        horarioReservado,
+        userId: sesion.user.id,
+        sessionId,
+        expiresAt,
+      },
     });
 
     return NextResponse.json({ ok: true });
@@ -94,9 +100,14 @@ export async function POST(req: NextRequest) {
 /**
  * DELETE /api/slot-locks
  * Body: { sessionId }
- * Elimina el lock de la sesión indicada.
+ * Elimina el lock del usuario autenticado que tenga ese sessionId.
  */
 export async function DELETE(req: NextRequest) {
+  const sesion = await requerirSesion();
+  if (!sesion) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { sessionId } = body;
@@ -105,7 +116,9 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Falta sessionId" }, { status: 400 });
     }
 
-    await prisma.slotLock.deleteMany({ where: { sessionId } });
+    await prisma.slotLock.deleteMany({
+      where: { sessionId, userId: sesion.user.id },
+    });
 
     return NextResponse.json({ ok: true });
   } catch (err) {
@@ -117,9 +130,14 @@ export async function DELETE(req: NextRequest) {
 /**
  * PATCH /api/slot-locks
  * Body: { sessionId }
- * Renueva el TTL del lock activo (heartbeat).
+ * Renueva el TTL del lock activo del usuario autenticado (heartbeat).
  */
 export async function PATCH(req: NextRequest) {
+  const sesion = await requerirSesion();
+  if (!sesion) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { sessionId } = body;
@@ -128,9 +146,9 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Falta sessionId" }, { status: 400 });
     }
 
-    const expiresAt = new Date(Date.now() + LOCK_TTL_MS);
+    const expiresAt = new Date(Date.now() + TTL_LOCK_SLOT_MS);
     await prisma.slotLock.updateMany({
-      where: { sessionId },
+      where: { sessionId, userId: sesion.user.id },
       data: { expiresAt },
     });
 

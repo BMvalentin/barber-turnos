@@ -2,6 +2,7 @@
 // app/pago/failure/page.tsx
 // ============================================================
 import Link from "next/link";
+import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import { XCircle, RefreshCw, ArrowRight } from "lucide-react";
 
 interface SearchParams {
@@ -9,12 +10,14 @@ interface SearchParams {
   payment_id?: string;
 }
 
+interface FailurePageProps {
+  searchParams: Promise<SearchParams>;
+}
+
 export default async function PagoFailurePage({
   searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
-  const turnoId = searchParams.turnoId;
+}: FailurePageProps) {
+  const { turnoId } = await searchParams;
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
@@ -39,7 +42,7 @@ export default async function PagoFailurePage({
           {turnoId && (
             <Link
               href={`/turno?retry=${turnoId}`}
-className="flex items-center justify-center gap-2 w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
+className={`flex items-center justify-center gap-2 w-full ${CLASES_BOTON_MARCA} font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm`}
             >
               <RefreshCw className="w-5 h-5" />
               Intentar de nuevo
@@ -57,46 +60,3 @@ className="flex items-center justify-center gap-2 w-full bg-[var(--page-primary)
     </div>
   );
 }
-
-
-// ============================================================
-// app/pago/pending/page.tsx
-// ============================================================
-// import Link from "next/link";
-// import { Clock, ArrowRight } from "lucide-react";
-
-// export default async function PagoPendingPage({
-//   searchParams,
-// }: {
-//   searchParams: { turnoId?: string };
-// }) {
-//   return (
-//     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
-//       <div className="max-w-md w-full text-center space-y-6">
-
-//         <div className="flex justify-center">
-//           <div className="w-24 h-24 rounded-full bg-yellow-500/20 border-2 border-yellow-500/40 flex items-center justify-center">
-//             <Clock className="w-12 h-12 text-yellow-400" />
-//           </div>
-//         </div>
-
-//         <div>
-//           <h1 className="text-3xl font-black text-white uppercase tracking-tight mb-2">
-//             Pago Pendiente
-//           </h1>
-//           <p className="text-zinc-400">
-//             Tu pago está siendo procesado. Te notificaremos cuando se acredite.
-//           </p>
-//         </div>
-
-//         <Link
-//           href="/dashboard"
-//           className="flex items-center justify-center gap-2 w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-zinc-950 font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
-//         >
-//           Ver mis turnos
-//           <ArrowRight className="w-5 h-5" />
-//         </Link>
-//       </div>
-//     </div>
-//   );
-// }
