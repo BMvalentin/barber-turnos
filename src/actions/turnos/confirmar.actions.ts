@@ -2,20 +2,18 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { requerirAdmin } from "@/lib/seguridad";
+import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
+import { ESTADOS_TURNO } from "@/lib/constants";
 
-export async function confirmarTurno(turnoId: string) {
+export const confirmarTurno = exigirAdmin(async (turnoId: string) => {
   try {
-    const sesion = await requerirAdmin();
-    if (!sesion) return { success: false, error: "No autorizado" };
-
     await prisma.turno.update({
       where: { id: turnoId },
-      data: { estado: "CONFIRMADO" },
+      data: { estado: ESTADOS_TURNO[1] },
     });
     revalidatePath("/turno"); // Refresca la página para ver el cambio
     return { success: true };
   } catch (error) {
     return { success: false, error: "No se pudo confirmar el turno" };
   }
-}
+});

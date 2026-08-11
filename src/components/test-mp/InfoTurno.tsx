@@ -4,6 +4,8 @@
 import type { Turno } from "./tipos";
 import { ESTADO_COLOR, ESTADO_DOT } from "./constantes";
 import { cortarId } from "./cortarId";
+import { ZONA_HORARIA } from "@/lib/constants";
+import { formatearMoneda } from "@/lib/utils/formatear-moneda";
 
 export function InfoTurno({ turno }: { turno: Turno }) {
   return (
@@ -37,7 +39,7 @@ export function InfoTurno({ turno }: { turno: Turno }) {
           [
             "Horario",
             new Date(turno.horarioReservado).toLocaleString("es-AR", {
-              timeZone: "America/Argentina/Buenos_Aires",
+              timeZone: ZONA_HORARIA,
               day: "2-digit",
               month: "2-digit",
               year: "numeric",
@@ -47,11 +49,11 @@ export function InfoTurno({ turno }: { turno: Turno }) {
           ],
           [
             "Precio",
-            `$${turno.precioCongelado.toLocaleString("es-AR")}`,
+            `$${formatearMoneda(turno.precioCongelado)}`,
           ],
           [
             "Seña",
-            `$${turno.seniaCongelada.toLocaleString("es-AR")}`,
+            `$${formatearMoneda(turno.seniaCongelada)}`,
           ],
           [
             "mp_preference_id",

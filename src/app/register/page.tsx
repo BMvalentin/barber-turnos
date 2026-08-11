@@ -1,5 +1,5 @@
 "use client";
-import { registerAction } from "@/actions/sesion/auth-actions";
+import { registerAction } from "@/actions/sesion/registro.actions";
 import GoogleButton from "@/components/auth/google-button";
 import Link from "next/link";
 import { useActionState, useEffect } from "react";

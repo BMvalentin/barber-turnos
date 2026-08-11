@@ -2,6 +2,8 @@
 
 import { CheckCircle2, Clock, CreditCard, Loader2, Scissors } from "lucide-react";
 import type { TurnoCreado } from "@/types/turno";
+import { formatearMoneda } from "@/lib/utils/formatear-moneda";
+import ModalBase from "@/components/ui/ModalBase";
 
 type Props = {
   turnoCreado: TurnoCreado;
@@ -19,9 +21,11 @@ export default function ModalPagoTurno({
   onPagarDespues,
 }: Props) {
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-
+    <ModalBase
+      maxWidth="max-w-md"
+      overlayClase="bg-black/80 backdrop-blur-md p-4"
+      contenedorClase="bg-zinc-900 border border-zinc-700 rounded-2xl overflow-hidden"
+      header={
         <div
           className="border-b border-zinc-800 p-6 flex items-center gap-3"
           style={{ backgroundColor: "color-mix(in srgb, var(--primary) 12%, transparent)" }}
@@ -37,8 +41,9 @@ export default function ModalPagoTurno({
             <p className="text-xs text-zinc-300">Aboná la seña para confirmar tu lugar.</p>
           </div>
         </div>
-
-        <div className="p-6 space-y-4">
+      }
+    >
+      <div className="p-6 space-y-4">
           <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 space-y-3">
             <div className="flex items-center gap-2 mb-1">
               <Scissors className="w-4 h-4" style={{ color: "var(--primary)" }} />
@@ -53,7 +58,7 @@ export default function ModalPagoTurno({
             <div className="flex items-center justify-between">
               <span className="text-sm text-zinc-400">Precio del servicio</span>
               <span className="text-sm text-white font-medium">
-                ${turnoCreado.precioCongelado.toLocaleString("es-AR")}
+                ${formatearMoneda(turnoCreado.precioCongelado)}
               </span>
             </div>
 
@@ -63,7 +68,7 @@ export default function ModalPagoTurno({
                 <p className="text-xs text-zinc-500 mt-0.5">El resto se abona en el local</p>
               </div>
               <span className="text-2xl font-black" style={{ color: "var(--primary-tinta)" }}>
-                ${turnoCreado.seniaCongelada.toLocaleString("es-AR")}
+                ${formatearMoneda(turnoCreado.seniaCongelada)}
               </span>
             </div>
           </div>
@@ -89,7 +94,7 @@ export default function ModalPagoTurno({
             ) : (
               <>
                 <CreditCard className="w-5 h-5" />
-                Pagar Seña · ${turnoCreado.seniaCongelada.toLocaleString("es-AR")}
+                Pagar Seña · ${formatearMoneda(turnoCreado.seniaCongelada)}
               </>
             )}
           </button>
@@ -104,7 +109,6 @@ export default function ModalPagoTurno({
             Pagar después (dejar pendiente)
           </button>
         </div>
-      </div>
-    </div>
+    </ModalBase>
   );
 }

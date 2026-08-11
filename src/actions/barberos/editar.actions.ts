@@ -1,21 +1,18 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidarBarberos } from "@/lib/revalidar/revalidar-barberos";
 import { updateBarberoSchema } from "@/lib/barbero-zod";
 import type { ActionState } from "@/types/action-state";
-import { requerirAdmin } from "@/lib/seguridad";
+import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
 import type { z } from "zod";
 
 type DatosActualizarBarbero = z.infer<typeof updateBarberoSchema>;
 
-export async function updateBarbero(
+async function updateBarberoBase(
   data: DatosActualizarBarbero
 ): Promise<ActionState> {
   try {
-    const sesion = await requerirAdmin();
-    if (!sesion) return { success: false, error: "No autorizado" };
-
     const parsed = updateBarberoSchema.safeParse(data);
 
     if (!parsed.success) {
@@ -68,10 +65,12 @@ export async function updateBarbero(
       }
     });
 
-    revalidatePath("/barbero");
+    revalidarBarberos();
     return { success: true };
   } catch (error) {
     console.error("Error al actualizar barbero:", error);
     return { success: false, error: "Error al actualizar barbero" };
   }
 }
+
+export const updateBarbero = exigirAdmin(updateBarberoBase);

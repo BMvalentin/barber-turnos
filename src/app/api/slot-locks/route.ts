@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fromZonedTime } from "date-fns-tz";
 import { prisma } from "@/lib/prisma";
-import { requerirSesion } from "@/lib/seguridad";
+import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { TTL_LOCK_SLOT_MS } from "@/lib/constants";
+import { obtenerRangoDelDia } from "@/lib/utils/obtener-rango-del-dia";
 
 export const dynamic = "force-dynamic";
-
-const TIMEZONE = "America/Argentina/Buenos_Aires";
 
 /**
  * GET /api/slot-locks?barberoId=X&fecha=YYYY-MM-DD
@@ -31,8 +29,7 @@ export async function GET(req: NextRequest) {
     const now = new Date();
 
     // Rango horario del día completo en Argentina
-    const inicio = fromZonedTime(`${fecha}T00:00:00`, TIMEZONE);
-    const fin = fromZonedTime(`${fecha}T23:59:59`, TIMEZONE);
+    const { inicio, fin } = obtenerRangoDelDia(fecha);
 
     const locks = await prisma.slotLock.findMany({
       where: {

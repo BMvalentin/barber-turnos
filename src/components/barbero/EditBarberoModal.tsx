@@ -1,18 +1,20 @@
 "use client";
 
-import { toast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button/Button";
+import { toast } from "@/lib/toast";
 import { useState, useTransition } from "react";
+import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { updateBarbero } from "@/actions/barberos/editar.actions";
-import { uploadBarberImages } from "@/actions/mercadopago/upload-images.actions";
+import { uploadBarberImages } from "@/actions/mercadopago/subir-barberos.actions";
+import { esImagenValida } from "@/lib/es-imagen-valida";
+import { useImagenServicio } from "@/hooks/useImagenServicio";
 import type { ServicioOpcion, DiaLaboral, BarberoEdicion } from "@/types/barbero";
 import CampoNombreBarbero from "./CampoNombreBarbero";
-import SelectorImagenBarbero from "./SelectorImagenBarbero";
+import SeccionImagenServicio from "@/components/servicio/SeccionImagenServicio";
 import SelectorServicios from "./SelectorServicios";
 import SelectorHorarios from "./SelectorHorarios";
-import BotonSubmitBarbero from "./BotonSubmitBarbero";
-import EncabezadoModalBarbero from "./EncabezadoModalBarbero";
+import ModalBase from "@/components/ui/ModalBase";
+import BotonSubmitPending from "@/components/ui/boton-submit-pending";
 
 type EditBarberoModalProps = {
   barbero: BarberoEdicion;
@@ -27,10 +29,15 @@ export default function EditBarberoModal({
   diasLaborales,
   onClose,
 }: EditBarberoModalProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const { retroalimentar } = useRetroalimentacionAccion({
+    mensajeExito: "Barbero actualizado",
+    descripcionExito: "Los cambios se han guardado correctamente.",
+    descripcionError: "Error al actualizar el barbero",
+    refrescar: true,
+    onExito: onClose,
+  });
   const [nombre, setNombre] = useState(barbero.nombre || "");
-  const [srcImage, setSrcImage] = useState(barbero.srcImage || "");
   const [estado, setEstado] = useState(barbero.estado);
   const [selectedServicios, setSelectedServicios] = useState<string[]>(
     barbero.servicios?.map((s) => s.servicio.id) || []
@@ -42,10 +49,17 @@ export default function EditBarberoModal({
   const [showHorarios, setShowHorarios] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  const {
+    srcImage,
+    previewUrl,
+    uploadError,
+    establecerSrcImagen,
+    quitarImagen,
+    setUploadError,
+  } = useImagenServicio({ srcImageInicial: barbero.srcImage || "" });
 
   const handleFileChange = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
+    if (!esImagenValida(file)) {
       setUploadError("El archivo debe ser una imagen");
       return;
     }
@@ -54,7 +68,7 @@ export default function EditBarberoModal({
     try {
       const result = await uploadBarberImages([file], "barberia/barberos");
       if (result.success && result.images.length > 0) {
-        setSrcImage(result.images[0]);
+        establecerSrcImagen(result.images[0]);
         toast({
           title: "Imagen subida",
           description: "La imagen se ha subido correctamente.",
@@ -77,11 +91,6 @@ export default function EditBarberoModal({
     }
   };
 
-  const handleRemoveImage = () => {
-    setSrcImage("");
-    setUploadError(null);
-  };
-
   const handleSubmit = () => {
     setError(null);
     startTransition(async () => {
@@ -93,52 +102,39 @@ export default function EditBarberoModal({
         serviciosIds: selectedServicios || [],
         margenesIds: selectedHorarios,
       });
-      if (result.success) {
-        toast({
-          title: "Barbero actualizado",
-          description: "Los cambios se han guardado correctamente.",
-          variant: "default",
-          duration: 4000,
-        });
-        onClose();
-        router.refresh();
-      } else {
-        toast({
-          title: "Error",
-          description: result.error || "Error al actualizar el barbero",
-          variant: "destructive",
-          duration: 4000,
-        });
+      if (!result.success) {
         const errorMsg =
           typeof result.error === "string" ? result.error : "Datos inválidos";
         setError(errorMsg);
       }
+      await retroalimentar(result);
     });
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div
-        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-black/70 rounded-xl p-6 space-y-6 shadow-2xl"
-        style={{
-          borderColor: "var(--page-primary)",
-          borderWidth: "1px",
-          borderStyle: "solid",
-        }}
-      >
-        <EncabezadoModalBarbero onCerrar={onClose} />
-        <div className="space-y-4">
+    <ModalBase
+      onClose={onClose}
+      titulo="Editar Barbero"
+      maxWidth="max-w-2xl"
+      overlayClase="bg-black/80 backdrop-blur-md p-4"
+      contenedorClase="max-h-[90vh] overflow-y-auto bg-black/70 rounded-xl p-6 space-y-6 border border-[var(--page-primary)]"
+      headerClase="flex justify-between items-center border-b pb-4 border-[var(--page-primary-40)]"
+      tituloClase="text-2xl font-bold text-white"
+    >
+      <div className="space-y-4">
           <CampoNombreBarbero
             valor={nombre}
             error={error}
             onCambio={setNombre}
           />
-          <SelectorImagenBarbero
-            imagen={srcImage}
-            subiendo={uploading}
-            errorSubida={uploadError}
-            onSeleccionarArchivo={handleFileChange}
-            onQuitarImagen={handleRemoveImage}
+          <SeccionImagenServicio
+            previewUrl={previewUrl}
+            srcImage={srcImage}
+            uploadError={uploadError}
+            isPending={uploading}
+            variante="barbero"
+            onFileChange={handleFileChange}
+            onRemove={quitarImagen}
           />
           <SelectorServicios
             abierto={showServicios}
@@ -186,14 +182,14 @@ export default function EditBarberoModal({
           >
             Cancelar
           </Button>
-          <BotonSubmitBarbero
-            isPending={isPending}
-            anchoCompleto={false}
+          <BotonSubmitPending
+            pendiente={isPending}
+            tipo="button"
             texto="Guardar Cambios"
             onClic={handleSubmit}
+            claseAdicional="flex-1 hover:opacity-90"
           />
         </div>
-      </div>
-    </div>
+    </ModalBase>
   );
 }

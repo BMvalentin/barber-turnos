@@ -3,7 +3,9 @@
 import { Scissors } from "lucide-react";
 import Paginacion from "./Paginacion";
 import ServicioRow from "./ServicioRow";
-import type { Barbero, Servicio } from "@/types/servicio";
+import EmptyState from "@/components/ui/EmptyState";
+import type { Servicio } from "@/types/servicio";
+import type { Barbero } from "@/types/barbero";
 
 type ServicioTablaProps = {
   servicios: Servicio[];
@@ -38,23 +40,28 @@ export default function ServicioTabla({
 }: ServicioTablaProps) {
   if (estaVacio) {
     return (
-      <div className="bg-black/70 border border-[#2C261D] rounded-xl p-12 text-center">
-        <Scissors className="h-12 w-12 text-[#8E8675] mx-auto mb-4 opacity-50" />
-        <p className="text-[#8E8675]">
-          {sinServicios
+      <EmptyState
+        icono={<Scissors />}
+        mensaje={
+          sinServicios
             ? "No hay servicios disponibles. Comienza agregando uno."
-            : "No hay servicios que coincidan con los filtros aplicados."}
-        </p>
-        {hayFiltros && (
-          <button
-            onClick={onLimpiarFiltros}
-            className="mt-4 text-[10px] font-bold uppercase tracking-wider hover:underline"
-            style={{ color: "var(--page-primary)" }}
-          >
-            Limpiar filtros
-          </button>
-        )}
-      </div>
+            : "No hay servicios que coincidan con los filtros aplicados."
+        }
+        claseContenedor="bg-black/70 border border-[#2C261D] rounded-xl p-12"
+        claseIcono="h-12 w-12 text-[#8E8675] opacity-50"
+        claseMensaje="text-[#8E8675]"
+        accion={
+          hayFiltros ? (
+            <button
+              onClick={onLimpiarFiltros}
+              className="text-[10px] font-bold uppercase tracking-wider hover:underline"
+              style={{ color: "var(--page-primary)" }}
+            >
+              Limpiar filtros
+            </button>
+          ) : undefined
+        }
+      />
     );
   }
 

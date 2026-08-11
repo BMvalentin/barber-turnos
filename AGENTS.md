@@ -1,7 +1,5 @@
 # AGENTS.md
 
-Guía de contexto y convenciones para trabajar en este repositorio. Complementa y respeta lo establecido en `CLAUDE.md` (fuente normativa).
-
 # Reglas globales del proyecto
 
 ### Idioma

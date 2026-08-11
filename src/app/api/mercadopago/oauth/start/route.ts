@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID, randomBytes, createHmac } from "crypto";
-import { requerirAdmin } from "@/lib/seguridad";
-import { construirUrlAutorizacionMP, estaBloqueadaMP } from "@/lib/mercadopago";
+import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
+import { construirUrlAutorizacionMP } from "@/lib/mercadopago/url-autorizacion";
+import { estaBloqueadaMP } from "@/lib/mercadopago/esta-bloqueada";
 
 type CodigoErrorInicio =
   | "bloqueado"

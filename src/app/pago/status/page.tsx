@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { auth } from "@/auth";
+import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { redirect } from "next/navigation";
 import { CLASES_BOTON_MARCA } from "@/lib/constants";
-import { confirmarPagoTurno } from "@/actions/mercadopago/mercadopago-actions";
+import { confirmarPagoTurno } from "@/actions/mercadopago/confirmar-pago.actions";
 import { CheckCircle2, Clock, XCircle, Calendar, ArrowRight, RefreshCw, AlertTriangle } from "lucide-react";
 
 interface StatusPageProps {
@@ -15,7 +15,7 @@ interface StatusPageProps {
 }
 
 export default async function PagoStatusPage({ searchParams }: StatusPageProps) {
-  const session = await auth();
+  const session = await requerirSesion();
   if (!session?.user) redirect("/login");
 
   const { status, turnoId, payment_id, collection_id } = await searchParams;

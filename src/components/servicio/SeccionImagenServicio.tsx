@@ -7,8 +7,9 @@ type SeccionImagenServicioProps = {
   srcImage: string;
   uploadError: string | null;
   isPending: boolean;
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFileChange: (archivo: File) => void;
   onRemove: () => void;
+  variante?: "servicio" | "barbero";
 };
 
 export default function SeccionImagenServicio({
@@ -18,12 +19,21 @@ export default function SeccionImagenServicio({
   isPending,
   onFileChange,
   onRemove,
+  variante = "servicio",
 }: SeccionImagenServicioProps) {
+  const esBarbero = variante === "barbero";
+
   return (
     <div className="space-y-2">
-      <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider">
-        Imagen del Servicio
-      </label>
+      {esBarbero ? (
+        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-70)" }}>
+          Foto del barbero <span className="text-zinc-500 text-xs">(Opcional)</span>
+        </label>
+      ) : (
+        <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider">
+          Imagen del Servicio
+        </label>
+      )}
 
       {previewUrl || srcImage ? (
         <div className="relative w-fit">
@@ -31,7 +41,7 @@ export default function SeccionImagenServicio({
             src={previewUrl || srcImage}
             alt="Vista previa"
             className="h-32 w-32 object-cover rounded-lg border"
-            style={{ borderColor: "var(--page-secondary)" }}
+            style={{ borderColor: esBarbero ? "var(--page-primary-80)" : "var(--page-secondary)" }}
           />
 
           <button
@@ -47,7 +57,7 @@ export default function SeccionImagenServicio({
           className={`relative flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg cursor-pointer transition ${
             isPending ? "opacity-50 pointer-events-none" : ""
           }`}
-          style={{ borderColor: "var(--page-secondary)" }}
+          style={{ borderColor: esBarbero ? "var(--page-primary-50)" : "var(--page-secondary)" }}
         >
           {isPending ? (
             <span className="text-sm" style={{ color: "var(--page-primary)" }}>
@@ -56,7 +66,7 @@ export default function SeccionImagenServicio({
           ) : (
             <>
               <Upload className="h-6 w-6" style={{ color: "var(--page-primary)" }} />
-              <span className="text-sm text-[#8E8675]">
+              <span className={`text-sm ${esBarbero ? "text-zinc-300" : "text-[#8E8675]"}`}>
                 Hacé clic para subir una imagen
               </span>
             </>
@@ -65,7 +75,10 @@ export default function SeccionImagenServicio({
           <input
             type="file"
             accept="image/*"
-            onChange={onFileChange}
+            onChange={(e) => {
+              const archivo = e.target.files?.[0];
+              if (archivo) onFileChange(archivo);
+            }}
             className="absolute inset-0 opacity-0 cursor-pointer"
             disabled={isPending}
           />
@@ -73,7 +86,7 @@ export default function SeccionImagenServicio({
       )}
 
       {uploadError && (
-        <p className="text-red-500 text-sm">
+        <p className={`text-sm ${esBarbero ? "text-red-400" : "text-red-500"}`}>
           {uploadError}
         </p>
       )}

@@ -3,6 +3,7 @@
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { ESTADOS_TURNO } from "@/lib/constants";
 
 export const runtime = "nodejs";
 
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest) {
     // Buscar turnos pendientes sin pago
     const turnosPendientes = await prisma.turno.findMany({
       where: {
-        estado: "PENDIENTE",
+        estado: ESTADOS_TURNO[0],
         createdAt: {
           lte: limite,
         },
@@ -83,7 +84,7 @@ export async function GET(req: NextRequest) {
         },
       },
       data: {
-        estado: "CANCELADO",
+        estado: ESTADOS_TURNO[3],
       },
     });
 

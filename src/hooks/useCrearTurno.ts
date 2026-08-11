@@ -2,7 +2,9 @@
 
 import { createTurno } from "@/actions/turnos/crear.actions";
 import type { TurnoCreado } from "@/types/turno";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { ActionStateInicial } from "@/types/action-state";
+import { useActionState, useEffect, useRef } from "react";
+import { useSessionId } from "@/hooks/useSessionId";
 import { useDatosFormularioTurno } from "./useDatosFormularioTurno";
 import type { ParametrosDatosTurno } from "./useDatosFormularioTurno";
 import { usePagoTurno } from "./usePagoTurno";
@@ -11,11 +13,7 @@ export type ParametrosCrearTurno = ParametrosDatosTurno & {
   whatsappPhone: string;
 };
 
-const estadoInicial = {
-  success: false,
-  error: undefined,
-  data: undefined,
-};
+const estadoInicial = ActionStateInicial;
 
 export function useCrearTurno({
   session,
@@ -36,7 +34,7 @@ export function useCrearTurno({
 
   const [state, formAction] = useActionState(createTurno, estadoInicial);
   const formRef = useRef<HTMLFormElement>(null);
-  const [sessionId] = useState(() => crypto.randomUUID());
+  const sessionId = useSessionId();
 
   useEffect(() => {
     if (state.success && state.data) {

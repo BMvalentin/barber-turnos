@@ -1,10 +1,10 @@
-import { auth } from "@/auth";
+import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import DashboardPanel from "@/components/dashboard/DashboardPanel";
-import { getUserTurnos } from "@/actions/sesion/user-dashboard";
+import { getUserTurnos } from "@/actions/sesion/listar-turnos-usuario.actions";
 import { prisma } from "@/lib/prisma";
 
 export default async function DashboardPage() {
-  const session = await auth();
+  const session = await requerirSesion();
 
   if (!session) return null; // El middleware ya protege, pero TypeScript lo agradece
 

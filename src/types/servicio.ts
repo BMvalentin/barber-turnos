@@ -21,13 +21,6 @@ export type Servicio = {
   }[];
 };
 
-export type Barbero = {
-  id: string;
-  nombre: string | null;
-  srcImage: string | null;
-  estado: boolean;
-};
-
 /* Servicio creado o actualizado (createServicio, actualizarServicio), con montos en Number. */
 export type ServicioCreado = Omit<
   Prisma.servicioGetPayload<{}>,

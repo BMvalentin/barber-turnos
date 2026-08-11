@@ -1,9 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { toZonedTime, fromZonedTime } from "date-fns-tz";
-import { MAP_DIA_SEMANA } from "@/lib/constants";
+import { MAPA_DIA_SEMANA_DB, ESTADOS_TURNO_ACTIVOS } from "@/lib/constants";
+import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
+import { obtenerRangoDelDia } from "@/lib/utils/obtener-rango-del-dia";
 import type { dias_laborales } from "../../generated/prisma/client";
-
-const TIMEZONE = "America/Argentina/Buenos_Aires";
 
 export async function obtenerContextoDeReserva(
   barberoId: string,
@@ -11,13 +10,12 @@ export async function obtenerContextoDeReserva(
   inicio: Date,
   fin: Date,
 ) {
-  const fechaSolo = toZonedTime(inicio, TIMEZONE).toISOString().split("T")[0];
-  const inicioDia = fromZonedTime(`${fechaSolo}T00:00:00`, TIMEZONE);
-  const finDia = fromZonedTime(`${fechaSolo}T23:59:59`, TIMEZONE);
+  const fechaSolo = obtenerFechaSola(inicio);
+  const { inicio: inicioDia, fin: finDia } = obtenerRangoDelDia(fechaSolo);
 
   const [diaLaboral, excepciones, turnosDelDia] = await Promise.all([
     prisma.dia_laboral.findFirst({
-      where: { dia: MAP_DIA_SEMANA[diaSemana] as dias_laborales, estado: true },
+      where: { dia: MAPA_DIA_SEMANA_DB[diaSemana] as dias_laborales, estado: true },
       include: { margenes: { where: { estado: true } } },
     }),
     prisma.excepcion_laboral.findMany({
@@ -26,7 +24,7 @@ export async function obtenerContextoDeReserva(
     prisma.turno.findMany({
       where: {
         barberoId,
-        estado: { in: ["PENDIENTE", "CONFIRMADO"] },
+        estado: { in: [...ESTADOS_TURNO_ACTIVOS] },
         horarioReservado: { gte: inicioDia, lte: finDia },
       },
       include: { servicio: { select: { duracion: true } } },

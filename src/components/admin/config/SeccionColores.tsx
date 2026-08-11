@@ -1,6 +1,7 @@
 // components/admin/config/SeccionColores.tsx
 import { Palette } from "lucide-react";
-import { elegirColorTexto, calcularRazonDeContraste } from "@/lib/contraste";
+import { elegirColorTexto } from "@/lib/contraste/elegir-color-texto";
+import { calcularRazonDeContraste } from "@/lib/contraste/calcular-razon-de-contraste";
 import CampoColor from "@/components/admin/config/CampoColor";
 import EncabezadoSeccion from "@/components/admin/config/EncabezadoSeccion";
 import type { ManejarCambio } from "@/components/admin/config/tipos";

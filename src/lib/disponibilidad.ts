@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { addMinutes } from "date-fns";
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
-import { MAP_DIA_SEMANA } from "@/lib/constants";
+import { MAPA_DIA_SEMANA_DB, ESTADOS_TURNO, MINIMO_ANTICIPACION_MS, ZONA_HORARIA } from "@/lib/constants";
+import { obtenerRangoDelDia } from "@/lib/utils/obtener-rango-del-dia";
 
-const TIMEZONE = "America/Argentina/Buenos_Aires";
 const GRANULARIDAD_MINUTOS = 15;
 
 function minutosDeHora(hora: string): number {
@@ -12,13 +12,13 @@ function minutosDeHora(hora: string): number {
 }
 
 export async function obtenerDisponibilidad(servicioId: string, barberoId: string, fechaInicio: string, fechaFin: string, turnoIdAExcluir?: string): Promise<Record<string, string[]>> {
-  const inicioRango = fromZonedTime(`${fechaInicio}T00:00:00`, TIMEZONE);
-  const finRango = fromZonedTime(`${fechaFin}T23:59:59`, TIMEZONE);
+  const { inicio: inicioRango } = obtenerRangoDelDia(fechaInicio);
+  const { fin: finRango } = obtenerRangoDelDia(fechaFin);
 
   const [servicio, horariosBarbero, turnosRango, excepciones] = await Promise.all([
     prisma.servicio.findUnique({ where: { id: servicioId }, select: { duracion: true } }),
     prisma.margen_laboral_barbero.findMany({ where: { barberoId, estado: true }, include: { margenLaboral: { include: { dia: true } } } }),
-    prisma.turno.findMany({ where: { barberoId, horarioReservado: { gte: inicioRango, lte: finRango }, estado: { notIn: ["CANCELADO"] }, ...(turnoIdAExcluir && { id: { not: turnoIdAExcluir } }) }, include: { servicio: { select: { duracion: true } } } }),
+    prisma.turno.findMany({ where: { barberoId, horarioReservado: { gte: inicioRango, lte: finRango }, estado: { notIn: [ESTADOS_TURNO[3]] }, ...(turnoIdAExcluir && { id: { not: turnoIdAExcluir } }) }, include: { servicio: { select: { duracion: true } } } }),
     prisma.excepcion_laboral.findMany({ where: { estado: true, desde: { lte: finRango }, hasta: { gte: inicioRango }, OR: [{ barberoId }, { barberoId: null }] } }),
   ]);
 
@@ -32,19 +32,18 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
 
   while (anio * 10000 + mes * 100 + dia <= tope) {
     const fechaStr = `${anio}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
-    const inicioDia = fromZonedTime(`${fechaStr}T00:00:00`, TIMEZONE);
-    const finDia = fromZonedTime(`${fechaStr}T23:59:59`, TIMEZONE);
+    const { inicio: inicioDia, fin: finDia } = obtenerRangoDelDia(fechaStr);
 
     if (finDia.getTime() < ahora.getTime()) continue;
     if (excepciones.some((ex) => inicioDia < ex.hasta && finDia > ex.desde)) continue;
 
-    const diaEnum = MAP_DIA_SEMANA[toZonedTime(inicioDia, TIMEZONE).getDay()];
+    const diaEnum = MAPA_DIA_SEMANA_DB[toZonedTime(inicioDia, ZONA_HORARIA).getDay()];
     const horariosDia = horariosBarbero
       .filter((h) => h.margenLaboral.dia.dia === diaEnum && h.margenLaboral.estado === true)
       .sort((a, b) => minutosDeHora(a.margenLaboral.desde) - minutosDeHora(b.margenLaboral.desde));
 
     const turnosDia = turnosRango.filter((t) => {
-      const tZoned = toZonedTime(t.horarioReservado, TIMEZONE);
+      const tZoned = toZonedTime(t.horarioReservado, ZONA_HORARIA);
       return `${tZoned.getFullYear()}-${String(tZoned.getMonth() + 1).padStart(2, "0")}-${String(tZoned.getDate()).padStart(2, "0")}` === fechaStr;
     });
 
@@ -54,10 +53,10 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
       const limiteMinutos = minutosDeHora(horario.margenLaboral.hasta);
 
       while (actualMinutos + servicio.duracion <= limiteMinutos) {
-        const slotUTC = fromZonedTime(`${fechaStr}T${String(Math.floor(actualMinutos / 60)).padStart(2, "0")}:${String(actualMinutos % 60).padStart(2, "0")}:00`, TIMEZONE);
+        const slotUTC = fromZonedTime(fechaStr + "T" + `${String(Math.floor(actualMinutos / 60)).padStart(2, "0")}:${String(actualMinutos % 60).padStart(2, "0")}:00`, ZONA_HORARIA);
 
         if (!turnosDia.some((t) => slotUTC < addMinutes(t.horarioReservado, t.servicio.duracion) && addMinutes(slotUTC, servicio.duracion) > t.horarioReservado)
-          && slotUTC.getTime() > ahora.getTime() + 10 * 60 * 1000) {
+          && slotUTC.getTime() > ahora.getTime() + MINIMO_ANTICIPACION_MS) {
           slots.push(slotUTC.toISOString());
         }
         actualMinutos += GRANULARIDAD_MINUTOS;

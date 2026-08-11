@@ -2,15 +2,13 @@
 
 import { useState } from "react";
 import { ESTILO_FONDO_MARCA } from "@/lib/constants";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog/Dialog";
+import { DialogContent } from "@/components/ui/dialog/DialogContent";
+import { DialogHeader } from "@/components/ui/dialog/DialogHeader";
+import { DialogTitle } from "@/components/ui/dialog/DialogTitle";
+import { DialogTrigger } from "@/components/ui/dialog/DialogTrigger";
+import { DialogClose } from "@/components/ui/dialog/DialogClose";
+import { Button } from "@/components/ui/button/Button";
 import { X } from "lucide-react";
 import CreateBarberoForm from "@/components/barbero/CreateBarberoForm";
 import type { ServicioOpcion, DiaLaboral } from "@/types/barbero";

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import ModalBase from "@/components/ui/ModalBase";
 
 interface PrivacyModalProps {
   isOpen?: boolean;
@@ -37,14 +38,13 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-black rounded-2xl shadow-xl p-6 max-w-lg w-full border-2 border-white text-left">
-        
-        <h2 className="text-xl font-semibold mb-4 text-white">
-          Política de Privacidad
-        </h2>
-
-        <div className="text-gray-400 text-sm space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+    <ModalBase
+      titulo="Política de Privacidad"
+      maxWidth="max-w-lg"
+      contenedorClase="bg-black rounded-2xl shadow-xl p-6 border-2 border-white text-left"
+      tituloClase="text-xl font-semibold mb-4 text-white"
+    >
+      <div className="text-gray-400 text-sm space-y-3 max-h-[60vh] overflow-y-auto pr-2">
 
           <p>
             Esta aplicación recopila y almacena datos proporcionados por los
@@ -85,7 +85,6 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
           </button>
         </div>
 
-      </div>
-    </div>
+    </ModalBase>
   );
 }

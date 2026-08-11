@@ -1,32 +1,21 @@
 "use client";
 
-import { createServicio } from "@/actions/servicios/servicio-actions";
+import { createServicio } from "@/actions/servicios/crear.actions";
+import { ActionStateInicial } from "@/types/action-state";
 import type { ActionState } from "@/types/action-state";
 import type { ServicioCreado } from "@/types/servicio";
+import type { Barbero } from "@/types/barbero";
 import { useEffect, useRef, useState } from "react";
-import { X } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-import { CLASES_BOTON_CERRAR } from "@/lib/constants";
+import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { useImagenServicio } from "@/hooks/useImagenServicio";
-import BotonCrearServicio from "./BotonCrearServicio";
+import ModalBase from "@/components/ui/ModalBase";
+import BotonSubmitPending from "@/components/ui/boton-submit-pending";
 import CampoDescripcionServicio from "./CampoDescripcionServicio";
 import CampoFormulario from "./CampoFormulario";
 import SeccionImagenServicio from "./SeccionImagenServicio";
 import SeccionPrecioDetalles from "./SeccionPrecioDetalles";
 
-const initialState: ActionState<ServicioCreado> = {
-  success: false,
-  error: undefined,
-  errors: undefined,
-  data: undefined,
-};
-
-type Barbero = {
-  id: string;
-  nombre: string | null;
-  srcImage: string | null;
-  estado: boolean;
-};
+const initialState: ActionState<ServicioCreado> = ActionStateInicial;
 
 type CreateServicioFormProps = {
   barberos: Barbero[];
@@ -46,55 +35,40 @@ export default function CreateServicioForm({
     previewUrl,
     srcImage,
     uploadError,
-    manejarCambioArchivo,
+    manejarArchivo,
     quitarImagen,
   } = useImagenServicio();
 
-  useEffect(() => {
-    if (state.success) {
+  const { retroalimentar } = useRetroalimentacionAccion({
+    mensajeExito: "Servicio creado",
+    descripcionExito: "El servicio se ha creado correctamente.",
+    onExito: () => {
       formRef.current?.reset();
       quitarImagen();
-
-      toast({
-        title: "Servicio creado",
-        description: "El servicio se ha creado correctamente.",
-        variant: "default",
-        duration: 4000,
-      });
-
       onClose();
+    },
+  });
+
+  useEffect(() => {
+    if (state.success) {
+      void retroalimentar(state);
     }
-  }, [state.success]);
+  }, [state, retroalimentar]);
 
   return (
-    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto">
-      <div 
-        className="bg-black/60 border rounded-xl w-full max-w-4xl shadow-2xl relative flex flex-col max-h-[90vh]"
-        style={{ borderColor: "var(--page-secondary)" }}
-      >
-        {/* Header Modal */}
-        <div 
-          className="flex justify-between items-center gap-4 p-6 border-b"
-          style={{ borderColor: "var(--page-secondary)" }}
-        >
-          <div>
-            <h2 className="text-xl font-bold text-[#E4E0D9]">Nuevo Servicio</h2>
-            <p className="text-[#8E8675] text-xs mt-1">
-              Completa los datos para agregar un servicio al catálogo.
-            </p>
-          </div>
-          {/* Acciones del Header */}
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onClose}
-              className={CLASES_BOTON_CERRAR}
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-        {/* Formulario */}
-        <div className="overflow-y-auto p-6 flex-1">
+    <ModalBase
+      onClose={onClose}
+      titulo="Nuevo Servicio"
+      subtitulo="Completa los datos para agregar un servicio al catálogo."
+      maxWidth="max-w-4xl"
+      overlayClase="bg-black/90 p-4 sm:p-6 overflow-y-auto"
+      contenedorClase="bg-black/60 border border-[var(--page-secondary)] rounded-xl relative flex flex-col max-h-[90vh]"
+      headerClase="flex justify-between items-center gap-4 p-6 border-b border-[var(--page-secondary)]"
+      tituloClase="text-xl font-bold text-[#E4E0D9]"
+      subtituloClase="text-[#8E8675] text-xs mt-1"
+    >
+      {/* Formulario */}
+      <div className="overflow-y-auto p-6 flex-1">
           <form
             ref={formRef}
             action={async (formData) => {
@@ -162,7 +136,7 @@ export default function CreateServicioForm({
                   srcImage={srcImage}
                   uploadError={uploadError}
                   isPending={isPending}
-                  onFileChange={manejarCambioArchivo}
+                  onFileChange={manejarArchivo}
                   onRemove={quitarImagen}
                 />
               </div>
@@ -189,11 +163,15 @@ export default function CreateServicioForm({
               >
                 Cancelar
               </button>
-              <BotonCrearServicio pending={isPending} />
+              <BotonSubmitPending
+                pendiente={isPending}
+                texto="Crear Servicio"
+                textoMientrasCarga="Creando..."
+                claseAdicional="font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg"
+              />
             </div>
           </form>
         </div>
-      </div>
-    </div>
+    </ModalBase>
   );
 }

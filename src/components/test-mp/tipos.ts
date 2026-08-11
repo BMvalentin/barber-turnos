@@ -1,18 +1,9 @@
 // src/components/test-mp/tipos.ts
 
-export type Turno = {
-  id: string;
-  estado: string;
-  horarioReservado: string;
-  precioCongelado: number;
-  seniaCongelada: number;
-  mpPreferenceId: string | null;
-  mpPaymentId: string | null;
-  userName: string | null;
-  userEmail: string | null;
-  servicioNombre: string;
-  barberoNombre: string;
-};
+import type { TurnoPruebaMp } from "@/types/turno";
+
+/* DTO aplanado del panel de testing (derivado del turno con relaciones). */
+export type Turno = TurnoPruebaMp;
 
 export type LogEntry = {
   id: string;

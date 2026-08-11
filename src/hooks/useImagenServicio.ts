@@ -1,36 +1,59 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useState } from "react";
+import { esImagenValida } from "@/lib/es-imagen-valida";
 
-export function useImagenServicio() {
+type OpcionesUseImagenServicio = {
+  previewInicial?: string | null;
+  srcImageInicial?: string;
+};
+
+export function useImagenServicio(opciones: OpcionesUseImagenServicio = {}) {
+  const { previewInicial = null, srcImageInicial = "" } = opciones;
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [srcImage, setSrcImage] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(previewInicial);
+  const [srcImage, setSrcImage] = useState<string>(srcImageInicial);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  const manejarCambioArchivo = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const manejarArchivo = (archivo: File | null) => {
+    if (!archivo) return;
 
-    if (!file.type.startsWith("image/")) {
+    if (!esImagenValida(archivo)) {
       setUploadError("El archivo debe ser una imagen");
       return;
     }
 
     setUploadError(null);
     setSrcImage("");
-    setSelectedFile(file);
+    setSelectedFile(archivo);
 
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
+    if (previewUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
+    setPreviewUrl(URL.createObjectURL(archivo));
   };
 
   const quitarImagen = () => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    if (previewUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
 
     setSelectedFile(null);
     setPreviewUrl(null);
     setSrcImage("");
+    setUploadError(null);
+  };
+
+  const establecerSrcImagen = (url: string) => {
+    if (previewUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setSrcImage(url);
     setUploadError(null);
   };
 
@@ -39,7 +62,9 @@ export function useImagenServicio() {
     previewUrl,
     srcImage,
     uploadError,
-    manejarCambioArchivo,
+    manejarArchivo,
     quitarImagen,
+    establecerSrcImagen,
+    setUploadError,
   };
 }

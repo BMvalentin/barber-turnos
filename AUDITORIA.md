@@ -537,3 +537,86 @@ verificador (V0…V8). El QA global final (V8) corrió los gates de PENDIENTES.m
      verificada: `/` 200) ✓
 5. **Acta final** emitida por V8 (ver ACTA DEL CICLO en la sesión de QA global) ✓
 6. **AUDITORIA.md actualizado** (esta sección) ✓
+
+---
+
+## 11. Ciclo de ordenamiento completado (Fases 9-15 + V15 QA global) — 2026-08-11
+
+Ciclo cerrado en 2026-08-11. Cada fase se ejecutó con subagentes (implementadores + verificador) y
+se certificó con su verificador (V9…V15). El QA global final (V15) corrió los gates de PENDIENTES.md
+§9 con éxito. **Meta global lograda:** 0 archivos de código con más de una función exportada (salvo
+re-exports documentados del framework/store), 0 patrones duplicados ≥3 copias, `npx tsc --noEmit` en
+0 errores y `npx next build` OK (26 rutas).
+
+### 11.1 Resultado por fase (resumen de lo centralizado/desglosado)
+
+| Fase | Objetivo | Resultado |
+|---|---|---|
+| 9 — Constantes, tipos y helpers | Base sin riesgo | `lib/constants.ts` centralizado: `ZONA_HORARIA`, `ESTADOS_TURNO`, `ESTADOS_TURNO_ACTIVOS`, `MINIMO_ANTICIPACION_MS`, familia de días DB (`DIAS_SEMANA_DB`, `MAPA_DIA_SEMANA_DB`, `REVERSE_MAPA_DIA_SEMANA_DB`) y display (`DIAS_SEMANA`, `ABREVIATURAS_DIAS`), `SELECCION_USUARIO_BASICA`; ~30 consumidores actualizados; `lib/utils/` desglosado en 8 archivos (1 fn c/u) + `lib/es-imagen-valida.ts`; tipos unificados (`types/excepcion.ts`, `types/page-config.ts`, `ActionStateInicial`) y definiciones manuales reemplazadas en 27 archivos |
+| 10 — Consultas Prisma + autorización | Capa de servicios | `lib/consultas/` (16 consultas, 1 fn/archivo) reemplaza los `findMany`/`findUnique` duplicados de servicios/barberos/márgenes/días/turnos/config; `lib/seguridad/` (`requerir-sesion`, `requerir-admin`, `es-admin`, `requerir-propietario`, `exigir-admin`) reemplaza el `auth()` manual, el check de rol y el boilerplate de admin en ~30 archivos |
+| 11 — Server actions 1 por archivo | Desglose de actions | Las 10 actions multi-función desglosadas: servicios (5), horarios (10), mercadopago (3+5), sesión (7), configuracion (3), excepciones (2) → 1 acción/archivo, ≤100 líneas; contrato de `user-dashboard` unificado a `ActionState`; helpers transversales: `confirmarTurnoPorPago` (único, con flag `soloSiPendiente` que preserva webhook vs acción), `lib/revalidar/` (4 helpers), `enviarEmailTurnoSeguro` |
+| 12 — Desglose de `lib/` y layout | lib multi-función → carpetas | `lib/mercadopago/` (10 fns + helper `uri-redireccion` + const/tipos), `lib/contraste/` (6 fns), `lib/cloudinary-uploader/` (2 fns), `lib/email/` (2 fns + seguro), `lib/utils/` (absorbido), `src/app/metadata.ts` + `layout.tsx` con solo `RootLayout` (re-export de metadata); regex de color única en `lib/contraste/es-color-hex-valido` |
+| 13 — Primitivas shadcn/ui y toast | Desglose estricto | `ui/dialog/` (10 piezas), `ui/carousel/` (5 + `contexto.ts`), `ui/button/` (`Button` + `button-variants`), `ui/badge/`; toast dividido en `lib/estado-toast.ts` (store compartido, 1 export de función) + `lib/toast.ts` (emisor) + `hooks/use-toast.ts` (hook); ~20 importadores migrados |
+| 14 — Componentes y hooks comunes | Eliminar duplicación de UI | `ui/ModalBase` (8 modales), `ui/EmptyState` (8 listas), `ui/boton-submit-form-status` + `ui/boton-submit-pending` (10 botones), `ui/SelectorCheckboxColapsable` (SelectorServicios/SelectorHorarios), unificación de `CampoFormulario`; hooks `useRetroalimentacionAccion` (9), `useConfiguracionTurno` (2), `useSessionId` (2); imagen centralizada en `useImagenServicio` + `SeccionImagenServicio` (4) |
+| 15 — QA global (V15) | Certificación | 0 violaciones de "1 función exportada"; 0 archivos >400 líneas; 0 duplicados ≥3 copias; `tsc` = 0; `next build` = OK (26 rutas); smoke test HTTP en puerto 3100 con respuestas esperadas |
+
+### 11.2 QA global final (V15) — gates de PENDIENTES.md §9
+
+1. **0 archivos con más de una función exportada** en `src/` ✓ (los únicos multi-export son `route.ts`
+   de framework y el re-export documentado de metadata en `layout.tsx`)
+2. **0 patrones duplicados con ≥3 copias** ✓ (verificado con greps transversales de zona horaria,
+   estados, días, `toLocaleString`, selects de usuario, queries Prisma, modales custom, botones
+   submit, empty states, toast+refresh, `auth()` manual, rol `=== "ADMIN"`)
+3. **Límites por capa** ✓ (acciones ≤100, lib ≤80, componentes ≤200, hooks ≤150, global ≤400; 6
+   componentes 201-400 líneas con 1 sola función = pendiente futuro, no aplica boy scout)
+4. `npx tsc --noEmit` = **0 errores** ✓
+5. `npx next build` = **OK** (26 rutas) ✓
+6. **Smoke test HTTP** ✓: `/` 200 SSR, `/login` 200, `/register` 200, `/turno` 307→login,
+   `/admin` 307→login, `/pago/*` responden. Verificación interactiva (toast/modales/lista de turnos
+   con sesión) pendiente de smoke manual en navegador.
+7. **Acta final** ✓ (emitida por V15)
+8. **AUDITORIA.md actualizado** ✓ (esta sección)
+
+### 11.3 Pendientes explícitos (documentados, no silenciados)
+
+- **6 componentes >200 líneas con UNA sola función** (desglose por tamaño NO es objetivo de este
+  ciclo, decisión §4.3 del usuario): `MercadoPagoConnectionPanel.tsx` (375), `TurnoList.tsx` (357),
+  `EditarTurnoModal.tsx` (300), `DashboardPanel.tsx` (292), `EditServicioModal.tsx` (242),
+  `horariosList.tsx` (219). La Fase 14 los redujo de paso (EditServicioModal 393→242,
+  EditarTurnoModal 386→300, TurnoList 380→357, BarberoList <200, diaLaboralList <200).
+- **Overlay de teléfono de `DashboardPanel`**: contenedor `fixed inset-0` preexistente fuera del
+  alcance de §3.2 (no se migró a `ModalBase` por no estar en la lista de duplicados del plan).
+- **Desviación de ubicación de `confirmarTurnoPorPago`**: quedó en `@/lib/confirmar-turno-por-pago.ts`
+  en vez de `lib/mercadopago/` como sugería el plan §6.12.1 — está centralizado y es consumido por
+  webhook + `confirmar-pago.actions`; se mantuvo para no re-mover imports ya migrados (decisión de
+  V12).
+- **`lib/estado-toast.ts` (~73 líneas)**: store único compartido (toast + useToast), excepción
+  justificada del límite lib 80; tipos extraídos a `types/toast.ts`.
+- **3 usos de `toLocaleString("es-AR")` de fecha** (crear-preferencia, MercadoPagoConnectionPanel,
+  test-mp/InfoTurno): candidatos opcionales a `formatearFechaHora` (output distinto, se preservó el
+  formato inline).
+- **Helpers en raíz de `lib/`**: `limpiar-url-imagen.ts`, `subir-imagen-servicio.ts`,
+  `es-imagen-valida.ts`, `obtener-config-cacheada.ts` (1 función c/u, dominio válido, no bloqueante).
+- **`send-turno-email.ts` mantiene los subjects de email** con literales `CANCELADO`/`CREADO`/etc.
+  (dominio de email, justificado).
+- **Smoke test interactivo pendiente**: toast funcional (crear/editar servicio o barbero), modales
+  abriendo y lista de turnos renderizando requieren navegador con sesión (documentado por V15).
+- **Secrets en Vercel**: `MP_WEBHOOK_SECRET` y `CRON_SECRET` siguen pendientes de configurar en el
+  entorno (del ciclo anterior, §8/§10).
+
+### 11.4 Decisiones de coordinación tomadas
+
+- **`exigirAdmin` como wrapper** (Fase 10.2): 23 call sites migrados al wrapper; 4 se dejaron con
+  `requerirAdmin()` directo porque validan el id ANTES del check de admin (cambiaría la precedencia
+  de mensajes) o devuelven un shape con `images: []`.
+- **`confirmarTurnoPorPago` con flag `soloSiPendiente`** (V11): el webhook lo pasa `true` (solo
+  confirma turnos PENDIENTES, comportamiento histórico) y `confirmarPagoTurno` omite el flag
+  (confirmaba cualquier no-CONFIRMADO, comportamiento histórico de la acción).
+- **`contexto.ts` de carousel** (V13): exporta `useCarousel` + context + tipos (excepción
+  documentada del plan §6.13.1, necesario para 4 piezas).
+- **`estado-toast.ts` exporta SOLO `dispatch`** (V13): 1 función exportada; `reducer`,
+  `addToRemoveQueue`, `actionTypes` y `genId` quedan internos/privados para cumplir la regla.
+- **`confirmarTurnoPorPago` no se movió a `lib/mercadopago/`** (V12): desviación del plan §6.12.1
+  aprobada para no re-mover imports; la centralización del objetivo se cumple igual.
+- **V14**: `ui/boton-submit.tsx` del plan se materializó como 2 archivos
+  (`boton-submit-form-status.tsx` + `boton-submit-pending.tsx`) para cumplir 1 export por archivo.

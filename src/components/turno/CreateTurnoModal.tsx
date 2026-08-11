@@ -3,7 +3,8 @@
 import { useCrearTurno } from "@/hooks/useCrearTurno";
 import type { ParametrosCrearTurno } from "@/hooks/useCrearTurno";
 import { Plus, X } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button/Button";
+import ModalBase from "@/components/ui/ModalBase";
 import FormularioTurno from "./FormularioTurno";
 import ModalPagoTurno from "./ModalPagoTurno";
 
@@ -71,11 +72,12 @@ export default function CreateTurnoModal({
 
       {/* MODAL CREAR TURNO */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          {/* Contenedor más claro y con mejor separación visual (bg-zinc-900 en vez de black/95) */}
-          <div className="bg-zinc-900 border border-zinc-700/80 rounded-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto shadow-2xl">
-
-            {/* Header */}
+        <ModalBase
+          maxWidth="max-w-4xl"
+          overlayClase="bg-black/80 backdrop-blur-md p-4"
+          contenedorClase="bg-zinc-900 border border-zinc-700/80 rounded-2xl max-h-[92vh] overflow-y-auto"
+          header={
+            /* Header sticky con botón X propio */
             <div className="sticky top-0 bg-zinc-900/95 backdrop-blur border-b border-zinc-800 p-6 flex items-center justify-between z-10">
               <h2 className="text-2xl font-bold text-white tracking-wide">Nuevo Turno</h2>
               <button
@@ -85,38 +87,38 @@ export default function CreateTurnoModal({
                 <X className="h-5 w-5" />
               </button>
             </div>
-
-            {/* Content */}
-            {cargandoDatos ? (
-              <div className="p-12 text-center">
-                <div
-                  className="animate-spin rounded-full h-10 w-10 border-b-2 mx-auto"
-                  style={{ borderColor: "var(--primary)" }}
-                ></div>
-                <p className="text-zinc-400 mt-4 text-sm">Cargando opciones disponibles...</p>
-              </div>
-            ) : (
-              <FormularioTurno
-                session={session}
-                formRef={formRef}
-                state={state}
-                formAction={formAction}
-                sessionId={sessionId}
-                servicios={servicios}
-                usuarios={usuarios}
-                selectedServicioId={selectedServicioId}
-                selectedBarberoId={selectedBarberoId}
-                selectedUserId={selectedUserId}
-                setSelectedUserId={setSelectedUserId}
-                serviciosFiltrados={serviciosFiltrados}
-                barberosFiltrados={barberosFiltrados}
-                handleBarberoChange={handleBarberoChange}
-                handleServicioChange={handleServicioChange}
-                onCancelar={() => setIsOpen(false)}
-              />
-            )}
-          </div>
-        </div>
+          }
+        >
+          {/* Content */}
+          {cargandoDatos ? (
+            <div className="p-12 text-center">
+              <div
+                className="animate-spin rounded-full h-10 w-10 border-b-2 mx-auto"
+                style={{ borderColor: "var(--primary)" }}
+              ></div>
+              <p className="text-zinc-400 mt-4 text-sm">Cargando opciones disponibles...</p>
+            </div>
+          ) : (
+            <FormularioTurno
+              session={session}
+              formRef={formRef}
+              state={state}
+              formAction={formAction}
+              sessionId={sessionId}
+              servicios={servicios}
+              usuarios={usuarios}
+              selectedServicioId={selectedServicioId}
+              selectedBarberoId={selectedBarberoId}
+              selectedUserId={selectedUserId}
+              setSelectedUserId={setSelectedUserId}
+              serviciosFiltrados={serviciosFiltrados}
+              barberosFiltrados={barberosFiltrados}
+              handleBarberoChange={handleBarberoChange}
+              handleServicioChange={handleServicioChange}
+              onCancelar={() => setIsOpen(false)}
+            />
+          )}
+        </ModalBase>
       )}
 
       {/* MODAL DE PAGO (SEÑA) */}

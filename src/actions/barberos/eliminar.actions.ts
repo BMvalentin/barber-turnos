@@ -1,14 +1,11 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
-import { requerirAdmin } from "@/lib/seguridad";
+import { revalidarBarberos } from "@/lib/revalidar/revalidar-barberos";
+import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
 
-export async function deleteBarbero(formData: FormData): Promise<void> {
+async function deleteBarberoBase(formData: FormData): Promise<void> {
   try {
-    const sesion = await requerirAdmin();
-    if (!sesion) return;
-
     const id = formData.get("id");
 
     if (!id || typeof id !== "string") {
@@ -23,8 +20,10 @@ export async function deleteBarbero(formData: FormData): Promise<void> {
       },
     });
 
-    revalidatePath("/barbero");
+    revalidarBarberos();
   } catch (error) {
     console.error("Error al eliminar barbero:", error);
   }
 }
+
+export const deleteBarbero = exigirAdmin(deleteBarberoBase);

@@ -13,13 +13,12 @@ import {
   Copy,
   Check,
 } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-import {
-  desconectarMP,
-  type EstadoConexionMP,
-  type ConfiguracionOAuthMP,
-} from "@/actions/mercadopago/mercadopago-oauth.actions";
+import { toast } from "@/lib/toast";
+import { desconectarMP } from "@/actions/mercadopago/desconectar.actions";
+import type { EstadoConexionMP } from "@/actions/mercadopago/estado-conexion.actions";
+import type { ConfiguracionOAuthMP } from "@/actions/mercadopago/estado-oauth.actions";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
+import { ZONA_HORARIA } from "@/lib/constants";
 interface Props {
   estadoInicial: EstadoConexionMP;
   configuracionOAuth: ConfiguracionOAuthMP;
@@ -281,7 +280,7 @@ export default function MercadoPagoConnectionPanel({
               <p className="text-white">
                 {estado.actualizadaEn
                   ? new Date(estado.actualizadaEn).toLocaleString("es-AR", {
-                    timeZone: "America/Argentina/Buenos_Aires",
+                    timeZone: ZONA_HORARIA,
                     hour12: false,
                     year: "numeric",
                     month: "2-digit",

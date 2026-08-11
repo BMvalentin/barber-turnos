@@ -14,9 +14,7 @@ import {
 import { es } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import DiaCalendario from "./DiaCalendario";
-
-// Encabezados de columna: Dom primero, igual que en la imagen de referencia
-const DIAS_SEMANA = ["DOM", "LUN", "MAR", "MIE", "JUE", "VIE", "SAB"];
+import { ABREVIATURAS_DIAS } from "@/lib/constants";
 
 interface PropsGrillaCalendario {
   mesVisible: Date;
@@ -111,7 +109,7 @@ export default function GrillaCalendario({
 
         {/* Cabecera de días de la semana */}
         <div className="grid grid-cols-7 px-2">
-          {DIAS_SEMANA.map((dia) => (
+          {ABREVIATURAS_DIAS.map((dia) => (
             <div
               key={dia}
               className="text-center text-[9px] font-bold text-[#6B6355] uppercase tracking-wider py-1.5"

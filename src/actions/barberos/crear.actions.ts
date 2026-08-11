@@ -1,16 +1,14 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidarBarberos } from "@/lib/revalidar/revalidar-barberos";
 import { barberoSchema } from "@/lib/barbero-zod";
+import { obtenerMargenesPorIds } from "@/lib/consultas/obtener-margenes-por-ids";
 import type { ActionState } from "@/types/action-state";
-import { requerirAdmin } from "@/lib/seguridad";
+import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
 
-export async function createBarbero(data: unknown): Promise<ActionState> {
+async function createBarberoBase(data: unknown): Promise<ActionState> {
   try {
-    const sesion = await requerirAdmin();
-    if (!sesion) return { success: false, error: "No autorizado" };
-
     const parsed = barberoSchema.safeParse(data);
 
     if (!parsed.success) {
@@ -40,9 +38,7 @@ export async function createBarbero(data: unknown): Promise<ActionState> {
     }
 
     if (margenesIds?.length) {
-      const margenes = await prisma.margen_laboral.findMany({
-        where: { id: { in: margenesIds } },
-      });
+      const margenes = await obtenerMargenesPorIds(margenesIds);
 
       await prisma.margen_laboral_barbero.createMany({
         data: margenes.map((m) => ({
@@ -53,10 +49,12 @@ export async function createBarbero(data: unknown): Promise<ActionState> {
       });
     }
 
-    revalidatePath("/barbero");
+    revalidarBarberos();
 
     return { success: true };
   } catch (error) {
     return { success: false, error: "Error al crear barbero" };
   }
 }
+
+export const createBarbero = exigirAdmin(createBarberoBase);

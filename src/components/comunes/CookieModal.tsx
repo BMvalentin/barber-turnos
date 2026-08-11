@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import ModalBase from "@/components/ui/ModalBase";
 
 interface CookieModalProps {
   onAccept?: () => void;
@@ -22,14 +23,14 @@ export default function CookieModal({ onAccept }: CookieModalProps) {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999]">
-      <div className="bg-black rounded-2xl p-6 max-w-md w-full text-center border-2 border-white">
-
-        <h2 className="text-xl font-semibold mb-2 text-white">
-          Uso de cookies
-        </h2>
-
-        <p className="text-gray-400 text-sm mb-4">
+    <ModalBase
+      titulo="Uso de cookies"
+      maxWidth="max-w-md"
+      overlayClase="z-[9999]"
+      contenedorClase="bg-black rounded-2xl p-6 border-2 border-white text-center"
+      tituloClase="text-xl font-semibold mb-2 text-white"
+    >
+      <p className="text-gray-400 text-sm mb-4">
           Este sitio utiliza cookies esenciales para gestionar la autenticación
           de usuarios y garantizar el funcionamiento seguro de la aplicación.
           Además, pueden almacenarse datos de contacto proporcionados por los
@@ -48,7 +49,6 @@ export default function CookieModal({ onAccept }: CookieModalProps) {
           Debés aceptar para continuar.
         </p>
 
-      </div>
-    </div>
+    </ModalBase>
   );
 }

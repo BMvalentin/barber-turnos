@@ -13,7 +13,7 @@
   --page-primary: #d97706;
   --page-secondary: #78350f;
 
-  /* Texto/íconos sobre fondo sólido de marca (decidido por src/lib/contraste.ts) */
+  /* Texto/íconos sobre fondo sólido de marca (decidido por src/lib/contraste/) */
   --page-primary-foreground: #09090b;
   --page-secondary-foreground: #ffffff;
   /* Marca legible como texto sobre fondos oscuros */

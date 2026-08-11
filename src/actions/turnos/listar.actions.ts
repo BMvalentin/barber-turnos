@@ -1,21 +1,23 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
+import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
+import { esAdmin } from "@/lib/seguridad/es-admin";
+import { SELECCION_USUARIO_BASICA } from "@/lib/constants";
 import type { Prisma, turno_estado } from "../../../generated/prisma/client";
 
 export async function getTurnos(page: number = 1, estadoFiltro?: string, fechaFiltro?: string) {
   try {
-    const session = await auth();
+    const session = await requerirSesion();
     if (!session?.user) return { success: false, error: "No autorizado" };
 
-    const isAdmin = session.user.role === "ADMIN";
+    const usuarioEsAdmin = esAdmin(session);
     const pageSize = 6;
     const skip = (page - 1) * pageSize;
 
     const where: Prisma.turnoWhereInput = {};
 
-    if (!isAdmin) where.userId = session.user.id;
+    if (!usuarioEsAdmin) where.userId = session.user.id;
     if (estadoFiltro && estadoFiltro !== "TODOS") where.estado = estadoFiltro as turno_estado;
 
     // Filtrado por fecha (convierte el string 'YYYY-MM-DD' a rango)
@@ -36,7 +38,7 @@ export async function getTurnos(page: number = 1, estadoFiltro?: string, fechaFi
         skip,
         take: pageSize,
         include: {
-          user: { select: { id: true, name: true, email: true, telefono: true } },
+          user: { select: SELECCION_USUARIO_BASICA },
           servicio: { select: { id: true, nombre: true, duracion: true } },
           barbero: { select: { id: true, nombre: true } },
         },

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
-import { requerirAdmin } from "@/lib/seguridad";
-import { conectarCuentaMP } from "@/lib/mercadopago";
+import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
+import { conectarCuentaMP } from "@/lib/mercadopago/conectar-cuenta";
 
 /**
  * Secreto para verificar la firma del state del OAuth. Debe ser idéntico al

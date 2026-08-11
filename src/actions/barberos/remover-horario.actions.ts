@@ -1,18 +1,15 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidarBarberos } from "@/lib/revalidar/revalidar-barberos";
 import type { ActionState } from "@/types/action-state";
-import { requerirAdmin } from "@/lib/seguridad";
+import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
 
-export async function removerHorarioDeBarbero(
+async function removerHorarioDeBarberoBase(
   prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   try {
-    const sesion = await requerirAdmin();
-    if (!sesion) return { success: false, error: "No autorizado" };
-
     const id = formData.get("id");
 
     if (!id) {
@@ -23,7 +20,7 @@ export async function removerHorarioDeBarbero(
       where: { id: String(id) },
     });
 
-    revalidatePath("/barbero");
+    revalidarBarberos();
 
     return { success: true };
   } catch (error) {
@@ -31,3 +28,5 @@ export async function removerHorarioDeBarbero(
     return { success: false, error: "Error al remover horario" };
   }
 }
+
+export const removerHorarioDeBarbero = exigirAdmin(removerHorarioDeBarberoBase);

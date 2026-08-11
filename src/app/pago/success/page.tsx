@@ -1,7 +1,7 @@
 // app/pago/success/page.tsx
-import { auth } from "@/auth";
+import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { redirect } from "next/navigation";
-import { confirmarPagoTurno } from "@/actions/mercadopago/mercadopago-actions";
+import { confirmarPagoTurno } from "@/actions/mercadopago/confirmar-pago.actions";
 import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import Link from "next/link";
 import { CheckCircle2, Calendar, ArrowRight } from "lucide-react";
@@ -20,7 +20,7 @@ interface SuccessPageProps {
 export default async function PagoSuccessPage({
   searchParams,
 }: SuccessPageProps) {
-  const session = await auth();
+  const session = await requerirSesion();
   if (!session?.user) redirect("/login");
 
   const { turnoId, payment_id, collection_id } = await searchParams;

@@ -4,66 +4,34 @@ import { useState } from "react";
 import EditBarberoModal from "./EditBarberoModal";
 import { deleteBarbero } from "@/actions/barberos/eliminar.actions";
 import { User } from "lucide-react";
-import { Button } from "../ui/button";
-import { ESTILO_FONDO_MARCA } from "@/lib/constants";
-import type { ServicioOpcion, DiaLaboral } from "@/types/barbero";
+import { Button } from "@/components/ui/button/Button";
+import EmptyState from "@/components/ui/EmptyState";
+import { ESTILO_FONDO_MARCA, DIAS_SEMANA_DB } from "@/lib/constants";
+import type { BarberoListado, ServicioOpcion, DiaLaboral } from "@/types/barbero";
 
-type HorarioBarbero = {
-  margenLaboralId: string;
-  dia: {
-    id: string;
-    dia: string;
-  };
-  margenLaboral: {
-    desde: string;
-    hasta: string;
-  };
-};
-
-type Barbero = {
-  id: string;
-  nombre: string | null;
-  srcImage: string | null;
-  estado: boolean;
-
-  servicios?: {
-    servicio: {
-      id: string;
-      nombre: string;
-    };
-  }[];
-  horarios?: HorarioBarbero[];
-};
-
-const ORDEN_DIAS = [
-  "Lunes",
-  "Martes",
-  "Miercoles",
-  "Jueves",
-  "Viernes",
-  "Sabado",
-  "Domingo",
-];
+type HorarioBarbero = NonNullable<BarberoListado["horarios"]>[number];
 
 export default function BarberoList({
   barberos = [],
   servicios = [],
   diasLaborales = [],
 }: {
-  barberos?: Barbero[];
+  barberos?: BarberoListado[];
   servicios?: ServicioOpcion[];
   diasLaborales?: DiaLaboral[];
 }) {
 
   if (!barberos.length) {
     return (
-      <div 
-        className="bg-black/40 p-8 text-center rounded-lg border"
-        style={{ borderColor: `var(--page-primary-30)` }}
-      >
-        <User className="h-16 w-16 mx-auto mb-4" style={{ color: `var(--page-primary-50)` }} />
-        <p style={{ color: `var(--page-primary-70)` }}>No hay barberos disponibles</p>
-      </div>
+      <EmptyState
+        icono={<User />}
+        mensaje="No hay barberos disponibles"
+        claseContenedor="bg-black/40 p-8 rounded-lg border"
+        estiloContenedor={{ borderColor: "var(--page-primary-30)" }}
+        claseIcono="h-16 w-16"
+        estiloIcono={{ color: "var(--page-primary-50)" }}
+        estiloMensaje={{ color: "var(--page-primary-70)" }}
+      />
     );
   }
 
@@ -98,7 +66,7 @@ function BarberoCard({
   servicios,
   diasLaborales,
 }: {
-  barbero: Barbero;
+  barbero: BarberoListado;
   servicios: ServicioOpcion[];
   diasLaborales: DiaLaboral[];
 }) {
@@ -107,7 +75,7 @@ function BarberoCard({
   const horariosPorDia = agruparHorariosPorDia(barbero.horarios);
 
   const diasConHorario = Object.keys(horariosPorDia).sort(
-    (a, b) => ORDEN_DIAS.indexOf(a) - ORDEN_DIAS.indexOf(b)
+    (a, b) => DIAS_SEMANA_DB.indexOf(a as (typeof DIAS_SEMANA_DB)[number]) - DIAS_SEMANA_DB.indexOf(b as (typeof DIAS_SEMANA_DB)[number])
   );
 
   return (

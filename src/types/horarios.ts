@@ -10,3 +10,12 @@ export type DiaLaboralCreado = Omit<
   Prisma.dia_laboralGetPayload<{}>,
   "dia"
 > & { dia: number };
+
+/* Día laboral listado (getDiasLaborales), con márgenes y día en número. */
+export type DiaLaboral = Omit<
+  Prisma.dia_laboralGetPayload<{ include: { margenes: true } }>,
+  "dia" | "margenes"
+> & {
+  dia: number;
+  margenes?: MargenLaboralCreado[];
+};

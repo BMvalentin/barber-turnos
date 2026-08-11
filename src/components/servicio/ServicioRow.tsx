@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Clock, Scissors, SquarePen, Trash2 } from "lucide-react";
 import EditServicioModal from "./EditServicioModal";
-import type { Barbero, Servicio } from "@/types/servicio";
+import type { Servicio } from "@/types/servicio";
+import type { Barbero } from "@/types/barbero";
 
 type ServicioRowProps = {
   servicio: Servicio;

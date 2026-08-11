@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Session } from "next-auth";
+import { useConfiguracionTurno } from "@/hooks/useConfiguracionTurno";
 import type { BarberoData, RelacionData, ServicioData, UsuarioData } from "@/types/turno";
 
 export type ParametrosDatosTurno = {
@@ -20,52 +21,24 @@ export function useDatosFormularioTurno({
   initialRelaciones = [],
 }: ParametrosDatosTurno) {
   const [isOpen, setIsOpen] = useState(false);
-  const [servicios, setServicios] = useState<ServicioData[]>(initialServicios);
-  const [barberos, setBarberos] = useState<BarberoData[]>(initialBarberos);
-  const [usuarios, setUsuarios] = useState<UsuarioData[]>(initialUsuarios);
-  const [relaciones, setRelaciones] = useState<RelacionData[]>(initialRelaciones);
-  const [cargandoDatos, setCargandoDatos] = useState(!initialServicios.length);
+  const tieneDatosIniciales = initialServicios.length > 0;
+  const { datos, cargando } = useConfiguracionTurno(
+    isOpen && !tieneDatosIniciales,
+  );
+
+  const servicios =
+    datos.servicios.length > 0 ? datos.servicios : initialServicios;
+  const barberos = datos.barberos.length > 0 ? datos.barberos : initialBarberos;
+  const usuarios = datos.usuarios.length > 0 ? datos.usuarios : initialUsuarios;
+  const relaciones =
+    datos.relaciones.length > 0 ? datos.relaciones : initialRelaciones;
+  const cargandoDatos = tieneDatosIniciales ? false : cargando;
 
   const [selectedServicioId, setSelectedServicioId] = useState("");
   const [selectedBarberoId, setSelectedBarberoId] = useState("");
   const [selectedUserId, setSelectedUserId] = useState(
     session?.user?.role === "USER" ? session?.user?.id ?? "" : "",
   );
-
-  useEffect(() => {
-    if (initialServicios.length > 0) {
-      setCargandoDatos(false);
-      return;
-    }
-
-    let isMounted = true;
-
-    async function cargarDatos() {
-      try {
-        const res = await fetch("/api/configuracion-turno");
-        const data = await res.json();
-
-        if (isMounted) {
-          setServicios(data.servicios || []);
-          setBarberos(data.barberos || []);
-          setUsuarios(data.usuarios || []);
-          setRelaciones(data.relaciones || []);
-          setCargandoDatos(false);
-        }
-      } catch (error) {
-        console.error("Error cargando datos:", error);
-        setCargandoDatos(false);
-      }
-    }
-
-    if (isOpen) {
-      cargarDatos();
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isOpen, initialServicios.length]);
 
   const serviciosFiltrados = selectedBarberoId
     ? servicios.filter((s) =>

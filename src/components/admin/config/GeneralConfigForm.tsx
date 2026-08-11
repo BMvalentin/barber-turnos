@@ -2,30 +2,23 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updatePageConfig } from "@/actions/configuracion/configPage";
-import { uploadConfigImage } from "@/actions/mercadopago/upload-images.actions";
-import { esColorHexValido } from "@/lib/contraste";
+import { updatePageConfig } from "@/actions/configuracion/config-general.actions";
+import { uploadConfigImage } from "@/actions/mercadopago/subir-config.actions";
+import { esColorHexValido } from "@/lib/contraste/es-color-hex-valido";
+import { elegirColorTexto } from "@/lib/contraste/elegir-color-texto";
 import SeccionIdentidad from "@/components/admin/config/SeccionIdentidad";
 import SeccionContacto from "@/components/admin/config/SeccionContacto";
 import SeccionColores from "@/components/admin/config/SeccionColores";
 import SeccionImagenes from "@/components/admin/config/SeccionImagenes";
-import BotonGuardar from "@/components/admin/config/BotonGuardar";
-import type { NombreCampoImagen, DatosConfiguracion } from "@/components/admin/config/tipos";
+import BotonSubmitPending from "@/components/ui/boton-submit-pending";
+import type { NombreCampoImagen } from "@/components/admin/config/tipos";
+import type {
+  DatosConfiguracion,
+  DatosConfiguracionInicial,
+} from "@/types/page-config";
 
 interface GeneralConfigFormProps {
-    initialData: {
-        name?: string | null;
-        description?: string | null;
-        slogan?: string | null;
-        logo?: string | null;
-        favicon?: string | null;
-        backgroundImage?: string | null;
-        primaryColor?: string | null;
-        secondaryColor?: string | null;
-        whatsapp?: string | null;
-        mapsUrl?: string | null;
-        address?: string | null;
-    } | null;
+    initialData: DatosConfiguracionInicial | null;
 }
 
 export default function GeneralConfigForm({ initialData }: GeneralConfigFormProps) {
@@ -162,11 +155,17 @@ export default function GeneralConfigForm({ initialData }: GeneralConfigFormProp
                 colorIcono={primaryColor}
             />
 
-            <BotonGuardar
-                colorPrimario={primaryColor}
-                colorSecundario={secondaryColor}
+            <BotonSubmitPending
                 pendiente={isPending}
                 deshabilitado={uploadingField !== null}
+                texto="Guardar Cambios"
+                mostrarSpinner={false}
+                claseAdicional="h-auto w-full font-semibold py-3 rounded-lg transition-all shadow-md hover:opacity-95 text-base cursor-pointer"
+                estiloAdicional={{
+                    backgroundColor: primaryColor,
+                    color: elegirColorTexto(primaryColor),
+                    border: `1px solid ${secondaryColor}`,
+                }}
             />
         </form>
     );

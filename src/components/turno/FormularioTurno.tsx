@@ -8,7 +8,7 @@ import SeleccionadorHorario from "./SeleccionadorHorario";
 import SeccionBarbero from "./SeccionBarbero";
 import SeccionCliente from "./SeccionCliente";
 import SeccionServicio from "./SeccionServicio";
-import SubmitButton from "./SubmitButton";
+import BotonSubmitFormStatus from "@/components/ui/boton-submit-form-status";
 
 type Props = {
   session: Session | null;
@@ -98,7 +98,12 @@ export default function FormularioTurno({
         >
           Cancelar
         </button>
-        <SubmitButton />
+        <BotonSubmitFormStatus
+          texto="Confirmar Reserva"
+          textoMientrasCarga="Procesando..."
+          mostrarSpinner={false}
+          claseAdicional="px-6 py-2.5 font-medium rounded-xl shadow-md hover:opacity-90 text-sm"
+        />
       </div>
     </form>
   );

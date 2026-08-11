@@ -2,18 +2,19 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { deleteservicio } from "@/actions/servicios/servicio-actions";
+import { deleteservicio } from "@/actions/servicios/eliminar.actions";
 import { ESTILO_FONDO_MARCA } from "@/lib/constants";
-import { toast } from "@/hooks/use-toast";
+import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { useFiltrosServicios } from "@/hooks/useFiltrosServicios";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button/Button";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
 import ServicioStats from "./ServicioStats";
 import PanelFiltros from "./PanelFiltros";
 import FilterTag from "./FilterTag";
 import ServicioTabla from "./ServicioTabla";
 import CreateServicioForm from "./CreateServicioForm";
-import type { Barbero, Servicio } from "@/types/servicio";
+import type { Servicio } from "@/types/servicio";
+import type { Barbero } from "@/types/barbero";
 
 export default function ServicioList({
   servicios,
@@ -27,6 +28,14 @@ export default function ServicioList({
   const [itemAEliminar, setItemAEliminar] = useState<string | null>(null);
 
   const { filters, updateFilter, resetFilters, activeFilterCount, serviciosFiltrados, totalPages, startIndex, paginatedServicios, displayCount, currentPage, setCurrentPage, activeServicesCount, avgPrice, avgTime } = useFiltrosServicios(servicios);
+
+  const { retroalimentar } = useRetroalimentacionAccion({
+    mensajeExito: "Servicio eliminado",
+    descripcionExito: "El servicio ha sido eliminado correctamente.",
+    mensajeError: "Error al eliminar",
+    descripcionError: "Ocurrió un error al intentar eliminar el servicio.",
+    recargarPagina: true,
+  });
 
   const handleEliminar = (id: string) => {
     setItemAEliminar(id);
@@ -50,29 +59,15 @@ export default function ServicioList({
     try {
       const result = await deleteservicio(formData);
       if (!result.success) {
-        toast({
-          title: "Error al eliminar",
-          description:
-            result.error ?? "Ocurrió un error al intentar eliminar el servicio.",
-          variant: "destructive",
-          duration: 4000,
-        });
+        await retroalimentar(result);
         return;
       }
-      toast({
-        title: "Servicio eliminado",
-        description: "El servicio ha sido eliminado correctamente.",
-        variant: "default",
-        duration: 4000,
-      });
-      window.location.reload();
+      await retroalimentar(result);
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error al eliminar",
-        description: "Ocurrió un error inesperado.",
-        variant: "destructive",
-        duration: 4000,
+      await retroalimentar({
+        success: false,
+        error: "Ocurrió un error inesperado.",
       });
     }
   };

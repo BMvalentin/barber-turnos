@@ -6,11 +6,12 @@ import {
   User, Mail, Phone, Settings,
   ShieldCheck, Calendar
 } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button/Button";
 import { CLASES_BOTON_MARCA } from "@/lib/constants";
-import { updateProfile } from "@/actions/sesion/user-dashboard";
+import { updateProfile } from "@/actions/sesion/perfil.actions";
 import { useSession } from "next-auth/react";
-import TurnoList, { type Turno } from "@/components/turno/TurnoList";
+import TurnoList from "@/components/turno/TurnoList";
+import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
 
 type DatosUsuarioPanel = {
@@ -20,7 +21,7 @@ type DatosUsuarioPanel = {
   telefono?: string | null;
 };
 
-export default function DashboardPanel({ user, turnos, session }: { user: DatosUsuarioPanel; turnos: Turno[]; session: Session | null }) {
+export default function DashboardPanel({ user, turnos, session }: { user: DatosUsuarioPanel; turnos: TurnoListado[]; session: Session | null }) {
   const { update } = useSession();
   const [isPending, startTransition] = useTransition();
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -55,14 +56,14 @@ export default function DashboardPanel({ user, turnos, session }: { user: DatosU
       if (res.success) {
         setStatus('success');
         setMsg("Perfil actualizado correctamente.");
-        if (res.user) {
-          await update({ name: res.user.name, telefono: res.user.telefono });
-          if (res.user.telefono) setHasPhone(true);
+        if (res.data) {
+          await update({ name: res.data.name, telefono: res.data.telefono });
+          if (res.data.telefono) setHasPhone(true);
         }
         setTimeout(() => setStatus('idle'), 3000);
       } else {
         setStatus('error');
-        setMsg(res.message || "Error al actualizar");
+        setMsg(res.error || "Error al actualizar");
       }
     });
   };

@@ -1,12 +1,13 @@
 "use client";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button/Button";
 import { motion, AnimatePresence } from "framer-motion";
 import { DoorOpen, Scissors, Menu, X } from "lucide-react";
 import Link from "next/link";
-import { handleSignOut } from "@/actions/sesion/auth-actions";
+import { handleSignOut } from "@/actions/sesion/logout.actions";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
+import { esAdmin } from "@/lib/seguridad/es-admin";
 
 interface HeaderProps {
   config?: {
@@ -61,7 +62,7 @@ export function Header({ config }: HeaderProps) {
               <Button variant="link" size="sm">Ubicación</Button>
             </Link>
 
-            {session?.user?.role === "ADMIN" && (
+            {esAdmin(session) && (
               <Link href="/admin" className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
                 <Button variant="link" size="sm">Administrador</Button>
               </Link>
@@ -131,7 +132,7 @@ export function Header({ config }: HeaderProps) {
                 Ubicación
               </Link>
 
-              {session?.user?.role === "ADMIN" && (
+              {esAdmin(session) && (
                 <Link href="/admin" onClick={() => setIsOpen(false)} className="text-base font-medium transition-colors py-2" style={{ color: "var(--page-primary-tinta)" }}>
                   Administrador
                 </Link>

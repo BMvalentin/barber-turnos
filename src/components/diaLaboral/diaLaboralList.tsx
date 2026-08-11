@@ -1,29 +1,12 @@
 "use client";
 
 import { Clock, CheckCircle2, XCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button/Button";
+import { Badge } from "@/components/ui/badge/Badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ESTILO_FONDO_MARCA } from "@/lib/constants";
-
-type MargenLaboral = {
-  id: string;
-  diaId: string;
-  estado: boolean;
-  desde: string;
-  hasta: string;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-type DiaLaboral = {
-  id: string;
-  estado: boolean;
-  dia: number;
-  createdAt: Date;
-  updatedAt: Date;
-  margenes?: MargenLaboral[];
-};
+import EmptyState from "@/components/ui/EmptyState";
+import { ESTILO_FONDO_MARCA, DIAS_SEMANA } from "@/lib/constants";
+import type { DiaLaboral, MargenLaboralCreado } from "@/types/horarios";
 
 type DiaLaboralListProps = {
   diasLaborales: DiaLaboral[];
@@ -31,14 +14,14 @@ type DiaLaboralListProps = {
   onAsignarHorarios: (dia: DiaLaboral) => void;
 };
 
-const DIAS_SEMANA: Record<number, { nombre: string; emoji: string }> = {
-  0: { nombre: "Domingo", emoji: "🟣" },
-  1: { nombre: "Lunes", emoji: "🔵" },
-  2: { nombre: "Martes", emoji: "🟢" },
-  3: { nombre: "Miércoles", emoji: "🟡" },
-  4: { nombre: "Jueves", emoji: "🟠" },
-  5: { nombre: "Viernes", emoji: "🔴" },
-  6: { nombre: "Sábado", emoji: "🟣" },
+const DIAS_SEMANA_INFO: Record<number, { nombre: string; emoji: string }> = {
+  0: { nombre: DIAS_SEMANA[0], emoji: "🟣" },
+  1: { nombre: DIAS_SEMANA[1], emoji: "🔵" },
+  2: { nombre: DIAS_SEMANA[2], emoji: "🟢" },
+  3: { nombre: DIAS_SEMANA[3], emoji: "🟡" },
+  4: { nombre: DIAS_SEMANA[4], emoji: "🟠" },
+  5: { nombre: DIAS_SEMANA[5], emoji: "🔴" },
+  6: { nombre: DIAS_SEMANA[6], emoji: "🟣" },
 };
 
 export function DiaLaboralList({
@@ -66,25 +49,24 @@ export function DiaLaboralList({
 
   if (diasLaborales.length === 0) {
     return (
-      <div 
-        className="bg-black/40 backdrop-blur-lg rounded-xl p-16 text-center"
-        style={{ border: `1px solid var(--page-secondary-30)` }}
-      >
-        <Clock className="h-16 w-16 mx-auto mb-4" style={{ color: `var(--page-primary-50)` }} />
-        <h3 className="text-xl font-semibold mb-2 text-white">
-          No hay días laborales configurados
-        </h3>
-        <p style={{ color: `var(--page-primary-70)` }}>
-          Los días de la semana aparecerán aquí una vez configurados
-        </p>
-      </div>
+      <EmptyState
+        icono={<Clock />}
+        titulo="No hay días laborales configurados"
+        mensaje="Los días de la semana aparecerán aquí una vez configurados"
+        claseContenedor="bg-black/40 backdrop-blur-lg rounded-xl p-16"
+        estiloContenedor={{ border: "1px solid var(--page-secondary-30)" }}
+        claseIcono="h-16 w-16"
+        estiloIcono={{ color: "var(--page-primary-50)" }}
+        claseTitulo="text-xl font-semibold mb-2 text-white"
+        estiloMensaje={{ color: "var(--page-primary-70)" }}
+      />
     );
   }
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {diasLaborales.map((dia) => {
-        const diaInfo = DIAS_SEMANA[dia.dia];
+        const diaInfo = DIAS_SEMANA_INFO[dia.dia];
         const cantidadHorarios = dia.margenes?.length || 0;
         const horariosActivos = dia.margenes?.filter((m) => m.estado) || [];
 

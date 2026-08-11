@@ -2,18 +2,18 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { toZonedTime } from "date-fns-tz";
-import { requerirAdmin } from "@/lib/seguridad";
-import { enviarEmailTurno } from "@/lib/email";
+import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
+import { enviarEmailTurnoSeguro } from "@/lib/email/enviar-email-turno-seguro";
 import { existeLockAjeno } from "@/lib/locks";
-import { revalidarCacheTurno } from "@/lib/revalidar-turno";
+import { revalidarCacheTurno } from "@/lib/revalidar/revalidar-cache-turno";
 import { actualizarTurnoConDetalle } from "@/lib/turno-con-detalle";
 import { obtenerHorariosDisponibles } from "@/actions/turnos/horarios-disponibles.actions";
+import { obtenerServicioPorId } from "@/lib/consultas/obtener-servicio-por-id";
+import { MINIMO_ANTICIPACION_MS, ESTADOS_TURNO } from "@/lib/constants";
+import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import type { ActionState } from "@/types/action-state";
 import type { TurnoConDetalle } from "@/types/turno";
 import type { Prisma, turno_estado } from "../../../generated/prisma/client";
-
-const TIMEZONE = "America/Argentina/Buenos_Aires";
 
 export async function actualizarTurno(
   prevState: ActionState<TurnoConDetalle>,
@@ -42,13 +42,13 @@ export async function actualizarTurno(
     const cambioServicio = servicioId !== turnoActual.servicioId;
 
     if (cambioFecha || cambioBarbero || cambioServicio) {
-      if (cambioFecha && horario.getTime() <= new Date().getTime() + 10 * 60 * 1000) {
+      if (cambioFecha && horario.getTime() <= new Date().getTime() + MINIMO_ANTICIPACION_MS) {
         return { success: false, error: "El nuevo horario debe ser con al menos 10 minutos de anticipación" };
       }
 
-      const servicio = await prisma.servicio.findUnique({ where: { id: servicioId } });
+      const servicio = await obtenerServicioPorId(servicioId);
       if (!servicio) return { success: false, error: "Servicio no encontrado" };
-      const fecha = toZonedTime(horario, TIMEZONE).toISOString().split("T")[0];
+      const fecha = obtenerFechaSola(horario);
       const horariosDisponibles = await obtenerHorariosDisponibles(fecha, servicioId, barberoId, id);
       if (!horariosDisponibles.success || !horariosDisponibles.data?.includes(horario.toISOString())) {
         return { success: false, error: "El horario seleccionado no está disponible para este barbero/servicio" };
@@ -60,12 +60,10 @@ export async function actualizarTurno(
       const dataUpdate: Prisma.turnoUncheckedUpdateInput = { servicioId, barberoId, horarioReservado: horario, estado, ...(cambioServicio ? { precioCongelado: servicio.precio, seniaCongelada: servicio.senia } : {}) };
 
       const turnoActualizado = await actualizarTurnoConDetalle(id, dataUpdate);
-      const fechaAnterior = toZonedTime(turnoActual.horarioReservado, TIMEZONE).toISOString().split("T")[0];
-      revalidarCacheTurno(turnoActual.barberoId, fechaAnterior);
-      revalidarCacheTurno(barberoId, fecha);
-      revalidateTag(`turnos-mes-${barberoId}-${fecha.substring(0, 7)}`);
-      revalidateTag(`turnos-user-${turnoActual.userId}`);
-      void enviarEmailTurno(turnoActualizado, turnoActualizado.estado === "CANCELADO" ? "CANCELADO" : "ACTUALIZADO").catch((error) => console.error("Error enviando email de actualización:", error));
+      const fechaAnterior = obtenerFechaSola(turnoActual.horarioReservado);
+      revalidarCacheTurno(turnoActual.barberoId, fechaAnterior, turnoActual.userId);
+      revalidarCacheTurno(barberoId, fecha, turnoActual.userId);
+      enviarEmailTurnoSeguro(turnoActualizado, turnoActualizado.estado === ESTADOS_TURNO[3] ? ESTADOS_TURNO[3] : "ACTUALIZADO");
 
       return {
         success: true,
@@ -82,7 +80,7 @@ export async function actualizarTurno(
       revalidateTag(`turnos-user-${turnoActual.userId}`);
       revalidatePath("/turno");
       revalidatePath("/admin");
-      void enviarEmailTurno(turnoActualizado, turnoActualizado.estado === "CANCELADO" ? "CANCELADO" : "ACTUALIZADO").catch((error) => console.error("Error enviando email de estado:", error));
+      enviarEmailTurnoSeguro(turnoActualizado, turnoActualizado.estado === ESTADOS_TURNO[3] ? ESTADOS_TURNO[3] : "ACTUALIZADO");
 
       return {
         success: true,

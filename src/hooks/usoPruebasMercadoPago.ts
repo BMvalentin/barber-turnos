@@ -2,11 +2,9 @@
 // src/hooks/usoPruebasMercadoPago.ts
 
 import { useEffect, useRef, useState } from "react";
-import {
-  confirmarPagoTurno,
-  crearPreferenciaPago,
-  verificarEstadoPago,
-} from "@/actions/mercadopago/mercadopago-actions";
+import { confirmarPagoTurno } from "@/actions/mercadopago/confirmar-pago.actions";
+import { crearPreferenciaPago } from "@/actions/mercadopago/crear-preferencia.actions";
+import { verificarEstadoPago } from "@/actions/mercadopago/verificar-estado.actions";
 import type { LogEntry, Turno } from "@/components/test-mp/tipos";
 
 function ahoraTs() {

@@ -1,5 +1,5 @@
 // app/dashboard/layout.tsx
-import { auth } from "@/auth";
+import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { redirect } from "next/navigation";
 
 export default async function DashboardLayout({
@@ -7,7 +7,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  const session = await requerirSesion();
 
   if (!session?.user) {
     redirect("/login");

@@ -3,39 +3,20 @@
 import { useState } from "react";
 import EditTurnoModal from "./EditarTurnoModal";
 import { Calendar, User, Scissors, DollarSign, Phone } from "lucide-react";
-import { cancelTurno } from "@/actions/sesion/user-dashboard";
+import { cancelTurno } from "@/actions/sesion/cancelar-turno.actions";
 import { completedTurno } from "@/actions/turnos/completar.actions";
 import { confirmarTurno } from "@/actions/turnos/confirmar.actions";
-import { toast } from "@/hooks/use-toast";
+import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
-import { formatearHora } from "@/lib/utils";
+import EmptyState from "@/components/ui/EmptyState";
+import { formatearHora } from "@/lib/utils/formatear-hora";
+import { ESTADOS_TURNO } from "@/lib/constants";
+import { esAdmin } from "@/lib/seguridad/es-admin";
+import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
 
-export type Turno = {
-  id: string;
-  horarioReservado: Date;
-  precioCongelado: number;
-  seniaCongelada: number;
-  estado: "PENDIENTE" | "CONFIRMADO" | "CANCELADO" | "COMPLETADO";
-  user: {
-    id: string;
-    name: string | null;
-    email: string | null;
-    telefono: string | null;
-  };
-  servicio: {
-    id: string;
-    nombre: string;
-    duracion: number;
-  };
-  barbero: {
-    id: string;
-    nombre: string;
-  };
-};
-
 interface Props {
-  turnos: Turno[];
+  turnos: TurnoListado[];
   session: Session | null;
 }
 
@@ -43,7 +24,7 @@ type AccionConfirmacion = "cancelar" | "completar" | "confirmar";
 
 export default function TurnoList({ turnos, session }: Props) {
   const turnosActivos = turnos.filter(
-    (t) => t.estado === "PENDIENTE" || t.estado === "CONFIRMADO"
+    (t) => t.estado === ESTADOS_TURNO[0] || t.estado === ESTADOS_TURNO[1]
   );
 
   // Estados del modal de confirmación
@@ -51,6 +32,10 @@ export default function TurnoList({ turnos, session }: Props) {
   const [accionConfirmacion, setAccionConfirmacion] = useState<AccionConfirmacion | null>(null);
   const [turnoIdConfirmacion, setTurnoIdConfirmacion] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const { retroalimentar } = useRetroalimentacionAccion({
+    descripcionError: "Hubo un error al intentar procesar la acción.",
+  });
 
   // Solicitar cancelación
   const handleRequestCancel = (turnoId: string) => {
@@ -82,38 +67,30 @@ export default function TurnoList({ turnos, session }: Props) {
     try {
       if (accionConfirmacion === "cancelar") {
         await cancelTurno(turnoIdConfirmacion);
-        toast({
-          title: "Turno cancelado",
-          description: "El turno se ha cancelado correctamente.",
-          variant: "default",
-          duration: 4000,
-        });
+        await retroalimentar(
+          { success: true },
+          "Turno cancelado",
+          "El turno se ha cancelado correctamente.",
+        );
       } else if (accionConfirmacion === "completar") {
         const formData = new FormData();
         formData.append("id", turnoIdConfirmacion);
         await completedTurno({ success: false }, formData);
-        toast({
-          title: "Turno completado",
-          description: "El turno se ha marcado como completado.",
-          variant: "default",
-          duration: 4000,
-        });
+        await retroalimentar(
+          { success: true },
+          "Turno completado",
+          "El turno se ha marcado como completado.",
+        );
       } else if (accionConfirmacion === "confirmar") {
         await confirmarTurno(turnoIdConfirmacion);
-        toast({
-          title: "Turno confirmado",
-          description: "El turno se ha confirmado correctamente.",
-          variant: "default",
-          duration: 4000,
-        });
+        await retroalimentar(
+          { success: true },
+          "Turno confirmado",
+          "El turno se ha confirmado correctamente.",
+        );
       }
     } catch {
-      toast({
-        title: "Error",
-        description: "Hubo un error al intentar procesar la acción.",
-        variant: "destructive",
-        duration: 4000,
-      });
+      await retroalimentar({ success: false });
     } finally {
       setIsLoading(false);
       cancelarConfirmacion();
@@ -142,12 +119,12 @@ export default function TurnoList({ turnos, session }: Props) {
 
   if (!turnosActivos.length) {
     return (
-      <div 
-        className="bg-black/40 backdrop-blur-lg border rounded-lg p-8 text-center"
-        style={{ borderColor: "var(--page-primary-30)" }}
-      >
-        <p style={{ color: "var(--page-primary-70)" }}>No hay turnos activos (pendientes o confirmados)</p>
-      </div>
+      <EmptyState
+        mensaje="No hay turnos activos (pendientes o confirmados)"
+        claseContenedor="bg-black/40 backdrop-blur-lg border rounded-lg p-8"
+        estiloContenedor={{ borderColor: "var(--page-primary-30)" }}
+        estiloMensaje={{ color: "var(--page-primary-70)" }}
+      />
     );
   }
 
@@ -202,7 +179,7 @@ function TurnoCard({
   onCompleteRequest,
   onConfirmRequest,
 }: {
-  turno: Turno;
+  turno: TurnoListado;
   session: Session | null;
   onCancelRequest: (id: string) => void;
   onCompleteRequest: (id: string) => void;
@@ -323,7 +300,7 @@ function TurnoCard({
       </div>
 
       {/* Acciones */}
-      {(session?.user?.role === "ADMIN" || (turno.user?.id === session?.user?.id && (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO"))) && (
+      {(esAdmin(session) || (turno.user?.id === session?.user?.id && (turno.estado === ESTADOS_TURNO[0] || turno.estado === ESTADOS_TURNO[1]))) && (
         <div className="mt-4 pt-4 border-t border-[var(--primary)]/30">
           <div className="grid grid-cols-2 gap-2">
             {/* Opciones del USER (Dueño) */}
@@ -341,7 +318,7 @@ function TurnoCard({
             )}
 
             {/* Opciones del ADMIN */}
-            {session?.user?.role === "ADMIN" && (
+            {esAdmin(session) && (
               <>
                 <button
                   onClick={handleCancel}

@@ -4,6 +4,8 @@
 import type { Turno } from "./tipos";
 import { ESTADO_COLOR } from "./constantes";
 import { cortarId } from "./cortarId";
+import { formatearMoneda } from "@/lib/utils/formatear-moneda";
+import EmptyState from "@/components/ui/EmptyState";
 
 export function ListaTurnos({
   turnos,
@@ -23,9 +25,11 @@ export function ListaTurnos({
       </div>
       <div className="overflow-y-auto flex-1">
         {turnos.length === 0 && (
-          <p className="px-4 py-6 text-zinc-600 text-xs text-center">
-            No hay turnos en la base de datos.
-          </p>
+          <EmptyState
+            mensaje="No hay turnos en la base de datos."
+            claseContenedor="px-4 py-6 text-center"
+            claseMensaje="text-zinc-600 text-xs"
+          />
         )}
         {turnos.map((turno) => (
           <button
@@ -50,7 +54,7 @@ export function ListaTurnos({
             <p className="text-xs text-zinc-300 truncate">{turno.servicioNombre}</p>
             <p className="text-xs text-zinc-600 truncate">{turno.userName}</p>
             <p className="text-xs text-amber-500/70 mt-1">
-              ${turno.seniaCongelada.toLocaleString("es-AR")} seña
+              ${formatearMoneda(turno.seniaCongelada)} seña
             </p>
           </button>
         ))}

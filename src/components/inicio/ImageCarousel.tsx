@@ -1,13 +1,11 @@
 "use client";
 import { motion } from "framer-motion";
 import Autoplay from "embla-carousel-autoplay"
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import { Carousel } from "@/components/ui/carousel/Carousel";
+import { CarouselContent } from "@/components/ui/carousel/CarouselContent";
+import { CarouselItem } from "@/components/ui/carousel/CarouselItem";
+import { CarouselNext } from "@/components/ui/carousel/CarouselNext";
+import { CarouselPrevious } from "@/components/ui/carousel/CarouselPrevious";
 import Image from "next/image";
 import type { ServicioCarrusel } from "@/types/servicio";
 

@@ -1,18 +1,15 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidarBarberos } from "@/lib/revalidar/revalidar-barberos";
 import type { ActionState } from "@/types/action-state";
-import { requerirAdmin } from "@/lib/seguridad";
+import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
 
-export async function asignarServicioABarbero(
+async function asignarServicioABarberoBase(
   prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   try {
-    const sesion = await requerirAdmin();
-    if (!sesion) return { success: false, error: "No autorizado" };
-
     const barberoId = formData.get("barberoId");
     const servicioId = formData.get("servicioId");
 
@@ -27,7 +24,7 @@ export async function asignarServicioABarbero(
       },
     });
 
-    revalidatePath("/barbero");
+    revalidarBarberos();
 
     return { success: true };
   } catch (error) {
@@ -35,3 +32,5 @@ export async function asignarServicioABarbero(
     return { success: false, error: "Error al asignar servicio" };
   }
 }
+
+export const asignarServicioABarbero = exigirAdmin(asignarServicioABarberoBase);

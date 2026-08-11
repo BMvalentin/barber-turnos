@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { MapPin, Phone, Clock, Scissors } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getHorariosCompactos } from "@/actions/horarios/margenesHorario.actions";
+import { getHorariosCompactos } from "@/actions/horarios/horarios-compactos.actions";
 
 interface LocationSectionProps {
   config?: {

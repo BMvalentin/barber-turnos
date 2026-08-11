@@ -1,9 +1,7 @@
 import { Suspense } from "react";
 import { CreditCard } from "lucide-react";
-import {
-  obtenerEstadoConexionMP,
-  obtenerEstadoConfiguracionOAuth,
-} from "@/actions/mercadopago/mercadopago-oauth.actions";
+import { obtenerEstadoConexionMP } from "@/actions/mercadopago/estado-conexion.actions";
+import { obtenerEstadoConfiguracionOAuth } from "@/actions/mercadopago/estado-oauth.actions";
 import MercadoPagoConnectionPanel from "@/components/admin/MercadoPagoConnectionPanel";
 
 export default async function PaginaConfiguracionMercadoPago() {

@@ -1,6 +1,7 @@
-import { getServicios } from "@/actions/servicios/servicio-actions";
+import { getServicios } from "@/actions/servicios/listar.actions";
 import { getBarberos } from "@/actions/barberos/listar.actions";
 import ServicioList from "@/components/servicio/ServicioList";
+import { serializarDatos } from "@/lib/utils/serializar-datos";
 
 export default async function ServiciosPage() {
   const [resultServicios, resultBarberos] = await Promise.all([
@@ -9,10 +10,10 @@ export default async function ServiciosPage() {
   ]);
 
   const servicios = resultServicios.success
-    ? JSON.parse(JSON.stringify(resultServicios.data))
+    ? serializarDatos(resultServicios.data ?? [])
     : [];
   const barberos = resultBarberos.success
-    ? JSON.parse(JSON.stringify(resultBarberos.data))
+    ? serializarDatos(resultBarberos.data ?? [])
     : [];
 
   return (

@@ -3,7 +3,9 @@ import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Payment } from "mercadopago";
-import { obtenerClienteMP } from "@/lib/mercadopago";
+import { obtenerClienteMP } from "@/lib/mercadopago/obtener-cliente";
+import { confirmarTurnoPorPago } from "@/lib/confirmar-turno-por-pago";
+import { ESTADOS_TURNO } from "@/lib/constants";
 
 export const runtime = "nodejs";
 
@@ -137,9 +139,22 @@ export async function POST(req: NextRequest) {
     // Manejar los distintos estados de pago
     switch (paymentData.status) {
       case "approved": {
-        // Validar que el monto acreditado cubra la seña congelada del turno
+        // Validar el pago contra la API de MP a través del helper compartido
         const montoAcreditado = Number(paymentData.transaction_amount ?? 0);
-        if (montoAcreditado < Number(turno.seniaCongelada)) {
+        const resultado = await confirmarTurnoPorPago({
+          turnoId,
+          estadoPago: "approved",
+          referencia: String(paymentData.external_reference ?? ""),
+          montoPago: montoAcreditado,
+          paymentId: paymentData.id,
+          soloSiPendiente: true,
+        });
+
+        if (resultado.ok && !resultado.yaConfirmado) {
+          console.log(`✅ Turno ${turnoId} CONFIRMADO por pago ${paymentData.id}`);
+        } else if (resultado.yaConfirmado) {
+          console.log(`ℹ️ Turno ${turnoId} ya no está PENDIENTE: ${turno.estado}`);
+        } else if (resultado.error === "El monto del pago no es válido") {
           console.error(
             `❌ Monto insuficiente para turno ${turnoId}: acreditado ${montoAcreditado}, seña ${turno.seniaCongelada}`
           );
@@ -147,20 +162,9 @@ export async function POST(req: NextRequest) {
             { error: "Monto no coincide con la seña" },
             { status: 400 }
           );
-        }
-
-        if (turno.estado === "PENDIENTE") {
-          // Pago aprobado → confirmar el turno
-          await prisma.turno.update({
-            where: { id: turnoId },
-            data: {
-              estado: "CONFIRMADO",
-              ...(paymentData.id ? { mpPaymentId: String(paymentData.id) } : {}),
-            },
-          });
-          console.log(`✅ Turno ${turnoId} CONFIRMADO por pago ${paymentData.id}`);
         } else {
-          console.log(`ℹ️ Turno ${turnoId} ya no está PENDIENTE: ${turno.estado}`);
+          console.error(`❌ No se pudo confirmar el turno ${turnoId}: ${resultado.error}`);
+          return NextResponse.json({ error: "No se pudo confirmar el pago" }, { status: 400 });
         }
         break;
       }
@@ -181,7 +185,7 @@ export async function POST(req: NextRequest) {
         // Pago rechazado/cancelado → turno vuelve a PENDIENTE sin paymentId confirmado
         await prisma.turno.update({
           where: { id: turnoId },
-          data: { estado: "PENDIENTE" },
+          data: { estado: ESTADOS_TURNO[0] },
         });
         console.log(`❌ Pago rechazado/cancelado para turno ${turnoId}`);
         break;
@@ -192,7 +196,7 @@ export async function POST(req: NextRequest) {
         // Devolución → cancelar el turno
         await prisma.turno.update({
           where: { id: turnoId },
-          data: { estado: "CANCELADO" },
+          data: { estado: ESTADOS_TURNO[3] },
         });
         console.log(`↩️ Turno ${turnoId} CANCELADO por devolución/contracargo`);
         break;

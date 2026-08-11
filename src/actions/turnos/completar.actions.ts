@@ -2,7 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { requerirAdmin } from "@/lib/seguridad";
+import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
+import { ESTADOS_TURNO } from "@/lib/constants";
 import type { ActionState } from "@/types/action-state";
 import type { TurnoResumen } from "@/types/turno";
 
@@ -19,7 +20,7 @@ export async function completedTurno(
 
     const turno = await prisma.turno.update({
       where: { id },
-      data: { estado: "COMPLETADO" },
+      data: { estado: ESTADOS_TURNO[2] },
     });
 
     revalidateTag("turnos-global");

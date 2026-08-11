@@ -1,6 +1,7 @@
 /* Tipos compartidos del flujo de creación de turnos. */
 
 import type { Prisma } from "../../generated/prisma/client";
+import { ESTADOS_TURNO, SELECCION_USUARIO_BASICA } from "@/lib/constants";
 
 export type ServicioData = {
   id: string;
@@ -42,7 +43,7 @@ export type TurnoCreado = {
 export type TurnoConDetalle = Omit<
   Prisma.turnoGetPayload<{
     include: {
-      user: { select: { id: true; name: true; email: true; telefono: true } };
+      user: { select: typeof SELECCION_USUARIO_BASICA };
       barbero: true;
       servicio: true;
     };
@@ -67,3 +68,34 @@ export type TurnoResumen = Omit<
   Prisma.turnoGetPayload<{}>,
   "precioCongelado" | "seniaCongelada"
 > & { precioCongelado: number; seniaCongelada: number };
+
+/* Turno listado (getTurnos del admin/dashboard), con selecciones mínimas. */
+export type TurnoListado = Omit<
+  Prisma.turnoGetPayload<{
+    include: {
+      user: { select: typeof SELECCION_USUARIO_BASICA };
+      servicio: { select: { id: true; nombre: true; duracion: true } };
+      barbero: { select: { id: true; nombre: true } };
+    };
+  }>,
+  "precioCongelado" | "seniaCongelada" | "estado"
+> & {
+  precioCongelado: number;
+  seniaCongelada: number;
+  estado: (typeof ESTADOS_TURNO)[number];
+};
+
+/* DTO aplanado del panel de testing de Mercado Pago (test-mp). */
+export type TurnoPruebaMp = {
+  id: string;
+  estado: string;
+  horarioReservado: string;
+  precioCongelado: number;
+  seniaCongelada: number;
+  mpPreferenceId: string | null;
+  mpPaymentId: string | null;
+  userName: string | null;
+  userEmail: string | null;
+  servicioNombre: string;
+  barberoNombre: string;
+};

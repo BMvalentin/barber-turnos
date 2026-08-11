@@ -1,12 +1,11 @@
-import type { Metadata } from "next";
-import { cache } from "react";
 import { Outfit, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import LayoutComponent from "@/components/comunes/LayoutComponent";
 import AppGate from "@/components/comunes/AppGate";
 import { Toaster } from "@/components/ui/toaster";
-import { getPageConfig } from "@/actions/configuracion/configPage";
-import { elegirColorTexto, obtenerTintaLejible } from "@/lib/contraste";
+import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
+import { elegirColorTexto } from "@/lib/contraste/elegir-color-texto";
+import { obtenerTintaLejible } from "@/lib/contraste/obtener-tinta-lejible";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -20,50 +19,14 @@ const playfair = Playfair_Display({
   display: "swap",
 });
 
-const DEFAULT_TITLE = "Mayoraz - Turnos Barberia";
-const DEFAULT_DESCRIPTION =
-  "Mayoraz - Reserva tu turno en línea de manera fácil y rápida. Santa clara, Buenos Aires.";
-const DEFAULT_ICON = "/images/logopng.png";
-
-// cache() evita repetir la query: generateMetadata y RootLayout la comparten
-const getCachedPageConfig = cache(async () => await getPageConfig());
-
-export async function generateMetadata(): Promise<Metadata> {
-  const config = await getCachedPageConfig();
-
-  const title = config?.metaTitle || config?.name || DEFAULT_TITLE;
-  const description =
-    config?.metaDescription || config?.description || DEFAULT_DESCRIPTION;
-  const icon = config?.favicon || DEFAULT_ICON;
-
-  return {
-    title,
-    description,
-    icons: {
-      icon,
-      shortcut: icon,
-      apple: icon,
-    },
-    openGraph: {
-      title,
-      description,
-      images: config?.logo ? [{ url: config.logo }] : [],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: config?.logo ? [config.logo] : [],
-    },
-  };
-}
+export { generateMetadata } from "./metadata";
 
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const config = await getCachedPageConfig();
+  const config = await obtenerConfigCacheada();
 
   // Defaults de color: la fuente única es :root en globals.css
   const PRIMARIO_POR_DEFECTO = "#d97706";

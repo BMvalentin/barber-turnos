@@ -8,10 +8,15 @@ import {
   DollarSign,
   Clock,
 } from "lucide-react";
-import { formatearHora } from "@/lib/utils";
+import { formatearHora } from "@/lib/utils/formatear-hora";
 import { StatCard } from "@/components/panel/StatCard";
 import { DetailCard } from "@/components/panel/DetailCard";
 import { ItemLista } from "@/components/panel/ItemLista";
+import { ESTADOS_TURNO_ACTIVOS, ESTADOS_TURNO } from "@/lib/constants";
+import { obtenerBarberosConConteoDeTurnos } from "@/lib/consultas/obtener-barberos-con-conteo-de-turnos";
+import { obtenerBarberosConTurnosHoy } from "@/lib/consultas/obtener-barberos-con-turnos-hoy";
+import { obtenerBarberosConRendimientoHoy } from "@/lib/consultas/obtener-barberos-con-rendimiento-hoy";
+import { obtenerServiciosPopulares } from "@/lib/consultas/obtener-servicios-populares";
 
 async function getStats() {
   const hoy = new Date();
@@ -68,92 +73,32 @@ async function getStats() {
       ["admin-dashboard"],
       () =>
         prisma.turno.count({
-          where: { estado: { in: ["PENDIENTE", "CONFIRMADO"] } },
+          where: { estado: { in: [...ESTADOS_TURNO_ACTIVOS] } },
         }),
       30,
     ),
     getCachedData(
       ["admin-dashboard-barberos"],
       ["admin-dashboard"],
-      () =>
-        prisma.barbero.findMany({
-          where: { estado: true },
-          select: {
-            id: true,
-            nombre: true,
-            srcImage: true,
-            _count: {
-              select: {
-                turnos: {
-                  where: { estado: { in: ["PENDIENTE", "CONFIRMADO"] } },
-                },
-              },
-            },
-          },
-          orderBy: { nombre: "asc" },
-          take: 5,
-        }),
+      () => obtenerBarberosConConteoDeTurnos(),
       30,
     ),
     getCachedData(
       ["admin-dashboard-servicios-populares"],
       ["admin-dashboard"],
-      () =>
-        prisma.servicio.findMany({
-          where: { estado: true },
-          select: {
-            id: true,
-            nombre: true,
-            precio: true,
-            _count: { select: { turnos: true } },
-          },
-          orderBy: { turnos: { _count: "desc" } },
-          take: 5,
-        }),
+      () => obtenerServiciosPopulares(),
       30,
     ),
     getCachedData(
       ["admin-dashboard-turnos-hoy-por-barbero", claveDia],
       ["admin-dashboard"],
-      () =>
-        prisma.barbero.findMany({
-          where: { estado: true },
-          include: {
-            turnos: {
-              where: {
-                horarioReservado: { gte: inicioDia, lte: finDia },
-                estado: { in: ["PENDIENTE", "CONFIRMADO"] },
-              },
-              include: {
-                user: { select: { name: true, email: true } },
-                servicio: { select: { nombre: true, duracion: true } },
-              },
-              orderBy: { horarioReservado: "asc" },
-            },
-          },
-          orderBy: { nombre: "asc" },
-        }),
+      () => obtenerBarberosConTurnosHoy(inicioDia, finDia),
       30,
     ),
     getCachedData(
       ["admin-dashboard-rendimiento-hoy-por-barbero", claveDia],
       ["admin-dashboard"],
-      () =>
-        prisma.barbero.findMany({
-          where: { estado: true },
-          select: {
-            id: true,
-            nombre: true,
-            turnos: {
-              where: {
-                horarioReservado: { gte: inicioDia, lte: finDia },
-                estado: "COMPLETADO",
-              },
-              select: { precioCongelado: true },
-            },
-          },
-          orderBy: { nombre: "asc" },
-        }),
+      () => obtenerBarberosConRendimientoHoy(inicioDia, finDia),
       30,
     ),
   ]);
@@ -308,7 +253,7 @@ export default async function AdminDashboard() {
                         </div>
                         <span
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                            t.estado === "CONFIRMADO"
+                            t.estado === ESTADOS_TURNO[1]
                               ? "bg-green-500/20 text-green-500 border-green-500/30"
                               : "bg-[var(--page-primary)]/20 text-[var(--page-primary)] border-[var(--page-primary)]/30"
                           }`}

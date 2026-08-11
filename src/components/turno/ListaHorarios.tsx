@@ -1,7 +1,8 @@
 "use client";
 
 import { Lock } from "lucide-react";
-import { formatearHora } from "@/lib/utils";
+import { formatearHora } from "@/lib/utils/formatear-hora";
+import EmptyState from "@/components/ui/EmptyState";
 
 interface PropsListaHorarios {
   slots: string[];
@@ -53,12 +54,13 @@ export default function ListaHorarios({
         </div>
       ) : slots.length === 0 ? (
         /* Estado: sin disponibilidad */
-        <div className="p-5 bg-red-500/5 border border-red-500/20 rounded-xl">
-          <p className="text-[11px] text-red-400/80 flex items-center gap-2">
-            <span className="text-red-500 font-bold">😔</span> No hay
-            horarios disponibles para esta combinación
-          </p>
-        </div>
+        <EmptyState
+          horizontal
+          icono={<span className="text-red-500 font-bold">😔</span>}
+          mensaje="No hay horarios disponibles para esta combinación"
+          claseContenedor="p-5 bg-red-500/5 border border-red-500/20 rounded-xl"
+          claseMensaje="text-[11px] text-red-400/80"
+        />
       ) : (
         /* Estado: grilla de horarios disponibles */
         <div className="space-y-3">

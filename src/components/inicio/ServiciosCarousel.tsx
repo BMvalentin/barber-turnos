@@ -1,4 +1,4 @@
-import { getServiciosCarrusel } from "@/actions/servicios/servicio-actions";
+import { getServiciosCarrusel } from "@/actions/servicios/carrusel.actions";
 import { ImageCarousel } from "@/components/inicio/ImageCarousel";
 
 export async function ServiciosCarousel() {

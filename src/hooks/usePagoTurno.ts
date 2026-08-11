@@ -1,8 +1,9 @@
 "use client";
 
-import { crearPreferenciaPago } from "@/actions/mercadopago/mercadopago-actions";
+import { crearPreferenciaPago } from "@/actions/mercadopago/crear-preferencia.actions";
 import { useState } from "react";
 import type { TurnoCreado } from "@/types/turno";
+import { formatearFechaHora } from "@/lib/utils/formatear-fecha-hora";
 
 export type ParametrosPagoTurno = {
   whatsappPhone: string;
@@ -21,14 +22,7 @@ export function usePagoTurno({ whatsappPhone }: ParametrosPagoTurno) {
     fecha: Date | string,
     estado: "Pagado" | "Pendiente de pago",
   ) => {
-    const fechaObj = new Date(fecha);
-
-    const fechaFormateada = fechaObj.toLocaleString("es-AR", {
-      day: "2-digit",
-      month: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    const fechaFormateada = formatearFechaHora(fecha);
 
     const mensaje = `Hola! Confirmé mi turno:
     📅 Fecha: ${fechaFormateada}

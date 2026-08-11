@@ -3,43 +3,22 @@
 import { useState, useTransition } from "react";
 import { DiaLaboralList } from "@/components/diaLaboral/diaLaboralList";
 import { HorariosList } from "@/components/horarios/horariosList";
-import {
-  deleteMargenLaboral,
-  getMargenesLaborales,
-} from "@/actions/horarios/margenesHorario.actions";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { deleteMargenLaboral } from "@/actions/horarios/eliminar-margen.actions";
+import { getMargenesLaborales } from "@/actions/horarios/listar-margenes.actions";
+import { Dialog } from "@/components/ui/dialog/Dialog";
+import { DialogContent } from "@/components/ui/dialog/DialogContent";
+import { DialogTitle } from "@/components/ui/dialog/DialogTitle";
 import { useRouter } from "next/navigation";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/lib/toast";
+import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
-import type { MargenLaboralCreado } from "@/types/horarios";
-
-export type DiaLaboral = {
-  id: string;
-  estado: boolean;
-  dia: number;
-  createdAt: Date;
-  updatedAt: Date;
-  margenes?: MargenLaboralCreado[];
-};
+import type { DiaLaboral, MargenLaboralCreado } from "@/types/horarios";
+import { DIAS_SEMANA } from "@/lib/constants";
 
 type DiaLaboralClientProps = {
   initialData: DiaLaboral[];
   isLoading?: boolean;
 };
-
-const DIAS_SEMANA = [
-  "Domingo",
-  "Lunes",
-  "Martes",
-  "Miércoles",
-  "Jueves",
-  "Viernes",
-  "Sábado",
-];
 
 export function DiaLaboralClient({
   initialData: diasLaborales,
@@ -54,6 +33,19 @@ export function DiaLaboralClient({
   // Estado para controlar el modal de confirmación de eliminación
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [margenAEliminar, setMargenAEliminar] = useState<string | null>(null);
+
+  const { retroalimentar } = useRetroalimentacionAccion({
+    mensajeExito: "Éxito",
+    descripcionExito: "Horario eliminado correctamente.",
+    descripcionError: "Error al eliminar el horario",
+    refrescar: true,
+    onExito: async () => {
+      if (selectedDia) {
+        const margenesData = await getMargenesLaborales(selectedDia.id);
+        setMargenes(margenesData);
+      }
+    },
+  });
 
   const handleAsignarHorarios = async (dia: DiaLaboral) => {
     setSelectedDia(dia);
@@ -89,28 +81,7 @@ export function DiaLaboralClient({
 
     startTransition(async () => {
       const result = await deleteMargenLaboral(idAEliminar);
-
-      if (result.success) {
-        toast({
-          title: "Éxito",
-          description: "Horario eliminado correctamente.",
-          variant: "default",
-          duration: 4000,
-        });
-        // Recargar márgenes
-        if (selectedDia) {
-          const margenesData = await getMargenesLaborales(selectedDia.id);
-          setMargenes(margenesData);
-        }
-        router.refresh();
-      } else {
-        toast({
-          title: "Error",
-          description: result.error || "Error al eliminar el horario",
-          variant: "destructive",
-          duration: 4000,
-        });
-      }
+      await retroalimentar(result);
     });
   };
 

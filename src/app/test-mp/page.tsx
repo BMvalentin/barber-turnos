@@ -3,7 +3,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { requerirAdmin } from "@/lib/seguridad";
+import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { MPTestClient } from "@/components/test-mp/MPTestClient";
 
 export default async function TestMPPage() {

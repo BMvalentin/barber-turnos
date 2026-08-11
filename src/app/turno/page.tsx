@@ -2,18 +2,13 @@
 import { getTurnos } from "@/actions/turnos/listar.actions";
 import TurnoList from "@/components/turno/TurnoList";
 import CreateTurnoModal from "@/components/turno/CreateTurnoModal";
-import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
+import { esAdmin } from "@/lib/seguridad/es-admin";
+import { obtenerDatosReserva } from "@/lib/consultas/obtener-datos-reserva";
 import TurnoManager from "@/components/turno/TurnoManager";
 
 async function getTurnoData() {
-  const [servicios, barberos, usuarios, relaciones, config] = await Promise.all([
-    prisma.servicio.findMany({ where: { estado: true }, orderBy: { nombre: "asc" } }),
-    prisma.barbero.findMany({ where: { estado: true }, orderBy: { nombre: "asc" } }),
-    prisma.user.findMany({ select: { id: true, name: true, email: true }, orderBy: { name: "asc" } }),
-    prisma.servicioxbarbero.findMany({ select: { barberoId: true, servicioId: true } }),
-    prisma.pageConfig.findUnique({ where: { id: 1 } }),
-  ]);
+  const { servicios, barberos, usuarios, relaciones, config } = await obtenerDatosReserva(true);
 
   const serializedServicios = servicios.map((s) => ({
     ...s,
@@ -26,7 +21,7 @@ async function getTurnoData() {
 }
 
 export default async function TurnoPage() {
-  const session = await auth();
+  const session = await requerirSesion();
   const { servicios, barberos, usuarios, relaciones, config } = await getTurnoData();
   const result = await getTurnos(1);
 
@@ -62,7 +57,7 @@ export default async function TurnoPage() {
             />
           </div>
 
-          {session?.user?.role === "ADMIN" ? (
+          {esAdmin(session) ? (
             <TurnoManager
               initialTurnos={turnosData}
               session={session}

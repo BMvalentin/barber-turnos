@@ -7,6 +7,31 @@ export type ServicioOpcion = {
   nombre: string;
 };
 
+/* Barbero base (id, nombre, imagen y estado) usado por formularios y listas. */
+export type Barbero = {
+  id: string;
+  nombre: string | null;
+  srcImage: string | null;
+  estado: boolean;
+};
+
+/* Barbero listado en la grilla del admin, con sus servicios y horarios
+   (datos de admin/barbero/page.tsx: `dia` seleccionado mínimo). */
+export type BarberoListado = {
+  id: string;
+  nombre: string | null;
+  srcImage: string | null;
+  estado: boolean;
+  servicios?: {
+    servicio: { id: string; nombre: string };
+  }[];
+  horarios?: {
+    margenLaboralId: string;
+    dia: { id: string; dia: string };
+    margenLaboral: { desde: string; hasta: string };
+  }[];
+};
+
 export type MargenLaboral = {
   id: string;
   desde: string;

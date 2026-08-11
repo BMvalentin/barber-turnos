@@ -1,28 +1,12 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
+import { obtenerBarberosConRelaciones } from "@/lib/consultas/obtener-barberos-con-relaciones";
 import type { ActionState } from "@/types/action-state";
 import type { BarberoConRelaciones } from "@/types/barbero";
 
 export async function getBarberos(): Promise<ActionState<BarberoConRelaciones[]>> {
   try {
-    const barberos = await prisma.barbero.findMany({
-      where: { estado: true },
-      include: {
-        servicios: {
-          include: {
-            servicio: true,
-          },
-        },
-        horarios: {
-          include: {
-            dia: true,
-            margenLaboral: true,
-          },
-        },
-      },
-      orderBy: { nombre: "asc" },
-    });
+    const barberos = await obtenerBarberosConRelaciones();
 
     const data = barberos.map((b) => ({
       ...b,

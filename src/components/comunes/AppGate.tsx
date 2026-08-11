@@ -7,6 +7,7 @@ import CookieModal from "@/components/comunes/CookieModal";
 import PrivacyModal from "@/components/comunes/PrivacyModal";
 import TermsModal from "@/components/comunes/TermsModal";
 import { Footer } from "@/components/inicio/Footer";
+import { esAdmin as esUsuarioAdmin } from "@/lib/seguridad/es-admin";
 
 type AppGateProps = {
   children: React.ReactNode;
@@ -77,7 +78,7 @@ export default function AppGate({
     setTermsOpen(false);
   };
 
-  const esAdmin = session?.user?.role === "ADMIN" || isAdmin;
+  const esAdmin = esUsuarioAdmin(session) || isAdmin;
 
   const hideFooter =
     pathname.startsWith("/admin") ||

@@ -1,16 +1,16 @@
 "use client";
 
-import { toast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { createBarbero } from "@/actions/barberos/crear.actions";
-import { uploadBarberImages } from "@/actions/mercadopago/upload-images.actions";
+import { uploadBarberImages } from "@/actions/mercadopago/subir-barberos.actions";
+import { useImagenServicio } from "@/hooks/useImagenServicio";
 import type { ServicioOpcion, DiaLaboral } from "@/types/barbero";
 import CampoNombreBarbero from "./CampoNombreBarbero";
-import SelectorImagenBarbero from "./SelectorImagenBarbero";
+import SeccionImagenServicio from "@/components/servicio/SeccionImagenServicio";
 import SelectorServicios from "./SelectorServicios";
 import SelectorHorarios from "./SelectorHorarios";
-import BotonSubmitBarbero from "./BotonSubmitBarbero";
+import BotonSubmitPending from "@/components/ui/boton-submit-pending";
 
 type Props = {
   servicios: ServicioOpcion[];
@@ -23,19 +23,36 @@ export default function CreateBarberoForm({
   diasLaborales,
   onSuccess,
 }: Props) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const { retroalimentar } = useRetroalimentacionAccion({
+    mensajeExito: "Barbero creado",
+    descripcionExito: "El barbero se ha creado correctamente.",
+    descripcionError: "Error al crear barbero",
+    refrescar: true,
+    onExito: () => {
+      setNombre("");
+      quitarImagen();
+      setSelectedServicios([]);
+      setSelectedHorarios([]);
+      onSuccess?.();
+    },
+  });
   const [nombre, setNombre] = useState("");
-  const [srcImage, setSrcImage] = useState("");
   const [selectedServicios, setSelectedServicios] = useState<string[]>([]);
   const [selectedHorarios, setSelectedHorarios] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showServicios, setShowServicios] = useState(false);
   const [showHorarios, setShowHorarios] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  const {
+    selectedFile,
+    previewUrl,
+    srcImage,
+    uploadError,
+    manejarArchivo,
+    quitarImagen,
+    setUploadError,
+  } = useImagenServicio();
 
   const handleNombreChange = (value: string) => {
     setNombre(value);
@@ -59,25 +76,6 @@ export default function CreateBarberoForm({
     );
   };
 
-  const handleFileChange = (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      setUploadError("El archivo debe ser una imagen");
-      return;
-    }
-    setUploadError(null);
-    setSrcImage("");
-    setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-  };
-
-  const handleRemoveImage = () => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setSrcImage("");
-    setUploadError(null);
-  };
-
   const handleSubmit = async () => {
     setError(null);
     setUploadError(null);
@@ -92,9 +90,7 @@ export default function CreateBarberoForm({
         const uploadResult = await uploadBarberImages([selectedFile], "barberia/barberos");
         if (uploadResult.success && uploadResult.images.length > 0) {
           finalImageUrl = uploadResult.images[0];
-          if (previewUrl) URL.revokeObjectURL(previewUrl);
-          setPreviewUrl(null);
-          setSelectedFile(null);
+          quitarImagen();
         } else {
           setUploadError("Error al subir la imagen");
           setUploading(false);
@@ -115,30 +111,10 @@ export default function CreateBarberoForm({
         serviciosIds: selectedServicios,
         margenesIds: selectedHorarios,
       });
-      if (result.success) {
-        toast({
-          title: "Barbero creado",
-          description: "El barbero se ha creado correctamente.",
-          variant: "default",
-          duration: 4000,
-        });
-        setNombre("");
-        setSrcImage("");
-        setPreviewUrl(null);
-        setSelectedFile(null);
-        setSelectedServicios([]);
-        setSelectedHorarios([]);
-        onSuccess?.();
-        router.refresh();
-      } else {
+      if (!result.success) {
         setError(result.error || "Error al crear barbero");
-        toast({
-          title: "Error",
-          description: result.error || "Error al crear barbero",
-          variant: "destructive",
-          duration: 4000,
-        });
       }
+      await retroalimentar(result);
     });
   };
 
@@ -153,12 +129,14 @@ export default function CreateBarberoForm({
         requerido
         onCambio={handleNombreChange}
       />
-      <SelectorImagenBarbero
-        imagen={previewUrl || srcImage}
-        subiendo={uploading}
-        errorSubida={uploadError}
-        onSeleccionarArchivo={handleFileChange}
-        onQuitarImagen={handleRemoveImage}
+      <SeccionImagenServicio
+        previewUrl={previewUrl}
+        srcImage={srcImage}
+        uploadError={uploadError}
+        isPending={uploading}
+        variante="barbero"
+        onFileChange={manejarArchivo}
+        onRemove={quitarImagen}
       />
       <SelectorServicios
         abierto={showServicios}
@@ -174,11 +152,13 @@ export default function CreateBarberoForm({
         diasLaborales={diasLaborales}
         onAlternarSeleccion={toggleHorario}
       />
-      <BotonSubmitBarbero
-        isPending={isPending || uploading}
-        deshabilitado={!!error}
+      <BotonSubmitPending
+        pendiente={isPending || uploading}
+        tipo="button"
         texto="Crear Barbero"
+        deshabilitado={!!error}
         onClic={handleSubmit}
+        claseAdicional="w-full shadow-lg"
       />
     </div>
   );
