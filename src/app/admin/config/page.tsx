@@ -1,11 +1,9 @@
 // app/admin/config/page.tsx
-import { prisma } from "@/lib/prisma";
+import { getPageConfig } from "@/actions/configuracion/leer-config.actions";
 import GeneralConfigForm from "@/components/admin/config/GeneralConfigForm";
 
 export default async function ConfigPage() {
-  const config = await prisma.pageConfig.findUnique({
-    where: { id: 1 },
-  });
+  const config = await getPageConfig();
 
   return (
     <div className="container mx-auto p-6 max-w-3xl">

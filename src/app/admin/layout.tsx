@@ -1,21 +1,21 @@
 // app/admin/layout.tsx
-import { auth } from "@/auth";
+import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { redirect } from "next/navigation";
-import AdminShell from "@/components/admin/AdminShell";
+import AdminShell from "@/components/panel/navegacion/AdminShell";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  const session = await requerirSesion();
 
   if (!session?.user) {
     redirect("/login");
   }
 
   if (session.user.role !== "ADMIN") {
-    redirect("/unauthorized");
+    redirect("/dashboard");
   }
 
   return <AdminShell>{children}</AdminShell>;

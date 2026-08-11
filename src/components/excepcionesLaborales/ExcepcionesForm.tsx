@@ -1,66 +1,32 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
-import { createExcepcion } from "@/actions/excepcionesLaborales.actions";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { useFormStatus } from "react-dom";
-import { toast } from "@/components/ui/use-toast";
+import { createExcepcion } from "@/actions/excepciones/crear.actions";
+import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
+import { ActionStateInicialSimple } from "@/types/action-state";
+import type { Barbero } from "@/types/barbero";
+import BotonSubmitFormStatus from "@/components/ui/boton-submit-form-status";
 
-const initialState = {
-  success: false,
-  error: undefined,
-};
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button
-      type="submit"
-      disabled={pending}
-      className="w-full text-[var(--page-primary-foreground)] shadow-md hover:opacity-95 transition-all"
-      style={{
-        backgroundColor: "var(--page-primary)",
-        border: "1px solid var(--page-secondary)",
-      }}
-    >
-      {pending ? "Guardando..." : "Crear Excepción"}
-    </Button>
-  );
-}
-
-type Barbero = {
-  id: string;
-  nombre: string;
-};
+const initialState = ActionStateInicialSimple;
 
 type ExcepcionFormProps = {
   barberos: Barbero[];
 };
 
 export default function ExcepcionForm({ barberos }: ExcepcionFormProps) {
-  const router = useRouter();
   const [state, formAction] = useActionState(createExcepcion, initialState);
+  const { retroalimentar } = useRetroalimentacionAccion({
+    mensajeExito: "Excepción creada",
+    descripcionExito: "La excepción laboral se ha creado correctamente.",
+    descripcionError: "Error al crear la excepción laboral",
+    refrescar: true,
+  });
 
   useEffect(() => {
-    if (state.success) {
-      toast({
-        title: "Excepción creada",
-        description: "La excepción laboral se ha creado correctamente.",
-        variant: "default",
-        duration: 4000,
-      });
-      router.refresh();
-    } else if (state.error) {
-      toast({
-        title: "Error",
-        description: state.error || "Error al crear la excepción laboral",
-        variant: "destructive",
-        duration: 4000,
-      });
+    if (state.success || state.error) {
+      void retroalimentar(state);
     }
-  }, [state, router]);
+  }, [state, retroalimentar]);
 
   return (
     <form action={formAction} className="space-y-4">
@@ -140,7 +106,11 @@ export default function ExcepcionForm({ barberos }: ExcepcionFormProps) {
         </div>
       )}
 
-      <SubmitButton />
+      <BotonSubmitFormStatus
+        texto="Crear Excepción"
+        claseAdicional="w-full shadow-md hover:opacity-95"
+        estiloAdicional={{ border: "1px solid var(--page-secondary)" }}
+      />
     </form>
   );
 }

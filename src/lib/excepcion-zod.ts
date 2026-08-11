@@ -1,15 +1,14 @@
 import { z } from "zod";
+import { esquemaNombre } from "@/lib/zod";
 
 /* =========================
    VALIDACIÓN MOTIVO
 ========================= */
-export const motivoSchema = z
-  .string()
-  .min(3, "El motivo debe tener al menos 3 caracteres")
-  .max(100, "El motivo es demasiado largo")
-  .regex(/^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/, {
-    message: "El motivo solo puede contener letras",
-  });
+export const motivoSchema = esquemaNombre(
+  "motivo",
+  /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/,
+  "El motivo solo puede contener letras"
+);
 
 /* =========================
    SCHEMA COMPLETO

@@ -1,15 +1,15 @@
 "use client";
 
-import { useActionState, useCallback, useEffect, useState, useRef } from "react";
-import { actualizarTurno } from "@/actions/turno.actions";
+import { useActionState, useEffect, useState, useRef } from "react";
+import { actualizarTurno } from "@/actions/turnos/estado.actions";
+import { useConfiguracionTurno } from "@/hooks/useConfiguracionTurno";
+import { useSessionId } from "@/hooks/useSessionId";
 import SeleccionadorHorario from "./SeleccionadorHorario";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog } from "@/components/ui/dialog/Dialog";
+import { DialogContent } from "@/components/ui/dialog/DialogContent";
+import { DialogHeader } from "@/components/ui/dialog/DialogHeader";
+import { DialogTitle } from "@/components/ui/dialog/DialogTitle";
+import { DialogTrigger } from "@/components/ui/dialog/DialogTrigger";
 import {
   Clock,
   Users,
@@ -18,62 +18,30 @@ import {
   ArrowLeft,
   AlertCircle,
 } from "lucide-react";
-import { useFormStatus } from "react-dom";
+import { ESTADOS_TURNO } from "@/lib/constants";
+import BotonSubmitFormStatus from "@/components/ui/boton-submit-form-status";
+import { ActionStateInicial } from "@/types/action-state";
+import type { TurnoListado } from "@/types/turno";
 
-type Turno = {
-  id: string;
-  horarioReservado: Date;
-  precioCongelado: number;
-  seniaCongelada: number;
-  estado: "PENDIENTE" | "CONFIRMADO" | "CANCELADO" | "COMPLETADO";
-  user: {
-    id: string;
-    name: string | null;
-    email: string | null;
-  };
-  servicio: {
-    id: string;
-    nombre: string;
-    duracion: number;
-  };
-  barbero: {
-    id: string;
-    nombre: string;
-  };
-};
-
-type Servicio = {
-  id: string;
-  nombre: string;
-  descripcion: string | null;
-  duracion: number;
-  precio: number;
-};
-
-type Barbero = {
-  id: string;
-  nombre: string;
-};
-
-const estadoInicial = {
-  success: false,
-  error: undefined as string | undefined,
-};
+const estadoInicial = ActionStateInicial;
 
 interface Props {
-  turno: Turno;
+  turno: TurnoListado;
   userId?: string;
 }
 
 export default function EditTurnoModal({ turno, userId = "" }: Props) {
   const [abierto, setAbierto] = useState(false);
-  const [servicios, setServicios] = useState<Servicio[]>([]);
-  const [barberos, setBarberos] = useState<Barbero[]>([]);
-  const [cargandoDatos, setCargandoDatos] = useState(false);
-  const [errorCarga, setErrorCarga] = useState<string | null>(null);
+  const { datos, cargando, error, recargar } = useConfiguracionTurno(abierto);
+  const servicios = datos.servicios;
+  const barberos = datos.barberos;
+  const cargandoDatos = cargando;
+  const errorCarga = error
+    ? "No se pudo cargar la configuración. Intente cerrando y abriendo el formulario."
+    : null;
 
   // sessionId único por instancia del modal
-  const [sessionId] = useState(() => crypto.randomUUID());
+  const sessionId = useSessionId();
 
   const [servicioSeleccionadoId, setServicioSeleccionadoId] = useState(
     turno.servicio?.id || ""
@@ -84,43 +52,6 @@ export default function EditTurnoModal({ turno, userId = "" }: Props) {
   const formularioRef = useRef<HTMLFormElement>(null);
 
   const [state, formAction] = useActionState(actualizarTurno, estadoInicial);
-
-  // useCallback para que la función sea estable entre renders y no cause loops
-  const cargarDatos = useCallback(async () => {
-    try {
-      setCargandoDatos(true);
-      setErrorCarga(null);
-
-      const respuesta = await fetch("/api/configuracion-turno");
-
-      if (!respuesta.ok) {
-        throw new Error(`Error del servidor: ${respuesta.status}`);
-      }
-
-      const datos = await respuesta.json();
-
-      if (datos.error) {
-        throw new Error(datos.error);
-      }
-
-      setServicios(datos.servicios || []);
-      setBarberos(datos.barberos || []);
-    } catch (error) {
-      console.error("Error cargando datos del formulario:", error);
-      setErrorCarga(
-        "No se pudo cargar la configuración. Intente cerrando y abriendo el formulario."
-      );
-    } finally {
-      setCargandoDatos(false);
-    }
-  }, []); // Sin dependencias: la función no depende de ningún estado externo
-
-  // Cargar datos cuando se abre el modal
-  useEffect(() => {
-    if (abierto) {
-      cargarDatos();
-    }
-  }, [abierto, cargarDatos]);
 
   // Cerrar modal y recargar página al guardar con éxito
   useEffect(() => {
@@ -168,11 +99,11 @@ export default function EditTurnoModal({ turno, userId = "" }: Props) {
               </DialogHeader>
               <div className="flex items-center gap-2 mt-1">
                 <div
-                  className={`w-2 h-2 rounded-full ${turno.estado === "CONFIRMADO"
+                  className={`w-2 h-2 rounded-full ${turno.estado === ESTADOS_TURNO[1]
                       ? "bg-green-500"
-                      : turno.estado === "PENDIENTE"
+                      : turno.estado === ESTADOS_TURNO[0]
                         ? "bg-[var(--page-primary)]"
-                        : turno.estado === "COMPLETADO"
+                        : turno.estado === ESTADOS_TURNO[2]
                           ? "bg-blue-500"
                           : "bg-red-500"
                     }`}
@@ -184,7 +115,11 @@ export default function EditTurnoModal({ turno, userId = "" }: Props) {
             </div>
           </div>
 
-          <BotonGuardar />
+          <BotonSubmitFormStatus
+            texto="Guardar Cambios"
+            textoMientrasCarga="Guardando"
+            claseAdicional="h-auto bg-[#E8B031] hover:bg-[#d49f2c] text-black font-bold text-[11px] uppercase tracking-widest py-3 px-10 rounded-xl shadow-xl shadow-amber-900/10"
+          />
         </div>
 
         {/* --- CUERPO DEL FORMULARIO --- */}
@@ -204,7 +139,7 @@ export default function EditTurnoModal({ turno, userId = "" }: Props) {
               <p className="text-sm text-red-400">{errorCarga}</p>
               <button
                 type="button"
-                onClick={cargarDatos}
+                onClick={() => void recargar()}
                 className="px-6 py-2 bg-[var(--page-primary)]/20 hover:bg-[var(--page-primary)]/30 text-[var(--page-primary-80)] border border-[var(--page-primary)]/30 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
               >
                 Reintentar
@@ -322,27 +257,6 @@ export default function EditTurnoModal({ turno, userId = "" }: Props) {
 }
 
 // --- COMPONENTES AUXILIARES ---
-
-function BotonGuardar() {
-  const { pending } = useFormStatus();
-
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="bg-[#E8B031] hover:bg-[#d49f2c] text-black font-bold text-[11px] uppercase tracking-widest py-3 px-10 rounded-xl transition-all shadow-xl shadow-amber-900/10 disabled:opacity-50 flex items-center gap-3"
-    >
-      {pending ? (
-        <>
-          <div className="w-3 h-3 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-          Guardando
-        </>
-      ) : (
-        "Guardar Cambios"
-      )}
-    </button>
-  );
-}
 
 interface CampoSelectProps {
   label: string;

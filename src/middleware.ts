@@ -9,17 +9,12 @@ export default auth((req) => {
   const userRole = req.auth?.user?.role;
   const { nextUrl } = req;
 
-  const isApiAuthRoute = nextUrl.pathname.startsWith("/api/auth");
   const isAuthRoute = ["/login", "/register"].includes(nextUrl.pathname);
   const isAdminRoute = nextUrl.pathname.startsWith("/admin");
 
-  const isGestionRoute = ["/admin", "/excepcionesLaborales"].includes(nextUrl.pathname);
-
-  const isProtectedRoute = ["/dashboard", "/turno", "/admin", "/excepcionesLaborales", "/diaLaboral"].some((route) => 
+  const isProtectedRoute = ["/dashboard", "/turno", "/admin"].some((route) => 
     nextUrl.pathname.startsWith(route)
   );
-
-  if (isApiAuthRoute) return NextResponse.next();
 
   // 1. .redirect
   if (isAuthRoute) {
@@ -30,7 +25,7 @@ export default auth((req) => {
   }
 
   // 2. Lógica de ADMIN
-  if (isAdminRoute || isGestionRoute) {
+  if (isAdminRoute) {
     if (!isLoggedIn) {
       const callbackUrl = nextUrl.pathname + nextUrl.search;
       return NextResponse.redirect(new URL(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`, nextUrl));
@@ -60,3 +55,9 @@ export default auth((req) => {
 
   return NextResponse.next();
 });
+
+// Alcance del JWT: solo las rutas que este middleware realmente protege.
+// /api/auth y el resto de rutas públicas ya no pasan por el JWT (objetivo Fase 1.5).
+export const config = {
+  matcher: ["/admin/:path*", "/turno/:path*", "/dashboard/:path*", "/login", "/register"],
+};

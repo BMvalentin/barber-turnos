@@ -18,7 +18,7 @@ async function main() {
   const dias = [
     'Lunes',
     'Martes',
-    'Mieracoles',
+    'Miercoles',
     'Jueves',
     'Viernes',
     'Sabado',

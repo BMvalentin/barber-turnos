@@ -1,38 +1,15 @@
-import { prisma } from "@/lib/prisma";
+import { obtenerServiciosActivos } from "@/lib/consultas/obtener-servicios-activos";
+import { obtenerDiasLaboralesActivos } from "@/lib/consultas/obtener-dias-laborales-activos";
+import { obtenerBarberosConRelaciones } from "@/lib/consultas/obtener-barberos-con-relaciones";
 
 import BarberoList from "@/components/barbero/BarberoList";
 import CreateBarberoModal from "@/components/barbero/CreateBarberoModal";
 
 async function getData() {
   const [servicios, diasLaborales, barberos] = await Promise.all([
-    prisma.servicio.findMany({
-      where: { estado: true },
-      select: { id: true, nombre: true },
-      orderBy: { nombre: "asc" },
-    }),
-    prisma.dia_laboral.findMany({
-      where: { estado: true },
-      include: {
-        margenes: {
-          where: { estado: true },
-          orderBy: { desde: "asc" },
-        },
-      },
-      orderBy: { dia: "asc" },
-    }),
-    prisma.barbero.findMany({
-      where: { estado: true }, 
-      include: {
-        servicios: { include: { servicio: true } },
-        horarios: {
-          include: {
-            margenLaboral: true,
-            dia: { select: { id: true, dia: true } },
-          },
-        },
-      },
-      orderBy: { nombre: "asc" },
-    }),
+    obtenerServiciosActivos(),
+    obtenerDiasLaboralesActivos(),
+    obtenerBarberosConRelaciones(),
   ]);
 
   const serializedBarberos = barberos.map(barbero => ({
@@ -48,7 +25,11 @@ async function getData() {
     }))
   }));
 
-  return { servicios, diasLaborales, barberos: serializedBarberos };
+  return {
+    servicios: servicios.map((s) => ({ id: s.id, nombre: s.nombre })),
+    diasLaborales,
+    barberos: serializedBarberos,
+  };
 }
 
 export default async function BarberosPage() {

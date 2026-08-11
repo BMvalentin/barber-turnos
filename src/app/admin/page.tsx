@@ -1,5 +1,6 @@
 // app/admin/page.tsx
 import { prisma } from "@/lib/prisma";
+import { getCachedData } from "@/lib/cache";
 import {
   Users,
   Scissors,
@@ -7,7 +8,15 @@ import {
   DollarSign,
   Clock,
 } from "lucide-react";
-import Link from "next/link";
+import { formatearHora } from "@/lib/utils/formatear-hora";
+import { StatCard } from "@/components/panel/StatCard";
+import { DetailCard } from "@/components/panel/DetailCard";
+import { ItemLista } from "@/components/panel/ItemLista";
+import { ESTADOS_TURNO_ACTIVOS, ESTADOS_TURNO } from "@/lib/constants";
+import { obtenerBarberosConConteoDeTurnos } from "@/lib/consultas/obtener-barberos-con-conteo-de-turnos";
+import { obtenerBarberosConTurnosHoy } from "@/lib/consultas/obtener-barberos-con-turnos-hoy";
+import { obtenerBarberosConRendimientoHoy } from "@/lib/consultas/obtener-barberos-con-rendimiento-hoy";
+import { obtenerServiciosPopulares } from "@/lib/consultas/obtener-servicios-populares";
 
 async function getStats() {
   const hoy = new Date();
@@ -27,6 +36,9 @@ async function getStats() {
     59,
     59,
   );
+  const claveDia = `${hoy.getFullYear()}-${String(
+    hoy.getMonth() + 1,
+  ).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`;
 
   const [
     totalBarberos,
@@ -34,93 +46,61 @@ async function getStats() {
     totalTurnos,
     turnosPendientes,
     barberos,
-    proximosTurnos,
     serviciosPopulares,
     turnosHoyPorBarbero,
     rendimientoHoyPorBarbero,
   ] = await Promise.all([
-    prisma.barbero.count({ where: { estado: true } }),
-    prisma.servicio.count({ where: { estado: true } }),
-    prisma.turno.count(),
-    prisma.turno.count({
-      where: { estado: { in: ["PENDIENTE", "CONFIRMADO"] } },
-    }),
-
-    prisma.barbero.findMany({
-      where: { estado: true },
-      select: {
-        id: true,
-        nombre: true,
-        srcImage: true,
-        _count: {
-          select: {
-            turnos: { where: { estado: { in: ["PENDIENTE", "CONFIRMADO"] } } },
-          },
-        },
-      },
-      orderBy: { nombre: "asc" },
-      take: 5,
-    }),
-
-    prisma.turno.findMany({
-      where: {
-        estado: { in: ["PENDIENTE", "CONFIRMADO"] },
-        horarioReservado: { gte: new Date() },
-      },
-      include: {
-        user: { select: { name: true, email: true } },
-        barbero: { select: { nombre: true } },
-        servicio: { select: { nombre: true } },
-      },
-      orderBy: { horarioReservado: "asc" },
-      take: 5,
-    }),
-
-    prisma.servicio.findMany({
-      where: { estado: true },
-      select: {
-        id: true,
-        nombre: true,
-        precio: true,
-        _count: { select: { turnos: true } },
-      },
-      orderBy: { turnos: { _count: "desc" } },
-      take: 5,
-    }),
-
-    prisma.barbero.findMany({
-      where: { estado: true },
-      include: {
-        turnos: {
-          where: {
-            horarioReservado: { gte: inicioDia, lte: finDia },
-            estado: { in: ["PENDIENTE", "CONFIRMADO"] },
-          },
-          include: {
-            user: { select: { name: true, email: true } },
-            servicio: { select: { nombre: true, duracion: true } },
-          },
-          orderBy: { horarioReservado: "asc" },
-        },
-      },
-      orderBy: { nombre: "asc" },
-    }),
-
-    prisma.barbero.findMany({
-      where: { estado: true },
-      select: {
-        id: true,
-        nombre: true,
-        turnos: {
-          where: {
-            horarioReservado: { gte: inicioDia, lte: finDia },
-            estado: "COMPLETADO",
-          },
-          select: { precioCongelado: true },
-        },
-      },
-      orderBy: { nombre: "asc" },
-    }),
+    getCachedData(
+      ["admin-dashboard-total-barberos"],
+      ["admin-dashboard"],
+      () => prisma.barbero.count({ where: { estado: true } }),
+      30,
+    ),
+    getCachedData(
+      ["admin-dashboard-total-servicios"],
+      ["admin-dashboard"],
+      () => prisma.servicio.count({ where: { estado: true } }),
+      30,
+    ),
+    getCachedData(
+      ["admin-dashboard-total-turnos"],
+      ["admin-dashboard"],
+      () => prisma.turno.count(),
+      30,
+    ),
+    getCachedData(
+      ["admin-dashboard-turnos-pendientes"],
+      ["admin-dashboard"],
+      () =>
+        prisma.turno.count({
+          where: { estado: { in: [...ESTADOS_TURNO_ACTIVOS] } },
+        }),
+      30,
+    ),
+    getCachedData(
+      ["admin-dashboard-barberos"],
+      ["admin-dashboard"],
+      () => obtenerBarberosConConteoDeTurnos(),
+      30,
+    ),
+    getCachedData(
+      ["admin-dashboard-servicios-populares"],
+      ["admin-dashboard"],
+      () => obtenerServiciosPopulares(),
+      30,
+    ),
+    getCachedData(
+      ["admin-dashboard-turnos-hoy-por-barbero", claveDia],
+      ["admin-dashboard"],
+      () => obtenerBarberosConTurnosHoy(inicioDia, finDia),
+      30,
+    ),
+    getCachedData(
+      ["admin-dashboard-rendimiento-hoy-por-barbero", claveDia],
+      ["admin-dashboard"],
+      () => obtenerBarberosConRendimientoHoy(inicioDia, finDia),
+      30,
+    ),
   ]);
 
   return {
@@ -129,7 +109,6 @@ async function getStats() {
     totalTurnos,
     turnosPendientes,
     barberos,
-    proximosTurnos,
     serviciosPopulares,
     turnosHoyPorBarbero,
     rendimientoHoyPorBarbero,
@@ -177,12 +156,12 @@ export default async function AdminDashboard() {
               <Empty text="No hay barberos" />
             ) : (
               stats.barberos.map((b) => (
-                <Item key={b.id}>
+                <ItemLista key={b.id}>
                   <p className="text-white text-sm">{b.nombre}</p>
                   <p className="text-amber-200/60 text-xs">
                     {b._count.turnos} activos
                   </p>
-                </Item>
+                </ItemLista>
               ))
             )}
           </DetailCard>
@@ -192,12 +171,12 @@ export default async function AdminDashboard() {
               <Empty text="No hay servicios" />
             ) : (
               stats.serviciosPopulares.map((s) => (
-                <Item key={s.id}>
+                <ItemLista key={s.id}>
                   <p className="text-white text-sm">{s.nombre}</p>
                   <p className="text-amber-200/60 text-xs">
                     {s._count.turnos} usos
                   </p>
-                </Item>
+                </ItemLista>
               ))
             )}
           </DetailCard>
@@ -214,7 +193,7 @@ export default async function AdminDashboard() {
                 );
                 const comision = recaudado * 0.5; // Asumiendo un 50% de comisión
                 return (
-                  <Item key={b.id}>
+                  <ItemLista key={b.id}>
                     <p className="text-white text-sm">{b.nombre}</p>
                     <p className="text-amber-200/60 text-xs">
                       {completados} cortes completados
@@ -229,7 +208,7 @@ export default async function AdminDashboard() {
                         </span>
                       </div>
                     )}
-                  </Item>
+                  </ItemLista>
                 );
               })
             )}
@@ -269,19 +248,12 @@ export default async function AdminDashboard() {
                             {t.servicio?.nombre || "Servicio eliminado"}
                           </p>
                           <p className="text-amber-200/60 text-xs">
-                            {new Date(t.horarioReservado).toLocaleTimeString(
-                              [],
-                              {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: false,
-                              },
-                            )}
+                            {formatearHora(t.horarioReservado)}
                           </p>
                         </div>
                         <span
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                            t.estado === "CONFIRMADO"
+                            t.estado === ESTADOS_TURNO[1]
                               ? "bg-green-500/20 text-green-500 border-green-500/30"
                               : "bg-[var(--page-primary)]/20 text-[var(--page-primary)] border-[var(--page-primary)]/30"
                           }`}
@@ -296,44 +268,6 @@ export default async function AdminDashboard() {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-/* COMPONENTES */
-
-function StatCard({ title, value, icon: Icon, href }: any) {
-  return (
-    <Link href={href}>
-      <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl p-6 hover:border-[var(--page-primary)]/50 transition group">
-        <div className="flex justify-between">
-          <div>
-            <p className="text-amber-200/70 text-sm">{title}</p>
-            <p className="text-3xl text-white font-bold">{value}</p>
-          </div>
-          <Icon className="text-[var(--page-primary)]" />
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-function DetailCard({ title, icon: Icon, children }: any) {
-  return (
-    <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl p-5">
-      <div className="flex items-center gap-2 mb-4">
-        <Icon className="text-[var(--page-primary)]" />
-        <h2 className="text-white font-bold">{title}</h2>
-      </div>
-      <div className="space-y-2">{children}</div>
-    </div>
-  );
-}
-
-function Item({ children }: any) {
-  return (
-    <div className="p-3 bg-black/60 border border-amber-900/30 rounded-lg hover:border-[var(--page-primary)]/50 transition">
-      {children}
     </div>
   );
 }
