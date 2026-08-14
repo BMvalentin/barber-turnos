@@ -1,10 +1,11 @@
 "use client";
-import { loginAction } from "@/actions/login.actions";
+import { loginAction } from "@/actions/sesion/login.actions";
 import GoogleButton from "@/components/auth/google-button";
 import Link from "next/link";
 import { Suspense, useActionState, useEffect } from "react"; 
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
+import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import { Mail, Lock, ChevronRight, Scissors } from "lucide-react";
 
 export default function LoginPage() {
@@ -145,7 +146,7 @@ function LoginPageContenido() {
               <button 
                 type="submit" 
                 disabled={isPending}
-                className="w-full group relative bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] font-black py-4 rounded-xl transition-all overflow-hidden active:scale- disabled:opacity-50 shadow- hover:shadow-"
+                className={`w-full group relative ${CLASES_BOTON_MARCA} font-black py-4 rounded-xl transition-all overflow-hidden active:scale- disabled:opacity-50 shadow- hover:shadow-`}
               >
                 <div className="relative z-10 flex items-center justify-center gap-2 uppercase tracking-widest text-sm sm:text-base">
                   {isPending ? "INGRESANDO..." : "INICIAR SESIÓN"}

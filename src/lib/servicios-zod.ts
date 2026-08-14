@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { esquemaNombre, esquemaImagenOpcional } from "@/lib/zod";
 
 /**
  * Esquema de validación para los servicios de la barbería.
@@ -6,15 +7,9 @@ import { z } from "zod";
  */
 export const servicioSchema = z.object({
   id: z.string().optional(),
-  nombre: z.string()
-    .min(3, "El nombre debe tener al menos 3 caracteres")
-    .max(100, "El nombre es demasiado largo"),
+  nombre: esquemaNombre("nombre"),
   descripcion: z.string().max(500, "La descripción no puede exceder los 500 caracteres").optional().nullable(),
-  srcImage: z.string()
-    .url("La URL de la imagen no es válida")
-    .optional()
-    .nullable()
-    .or(z.literal("")),
+  srcImage: esquemaImagenOpcional,
   duracion: z.coerce.number()
     .int("La duración debe ser un número entero (minutos)")
     .positive("La duración debe ser mayor a 0"),

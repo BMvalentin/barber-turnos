@@ -4,11 +4,9 @@ import { render } from "@react-email/render";
 import { prisma } from "@/lib/prisma";
 import { EmailVerificacion } from "@/emails/EmailVerificacion";
 import type { ColoresEmail } from "@/emails/EmailTurno";
-import {
-  elegirColorTexto,
-  mezclarConBlanco,
-  obtenerTintaLejible,
-} from "@/lib/contraste";
+import { elegirColorTexto } from "@/lib/contraste/elegir-color-texto";
+import { mezclarConBlanco } from "@/lib/contraste/mezclar-con-blanco";
+import { obtenerTintaLejible } from "@/lib/contraste/obtener-tinta-lejible";
 
 const COLOR_PRIMARIO_DEFECTO = "#d97706";
 const COLOR_SECUNDARIO_DEFECTO = "#78350f";

@@ -2,28 +2,11 @@
 
 import ExcepcionForm from "@/components/excepcionesLaborales/ExcepcionesForm";
 import ExcepcionesList from "@/components/excepcionesLaborales/ExcepcionesList";
-
-type Excepcion = {
-  id: string;
-  motivo: string;
-  desde: Date;
-  hasta: Date;
-  estado: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  barbero?: {
-    id: string;
-    nombre: string;
-  } | null;
-};
-
-type Barbero = {
-  id: string;
-  nombre: string;
-};
+import type { ExcepcionLaboral } from "@/types/excepcion";
+import type { Barbero } from "@/types/barbero";
 
 type ExcepcionesClientProps = {
-  excepciones: Excepcion[];
+  excepciones: ExcepcionLaboral[];
   barberos: Barbero[];
 }
 

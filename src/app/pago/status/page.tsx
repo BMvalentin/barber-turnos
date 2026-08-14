@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { confirmarPagoTurno } from "@/actions/mercadopago-actions";
+import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
+import { redirect } from "next/navigation";
+import { CLASES_BOTON_MARCA } from "@/lib/constants";
+import { confirmarPagoTurno } from "@/actions/mercadopago/confirmar-pago.actions";
 import { CheckCircle2, Clock, XCircle, Calendar, ArrowRight, RefreshCw, AlertTriangle } from "lucide-react";
 
 interface StatusPageProps {
@@ -12,6 +15,9 @@ interface StatusPageProps {
 }
 
 export default async function PagoStatusPage({ searchParams }: StatusPageProps) {
+  const session = await requerirSesion();
+  if (!session?.user) redirect("/login");
+
   const { status, turnoId, payment_id, collection_id } = await searchParams;
   
   const paymentId = payment_id || collection_id;
@@ -39,18 +45,22 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
     );
   }
 
-  // Evaluación de seguridad con la API de Mercado Pago
+  // Evaluación de seguridad con la API de Mercado Pago:
+  // solo se muestra éxito si el pago fue verificado correctamente
   const esPagoAprobado = status === "approved";
   let verificadoCorrectamente = false;
 
   if (esPagoAprobado && paymentId) {
     const result = await confirmarPagoTurno(turnoId, paymentId);
-    verificadoCorrectamente = result.success;
+    verificadoCorrectamente = result.success === true;
   }
 
-  // Mapeo preciso de estados
-  const mostrarExito = esPagoAprobado && (paymentId ? verificadoCorrectamente : true);
-  const mostrarFallo = status === "rejected" || status === "null" || (esPagoAprobado && paymentId && !verificadoCorrectamente);
+  // Mapeo preciso de estados:
+  // - Éxito: solo con pago aprobado Y verificado contra la API de MP
+  // - Fallo: rechazado, nulo, o aprobado sin poder verificar (sin paymentId o verificación fallida)
+  // - Pendiente: procesando
+  const mostrarExito = esPagoAprobado && verificadoCorrectamente;
+  const mostrarFallo = status === "rejected" || status === "null" || (esPagoAprobado && !verificadoCorrectamente);
   const mostrarPendiente = status === "pending" || status === "in_process";
 
   return (
@@ -172,7 +182,7 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
             <>
               <Link
                 href="/dashboard"
-                className="flex items-center justify-center gap-2 w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
+                className={`flex items-center justify-center gap-2 w-full ${CLASES_BOTON_MARCA} font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm`}
               >
                 <Calendar className="w-5 h-5" />
                 Ver mis turnos
@@ -190,7 +200,7 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
           {mostrarPendiente && (
             <Link
               href="/dashboard"
-              className="flex items-center justify-center gap-2 w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
+              className={`flex items-center justify-center gap-2 w-full ${CLASES_BOTON_MARCA} font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm`}
             >
               Ver mis turnos
               <ArrowRight className="w-5 h-5" />
@@ -201,7 +211,7 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
             <>
               <Link
                 href={`/turno?retry=${turnoId}`}
-                className="flex items-center justify-center gap-2 w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
+                className={`flex items-center justify-center gap-2 w-full ${CLASES_BOTON_MARCA} font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm`}
               >
                 <RefreshCw className="w-5 h-5" />
                 Intentar de nuevo

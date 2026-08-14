@@ -1,10 +1,8 @@
-import { prisma } from "@/lib/prisma";
-import HomeClient from "@/components/HomeClient"; // O donde tengas tu HomeClient
+import { getPageConfig } from "@/actions/configuracion/leer-config.actions";
+import HomeClient from "@/components/inicio/HomeClient";
 
 export default async function Page() {
-  const config = await prisma.pageConfig.findUnique({
-    where: { id: 1 },
-  });
+  const config = await getPageConfig();
 
   return <HomeClient config={config} />;
 }

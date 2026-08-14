@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
 import Link from "next/link";
 import AuthLayout from "@/components/auth/AuthLayout";
-import { reenviarVerificacion } from "@/actions/reenviar-verificacion.actions";
+import { reenviarVerificacion } from "@/actions/sesion/reenviar-verificacion.actions";
 import type { ActionState } from "@/types/action-state";
 import { Mail, Scissors, ShieldCheck } from "lucide-react";
 

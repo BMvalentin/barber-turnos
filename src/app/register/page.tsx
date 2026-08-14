@@ -1,10 +1,11 @@
 "use client";
-import { registerAction } from "@/actions/registro.actions";
+import { registerAction } from "@/actions/sesion/registro.actions";
 import GoogleButton from "@/components/auth/google-button";
 import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
+import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import { User, Mail, Lock, Scissors, Eye, EyeOff } from "lucide-react";
 import type { ActionState } from "@/types/action-state";
 
@@ -190,7 +191,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={isPending}
-                className="w-full mt-4 bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] font-black py-4 rounded-xl transition-all shadow- hover:shadow- flex items-center justify-center gap-3 uppercase tracking-widest text-sm sm:text-base active:scale- disabled:opacity-50"
+                className={`w-full mt-4 ${CLASES_BOTON_MARCA} font-black py-4 rounded-xl transition-all shadow- hover:shadow- flex items-center justify-center gap-3 uppercase tracking-widest text-sm sm:text-base active:scale- disabled:opacity-50`}
               >
                 {isPending ? "PROCESANDO..." : (
                   <>

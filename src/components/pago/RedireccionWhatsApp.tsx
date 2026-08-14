@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { MessageCircle, ArrowRight } from "lucide-react";
 import Link from "next/link";
-
-const TIMEZONE_NEGOCIO = "America/Argentina/Buenos_Aires";
+import { formatearFecha } from "@/lib/utils/formatear-fecha";
+import { formatearHora } from "@/lib/utils/formatear-hora";
 
 type Props = {
   numeroWhatsApp: string;
@@ -32,27 +32,10 @@ export default function RedireccionWhatsApp({
     if (horarioReservado) {
       const fecha = new Date(horarioReservado);
       if (!isNaN(fecha.getTime())) {
-        const formateadorDia = new Intl.DateTimeFormat("es-AR", {
-          weekday: "long",
-          timeZone: TIMEZONE_NEGOCIO,
-        });
-        const formateadorFecha = new Intl.DateTimeFormat("es-AR", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          timeZone: TIMEZONE_NEGOCIO,
-        });
-        const formateadorHora = new Intl.DateTimeFormat("es-AR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-          timeZone: TIMEZONE_NEGOCIO,
-        });
-
-        const dia = formateadorDia.format(fecha);
+        const dia = formatearFecha(fecha);
         const diaCapitalizado = dia.charAt(0).toUpperCase() + dia.slice(1);
-        partes.push(`📅 Día: ${diaCapitalizado} ${formateadorFecha.format(fecha)}`);
-        partes.push(`⏰ Horario: ${formateadorHora.format(fecha)}`);
+        partes.push(`📅 Día: ${diaCapitalizado}`);
+        partes.push(`⏰ Horario: ${formatearHora(fecha)}`);
       }
     }
 

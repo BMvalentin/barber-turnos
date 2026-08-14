@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import ExcepcionesClient from "@/components/excepcionesLaborales/ExcepcionesClient";
 import { Calendar } from "lucide-react";
-import { getBarberos } from "@/actions/barbero.actions";
+import { getBarberos } from "@/actions/barberos/listar.actions";
 
 async function getExcepciones() {
   return await prisma.excepcion_laboral.findMany({
@@ -24,7 +24,7 @@ async function getExcepciones() {
 
 export default async function ExcepcionesLaboralesPage() {
   const [excepciones, responseBarberos] = await Promise.all([getExcepciones(), getBarberos()]);
-  const barberos = responseBarberos.success ? responseBarberos.data : [];
+  const barberos = responseBarberos.success ? (responseBarberos.data ?? []) : [];
 
   return (
     <div className="min-h-screen p-6">

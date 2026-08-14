@@ -12,7 +12,7 @@ import {
   Text,
 } from "@react-email/components";
 import type { CSSProperties, ReactNode } from "react";
-import type { DatosEmailTurno, TipoEstadoEmail } from "@/lib/turno-datos-email";
+import type { DatosEmailTurno, TipoEstadoEmail } from "@/lib/email/turno-datos-email";
 
 export type ColoresEmail = {
   primario: string;
