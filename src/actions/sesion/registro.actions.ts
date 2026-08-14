@@ -5,6 +5,9 @@ import { registerSchema } from "@/lib/zod";
 import bcrypt from "bcryptjs";
 import { crearLimitadorDeIntentos, MENSAJE_BLOQUEO } from "@/lib/seguridad/limitador-intentos";
 import { obtenerIp } from "@/lib/seguridad/obtener-ip";
+import { crearTokenVerificacion } from "@/lib/crear-token-verificacion";
+import { construirUrlVerificacion } from "@/lib/construir-url-verificacion";
+import { sendVerificacionEmail } from "@/lib/email-verificacion";
 import type { ActionState } from "@/types/action-state";
 
 const MAX_REGISTROS_POR_IP = 5;
@@ -29,8 +32,16 @@ export const registerAction = async (prevState: ActionState, formData: FormData)
     await prisma.user.create({
       data: { email, name, password: hashedPassword, role: "USER" },
     });
+    const token = await crearTokenVerificacion(email);
+    let aviso: string | undefined;
+    if (token) {
+      const enviado = await sendVerificacionEmail(email, name, construirUrlVerificacion(token));
+      if (!enviado.success) {
+        aviso = "No pudimos enviar el email. Usá el botón de reenviar.";
+      }
+    }
     for (const k of [clave, ip]) limitadorDeIntentos.limpiarIntentos(k);
-    return { success: true };
+    return { success: true, email, aviso };
   } catch (error) {
     console.error("Error en el registro de usuario:", error);
     return { error: "No se pudo completar el registro. Intentá de nuevo." };
