@@ -1,7 +1,9 @@
 "use server";
 
 import { signIn } from "@/auth";
+import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/zod";
+import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import { crearLimitadorDeIntentos, MENSAJE_BLOQUEO } from "@/lib/seguridad/limitador-intentos";
 import { obtenerIp } from "@/lib/seguridad/obtener-ip";
@@ -18,6 +20,15 @@ export const loginAction = async (prevState: ActionState, formData: FormData): P
   const clave = `login:${validated.data.email.toLowerCase()}`;
   const ip = await obtenerIp();
   if (limitadorDeIntentos.estaBloqueado(clave) || limitadorDeIntentos.estaBloqueado(ip)) return { error: MENSAJE_BLOQUEO };
+
+  const user = await prisma.user.findUnique({ where: { email: validated.data.email } });
+  if (user?.password && !user.emailVerified) {
+    const esValida = await bcrypt.compare(validated.data.password, user.password);
+    if (esValida) {
+      return { error: "Debes verificar tu email antes de ingresar" };
+    }
+  }
+
   try {
     await signIn("credentials", {
       email: validated.data.email,

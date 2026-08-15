@@ -6,6 +6,8 @@ export type ActionState<TData = unknown> = {
   error?: string;
   errors?: Record<string, string[]>;
   warning?: string;
+  email?: string;
+  aviso?: string;
   data?: TData;
 };
 
