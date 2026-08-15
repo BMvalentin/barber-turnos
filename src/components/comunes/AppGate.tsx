@@ -15,6 +15,12 @@ type AppGateProps = {
   logoUrl?: string | null;
   descripcion?: string | null;
   localidad?: string | null;
+  instagram?: string | null;
+  whatsapp?: string | null;
+  telefono?: string | null;
+  email?: string | null;
+  direccion?: string | null;
+  ciudad?: string | null;
   isAdmin?: boolean;
 };
 
@@ -24,6 +30,12 @@ export default function AppGate({
   logoUrl,
   descripcion,
   localidad,
+  instagram,
+  whatsapp,
+  telefono,
+  email,
+  direccion,
+  ciudad,
   isAdmin = false
 }: AppGateProps) {
   const pathname = usePathname();
@@ -73,8 +85,7 @@ export default function AppGate({
     }
   };
 
-  const handleAcceptTerms = () => {
-    localStorage.setItem("termsAccepted", "true");
+  const handleCloseTerms = () => {
     setTermsOpen(false);
   };
 
@@ -94,6 +105,12 @@ export default function AppGate({
           logoUrl={logoUrl}
           descripcion={descripcion}
           localidad={localidad}
+          instagram={instagram}
+          whatsapp={whatsapp}
+          telefono={telefono}
+          email={email}
+          direccion={direccion}
+          ciudad={ciudad}
           openPrivacy={() => setPrivacyOpen(true)}
           openTerms={() => setTermsOpen(true)}
         />
@@ -110,7 +127,7 @@ export default function AppGate({
 
       <TermsModal
         isOpen={termsOpen}
-        onClose={handleAcceptTerms}
+        onClose={handleCloseTerms}
       />
     </>
   );

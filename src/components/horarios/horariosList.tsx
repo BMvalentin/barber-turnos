@@ -65,7 +65,7 @@ export function HorariosList({
             <Clock className="h-5 w-5" />
           </div>
           <div className="flex items-center gap-3">
-            <h3 className="text-xl font-bold text-white">
+            <h3 className="text-xl font-bold text-[var(--admin-texto-primario)]">
               Horarios - {diaNombre}
             </h3>
             {margenes.length > 0 && (
@@ -108,15 +108,15 @@ export function HorariosList({
             border: "1px solid var(--page-secondary-40)",
           }}
           claseIcono="h-10 w-10 opacity-60"
-          estiloIcono={{ color: "var(--page-primary)" }}
-          claseMensaje="text-white font-medium"
+          estiloIcono={{ color: "var(--page-primary-tinta)" }}
+          claseMensaje="text-[var(--admin-texto-primario)] font-medium"
         />
       ) : (
         <div className="space-y-3">
           {margenes.map((margen) => (
             <div
               key={margen.id}
-              className={`flex items-center justify-between p-4 rounded-xl border transition-all backdrop-blur-md shadow-lg ${margen.estado
+              className={`flex items-center justify-between p-4 rounded-xl border transition-colors duration-150 ${margen.estado
                   ? ""
                   : "opacity-60"
                 }`}
@@ -138,11 +138,11 @@ export function HorariosList({
 
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-lg text-white">
+                    <span className="font-mono text-lg text-[var(--admin-texto-primario)]">
                       {margen.desde}
                     </span>
-                    <span style={{ color: "var(--page-primary)" }}>→</span>
-                    <span className="font-mono text-lg text-white">
+                    <span style={{ color: "var(--page-primary-tinta)" }}>→</span>
+                    <span className="font-mono text-lg text-[var(--admin-texto-primario)]">
                       {margen.hasta}
                     </span>
                   </div>
@@ -200,7 +200,7 @@ export function HorariosList({
             }}
           >
             <DialogHeader>
-              <DialogTitle className="text-xl text-white">
+              <DialogTitle className="text-xl text-[var(--admin-texto-primario)]">
                 {editingMargen ? "Editar Horario" : "Nuevo Horario"}
               </DialogTitle>
             </DialogHeader>

@@ -23,6 +23,8 @@ export const barberoSchema = z.object({
 
   srcImage: esquemaImagenOpcional,
 
+  email: z.string().trim().email("El email no es válido").nullable().optional(),
+
   serviciosIds: z.array(z.string()).optional(),
 
   margenesIds: z.array(z.string()).optional(),
@@ -39,6 +41,8 @@ export const updateBarberoSchema = z.object({
   nombre: nombreSchema,
 
   srcImage: esquemaImagenOpcional,
+
+  email: z.string().trim().email("El email no es válido").nullable().optional(),
 
   estado: z.boolean().optional(),
 

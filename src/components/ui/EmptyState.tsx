@@ -28,15 +28,19 @@ export default function EmptyState({
   estiloContenedor,
   claseIcono,
   estiloIcono,
-  claseTitulo = "text-lg font-semibold text-white",
-  claseMensaje,
+  claseTitulo = "text-lg font-semibold text-[var(--admin-texto-primario)]",
+  claseMensaje = "text-sm text-[var(--admin-texto-secundario)]",
   estiloMensaje,
 }: EmptyStateProps) {
+  const estiloIconoFinal: CSSProperties = estiloIcono ?? {
+    color: "var(--admin-texto-muted)",
+  };
+
   if (horizontal) {
     return (
       <div className={cn("flex items-center gap-2", claseContenedor)} style={estiloContenedor}>
         {icono && (
-          <span className={claseIcono} style={estiloIcono}>
+          <span className={claseIcono} style={estiloIconoFinal}>
             {icono}
           </span>
         )}
@@ -53,7 +57,7 @@ export default function EmptyState({
   return (
     <div className={cn("text-center", claseContenedor)} style={estiloContenedor}>
       {icono && (
-        <div className={cn("mx-auto mb-4", claseIcono)} style={estiloIcono}>
+        <div className={cn("mx-auto mb-4", claseIcono)} style={estiloIconoFinal}>
           {icono}
         </div>
       )}

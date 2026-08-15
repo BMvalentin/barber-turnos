@@ -8,7 +8,10 @@ type ItemListaProps = {
 
 export function ItemLista({ children }: ItemListaProps) {
   return (
-    <div className="p-3 bg-black/60 border border-amber-900/30 rounded-lg hover:border-[var(--page-primary)]/50 transition">
+    <div
+      className="flex items-center justify-between gap-3 py-2 border-b last:border-b-0"
+      style={{ borderColor: "var(--admin-border)" }}
+    >
       {children}
     </div>
   );

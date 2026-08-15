@@ -1,40 +1,24 @@
 import { Suspense } from "react";
-import { Calendar } from "lucide-react";
 import { DiaLaboralClient } from "@/components/diaLaboral/diaLaboralClient";
 import { getDiasLaborales } from "@/actions/horarios/listar.actions";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default async function DiaLaboralPage() {
   return (
-    <div className="min-h-screen p-6">
-      <div className="container mx-auto max-w-7xl">
-        {/* Header */}
-        <div className="mb-8 flex items-center gap-4">
-          <div className="flex items-center gap-4">
-            <div 
-              className="p-3 rounded-xl border-2"
-              style={{ 
-                backgroundColor: "var(--page-primary-20)",
-                borderColor: "var(--page-primary-40)" 
-              }}
-            >
-              <Calendar className="h-8 w-8" style={{ color: "var(--page-primary)" }} />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">
-                Días Laborales
-              </h1>
-              <p className="text-white/70">
-                Configura los horarios de cada día de la semana
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <Suspense fallback={<LoadingSkeleton />}>
-          <DiaLaboralContent />
-        </Suspense>
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight md:text-[28px] text-[var(--admin-texto-primario)]">
+          Días Laborales
+        </h1>
+        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
+          Configurá los horarios de atención de cada día.
+        </p>
       </div>
+
+      <Suspense fallback={<LoadingSkeleton />}>
+        <DiaLaboralContent />
+      </Suspense>
     </div>
   );
 }
@@ -51,8 +35,8 @@ function LoadingSkeleton() {
       {[...Array(7)].map((_, i) => (
         <div 
           key={i} 
-          className="bg-black/40 backdrop-blur-lg rounded-xl p-6 space-y-4 animate-pulse"
-          style={{ border: "1px solid var(--page-secondary-30)" }}
+          className="bg-[var(--admin-surface)] rounded-xl p-6 space-y-4 animate-pulse"
+          style={{ border: "1px solid var(--admin-border)" }}
         >
           <div className="flex items-start gap-3">
             <Skeleton className="w-2 h-12 rounded-full bg-white/10" />

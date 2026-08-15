@@ -1,6 +1,6 @@
 # Configurar Resend para el envío de emails
 
-Guía para configurar [Resend](https://resend.com/) en la app de reserva de turnos. Resend es el proveedor de email que utiliza la aplicación para enviar las notificaciones de turnos (confirmación, modificación y cancelación) a los clientes.
+Guía para configurar [Resend](https://resend.com/) en la app de reserva de turnos. Resend es el proveedor de email que utiliza la aplicación para enviar las notificaciones de turnos (confirmación, modificación y cancelación) a los clientes y al barbero asignado al turno.
 
 ## 1. Crear cuenta
 
@@ -29,24 +29,17 @@ La variable `RESEND_FROM_EMAIL` define el remitente:
 - Con un **dominio verificado**, usá algo como `turnos@TU_DOMINIO.com`.
 - El remitente se muestra como `NombreDeLaBarbería <from>`: el nombre que aparece sale de la configuración de la aplicación (config de la barbería), no del email.
 
-## 4. NOTIFICATION_EMAIL
-
-- Es el correo de la barbería que recibe una **copia oculta (BCC)** de cada email de turno enviado al cliente (confirmación, modificación, cancelación).
-- Poné un correo **real** al que la barbería tenga acceso, por ejemplo `barberia@TU_DOMINIO.com`.
-- Si esta variable no está definida, el email se envía igualmente solo al destinatario (el BCC simplemente no se agrega).
-
-## 5. .env final
+## 4. .env final
 
 ```env
 RESEND_API_KEY="re_TU_RESEND_API_KEY"
 RESEND_FROM_EMAIL="onboarding@resend.dev"
-NOTIFICATION_EMAIL="tu_email@ejemplo.com"
 ```
 
-## 6. Cómo probar
+## 5. Cómo probar
 
 - Levantá la aplicación con `npm run dev`.
-- Creá, modificá o cancelá un turno y revisá que llegue el email tanto al destinatario como a la copia oculta (`NOTIFICATION_EMAIL`).
+- Creá un turno (o confirmalo) y revisá que llegue el email al cliente y al barbero asignado (requiere que el barbero tenga email cargado en el admin).
 - Si **no llega nada**, verificá lo siguiente:
   - Que `RESEND_API_KEY` esté correcta y completa en el `.env` (recordá reiniciar el servidor tras modificar variables de entorno).
   - Que el remitente (`from`) use un dominio verificado: en la fase inicial, `onboarding@resend.dev` solo envía a cuentas verificadas del usuario de Resend. Para probar con otros destinatarios, configurá y verificá tu propio dominio.

@@ -2,188 +2,191 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { updatePageConfig } from "@/actions/configuracion/config-general.actions";
 import { uploadConfigImage } from "@/actions/mercadopago/subir-config.actions";
 import { esColorHexValido } from "@/lib/contraste/es-color-hex-valido";
-import { elegirColorTexto } from "@/lib/contraste/elegir-color-texto";
 import SeccionIdentidad from "@/components/admin/config/SeccionIdentidad";
 import SeccionContacto from "@/components/admin/config/SeccionContacto";
-import SeccionColores from "@/components/admin/config/SeccionColores";
-import SeccionPlantillasColores from "@/components/admin/config/SeccionPlantillasColores";
+import SeccionApariencia from "@/components/admin/config/SeccionApariencia";
 import SeccionImagenes from "@/components/admin/config/SeccionImagenes";
+import NavegacionConfig from "@/components/admin/config/NavegacionConfig";
 import BotonSubmitPending from "@/components/ui/boton-submit-pending";
+import { CAMPOS_POR_MODULO, type IdModuloConfig } from "@/components/admin/config/modulos-config";
 import type { NombreCampoImagen } from "@/components/admin/config/tipos";
 import type { PlantillaColor } from "@/lib/plantillas-colores";
 import type {
   DatosConfiguracion,
   DatosConfiguracionInicial,
+  PageConfigData,
 } from "@/types/page-config";
 
 interface GeneralConfigFormProps {
-    initialData: DatosConfiguracionInicial | null;
+  initialData: DatosConfiguracionInicial | null;
 }
 
 export default function GeneralConfigForm({ initialData }: GeneralConfigFormProps) {
-    const [isPending, startTransition] = useTransition();
-    const [successMessage, setSuccessMessage] = useState("");
-    const [errorMessage, setErrorMessage] = useState("");
-    const [uploadingField, setUploadingField] = useState<NombreCampoImagen | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const [uploadingField, setUploadingField] = useState<NombreCampoImagen | null>(null);
+  const [seccionActiva, setSeccionActiva] = useState<IdModuloConfig>("informacion-general");
 
-    const [formData, setFormData] = useState<DatosConfiguracion>({
-        name: initialData?.name || "",
-        description: initialData?.description || "",
-        slogan: initialData?.slogan || "",
-        logo: initialData?.logo || "",
-        favicon: initialData?.favicon || "",
-        backgroundImage: initialData?.backgroundImage || "",
-        primaryColor: initialData?.primaryColor || "#3b82f6",
-        secondaryColor: initialData?.secondaryColor || "#1e3a8a",
-        whatsapp: initialData?.whatsapp || "",
-        mapsUrl: initialData?.mapsUrl || "",
-        address: initialData?.address || "",
+  const [formData, setFormData] = useState<DatosConfiguracion>({
+    name: initialData?.name || "",
+    description: initialData?.description || "",
+    slogan: initialData?.slogan || "",
+    logo: initialData?.logo || "",
+    favicon: initialData?.favicon || "",
+    backgroundImage: initialData?.backgroundImage || "",
+    primaryColor: initialData?.primaryColor || "#3b82f6",
+    secondaryColor: initialData?.secondaryColor || "#1e3a8a",
+    bgColor: initialData?.bgColor || "#09090b",
+    whatsapp: initialData?.whatsapp || "",
+    mapsUrl: initialData?.mapsUrl || "",
+    address: initialData?.address || "",
+  });
+
+  const primaryColor = formData.primaryColor || "#3b82f6";
+  const secondaryColor = formData.secondaryColor || "#1e3a8a";
+  const colorFondo = formData.bgColor || "#09090b";
+
+  const manejarCambio = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const aplicarPlantilla = (plantilla: PlantillaColor) => {
+    setFormData((prev) => ({
+      ...prev,
+      primaryColor: plantilla.primaryColor,
+      secondaryColor: plantilla.secondaryColor,
+      bgColor: plantilla.bgColor,
+    }));
+  };
+
+  const manejarArchivo = async (e: React.ChangeEvent<HTMLInputElement>, campo: NombreCampoImagen) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingField(campo);
+
+    try {
+      const res = await uploadConfigImage(file);
+      const url = res.url;
+
+      if (res.success && url) {
+        setFormData((prev) => ({ ...prev, [campo]: url }));
+      } else {
+        toast.error("Error al subir la imagen", { description: res.error || "No se pudo subir la imagen." });
+      }
+    } catch (error) {
+      console.error("Error al subir la imagen:", error);
+      toast.error("Error al subir la imagen", { description: "Ocurrió un error al subir la imagen. Intentá de nuevo." });
+    } finally {
+      setUploadingField(null);
+      e.target.value = "";
+    }
+  };
+
+  const quitarImagen = (campo: NombreCampoImagen) => {
+    setFormData((prev) => ({ ...prev, [campo]: "" }));
+  };
+
+  const alCambiarSeccion = (id: IdModuloConfig) => {
+    setSeccionActiva(id);
+  };
+
+  const guardarModuloActivo = () => {
+    if (seccionActiva === "apariencia") {
+      if (
+        !esColorHexValido(primaryColor) ||
+        !esColorHexValido(secondaryColor) ||
+        !esColorHexValido(colorFondo)
+      ) {
+        toast.error("Color inválido", { description: "Usá el formato #RRGGBB (ej.: #d97706)." });
+        return;
+      }
+    }
+
+    const payload: PageConfigData = {};
+    for (const campo of CAMPOS_POR_MODULO[seccionActiva]) {
+      payload[campo] = formData[campo];
+    }
+
+    startTransition(async () => {
+      const res = await updatePageConfig(payload);
+
+      if (res.success) {
+        toast.success("¡Configuración guardada con éxito!");
+      } else {
+        toast.error("Error al guardar", { description: res.error || "No se pudo guardar la configuración." });
+      }
     });
+  };
 
-    const primaryColor = formData.primaryColor || "#3b82f6";
-    const secondaryColor = formData.secondaryColor || "#1e3a8a";
-
-    const manejarCambio = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const aplicarPlantilla = (plantilla: PlantillaColor) => {
-        setFormData((prev) => ({
-            ...prev,
-            primaryColor: plantilla.primaryColor,
-            secondaryColor: plantilla.secondaryColor,
-        }));
-    };
-
-    const manejarArchivo = async (e: React.ChangeEvent<HTMLInputElement>, campo: NombreCampoImagen) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        setErrorMessage("");
-        setSuccessMessage("");
-        setUploadingField(campo);
-
-        try {
-            const res = await uploadConfigImage(file);
-            const url = res.url;
-
-            if (res.success && url) {
-                setFormData((prev) => ({ ...prev, [campo]: url }));
-            } else {
-                setErrorMessage(res.error || "No se pudo subir la imagen.");
-            }
-        } catch (error) {
-            console.error("Error al subir la imagen:", error);
-            setErrorMessage("Ocurrió un error al subir la imagen. Intentá de nuevo.");
-        } finally {
-            setUploadingField(null);
-            e.target.value = "";
-        }
-    };
-
-    const quitarImagen = (campo: NombreCampoImagen) => {
-        setFormData((prev) => ({ ...prev, [campo]: "" }));
-    };
-
-    const manejarEnvio = (e: React.FormEvent) => {
+  return (
+    <form
+      onSubmit={(e) => {
         e.preventDefault();
-        setSuccessMessage("");
-        setErrorMessage("");
+        guardarModuloActivo();
+      }}
+      className="flex flex-col gap-8 lg:flex-row lg:gap-10"
+    >
+      <NavegacionConfig seccionActiva={seccionActiva} alCambiarSeccion={alCambiarSeccion} />
 
-        if (!esColorHexValido(primaryColor) || !esColorHexValido(secondaryColor)) {
-            setSuccessMessage("");
-            setErrorMessage("Color inválido. Usá el formato #RRGGBB (ej.: #d97706).");
-            return;
-        }
+      <div className="min-w-0 flex-1 space-y-10">
+        {seccionActiva === "informacion-general" && (
+          <SeccionIdentidad
+            nombre={formData.name}
+            slogan={formData.slogan}
+            descripcion={formData.description}
+            manejarCambio={manejarCambio}
+          />
+        )}
 
-        startTransition(async () => {
-            const res = await updatePageConfig(formData);
+        {seccionActiva === "ubicacion-contacto" && (
+          <SeccionContacto
+            whatsapp={formData.whatsapp}
+            mapsUrl={formData.mapsUrl}
+            direccion={formData.address}
+            manejarCambio={manejarCambio}
+          />
+        )}
 
-            if (res.success) {
-                setSuccessMessage("¡Configuración guardada con éxito!");
-            } else {
-                setErrorMessage(res.error || "No se pudo guardar la configuración.");
-            }
-        });
-    };
+        {seccionActiva === "apariencia" && (
+          <SeccionApariencia
+            colorPrimario={primaryColor}
+            colorSecundario={secondaryColor}
+            colorFondo={colorFondo}
+            nombreNegocio={formData.name}
+            aplicarPlantilla={aplicarPlantilla}
+            manejarCambio={manejarCambio}
+          />
+        )}
 
-    const inputBorder = { border: `1px solid ${secondaryColor}60` };
+        {seccionActiva === "imagenes" && (
+          <SeccionImagenes
+            logo={formData.logo}
+            favicon={formData.favicon}
+            fondo={formData.backgroundImage}
+            campoSubiendo={uploadingField}
+            manejarArchivo={manejarArchivo}
+            manejarTexto={manejarCambio}
+            quitarImagen={quitarImagen}
+          />
+        )}
 
-    return (
-        <form onSubmit={manejarEnvio} className="space-y-8">
-            {successMessage && (
-                <div className="p-3 bg-green-500/20 border border-green-500 text-green-300 rounded-lg text-sm">
-                    {successMessage}
-                </div>
-            )}
-
-            {errorMessage && (
-                <div className="p-3 bg-red-500/20 border border-red-500 text-red-300 rounded-lg text-sm">
-                    {errorMessage}
-                </div>
-            )}
-
-            <SeccionIdentidad
-                nombre={formData.name}
-                slogan={formData.slogan}
-                descripcion={formData.description}
-                borde={inputBorder}
-                manejarCambio={manejarCambio}
-                colorIcono={primaryColor}
-            />
-
-            <SeccionContacto
-                whatsapp={formData.whatsapp}
-                mapsUrl={formData.mapsUrl}
-                direccion={formData.address}
-                borde={inputBorder}
-                manejarCambio={manejarCambio}
-                colorIcono={primaryColor}
-            />
-
-            <SeccionPlantillasColores
-                colorPrimario={primaryColor}
-                colorSecundario={secondaryColor}
-                aplicarPlantilla={aplicarPlantilla}
-                colorIcono={primaryColor}
-            />
-
-            <SeccionColores
-                colorPrimario={primaryColor}
-                colorSecundario={secondaryColor}
-                borde={inputBorder}
-                manejarCambio={manejarCambio}
-                colorIcono={primaryColor}
-            />
-
-            <SeccionImagenes
-                logo={formData.logo}
-                favicon={formData.favicon}
-                fondo={formData.backgroundImage}
-                campoSubiendo={uploadingField}
-                borde={inputBorder}
-                manejarArchivo={manejarArchivo}
-                manejarTexto={manejarCambio}
-                quitarImagen={quitarImagen}
-                colorIcono={primaryColor}
-            />
-
-            <BotonSubmitPending
-                pendiente={isPending}
-                deshabilitado={uploadingField !== null}
-                texto="Guardar Cambios"
-                mostrarSpinner={false}
-                claseAdicional="h-auto w-full font-semibold py-3 rounded-lg transition-all shadow-md hover:opacity-95 text-base cursor-pointer"
-                estiloAdicional={{
-                    backgroundColor: primaryColor,
-                    color: elegirColorTexto(primaryColor),
-                    border: `1px solid ${secondaryColor}`,
-                }}
-            />
-        </form>
-    );
+        <BotonSubmitPending
+          pendiente={isPending}
+          deshabilitado={uploadingField !== null}
+          texto="Guardar cambios"
+          mostrarSpinner={false}
+          claseAdicional="w-full sm:w-auto font-semibold transition-opacity hover:opacity-90"
+          estiloAdicional={{
+            backgroundColor: "var(--page-primary)",
+            color: "var(--page-primary-foreground)",
+          }}
+        />
+      </div>
+    </form>
+  );
 }

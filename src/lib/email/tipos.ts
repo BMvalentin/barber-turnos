@@ -5,5 +5,5 @@ export type TurnoParaEmail = {
   seniaCongelada: number | { toNumber: () => number };
   user: { email: string; name: string | null; telefono?: string | null };
   servicio: { nombre: string };
-  barbero: { nombre: string };
+  barbero: { nombre: string; email: string | null };
 };

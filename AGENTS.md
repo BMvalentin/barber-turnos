@@ -146,10 +146,11 @@ toda modificación. No pueden borrarse, atenuarse ni saltarse nunca.
 
 Los colores de marca se centralizan en CSS variables globales. NO hardcodear hex de acento en componentes.
 
-- Origen: `PageConfig.primaryColor` / `.secondaryColor` (tabla `page_config`).
-- Inyección: `layout.tsx` setea `--page-primary` / `--page-secondary` en `<style>` del `<html>` (con `as React.CSSProperties`).
-- Defaults (fuente única): `:root` en `src/app/globals.css` — `#d97706` / `#78350f`.
+- Origen: `PageConfig.primaryColor` / `.secondaryColor` / `.bgColor` (tabla `page_config`).
+- Inyección: `layout.tsx` setea `--page-primary` / `--page-secondary` / `--page-bg` (y sus `-foreground`/`-tinta`) en `<style>` del `<html>` (con `as React.CSSProperties`).
+- Defaults (fuente única): `:root` en `src/app/globals.css` — `#d97706` / `#78350f` / `#09090b`.
 - Variantes alfa derivadas con `color-mix()`: `--page-primary-08/15/18/20/25/30/40/44/50/60/70/80` y equivalentes `--page-secondary-*`. Se usan en lugar de sufijos hex antiguos como `#d97706cc`.
+- Los tokens de superficie del admin (`--admin-*`) ahora se DERIVAN de `--page-bg` con color-mix (ya no son fijos). El fondo de la landing pública usa `--page-bg` con texto `--page-bg-foreground`.
 
 Cómo usarlo (NO prop drilling):
 - Inline: `style={{ color: "var(--page-primary)", backgroundColor: "var(--page-primary-30)" }}`.
@@ -157,6 +158,7 @@ Cómo usarlo (NO prop drilling):
 - Si un componente tenía `"--primary": "var(--page-primary)"` en un wrapper (alias a las globales), mantener ese alias local para `var(--primary)`.
 
 FIJOS (no parametrizables, pertenecen al diseño/base de color):
+- El fondo base de la landing y las superficies del admin son parametrizables vía `bgColor`; lo fijo queda en neutros/accesorios que no dependen del bg.
 - Neutros (zinc / black / white), azules (blue), rojo semántico de error (`#ef4444`).
 - Paleta dorada oscura de modales/paneles: `#E8B031`, `#E4E0D9`, `#2C261D`, `#8E8675`, `#1C1812`, `#14110C`, `#251f15`.
 - Acentos oscuros tipo `amber-900/xx`, `amber-100/xx`, `amber-200/xx`, `amber-950/xx` (usados como bordes besurros / text gold).

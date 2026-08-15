@@ -1,22 +1,45 @@
+// components/admin/config/VistaPreviaPlantilla.tsx
 import { elegirColorTexto } from "@/lib/contraste/elegir-color-texto";
 import type { PlantillaColor } from "@/lib/plantillas-colores";
 
-export default function VistaPreviaPlantilla({ plantilla }: { plantilla: PlantillaColor }) {
+const CHIPS_FANTASMA = ["Servicios", "Barberos", "Ubicación"];
+
+interface VistaPreviaPlantillaProps {
+  plantilla: PlantillaColor;
+  nombreNegocio: string;
+}
+
+export default function VistaPreviaPlantilla({
+  plantilla,
+  nombreNegocio,
+}: VistaPreviaPlantillaProps) {
+  const textoSobreFondo = elegirColorTexto(plantilla.bgColor);
+
   return (
-    <div className="rounded-lg overflow-hidden border border-white/10 bg-zinc-950">
+    <div
+      className="overflow-hidden rounded-lg border border-white/10"
+      style={{ backgroundColor: plantilla.bgColor }}
+    >
       <div
         className="flex items-center justify-between px-3 py-2"
-        style={{ backgroundColor: `${plantilla.secondaryColor}26` }}
+        style={{
+          backgroundColor: `color-mix(in srgb, ${plantilla.secondaryColor} 10%, transparent)`,
+        }}
       >
-        <div className="flex items-center gap-1.5">
+        <div className="flex min-w-0 items-center gap-1.5">
           <span
-            className="w-2 h-2 rounded-full shrink-0"
+            className="h-2 w-2 shrink-0 rounded-full"
             style={{ backgroundColor: plantilla.primaryColor }}
           />
-          <span className="text-[10px] font-semibold text-zinc-200">Mi Barbería</span>
+          <span
+            className="truncate text-[10px] font-semibold"
+            style={{ color: textoSobreFondo }}
+          >
+            {nombreNegocio.trim() || "Mi Barbería"}
+          </span>
         </div>
         <span
-          className="text-[9px] px-2 py-0.5 rounded-full"
+          className="ml-2 shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold"
           style={{
             backgroundColor: plantilla.primaryColor,
             color: elegirColorTexto(plantilla.primaryColor),
@@ -25,12 +48,13 @@ export default function VistaPreviaPlantilla({ plantilla }: { plantilla: Plantil
           Turnos
         </span>
       </div>
-      <div className="px-3 py-3 space-y-2">
+
+      <div className="space-y-2 px-3 py-3">
         <div className="h-1.5 w-3/4 rounded-full bg-zinc-700" />
         <div className="h-1.5 w-1/2 rounded-full bg-zinc-700" />
-        <div className="flex items-center gap-2 pt-1">
+        <div className="pt-1">
           <span
-            className="text-[10px] font-bold px-3 py-1 rounded-md"
+            className="rounded-md px-2.5 py-1 text-[10px] font-semibold"
             style={{
               backgroundColor: plantilla.primaryColor,
               color: elegirColorTexto(plantilla.primaryColor),
@@ -38,16 +62,26 @@ export default function VistaPreviaPlantilla({ plantilla }: { plantilla: Plantil
           >
             Reservar
           </span>
-          <span
-            className="text-[9px] px-2 py-1 rounded-md text-zinc-300"
-            style={{ border: `1px solid ${plantilla.secondaryColor}80` }}
-          >
-            Servicios
-          </span>
         </div>
       </div>
+
+      <div className="flex flex-wrap gap-1.5 px-3 pb-3">
+        {CHIPS_FANTASMA.map((chip) => (
+          <span
+            key={chip}
+            className="rounded-md border px-2 py-1 text-[9px]"
+            style={{
+              borderColor: `color-mix(in srgb, ${plantilla.secondaryColor} 35%, transparent)`,
+              color: textoSobreFondo,
+            }}
+          >
+            {chip}
+          </span>
+        ))}
+      </div>
+
       <div
-        className="h-1"
+        className="h-[3px]"
         style={{
           backgroundImage: `linear-gradient(to right, ${plantilla.primaryColor}, ${plantilla.secondaryColor})`,
         }}

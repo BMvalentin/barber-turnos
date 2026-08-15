@@ -23,7 +23,7 @@ async function updateBarberoBase(
       };
     }
 
-    const { id, nombre, srcImage, estado, serviciosIds, margenesIds } = parsed.data;
+    const { id, nombre, email, srcImage, estado, serviciosIds, margenesIds } = parsed.data;
 
     await prisma.$transaction(async (tx) => {
       // 1. Actualizar datos básicos
@@ -31,6 +31,7 @@ async function updateBarberoBase(
         where: { id },
         data: {
           nombre,
+          email: email?.trim() ? email.trim() : null,
           srcImage: srcImage || null,
           estado: estado ?? true,
           updatedAt: new Date(),

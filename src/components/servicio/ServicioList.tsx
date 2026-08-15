@@ -85,11 +85,11 @@ export default function ServicioList({
           <div>
             <p
               className="text-[10px] font-bold uppercase tracking-wider mb-1"
-              style={{ color: "var(--page-primary)" }}
+              style={{ color: "var(--page-primary-tinta)" }}
             >
               Catálogo
             </p>
-            <h2 className="text-2xl font-bold text-[#E4E0D9]">
+            <h2 className="text-2xl font-bold text-[var(--admin-texto-primario)]">
               Menú de Barbería
             </h2>
           </div>
@@ -133,7 +133,7 @@ export default function ServicioList({
             )}
             <button
               onClick={resetFilters}
-              className="text-[10px] font-bold text-[#8E8675] hover:text-red-400 uppercase tracking-wider transition-colors px-1"
+              className="text-[10px] font-bold text-[var(--admin-texto-muted)] hover:text-red-400 uppercase tracking-wider transition-colors duration-150 px-1"
             >
               Limpiar todo
             </button>

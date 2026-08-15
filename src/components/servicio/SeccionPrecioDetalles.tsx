@@ -12,12 +12,12 @@ export default function SeccionPrecioDetalles({
 }: SeccionPrecioDetallesProps) {
   return (
     <div 
-      className="bg-black/70 border rounded-xl p-6"
+      className="bg-[var(--admin-surface-elevated)] border rounded-xl p-6"
       style={{ borderColor: "var(--page-secondary)" }}
     >
       <h3 
         className="text-xs font-bold uppercase tracking-wider mb-6"
-        style={{ color: "var(--page-primary)" }}
+        style={{ color: "var(--page-primary-tinta)" }}
       >
         Precio & Detalles
       </h3>

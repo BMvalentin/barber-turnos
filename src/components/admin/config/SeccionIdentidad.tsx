@@ -1,68 +1,76 @@
 // components/admin/config/SeccionIdentidad.tsx
 import { Building2 } from "lucide-react";
-import EncabezadoSeccion from "@/components/admin/config/EncabezadoSeccion";
 import type { ManejarCambio } from "@/components/admin/config/tipos";
 
+const CLASES_INPUT =
+  "w-full rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-3 py-2.5 text-sm text-[var(--admin-texto-primario)] placeholder:text-[var(--admin-texto-muted)] transition-colors duration-150 hover:border-[var(--admin-border-fuerte)] focus:border-[var(--page-primary)]/60 focus:outline-none focus:ring-2 focus:ring-[var(--page-focus-ring)]";
+
 interface SeccionIdentidadProps {
-    nombre: string;
-    slogan: string;
-    descripcion: string;
-    borde: React.CSSProperties;
-    manejarCambio: ManejarCambio;
-    colorIcono: string;
+  nombre: string;
+  slogan: string;
+  descripcion: string;
+  manejarCambio: ManejarCambio;
 }
 
 export default function SeccionIdentidad({
-    nombre,
-    slogan,
-    descripcion,
-    borde,
-    manejarCambio,
-    colorIcono,
+  nombre,
+  slogan,
+  descripcion,
+  manejarCambio,
 }: SeccionIdentidadProps) {
-    return (
-        <div className="p-6 rounded-xl bg-neutral-900/40 border border-neutral-800 space-y-4 shadow-lg">
-            <EncabezadoSeccion
-                icono={<Building2 className="w-5 h-5" style={{ color: colorIcono }} />}
-                titulo="Información General"
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">Nombre del Negocio</label>
-                    <input
-                        type="text"
-                        name="name"
-                        value={nombre}
-                        onChange={manejarCambio}
-                        className="w-full bg-black/60 rounded-lg p-2.5 text-white focus:outline-none transition-all"
-                        style={borde}
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">Slogan</label>
-                    <input
-                        type="text"
-                        name="slogan"
-                        value={slogan}
-                        onChange={manejarCambio}
-                        className="w-full bg-black/60 rounded-lg p-2.5 text-white focus:outline-none transition-all"
-                        style={borde}
-                    />
-                </div>
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Descripción</label>
-                <textarea
-                    name="description"
-                    rows={3}
-                    value={descripcion}
-                    onChange={manejarCambio}
-                    className="w-full bg-black/60 rounded-lg p-2.5 text-white focus:outline-none transition-all"
-                    style={borde}
-                />
-            </div>
+  return (
+    <div>
+      <div className="border-b border-[var(--admin-border)] pb-6">
+        <div className="flex items-center gap-2">
+          <Building2 className="h-4 w-4 text-[var(--admin-texto-muted)]" />
+          <h2 className="text-lg font-semibold tracking-tight text-[var(--admin-texto-primario)]">
+            Información general
+          </h2>
         </div>
-    );
+        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
+          Nombre, slogan y descripción que se muestran en tu sitio.
+        </p>
+      </div>
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-[var(--admin-texto-secundario)]">
+            Nombre del Negocio
+          </label>
+          <input
+            type="text"
+            name="name"
+            value={nombre}
+            onChange={manejarCambio}
+            className={CLASES_INPUT}
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-[var(--admin-texto-secundario)]">
+            Slogan
+          </label>
+          <input
+            type="text"
+            name="slogan"
+            value={slogan}
+            onChange={manejarCambio}
+            className={CLASES_INPUT}
+          />
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <label className="mb-1.5 block text-sm font-medium text-[var(--admin-texto-secundario)]">
+          Descripción
+        </label>
+        <textarea
+          name="description"
+          rows={3}
+          value={descripcion}
+          onChange={manejarCambio}
+          className={CLASES_INPUT}
+        />
+      </div>
+    </div>
+  );
 }

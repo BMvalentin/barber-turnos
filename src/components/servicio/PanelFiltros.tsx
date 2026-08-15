@@ -52,17 +52,17 @@ export default function PanelFiltros({
           borderColor:
             mostrarPanel || filtrosActivos > 0
               ? "var(--page-primary)"
-              : "#2C261D",
+              : "var(--admin-border)",
           color:
             mostrarPanel || filtrosActivos > 0
               ? "var(--page-primary)"
-              : "#E4E0D9",
+              : "var(--admin-texto-primario)",
           backgroundColor:
             mostrarPanel || filtrosActivos > 0
               ? "var(--page-primary-15)"
-              : "#1C1812",
+              : "var(--admin-surface-elevated)",
         }}
-        className="flex items-center gap-2 px-4 py-2 border text-[10px] font-bold uppercase tracking-wider rounded transition-colors hover:bg-[#2C261D]"
+        className="flex items-center gap-2 px-4 py-2 border text-[10px] font-bold uppercase tracking-wider rounded transition-colors duration-150 hover:bg-white/5"
       >
         <SlidersHorizontal className="w-4 h-4" />
         Filtrar
@@ -82,15 +82,15 @@ export default function PanelFiltros({
             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 sm:hidden"
             onClick={() => setMostrarPanel(false)}
           />
-          <div className="fixed inset-x-0 bottom-0 z-50 h-[85dvh] bg-black border-t border-[#2C261D] rounded-t-3xl shadow-2xl flex flex-col sm:absolute sm:right-0 sm:top-full sm:bottom-auto sm:inset-x-auto sm:mt-2 sm:w-80 sm:h-auto sm:rounded-xl sm:border sm:border-[#2C261D] sm:bg-black/90 sm:overflow-hidden">
+          <div className="fixed inset-x-0 bottom-0 z-50 h-[85dvh] bg-[var(--admin-surface-elevated)] border-t border-[var(--admin-border)] rounded-t-3xl shadow-2xl flex flex-col sm:absolute sm:right-0 sm:top-full sm:bottom-auto sm:inset-x-auto sm:mt-2 sm:w-80 sm:h-auto sm:rounded-xl sm:border sm:border-[var(--admin-border)] sm:overflow-hidden">
             <div className="shrink-0">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-[#2C261D]">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--admin-border)]">
                 <div className="flex items-center gap-2">
                   <Filter
                     className="w-4 h-4"
-                    style={{ color: "var(--page-primary)" }}
+                    style={{ color: "var(--page-primary-tinta)" }}
                   />
-                  <span className="text-xs font-bold text-[#E4E0D9] uppercase tracking-wider">
+                  <span className="text-xs font-bold text-[var(--admin-texto-primario)] uppercase tracking-wider">
                     Filtros
                   </span>
                 </div>
@@ -98,15 +98,15 @@ export default function PanelFiltros({
                   {filtrosActivos > 0 && (
                     <button
                       onClick={onLimpiarFiltros}
-                      className="text-[10px] font-bold text-[#8E8675] uppercase tracking-wider transition-colors"
-                      style={{ color: "var(--page-primary)" }}
+                      className="text-[10px] font-bold text-[var(--admin-texto-muted)] uppercase tracking-wider transition-colors duration-150"
+                      style={{ color: "var(--page-primary-tinta)" }}
                     >
                       Limpiar
                     </button>
                   )}
                   <button
                     onClick={() => setMostrarPanel(false)}
-                    className="text-[#8E8675] hover:text-[#E4E0D9] transition-colors"
+                    className="text-[var(--admin-texto-muted)] hover:text-[var(--admin-texto-primario)] transition-colors duration-150"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -116,8 +116,8 @@ export default function PanelFiltros({
 
             <CamposFiltros filtros={filtros} onCambiarFiltro={onCambiarFiltro} />
 
-            <div className="shrink-0 px-5 py-4 border-t border-[#2C261D] bg-[#1C1812]/50">
-              <p className="text-[10px] text-[#8E8675] text-center">
+            <div className="shrink-0 px-5 py-4 border-t border-[var(--admin-border)] bg-[var(--admin-surface)]">
+              <p className="text-[10px] text-[var(--admin-texto-muted)] text-center">
                 {totalResultados} de {totalServicios} servicios encontrados
               </p>
             </div>
