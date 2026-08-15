@@ -5,19 +5,25 @@ export const loginSchema = z.object({
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
 });
 
-export const registerSchema = loginSchema.extend({
-  password: z
-    .string()
-    .min(8, "La contraseña debe tener al menos 8 caracteres"),
-  name: z
-    .string()
-    .min(2, "Nombre requerido")
-    .max(100, "El nombre es demasiado largo")
-    .regex(
-      /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9 .\-']+$/,
-      "Nombre inválido: solo letras, números, espacios, puntos, guiones y apóstrofes"
-    ),
-});
+export const registerSchema = loginSchema
+  .extend({
+    password: z
+      .string()
+      .min(8, "La contraseña debe tener al menos 8 caracteres"),
+    name: z
+      .string()
+      .min(2, "Nombre requerido")
+      .max(100, "El nombre es demasiado largo")
+      .regex(
+        /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9 .\-']+$/,
+        "Nombre inválido: solo letras, números, espacios, puntos, guiones y apóstrofes"
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine((datos) => datos.password === datos.confirmPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"],
+  });
 
 /* Esquema base de nombre (mín. 3, máx. 100) con regex opcional */
 export function esquemaNombre(
