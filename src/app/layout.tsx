@@ -57,7 +57,18 @@ export default async function RootLayout({
     >
       <body className={`${outfit.variable} antialiased`}>
         <LayoutComponent session={session} config={config}>
-          <AppGate barberiaNombre={config?.name} logoUrl={config?.logo}>
+          <AppGate
+            barberiaNombre={config?.name}
+            logoUrl={config?.logo}
+            descripcion={config?.description}
+            localidad={config?.city}
+            instagram={config?.instagram}
+            whatsapp={config?.whatsapp}
+            telefono={config?.phone}
+            email={config?.email}
+            direccion={config?.address}
+            ciudad={config?.city}
+          >
             {children}
             <Toaster
               position="bottom-right"

@@ -2,6 +2,7 @@
 import { Palette } from "lucide-react";
 import CampoColor from "@/components/admin/config/CampoColor";
 import SelectorPlantillasColores from "@/components/admin/config/SelectorPlantillasColores";
+import VistaPreviaPersonalizada from "@/components/admin/config/VistaPreviaPersonalizada";
 import type { AplicarPlantilla, ManejarCambio } from "@/components/admin/config/tipos";
 
 interface SeccionAparienciaProps {
@@ -79,6 +80,14 @@ export default function SeccionApariencia({
               etiqueta="Color de fondo"
               valor={colorFondo}
               manejarCambio={manejarCambio}
+            />
+          </div>
+          <div className="mt-4">
+            <VistaPreviaPersonalizada
+              colorPrimario={colorPrimario}
+              colorSecundario={colorSecundario}
+              colorFondo={colorFondo}
+              nombreNegocio={nombreNegocio}
             />
           </div>
         </div>
