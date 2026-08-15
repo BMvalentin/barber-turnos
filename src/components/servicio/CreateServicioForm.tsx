@@ -50,7 +50,7 @@ export default function CreateServicioForm({
   });
 
   useEffect(() => {
-    if (state.success) {
+    if (state.success || state.error) {
       void retroalimentar(state);
     }
   }, [state, retroalimentar]);
@@ -62,10 +62,10 @@ export default function CreateServicioForm({
       subtitulo="Completa los datos para agregar un servicio al catálogo."
       maxWidth="max-w-4xl"
       overlayClase="bg-black/90 p-4 sm:p-6 overflow-y-auto"
-      contenedorClase="bg-black/60 border border-[var(--page-secondary)] rounded-xl relative flex flex-col max-h-[90vh]"
+      contenedorClase="bg-[var(--admin-surface)] border border-[var(--page-secondary)] rounded-xl relative flex flex-col max-h-[90vh]"
       headerClase="flex justify-between items-center gap-4 p-6 border-b border-[var(--page-secondary)]"
-      tituloClase="text-xl font-bold text-[#E4E0D9]"
-      subtituloClase="text-[#8E8675] text-xs mt-1"
+      tituloClase="text-xl font-bold text-[var(--admin-texto-primario)]"
+      subtituloClase="text-[var(--admin-texto-muted)] text-xs mt-1"
     >
       {/* Formulario */}
       <div className="overflow-y-auto p-6 flex-1">
@@ -91,23 +91,23 @@ export default function CreateServicioForm({
           >
             {/* Información General */}
             <div 
-              className="bg-black/70 border rounded-xl p-6"
+              className="bg-[var(--admin-surface-elevated)] border rounded-xl p-6"
               style={{ borderColor: "var(--page-secondary)" }}
             >
               <div className="flex justify-between items-center mb-6">
                 <h3 
                   className="text-xs font-bold uppercase tracking-wider"
-                  style={{ color: "var(--page-primary)" }}
+                  style={{ color: "var(--page-primary-tinta)" }}
                 >
                   Información General
                 </h3>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-[#8E8675] uppercase font-bold">
+                  <span className="text-[10px] text-[var(--admin-texto-secundario)] uppercase font-bold">
                     Estado
                   </span>
                   <select
                     name="estado"
-                    className="bg-black/70 border text-[#E4E0D9] text-xs rounded px-2 py-1 outline-none"
+                    className="bg-[var(--admin-surface-elevated)] border text-[var(--admin-texto-primario)] text-xs rounded px-2 py-1 transition-colors duration-150 focus:outline-none focus:border-[var(--page-primary)]/60 focus:ring-2 focus:ring-[var(--page-focus-ring)]"
                     style={{ borderColor: "var(--page-secondary)" }}
                   >
                     <option value="true">Activo</option>
@@ -145,12 +145,6 @@ export default function CreateServicioForm({
             {/* Detalles Técnicos & Precios */}
             <SeccionPrecioDetalles errors={state.errors} />
 
-            {state.error && (
-              <div className="bg-red-900/20 border border-red-900/50 rounded-lg p-4 text-red-400 text-sm text-center">
-                {state.error}
-              </div>
-            )}
-
             <div 
               className="flex justify-end gap-4 pt-4 border-t"
               style={{ borderColor: "var(--page-secondary)" }}
@@ -158,7 +152,7 @@ export default function CreateServicioForm({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-3 hover:cursor-pointer rounded-lg font-bold text-xs uppercase tracking-wider text-[#E4E0D9] transition-colors"
+                className="px-6 py-3 hover:cursor-pointer rounded-lg font-bold text-xs uppercase tracking-wider text-[var(--admin-texto-primario)] hover:bg-white/5 transition-colors duration-150"
                 style={{ backgroundColor: 'transparent' }}
               >
                 Cancelar

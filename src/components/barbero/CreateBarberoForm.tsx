@@ -7,6 +7,7 @@ import { uploadBarberImages } from "@/actions/mercadopago/subir-barberos.actions
 import { useImagenServicio } from "@/hooks/useImagenServicio";
 import type { ServicioOpcion, DiaLaboral } from "@/types/barbero";
 import CampoNombreBarbero from "./CampoNombreBarbero";
+import CampoEmailBarbero from "./CampoEmailBarbero";
 import SeccionImagenServicio from "@/components/servicio/SeccionImagenServicio";
 import SelectorServicios from "./SelectorServicios";
 import SelectorHorarios from "./SelectorHorarios";
@@ -31,6 +32,7 @@ export default function CreateBarberoForm({
     refrescar: true,
     onExito: () => {
       setNombre("");
+      setEmail("");
       quitarImagen();
       setSelectedServicios([]);
       setSelectedHorarios([]);
@@ -38,6 +40,7 @@ export default function CreateBarberoForm({
     },
   });
   const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
   const [selectedServicios, setSelectedServicios] = useState<string[]>([]);
   const [selectedHorarios, setSelectedHorarios] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +62,16 @@ export default function CreateBarberoForm({
     const regex = /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/;
     if (!regex.test(value)) {
       setError("El nombre no puede tener números ni caracteres especiales");
+    } else {
+      setError(null);
+    }
+  };
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (value.trim() !== "" && !regex.test(value.trim())) {
+      setError("El email no es válido");
     } else {
       setError(null);
     }
@@ -96,7 +109,7 @@ export default function CreateBarberoForm({
           setUploading(false);
           return;
         }
-      } catch (err) {
+      } catch {
         setUploadError("Error al subir la imagen");
         setUploading(false);
         return;
@@ -107,20 +120,18 @@ export default function CreateBarberoForm({
     startTransition(async () => {
       const result = await createBarbero({
         nombre: nombre.trim(),
+        email: email.trim() || null,
         srcImage: finalImageUrl?.trim() || null,
         serviciosIds: selectedServicios,
         margenesIds: selectedHorarios,
       });
-      if (!result.success) {
-        setError(result.error || "Error al crear barbero");
-      }
       await retroalimentar(result);
     });
   };
 
   return (
     <div
-      className="bg-black/40 backdrop-blur-lg rounded-xl p-6 space-y-6 border"
+      className="bg-[var(--admin-surface-elevated)] backdrop-blur-lg rounded-xl p-6 space-y-6 border"
       style={{ borderColor: `var(--page-primary-30)` }}
     >
       <CampoNombreBarbero
@@ -128,6 +139,11 @@ export default function CreateBarberoForm({
         error={error}
         requerido
         onCambio={handleNombreChange}
+      />
+      <CampoEmailBarbero
+        valor={email}
+        error={error}
+        onCambio={handleEmailChange}
       />
       <SeccionImagenServicio
         previewUrl={previewUrl}

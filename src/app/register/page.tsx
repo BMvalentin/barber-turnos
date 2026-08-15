@@ -8,6 +8,7 @@ import AuthLayout from "@/components/auth/AuthLayout";
 import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import { User, Mail, Lock, Scissors, Eye, EyeOff } from "lucide-react";
 import type { ActionState } from "@/types/action-state";
+import { toast } from "sonner";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -30,6 +31,10 @@ export default function RegisterPage() {
       );
     }
   }, [state, router]);
+
+  useEffect(() => {
+    if (state.error) toast.error("Error", { description: state.error });
+  }, [state]);
 
   return (
     <AuthLayout>
@@ -181,12 +186,6 @@ export default function RegisterPage() {
                   </button>
                 </div>
               </div>
-
-              {state.error && (
-                <p className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium rounded-xl text-center">
-                  {state.error}
-                </p>
-              )}
 
               <button
                 type="submit"

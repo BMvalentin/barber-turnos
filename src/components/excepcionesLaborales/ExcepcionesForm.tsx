@@ -32,31 +32,31 @@ export default function ExcepcionForm({ barberos }: ExcepcionFormProps) {
     <form action={formAction} className="space-y-4">
       {/* Motivo */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-80)" }}>
-          Motivo <span style={{ color: "var(--page-primary)" }}>*</span>
+        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-tinta)" }}>
+          Motivo <span style={{ color: "var(--page-primary-tinta)" }}>*</span>
         </label>
         <input
           type="text"
           name="motivo"
           required
           placeholder="Ej: Feriado Nacional"
-          className="w-full rounded-lg px-3 py-2 bg-black/60 text-white focus:outline-none transition-all placeholder:text-zinc-500"
+          className="w-full rounded-lg px-3 py-2 bg-[var(--admin-surface-elevated)] text-[var(--admin-texto-primario)] transition-colors duration-150 placeholder:text-[var(--admin-texto-muted)] focus:outline-none focus:border-[var(--page-primary)]/60 focus:ring-2 focus:ring-[var(--page-focus-ring)]"
           style={{
-            border: "1px solid var(--page-secondary-60)",
+            border: "1px solid var(--admin-border)",
           }}
         />
       </div>
 
       {/* Adjudicar a Barbero */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-80)" }}>
+        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-tinta)" }}>
           ¿A quién afecta?
         </label>
         <select
           name="barberoId"
-          className="w-full rounded-lg px-3 py-2 bg-black/60 text-white focus:outline-none transition-all"
+          className="w-full rounded-lg px-3 py-2 bg-[var(--admin-surface-elevated)] text-[var(--admin-texto-primario)] transition-colors duration-150 focus:outline-none focus:border-[var(--page-primary)]/60 focus:ring-2 focus:ring-[var(--page-focus-ring)]"
           style={{
-            border: "1px solid var(--page-secondary-60)",
+            border: "1px solid var(--admin-border)",
           }}
         >
           <option value="">🌎 Toda la barbería (Global)</option>
@@ -70,41 +70,35 @@ export default function ExcepcionForm({ barberos }: ExcepcionFormProps) {
 
       {/* Fecha Desde */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-80)" }}>
-          Desde <span style={{ color: "var(--page-primary)" }}>*</span>
+        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-tinta)" }}>
+          Desde <span style={{ color: "var(--page-primary-tinta)" }}>*</span>
         </label>
         <input
           type="datetime-local"
           name="desde"
           required
-          className="w-full rounded-lg px-3 py-2 bg-black/60 text-white focus:outline-none transition-all [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+          className="w-full rounded-lg px-3 py-2 bg-[var(--admin-surface-elevated)] text-[var(--admin-texto-primario)] transition-colors duration-150 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer focus:outline-none focus:border-[var(--page-primary)]/60 focus:ring-2 focus:ring-[var(--page-focus-ring)]"
           style={{
-            border: "1px solid var(--page-secondary-60)",
+            border: "1px solid var(--admin-border)",
           }}
         />
       </div>
 
       {/* Fecha Hasta */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-80)" }}>
-          Hasta <span style={{ color: "var(--page-primary)" }}>*</span>
+        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-tinta)" }}>
+          Hasta <span style={{ color: "var(--page-primary-tinta)" }}>*</span>
         </label>
         <input
           type="datetime-local"
           name="hasta"
           required
-          className="w-full rounded-lg px-3 py-2 bg-black/60 text-white focus:outline-none transition-all [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+          className="w-full rounded-lg px-3 py-2 bg-[var(--admin-surface-elevated)] text-[var(--admin-texto-primario)] transition-colors duration-150 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer focus:outline-none focus:border-[var(--page-primary)]/60 focus:ring-2 focus:ring-[var(--page-focus-ring)]"
           style={{
-            border: "1px solid var(--page-secondary-60)",
+            border: "1px solid var(--admin-border)",
           }}
         />
       </div>
-
-      {state.error && (
-        <div className="p-3 bg-red-500/10 text-red-400 rounded-lg text-sm border border-red-500/50">
-          {state.error}
-        </div>
-      )}
 
       <BotonSubmitFormStatus
         texto="Crear Excepción"

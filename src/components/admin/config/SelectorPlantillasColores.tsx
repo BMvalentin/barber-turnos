@@ -6,13 +6,17 @@ import type { AplicarPlantilla } from "@/components/admin/config/tipos";
 interface SelectorPlantillasColoresProps {
   colorPrimario: string;
   colorSecundario: string;
+  colorFondo: string;
   aplicarPlantilla: AplicarPlantilla;
+  nombreNegocio: string;
 }
 
 export default function SelectorPlantillasColores({
   colorPrimario,
   colorSecundario,
+  colorFondo,
   aplicarPlantilla,
+  nombreNegocio,
 }: SelectorPlantillasColoresProps) {
   const colorCoincide = (colorA: string, colorB: string) =>
     colorA.trim().toUpperCase() === colorB.trim().toUpperCase();
@@ -21,7 +25,7 @@ export default function SelectorPlantillasColores({
     <div
       role="radiogroup"
       aria-label="Plantillas de colores"
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+      className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-3"
     >
       {PLANTILLAS_COLORES.map((plantilla) => (
         <TarjetaPlantillaColor
@@ -29,9 +33,11 @@ export default function SelectorPlantillasColores({
           plantilla={plantilla}
           seleccionada={
             colorCoincide(plantilla.primaryColor, colorPrimario) &&
-            colorCoincide(plantilla.secondaryColor, colorSecundario)
+            colorCoincide(plantilla.secondaryColor, colorSecundario) &&
+            colorCoincide(plantilla.bgColor, colorFondo)
           }
           alSeleccionar={() => aplicarPlantilla(plantilla)}
+          nombreNegocio={nombreNegocio}
         />
       ))}
     </div>

@@ -73,8 +73,7 @@ export default function AppGate({
     }
   };
 
-  const handleAcceptTerms = () => {
-    localStorage.setItem("termsAccepted", "true");
+  const handleCloseTerms = () => {
     setTermsOpen(false);
   };
 
@@ -110,7 +109,7 @@ export default function AppGate({
 
       <TermsModal
         isOpen={termsOpen}
-        onClose={handleAcceptTerms}
+        onClose={handleCloseTerms}
       />
     </>
   );

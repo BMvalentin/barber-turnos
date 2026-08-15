@@ -6,20 +6,15 @@ export default async function ConfigPage() {
   const config = await getPageConfig();
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      <h1 
-        className="text-2xl font-bold mb-6"
-        style={{ color: "var(--page-primary)" }}
-      >
-        Configuración General
+    <div>
+      <h1 className="text-2xl font-semibold tracking-tight text-[var(--admin-texto-primario)] md:text-[28px]">
+        Configuración
       </h1>
-      
-      <div 
-        className="bg-black/40 p-6 rounded-xl transition-all"
-        style={{
-          border: "1px solid var(--page-secondary-40)",
-        }}
-      >
+      <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
+        Administrá la información y apariencia de tu barbería.
+      </p>
+
+      <div className="mt-8">
         <GeneralConfigForm initialData={config} />
       </div>
     </div>

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { enviarEmailTurnoSeguro } from "@/lib/email/enviar-email-turno-seguro";
+import { enviarEmailTurnoBarberoSeguro } from "@/lib/email/enviar-email-turno-barbero-seguro";
 import { existeLockAjeno } from "@/lib/locks";
 import { revalidarCacheTurno } from "@/lib/revalidar/revalidar-cache-turno";
 import { actualizarTurnoConDetalle } from "@/lib/turno-con-detalle";
@@ -64,6 +65,9 @@ export async function actualizarTurno(
       revalidarCacheTurno(turnoActual.barberoId, fechaAnterior, turnoActual.userId);
       revalidarCacheTurno(barberoId, fecha, turnoActual.userId);
       enviarEmailTurnoSeguro(turnoActualizado, turnoActualizado.estado === ESTADOS_TURNO[3] ? ESTADOS_TURNO[3] : "ACTUALIZADO");
+      if (turnoActualizado.estado === ESTADOS_TURNO[1] && turnoActual.estado !== ESTADOS_TURNO[1]) {
+        enviarEmailTurnoBarberoSeguro(turnoActualizado, "CONFIRMADO");
+      }
 
       return {
         success: true,
@@ -81,6 +85,9 @@ export async function actualizarTurno(
       revalidatePath("/turno");
       revalidatePath("/admin");
       enviarEmailTurnoSeguro(turnoActualizado, turnoActualizado.estado === ESTADOS_TURNO[3] ? ESTADOS_TURNO[3] : "ACTUALIZADO");
+      if (turnoActualizado.estado === ESTADOS_TURNO[1] && turnoActual.estado !== ESTADOS_TURNO[1]) {
+        enviarEmailTurnoBarberoSeguro(turnoActualizado, "CONFIRMADO");
+      }
 
       return {
         success: true,

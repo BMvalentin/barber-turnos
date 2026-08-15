@@ -58,7 +58,7 @@ export default function EditServicioModal({
 
   // Efecto para cerrar el modal si la actualización fue exitosa
   useEffect(() => {
-    if (state.success) {
+    if (state.success || state.error) {
       void retroalimentar(state);
     }
   }, [state, retroalimentar]);
@@ -69,14 +69,14 @@ export default function EditServicioModal({
       titulo={
         <>
           Editar Servicio:{" "}
-          <span className="font-normal text-[#8E8675]">{servicio.nombre}</span>
+          <span className="font-normal text-[var(--admin-texto-muted)]">{servicio.nombre}</span>
         </>
       }
       maxWidth="max-w-7xl"
       overlayClase="bg-black/90 p-4 sm:p-6 overflow-y-auto"
-      contenedorClase="bg-black/70 backdrop-blur-2xl border border-[#2C261D] rounded-xl relative flex flex-col max-h-[95vh]"
-      headerClase="flex items-center justify-between p-6 border-b border-[#2C261D]"
-      tituloClase="text-2xl font-bold text-[#E4E0D9]"
+      contenedorClase="bg-[var(--admin-surface)] backdrop-blur-2xl border border-[var(--admin-border)] rounded-xl relative flex flex-col max-h-[95vh]"
+      headerClase="flex items-center justify-between p-6 border-b border-[var(--admin-border)]"
+      tituloClase="text-2xl font-bold text-[var(--admin-texto-primario)]"
     >
       {/* Formulario envolvente para capturar la acción del botón en el header */}
       <form
@@ -104,7 +104,7 @@ export default function EditServicioModal({
           <div className="overflow-y-auto p-8 grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
             {/* Columna Izquierda: INFORMACIÓN GENERAL */}
             <div className="space-y-6">
-              <h3 className="text-xs font-bold text-[#E8B031] uppercase tracking-wider">
+              <h3 className="text-xs font-semibold text-[var(--admin-texto-secundario)] uppercase tracking-wider">
                 INFORMACIÓN GENERAL
               </h3>
 
@@ -122,10 +122,10 @@ export default function EditServicioModal({
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider">
+                    <label className="block text-xs font-medium text-[var(--admin-texto-secundario)]">
                       Descripción del Servicio
                     </label>
-                    <span className={`text-[9px] font-bold uppercase ${descripcion.length > 450 ? 'text-[#E8B031]' : 'text-[#8E8675]'}`}>
+                    <span className={`text-[9px] font-bold uppercase ${descripcion.length > 450 ? 'text-[var(--page-primary-tinta)]' : 'text-[var(--admin-texto-muted)]'}`}>
                       {descripcion.length} / 500
                     </span>
                   </div>
@@ -134,7 +134,7 @@ export default function EditServicioModal({
                     value={descripcion}
                     onChange={(e) => setDescripcion(e.target.value.slice(0, 500))}
                     rows={3}
-                    className={`w-full bg-black/70 backdrop-blur-2xl  border ${state.errors?.descripcion ? "border-red-500" : "border-[#2C261D]"} rounded-lg px-4 py-3 text-[#E4E0D9] text-sm outline-none focus:border-[#E8B031] transition-colors resize-none`}
+                    className={`w-full bg-[var(--admin-surface-elevated)] backdrop-blur-2xl border ${state.errors?.descripcion ? "border-red-500" : "border-[var(--admin-border)]"} rounded-lg px-4 py-3 text-[var(--admin-texto-primario)] text-sm transition-colors duration-150 placeholder:text-[var(--admin-texto-muted)] focus:outline-none focus:border-[var(--page-primary)]/60 focus:ring-2 focus:ring-[var(--page-focus-ring)] resize-none`}
                     placeholder="Detalla qué incluye el servicio..."
                   />
                   {state.errors?.descripcion && (
@@ -155,7 +155,7 @@ export default function EditServicioModal({
 
             {/* Columna Derecha: PRICING & DETAILS */}
             <div className="space-y-6">
-              <h3 className="text-xs font-bold text-[#E8B031] uppercase tracking-wider">
+              <h3 className="text-xs font-semibold text-[var(--admin-texto-secundario)] uppercase tracking-wider">
                 PRECIOS & DETALLES
               </h3>
 
@@ -211,20 +211,13 @@ export default function EditServicioModal({
                 />
               </div>
             </div>
-
-            {/* Mensaje de Error si existe */}
-            {state.error && (
-              <div className="col-span-1 md:col-span-2 bg-red-900/20 border border-red-900/50 rounded-lg p-4 text-red-400 text-sm text-center">
-                {state.error}
-              </div>
-            )}
           </div>
 
-          <div className="flex justify-end px-6 py-4 gap-4 border-t border-[#2C261D] bg-black/70 w-full">
+          <div className="flex justify-end px-6 py-4 gap-4 border-t border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] w-full">
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-3 hover:cursor-pointer rounded-lg font-bold text-xs uppercase tracking-wider text-[#E4E0D9] hover:bg-[#2C261D] transition-colors"
+            className="px-6 py-3 hover:cursor-pointer rounded-lg font-bold text-xs uppercase tracking-wider text-[var(--admin-texto-primario)] hover:bg-white/5 transition-colors duration-150"
           >
             Cancelar
           </button>

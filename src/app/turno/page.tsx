@@ -31,7 +31,7 @@ export default async function TurnoPage() {
     <div
       className="min-h-screen w-full p-2 sm:p-6 pt-24 md:pt-24 overflow-x-hidden"
       style={{
-        background: `linear-gradient(to bottom right, #000000, var(--page-secondary-30))`,
+        background: `linear-gradient(to bottom right, var(--page-bg), var(--page-secondary-30))`,
       }}
     >
       <div className="container mx-auto max-w-7xl">

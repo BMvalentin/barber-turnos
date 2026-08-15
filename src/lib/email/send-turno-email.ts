@@ -12,8 +12,16 @@ const COLOR_PRIMARIO_DEFECTO = "#d97706";
 const COLOR_SECUNDARIO_DEFECTO = "#78350f";
 const NOMBRE_BARBERIA_DEFECTO = "Tu Barbería";
 
-const ASUNTOS: Record<DatosEmailTurno["estado"], string> = {
+const ASUNTOS_CLIENTE: Record<DatosEmailTurno["estado"], string> = {
   CREADO: "Turno Confirmado",
+  CONFIRMADO: "Turno Confirmado",
+  ACTUALIZADO: "Turno Modificado",
+  CANCELADO: "Turno Cancelado",
+};
+
+const ASUNTOS_BARBERO: Record<DatosEmailTurno["estado"], string> = {
+  CREADO: "Nuevo Turno Reservado",
+  CONFIRMADO: "Turno Confirmado",
   ACTUALIZADO: "Turno Modificado",
   CANCELADO: "Turno Cancelado",
 };
@@ -28,7 +36,11 @@ function construirColores(primario: string, secundario: string): ColoresEmail {
   };
 }
 
-export async function sendTurnoEmail(to: string, datos: DatosEmailTurno) {
+export async function sendTurnoEmail(
+  to: string,
+  datos: DatosEmailTurno,
+  destinatario: "cliente" | "barbero" = "cliente",
+) {
   if (!process.env.RESEND_API_KEY) {
     return { success: false, error: "RESEND_API_KEY no configurada" };
   }
@@ -47,16 +59,16 @@ export async function sendTurnoEmail(to: string, datos: DatosEmailTurno) {
         colores: construirColores(primario, secundario),
         barberiaNombre,
         moneda,
+        destinatario,
       }),
     );
 
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const asunto = `${ASUNTOS[datos.estado]} - ${barberiaNombre}`;
+    const asunto = `${(destinatario === "barbero" ? ASUNTOS_BARBERO : ASUNTOS_CLIENTE)[datos.estado]} - ${barberiaNombre}`;
 
     await resend.emails.send({
       from: `${barberiaNombre} <${from}>`,
       to,
-      bcc: process.env.NOTIFICATION_EMAIL,
       subject: asunto,
       html,
     });

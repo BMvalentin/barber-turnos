@@ -1,7 +1,8 @@
 "use client";
 
-import type { RefObject } from "react";
+import { useEffect, type RefObject } from "react";
 import type { Session } from "next-auth";
+import { toast } from "sonner";
 import type { ActionState } from "@/types/action-state";
 import type { BarberoData, ServicioData, UsuarioData } from "@/types/turno";
 import SeleccionadorHorario from "./SeleccionadorHorario";
@@ -47,6 +48,12 @@ export default function FormularioTurno({
   handleServicioChange,
   onCancelar,
 }: Props) {
+  useEffect(() => {
+    if (state.error) {
+      toast.error("Error", { description: state.error });
+    }
+  }, [state]);
+
   return (
     <form ref={formRef} action={formAction} className="p-6 md:p-8 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -82,12 +89,6 @@ export default function FormularioTurno({
           userId={selectedUserId}
         />
       </div>
-
-      {state.error && (
-        <div className="p-4 bg-red-500/10 text-red-400 rounded-xl text-sm border border-red-500/30">
-          {state.error}
-        </div>
-      )}
 
       {/* Botones de acción inferior */}
       <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800">

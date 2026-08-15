@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useRef } from "react";
-import { toast } from "@/lib/toast";
+import { toast } from "sonner";
 import type { ActionState } from "@/types/action-state";
 
 export type OpcionesRetroalimentacionAccion = {
@@ -41,10 +41,8 @@ export function useRetroalimentacionAccion(
       } = opcionesRef.current;
 
       if (estado.success) {
-        toast({
-          title: mensajeExito ?? mensajeExitoBase ?? "Éxito",
+        toast.success(mensajeExito ?? mensajeExitoBase ?? "Éxito", {
           description: descripcionExito ?? descripcionExitoBase,
-          variant: "default",
           duration: 4000,
         });
         await onExito?.();
@@ -54,20 +52,16 @@ export function useRetroalimentacionAccion(
           router.refresh();
         }
       } else if (estado.error) {
-        toast({
-          title: mensajeError ?? "Error",
+        toast.error(mensajeError ?? "Error", {
           description:
             estado.error ||
             descripcionError ||
             "Ocurrió un error al procesar la solicitud.",
-          variant: "destructive",
           duration: 4000,
         });
       } else if (estado.warning) {
-        toast({
-          title: mensajeAdvertencia ?? "Atención",
+        toast.warning(mensajeAdvertencia ?? "Atención", {
           description: estado.warning,
-          variant: "default",
           duration: 4000,
         });
       }

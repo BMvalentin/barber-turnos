@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { CreditCard } from "lucide-react";
 import { obtenerEstadoConexionMP } from "@/actions/mercadopago/estado-conexion.actions";
 import { obtenerEstadoConfiguracionOAuth } from "@/actions/mercadopago/estado-oauth.actions";
 import MercadoPagoConnectionPanel from "@/components/admin/MercadoPagoConnectionPanel";
@@ -11,33 +10,29 @@ export default async function PaginaConfiguracionMercadoPago() {
   ]);
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="container mx-auto max-w-3xl">
-        <div className="mb-8 flex items-center gap-4">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-[var(--page-primary)]/20 rounded-xl border-2 border-[var(--page-primary)]/30">
-              <CreditCard className="h-8 w-8 text-[var(--page-primary)]" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">Mercado Pago</h1>
-              <p className="text-amber-200/70">
-                Conectá tu cuenta para poder cobrar las señas de los turnos
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <Suspense
-          fallback={
-            <p className="text-amber-200/50">Cargando estado de conexión...</p>
-          }
-        >
-          <MercadoPagoConnectionPanel
-            estadoInicial={estadoConexion}
-            configuracionOAuth={configuracionOAuth}
-          />
-        </Suspense>
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight md:text-[28px] text-[var(--admin-texto-primario)]">
+          Mercado Pago
+        </h1>
+        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
+          Estado de la conexión y cobros.
+        </p>
       </div>
+
+      <Suspense
+        fallback={
+          <p className="text-[var(--admin-texto-muted)]">
+            Cargando estado de conexión...
+          </p>
+        }
+      >
+        <MercadoPagoConnectionPanel
+          estadoInicial={estadoConexion}
+          configuracionOAuth={configuracionOAuth}
+        />
+      </Suspense>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { toZonedTime } from "date-fns-tz";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { esAdmin } from "@/lib/seguridad/es-admin";
 import { enviarEmailTurnoSeguro } from "@/lib/email/enviar-email-turno-seguro";
+import { enviarEmailTurnoBarberoSeguro } from "@/lib/email/enviar-email-turno-barbero-seguro";
 import { existeLockAjeno } from "@/lib/locks";
 import { entraEnMargen } from "@/lib/margenes";
 import { obtenerContextoDeReserva } from "@/lib/contexto-reserva";
@@ -81,6 +82,7 @@ export async function createTurno(
     revalidarCacheTurno(barberoId, fechaSolo, userId);
     try { await prisma.slotLock.deleteMany({ where: { userId, barberoId, horarioReservado: inicio } }); } catch { /* No bloquear el flujo si falla la limpieza */ }
     enviarEmailTurnoSeguro(turno, "CREADO");
+    enviarEmailTurnoBarberoSeguro(turno, "CREADO");
 
     return {
       success: true,

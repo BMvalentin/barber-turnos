@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import { Mail, Lock, ChevronRight, Scissors } from "lucide-react";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   return (
@@ -28,6 +29,16 @@ function LoginPageContenido() {
       router.refresh();
     }
   }, [state, router]);
+
+  useEffect(() => {
+    if (verificado) {
+      toast.success("¡Cuenta activada!", { description: "Ya podés iniciar sesión." });
+    }
+  }, [verificado]);
+
+  useEffect(() => {
+    if (state.error) toast.error("Error", { description: state.error });
+  }, [state]);
 
   return (
     <AuthLayout>
@@ -102,12 +113,6 @@ function LoginPageContenido() {
               </div>
             </div>
 
-            {verificado && (
-              <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium rounded-xl text-center">
-                ¡Cuenta activada! Ya podés iniciar sesión.
-              </div>
-            )}
-
             <form action={action} className="space-y-6">
               <div className="space-y-2">
                 <label className="text- font-black text-[var(--page-primary)] uppercase tracking- ml-1">Email</label>
@@ -136,12 +141,6 @@ function LoginPageContenido() {
                   />
                 </div>
               </div>
-
-              {state.error && (
-                <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium rounded-xl text-center animate-pulse">
-                  {state.error}
-                </div>
-              )}
 
               <button 
                 type="submit" 

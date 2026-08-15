@@ -21,11 +21,11 @@ export default function ServicioRow({
 
   return (
     <>
-      <div className="flex flex-col md:grid md:grid-cols-12 gap-4 p-4 md:items-center hover:bg-[#14110C]/80 transition-colors group">
+      <div className="flex flex-col md:grid md:grid-cols-12 gap-4 p-4 md:items-center hover:bg-white/5 transition-colors duration-150 group">
         <div className="md:col-span-6 flex items-start md:items-center gap-4">
           <div
-            className="w-10 h-10 rounded-lg bg-[#251f15] border border-[#2C261D] flex items-center justify-center flex-shrink-0"
-            style={{ color: "var(--page-primary)" }}
+            className="w-10 h-10 rounded-lg bg-[var(--admin-surface-elevated)] border border-[var(--admin-border)] flex items-center justify-center flex-shrink-0"
+            style={{ color: "var(--page-primary-tinta)" }}
           >
             {servicio.srcImage ? (
               <img
@@ -41,25 +41,25 @@ export default function ServicioRow({
             )}
           </div>
           <div className="flex-1">
-            <h3 className="text-[#E4E0D9] font-semibold text-sm">
+            <h3 className="text-[var(--admin-texto-primario)] font-semibold text-sm">
               {servicio.nombre}
             </h3>
             {servicio.descripcion && (
-              <p className="text-[#8E8675] text-xs line-clamp-2 md:max-w-[350px] mt-0.5">
+              <p className="text-[var(--admin-texto-muted)] text-xs line-clamp-2 md:max-w-[350px] mt-0.5">
                 {servicio.descripcion}
               </p>
             )}
           </div>
         </div>
 
-        <div className="hidden md:flex col-span-2 justify-center items-center gap-1 text-[#8E8675] text-sm">
+        <div className="hidden md:flex col-span-2 justify-center items-center gap-1 text-[var(--admin-texto-muted)] text-sm">
           <Clock className="w-3 h-3" />
           {servicio.duracion} min
         </div>
 
         <div
           className="hidden md:flex col-span-2 justify-center font-semibold text-sm"
-          style={{ color: "var(--page-primary)" }}
+          style={{ color: "var(--page-primary-tinta)" }}
         >
           ${servicio.precio}
         </div>
@@ -68,29 +68,29 @@ export default function ServicioRow({
           <button
             onClick={() => setShowEditModal(true)}
             title="Editar servicio"
-            className="text-[#8E8675] transition-colors p-1"
-            style={{ color: "var(--page-primary)" }}
+            className="text-[var(--admin-texto-muted)] transition-colors duration-150 p-1 hover:bg-white/5 rounded"
+            style={{ color: "var(--page-primary-tinta)" }}
           >
             <SquarePen className="w-5 h-5" />
           </button>
           <button
             onClick={() => onEliminar(servicio.id)}
             title="Eliminar servicio"
-            className="text-[#8E8675] hover:text-red-500 transition-colors p-1"
+            className="text-[var(--admin-texto-muted)] hover:text-red-500 transition-colors duration-150 p-1 hover:bg-white/5 rounded"
           >
             <Trash2 className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="flex md:hidden items-center justify-between mt-2 pt-3 border-t border-[#2C261D]/50">
+        <div className="flex md:hidden items-center justify-between mt-2 pt-3 border-t border-[var(--admin-border)]">
           <div className="flex items-center gap-4">
             <span
               className="font-semibold text-sm"
-              style={{ color: "var(--page-primary)" }}
+              style={{ color: "var(--page-primary-tinta)" }}
             >
               ${servicio.precio}
             </span>
-            <span className="flex items-center gap-1 text-[#8E8675] text-sm">
+            <span className="flex items-center gap-1 text-[var(--admin-texto-muted)] text-sm">
               <Clock className="w-3 h-3" /> {servicio.duracion} min
             </span>
           </div>
@@ -98,14 +98,14 @@ export default function ServicioRow({
             <button
               onClick={() => setShowEditModal(true)}
               title="Editar servicio"
-              className="text-[#8E8675] transition-colors p-1.5 bg-[#1C1812] rounded border border-[#2C261D]"
+              className="text-[var(--admin-texto-muted)] transition-colors duration-150 p-1.5 bg-[var(--admin-surface-elevated)] rounded border border-[var(--admin-border)]"
             >
               <SquarePen className="w-4 h-4" />
             </button>
             <button
               onClick={() => onEliminar(servicio.id)}
               title="Eliminar servicio"
-              className="text-[#8E8675] hover:text-red-500 transition-colors p-1.5 bg-[#1C1812] rounded border border-[#2C261D]"
+              className="text-[var(--admin-texto-muted)] hover:text-red-500 transition-colors duration-150 p-1.5 bg-[var(--admin-surface-elevated)] rounded border border-[var(--admin-border)]"
             >
               <Trash2 className="w-4 h-4" />
             </button>

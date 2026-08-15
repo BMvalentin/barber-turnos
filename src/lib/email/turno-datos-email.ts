@@ -2,7 +2,7 @@ import { toZonedTime } from "date-fns-tz";
 
 const TIMEZONE = "America/Argentina/Buenos_Aires";
 
-export type TipoEstadoEmail = "CREADO" | "ACTUALIZADO" | "CANCELADO";
+export type TipoEstadoEmail = "CREADO" | "ACTUALIZADO" | "CANCELADO" | "CONFIRMADO";
 
 export type DatosEmailTurno = {
   clienteNombre: string;
@@ -24,7 +24,7 @@ type TurnoConRelaciones = {
   seniaCongelada: number | { toNumber: () => number };
   user?: { name?: string | null; telefono?: string | null } | null;
   servicio?: { nombre?: string } | null;
-  barbero?: { nombre?: string } | null;
+  barbero?: { nombre?: string; email?: string | null } | null;
 };
 
 function aNumero(valor: number | { toNumber: () => number }): number {

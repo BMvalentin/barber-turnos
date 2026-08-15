@@ -13,6 +13,7 @@ export type DatosConfiguracion = {
   backgroundImage: string;
   primaryColor: string;
   secondaryColor: string;
+  bgColor: string;
   whatsapp: string;
   mapsUrl: string;
   address: string;

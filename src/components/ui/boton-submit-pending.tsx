@@ -36,7 +36,7 @@ export default function BotonSubmitPending({
       disabled={pendiente || deshabilitado}
       className={cn(
         CLASES_BOTON_MARCA,
-        "flex items-center gap-2 disabled:opacity-50",
+        "flex items-center gap-2 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed",
         claseAdicional,
       )}
       style={estiloAdicional}

@@ -35,7 +35,7 @@ export default function CreateBarberoModal({ servicios, diasLaborales }: Props) 
 
       <DialogContent className="max-w-2xl p-0 bg-transparent border-none animate-in fade-in zoom-in-95 duration-200 [&>button]:hidden">
         <div
-          className="bg-black/40 backdrop-blur-lg rounded-xl p-6 space-y-6 shadow-2xl border relative"
+          className="bg-[var(--admin-surface)] backdrop-blur-lg rounded-xl p-6 space-y-6 shadow-2xl border relative"
           style={{
             borderColor: "var(--page-primary-40)",
             boxShadow: "0 25px 50px -12px var(--page-primary-15)"
@@ -45,14 +45,14 @@ export default function CreateBarberoModal({ servicios, diasLaborales }: Props) 
           {/* AQUÍ ESTÁ LA X: Usamos DialogClose con el color primario */}
           <DialogClose
             className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none p-1 z-10"
-            style={{ color: "var(--page-primary)" }}
+            style={{ color: "var(--page-primary-tinta)" }}
           >
             <X className="h-5 w-5" />
             <span className="sr-only">Cerrar</span>
           </DialogClose>
 
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-white">
+            <DialogTitle className="text-2xl font-bold text-[var(--admin-texto-primario)]">
               Nuevo Barbero
             </DialogTitle>
           </DialogHeader>

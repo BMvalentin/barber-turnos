@@ -19,43 +19,35 @@ export function ConfirmDialog({ title, message, onConfirm, onCancel }: ConfirmDi
       data-confirm-modal
       className="fixed inset-0 z-[200] flex items-center justify-center p-4"
       style={{
-        background: "rgba(7,26,24,0.7)",
+        background: "rgba(0,0,0,0.7)",
         backdropFilter: "blur(8px)",
         pointerEvents: "auto",
       }}
     >
       <div
-        className="w-full max-w-sm rounded-2xl p-8 shadow-2xl relative"
-        style={{ background: "#ffffff", border: "1px solid #b2dede" }}
+        className="relative w-[min(92vw,400px)] rounded-xl border bg-[var(--admin-surface-elevated)] p-6 shadow-2xl shadow-black/40"
+        style={{ borderColor: "var(--admin-border)" }}
       >
         <button
           onClick={onCancel}
-          className="absolute top-4 right-4 transition-colors"
-          style={{ color: "#4a7c80" }}
+          className="absolute right-4 top-4 rounded-md p-1.5 text-[var(--admin-texto-muted)] transition-colors hover:bg-white/5 hover:text-[var(--admin-texto-primario)]"
         >
-          <X size={20} />
+          <X className="h-4 w-4" />
         </button>
-        <h3
-          className="text-xl font-black uppercase italic mb-4"
-          style={{ color: "#083d42" }}
-        >
+        <h3 className="mb-4 text-base font-semibold text-[var(--admin-texto-primario)]">
           {title}
         </h3>
-        <p className="text-sm mb-8" style={{ color: "#4a7c80" }}>
-          {message}
-        </p>
+        <p className="mb-8 text-sm text-[var(--admin-texto-secundario)]">{message}</p>
         <div className="flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 rounded-lg text-sm font-bold uppercase"
-            style={{ background: "#f0fafa", color: "#4a7c80" }}
+            className="rounded-lg px-3.5 py-2 text-sm font-medium text-[var(--admin-texto-secundario)] transition-colors hover:bg-white/5 hover:text-[var(--admin-texto-primario)]"
           >
             Cancelar
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 rounded-lg text-sm font-bold uppercase text-white"
-            style={{ background: "#e05050" }}
+            className="rounded-lg bg-red-500/10 px-3.5 py-2 text-sm font-semibold text-red-400 transition-colors hover:bg-red-500/20"
           >
             Aceptar
           </button>
