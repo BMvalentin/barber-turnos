@@ -6,7 +6,7 @@ export default async function ConfigPage() {
   const config = await getPageConfig();
 
   return (
-    <div className="container mx-auto p-6 max-w-3xl">
+    <div className="container mx-auto p-6 max-w-4xl">
       <h1 
         className="text-2xl font-bold mb-6"
         style={{ color: "var(--page-primary)" }}
