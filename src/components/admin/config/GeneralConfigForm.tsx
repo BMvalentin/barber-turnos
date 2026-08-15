@@ -9,9 +9,11 @@ import { elegirColorTexto } from "@/lib/contraste/elegir-color-texto";
 import SeccionIdentidad from "@/components/admin/config/SeccionIdentidad";
 import SeccionContacto from "@/components/admin/config/SeccionContacto";
 import SeccionColores from "@/components/admin/config/SeccionColores";
+import SeccionPlantillasColores from "@/components/admin/config/SeccionPlantillasColores";
 import SeccionImagenes from "@/components/admin/config/SeccionImagenes";
 import BotonSubmitPending from "@/components/ui/boton-submit-pending";
 import type { NombreCampoImagen } from "@/components/admin/config/tipos";
+import type { PlantillaColor } from "@/lib/plantillas-colores";
 import type {
   DatosConfiguracion,
   DatosConfiguracionInicial,
@@ -47,6 +49,14 @@ export default function GeneralConfigForm({ initialData }: GeneralConfigFormProp
     const manejarCambio = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const aplicarPlantilla = (plantilla: PlantillaColor) => {
+        setFormData((prev) => ({
+            ...prev,
+            primaryColor: plantilla.primaryColor,
+            secondaryColor: plantilla.secondaryColor,
+        }));
     };
 
     const manejarArchivo = async (e: React.ChangeEvent<HTMLInputElement>, campo: NombreCampoImagen) => {
@@ -132,6 +142,13 @@ export default function GeneralConfigForm({ initialData }: GeneralConfigFormProp
                 direccion={formData.address}
                 borde={inputBorder}
                 manejarCambio={manejarCambio}
+                colorIcono={primaryColor}
+            />
+
+            <SeccionPlantillasColores
+                colorPrimario={primaryColor}
+                colorSecundario={secondaryColor}
+                aplicarPlantilla={aplicarPlantilla}
                 colorIcono={primaryColor}
             />
 
