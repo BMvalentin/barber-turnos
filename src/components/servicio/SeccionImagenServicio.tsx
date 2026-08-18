@@ -26,11 +26,11 @@ export default function SeccionImagenServicio({
   return (
     <div className="space-y-2">
       {esBarbero ? (
-        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-70)" }}>
+        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-tinta)" }}>
           Foto del barbero <span className="text-zinc-500 text-xs">(Opcional)</span>
         </label>
       ) : (
-        <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider">
+        <label className="block text-xs font-medium text-[var(--admin-texto-secundario)]">
           Imagen del Servicio
         </label>
       )}
@@ -60,13 +60,13 @@ export default function SeccionImagenServicio({
           style={{ borderColor: esBarbero ? "var(--page-primary-50)" : "var(--page-secondary)" }}
         >
           {isPending ? (
-            <span className="text-sm" style={{ color: "var(--page-primary)" }}>
+            <span className="text-sm" style={{ color: "var(--page-primary-tinta)" }}>
               Subiendo...
             </span>
           ) : (
             <>
-              <Upload className="h-6 w-6" style={{ color: "var(--page-primary)" }} />
-              <span className={`text-sm ${esBarbero ? "text-zinc-300" : "text-[#8E8675]"}`}>
+              <Upload className="h-6 w-6" style={{ color: "var(--page-primary-tinta)" }} />
+              <span className={`text-sm ${esBarbero ? "text-zinc-300" : "text-[var(--admin-texto-muted)]"}`}>
                 Hacé clic para subir una imagen
               </span>
             </>

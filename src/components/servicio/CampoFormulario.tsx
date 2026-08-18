@@ -18,24 +18,24 @@ export default function CampoFormulario({
 }: CampoFormularioProps) {
   return (
     <div className="space-y-2">
-      <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-wider">
-        {label} {required && <span style={{ color: "var(--page-primary)" }}>*</span>}
+      <label className="block text-xs font-medium text-[var(--admin-texto-secundario)]">
+        {label} {required && <span style={{ color: "var(--page-primary-tinta)" }}>*</span>}
       </label>
       <div className="relative">
         {Icon && (
-          <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8675]" />
+          <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--admin-texto-muted)]" />
         )}
         <input
           {...props}
-          className={`w-full bg-black/70 border rounded-lg ${Icon ? "pl-11" : "pl-4"} ${
+          className={`w-full bg-[var(--admin-surface-elevated)] border rounded-lg ${Icon ? "pl-11" : "pl-4"} ${
             unit ? "pr-14" : "pr-4"
-          } py-3 text-[#E4E0D9] text-sm outline-none transition-colors`}
+          } py-3 text-[var(--admin-texto-primario)] text-sm transition-colors duration-150 placeholder:text-[var(--admin-texto-muted)] focus:outline-none focus:border-[var(--page-primary)]/60 focus:ring-2 focus:ring-[var(--page-focus-ring)]`}
           style={{
-            borderColor: errors ? "#ef4444" : "var(--page-secondary)",
+            borderColor: errors ? "#ef4444" : "var(--admin-border)",
           }}
         />
         {unit && (
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#8E8675] uppercase">
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--admin-texto-muted)] uppercase">
             {unit}
           </span>
         )}

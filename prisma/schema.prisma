@@ -32,6 +32,7 @@ model barbero {
   id          String                   @id @default(cuid())
   srcImage    String?
   nombre      String
+  email       String?
   estado      Boolean                  @default(true)
   createdAt   DateTime                 @default(now())
   updatedAt   DateTime                 @updatedAt
@@ -215,6 +216,7 @@ model PageConfig {
   favicon            String?  @db.Text
   primaryColor       String?  @default("#000000")
   secondaryColor     String?  @default("#FFFFFF")
+  bgColor            String?  @default("#09090b")
   address            String?
   city               String?
   province           String?

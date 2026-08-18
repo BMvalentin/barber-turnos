@@ -2,6 +2,7 @@
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { redirect } from "next/navigation";
 import AdminShell from "@/components/panel/navegacion/AdminShell";
+import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 
 export default async function AdminLayout({
   children,
@@ -18,5 +19,7 @@ export default async function AdminLayout({
     redirect("/dashboard");
   }
 
-  return <AdminShell>{children}</AdminShell>;
+  const config = await obtenerConfigCacheada();
+
+  return <AdminShell config={config}>{children}</AdminShell>;
 }

@@ -38,7 +38,7 @@ export function LocationSection({ config }: LocationSectionProps) {
   }, []);
 
   return (
-    <section id="ubicacion" className="py-20 md:py-32 bg-linear-to-b from-black/90 to-black justify-center items-center mx-auto border-y border-amber-900/20">
+    <section id="ubicacion" className="py-20 md:py-32 bg-linear-to-b from-[var(--page-bg)]/90 to-[var(--page-bg)] justify-center items-center mx-auto border-y border-amber-900/20">
       <div className="container justify-around items-center mx-auto px-4">
 
         {/* HEADER DE LA SECCIÓN */}
@@ -58,7 +58,7 @@ export function LocationSection({ config }: LocationSectionProps) {
           >
             <Scissors className="w-5 h-5" style={{ color: "var(--page-primary)" }} />
           </div>
-          <h2 className="font-display text-3xl md:text-5xl font-bold mb-4 text-white">
+          <h2 className="font-display text-3xl md:text-5xl font-bold mb-4 text-[var(--page-bg-foreground)]">
             Nuestra <span className="italic" style={{ color: "var(--page-primary-tinta)" }}>Ubicación</span>
           </h2>
         </motion.div>
@@ -74,7 +74,7 @@ export function LocationSection({ config }: LocationSectionProps) {
             className="space-y-6 items-center justify-center w-full md:max-w-[35vw] mx-auto"
           >
             {/* DIRECCIÓN */}
-            <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-[var(--page-primary)]/50 transition-colors group">
+            <div className="flex gap-4 p-6 rounded-xl bg-[var(--admin-surface)] border border-amber-900/30 shadow-2xl hover:border-[var(--page-primary)]/50 transition-colors group">
               <div 
                 className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
                 style={{ backgroundColor: "var(--page-primary-15)" }}
@@ -83,12 +83,12 @@ export function LocationSection({ config }: LocationSectionProps) {
               </div>
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary-tinta)" }}>Dirección</h3>
-                <p className="text-amber-100/80">{addressText}</p>
+                <p className="text-[var(--page-bg-foreground)]/80">{addressText}</p>
               </div>
             </div>
 
             {/* TELÉFONO */}
-            <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-[var(--page-primary)]/50 transition-colors group">
+            <div className="flex gap-4 p-6 rounded-xl bg-[var(--admin-surface)] border border-amber-900/30 shadow-2xl hover:border-[var(--page-primary)]/50 transition-colors group">
               <div 
                 className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
                 style={{ backgroundColor: "var(--page-primary-15)" }}
@@ -97,12 +97,12 @@ export function LocationSection({ config }: LocationSectionProps) {
               </div>
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary-tinta)" }}>Turnos y Consultas</h3>
-                <p className="text-amber-100/80">+54 9 2233 42-7022</p>
+                <p className="text-[var(--page-bg-foreground)]/80">+54 9 2233 42-7022</p>
               </div>
             </div>
 
             {/* HORARIOS */}
-            <div className="flex gap-4 p-6 rounded-xl bg-neutral-900/50 border border-amber-900/30 shadow-2xl hover:border-[var(--page-primary)]/50 transition-colors group">
+            <div className="flex gap-4 p-6 rounded-xl bg-[var(--admin-surface)] border border-amber-900/30 shadow-2xl hover:border-[var(--page-primary)]/50 transition-colors group">
               <div 
                 className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
                 style={{ backgroundColor: "var(--page-primary-15)" }}
@@ -112,10 +112,10 @@ export function LocationSection({ config }: LocationSectionProps) {
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary-tinta)" }}>Horarios</h3>
                 {cargando ? (
-                  <p className="text-amber-100/80">Cargando horarios...</p>
+                  <p className="text-[var(--page-bg-foreground)]/80">Cargando horarios...</p>
                 ) : (
                   horarios.map((horario, index) => (
-                    <p key={index} className="text-amber-100/80">
+                    <p key={index} className="text-[var(--page-bg-foreground)]/80">
                       {horario}
                     </p>
                   ))
@@ -130,7 +130,7 @@ export function LocationSection({ config }: LocationSectionProps) {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="relative rounded-xl overflow-hidden border border-amber-900/30 h-[450px] bg-neutral-900 shadow-2xl group"
+            className="relative rounded-xl overflow-hidden border border-amber-900/30 h-[450px] bg-[var(--admin-surface)] shadow-2xl group"
           >
             {/* Overlay estético para el mapa */}
             <div className="absolute inset-0 bg-amber-950/5 pointer-events-none group-hover:bg-transparent transition-colors z-10" />

@@ -35,7 +35,7 @@ export function DiaLaboralList({
         {[...Array(7)].map((_, i) => (
           <div 
             key={i} 
-            className="bg-black/40 backdrop-blur-lg rounded-xl p-6"
+            className="bg-[var(--admin-surface)] rounded-xl p-6"
             style={{ border: `1px solid var(--page-secondary-30)` }}
           >
             <Skeleton className="h-6 w-32 bg-white/10" />
@@ -53,12 +53,12 @@ export function DiaLaboralList({
         icono={<Clock />}
         titulo="No hay días laborales configurados"
         mensaje="Los días de la semana aparecerán aquí una vez configurados"
-        claseContenedor="bg-black/40 backdrop-blur-lg rounded-xl p-16"
+        claseContenedor="bg-[var(--admin-surface)] rounded-xl p-16"
         estiloContenedor={{ border: "1px solid var(--page-secondary-30)" }}
         claseIcono="h-16 w-16"
-        estiloIcono={{ color: "var(--page-primary-50)" }}
-        claseTitulo="text-xl font-semibold mb-2 text-white"
-        estiloMensaje={{ color: "var(--page-primary-70)" }}
+        estiloIcono={{ color: "var(--page-primary-tinta)" }}
+        claseTitulo="text-xl font-semibold mb-2 text-[var(--admin-texto-primario)]"
+        estiloMensaje={{ color: "var(--page-primary-tinta)" }}
       />
     );
   }
@@ -73,7 +73,7 @@ export function DiaLaboralList({
         return (
           <div
             key={dia.id}
-            className={`bg-black/40 backdrop-blur-lg border rounded-xl shadow-lg overflow-hidden transition-all ${
+            className={`bg-[var(--admin-surface)] border rounded-xl overflow-hidden transition-colors duration-150 ${
               dia.estado ? "" : "opacity-60"
             }`}
             style={{
@@ -88,11 +88,11 @@ export function DiaLaboralList({
                     style={ESTILO_FONDO_MARCA} 
                   />
                   <div>
-                    <h3 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <h3 className="text-2xl font-bold text-[var(--admin-texto-primario)] flex items-center gap-2">
                       <span>{diaInfo.emoji}</span>
                       {diaInfo.nombre}
                     </h3>
-                    <p className="text-xs mt-1" style={{ color: `var(--page-primary-70)` }}>
+                    <p className="text-xs mt-1" style={{ color: `var(--page-primary-tinta)` }}>
                       Día {dia.dia} de la semana
                     </p>
                   </div>
@@ -133,7 +133,7 @@ export function DiaLaboralList({
                   className="space-y-2 pt-3"
                   style={{ borderTop: `1px solid var(--page-secondary-30)` }}
                 >
-                  <p className="text-xs font-semibold flex items-center gap-1" style={{ color: "var(--page-primary)" }}>
+                  <p className="text-xs font-semibold flex items-center gap-1" style={{ color: "var(--page-primary-tinta)" }}>
                     <Clock className="h-3 w-3" />
                     Horarios activos:
                   </p>
@@ -141,17 +141,17 @@ export function DiaLaboralList({
                     {horariosActivos.slice(0, 3).map((margen) => (
                       <div
                         key={margen.id}
-                        className="flex items-center gap-2 text-sm bg-black/60 px-3 py-2 rounded-lg border transition-colors hover:bg-black/80"
+                        className="flex items-center gap-2 text-sm bg-[var(--admin-surface-elevated)] px-3 py-2 rounded-lg border transition-colors duration-150 hover:bg-white/5"
                         style={{ borderColor: `var(--page-secondary-30)` }}
                       >
-                        <Clock className="h-3 w-3 shrink-0" style={{ color: "var(--page-primary)" }} />
-                        <span className="font-mono text-white font-semibold">
+                        <Clock className="h-3 w-3 shrink-0" style={{ color: "var(--page-primary-tinta)" }} />
+                        <span className="font-mono text-[var(--admin-texto-primario)] font-semibold">
                           {margen.desde} → {margen.hasta}
                         </span>
                       </div>
                     ))}
                     {horariosActivos.length > 3 && (
-                      <p className="text-xs pl-2" style={{ color: `var(--page-primary-70)` }}>
+                      <p className="text-xs pl-2" style={{ color: `var(--page-primary-tinta)` }}>
                         +{horariosActivos.length - 3} más...
                       </p>
                     )}
@@ -165,7 +165,7 @@ export function DiaLaboralList({
                   className="pt-3"
                   style={{ borderTop: `1px solid var(--page-secondary-30)` }}
                 >
-                  <p className="text-xs italic" style={{ color: `var(--page-primary-70)` }}>
+                  <p className="text-xs italic" style={{ color: `var(--page-primary-tinta)` }}>
                     Sin horarios asignados
                   </p>
                 </div>

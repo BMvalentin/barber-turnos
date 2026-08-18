@@ -19,6 +19,8 @@ async function updatePageConfigBase(
       return { success: false, error: "Formato de color inválido. Usá #RRGGBB (ej.: #d97706)." };
     if (data.secondaryColor !== undefined && !esquemaColor.safeParse(data.secondaryColor).success)
       return { success: false, error: "Formato de color inválido. Usá #RRGGBB (ej.: #d97706)." };
+    if (data.bgColor !== undefined && !esquemaColor.safeParse(data.bgColor).success)
+      return { success: false, error: "Formato de color inválido. Usá #RRGGBB (ej.: #d97706)." };
 
     const cleanWhatsapp = data.whatsapp ? data.whatsapp.replace(/\D/g, "") : undefined;
     await prisma.pageConfig.upsert({
@@ -32,6 +34,7 @@ async function updatePageConfigBase(
         ...(data.backgroundImage !== undefined && { backgroundImage: data.backgroundImage }),
         ...(data.primaryColor !== undefined && { primaryColor: data.primaryColor }),
         ...(data.secondaryColor !== undefined && { secondaryColor: data.secondaryColor }),
+        ...(data.bgColor !== undefined && { bgColor: data.bgColor }),
         ...(data.mapsUrl !== undefined && { mapsUrl: data.mapsUrl }),
         ...(data.address !== undefined && { address: data.address }),
         ...(cleanWhatsapp !== undefined && { whatsapp: cleanWhatsapp }),
@@ -46,6 +49,7 @@ async function updatePageConfigBase(
         backgroundImage: data.backgroundImage || "",
         primaryColor: data.primaryColor || "#000000",
         secondaryColor: data.secondaryColor || "#ffffff",
+        bgColor: data.bgColor || "#09090b",
         whatsapp: cleanWhatsapp || "",
         mapsUrl: data.mapsUrl || "",
         address: data.address || "",

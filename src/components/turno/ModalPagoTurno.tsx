@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { toast } from "sonner";
 import { CheckCircle2, Clock, CreditCard, Loader2, Scissors } from "lucide-react";
 import type { TurnoCreado } from "@/types/turno";
 import { formatearMoneda } from "@/lib/utils/formatear-moneda";
@@ -20,6 +22,12 @@ export default function ModalPagoTurno({
   onPagarSenia,
   onPagarDespues,
 }: Props) {
+  useEffect(() => {
+    if (errorPago) {
+      toast.error("Error de pago", { description: errorPago });
+    }
+  }, [errorPago]);
+
   return (
     <ModalBase
       maxWidth="max-w-md"
@@ -72,12 +80,6 @@ export default function ModalPagoTurno({
               </span>
             </div>
           </div>
-
-          {errorPago && (
-            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-400">
-              {errorPago}
-            </div>
-          )}
 
           <button
             id="btn-pagar-senia"

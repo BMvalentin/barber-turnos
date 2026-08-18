@@ -43,7 +43,7 @@ export function Hero({ config }: HeroProps) {
         className="z-0 object-cover object-center opacity-40 mix-blend-luminosity"
       />
       
-      <div className="absolute inset-0 z-0 bg-gradient-to-b from-zinc-950/80 via-zinc-950/60 to-zinc-950" />
+      <div className="absolute inset-0 z-0 bg-gradient-to-b from-[var(--page-bg)]/80 via-[var(--page-bg)]/60 to-[var(--page-bg)]" />
 
       <div className="container relative z-10 px-4 md:px-6 flex flex-col items-center justify-center w-full max-w-6xl mx-auto">
         
@@ -54,19 +54,19 @@ export function Hero({ config }: HeroProps) {
           transition={{ duration: 0.7, ease: "easeOut" }}
           className="text-center mb-10 md:mb-16 w-full"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/80 border border-white/5 backdrop-blur-md mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--page-bg)]/80 border border-[var(--page-bg-foreground)]/5 backdrop-blur-md mb-6">
             <span 
               className="w-2 h-2 rounded-full animate-pulse" 
 style={ESTILO_FONDO_MARCA}
             />
-            <span className="text-xs font-bold uppercase tracking-widest text-zinc-300">Solicita tu Turno</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-[var(--page-bg-foreground)]">Solicita tu Turno</span>
           </div>
           
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white uppercase tracking-tighter leading-tight flex flex-wrap text-center items-center justify-center max-w-4xl mx-auto">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-[var(--page-bg-foreground)] uppercase tracking-tighter leading-tight flex flex-wrap text-center items-center justify-center max-w-4xl mx-auto">
             {firstPart}&nbsp;<span className="italic pr-2" style={{ color: "var(--page-primary-tinta)" }}>{secondPart || "Estilo"}</span>
           </h1>
           
-          <p className="mt-6 text-zinc-400 text-sm md:text-base font-medium max-w-xl mx-auto tracking-wide">
+          <p className="mt-6 text-[var(--page-bg-foreground)]/70 text-sm md:text-base font-medium max-w-xl mx-auto tracking-wide">
             {description}
           </p>
         </motion.div>
@@ -83,11 +83,11 @@ style={ESTILO_FONDO_MARCA}
             style={{ background: `linear-gradient(to right, var(--page-primary), #52525b)` }}
           />
           
-          <div className="relative bg-zinc-950/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl">
+          <div className="relative bg-[var(--page-bg)]/60 backdrop-blur-xl border border-[var(--page-bg-foreground)]/10 rounded-3xl p-6 md:p-8 shadow-2xl">
             
-            <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/5">
+            <div className="flex items-center justify-between mb-8 pb-6 border-b border-[var(--page-bg-foreground)]/5">
               <div>
-                <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-2">
+                <h2 className="text-xl md:text-2xl font-black text-[var(--page-bg-foreground)] uppercase tracking-tighter flex items-center gap-2">
                   <Calendar className="w-6 h-6" style={{ color: "var(--page-primary-tinta)" }} />
                   Tu Turno
                 </h2>
@@ -95,15 +95,15 @@ style={ESTILO_FONDO_MARCA}
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-8">
-              <div className="flex flex-col gap-1 p-3 rounded-2xl bg-zinc-900/50 border border-white/5">
-                <Scissors className="w-5 h-5 text-zinc-400 mb-1" />
-                <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Servicio</span>
-                <span className="text-sm font-bold text-zinc-200">Premium</span>
+              <div className="flex flex-col gap-1 p-3 rounded-2xl bg-[var(--page-bg)]/50 border border-[var(--page-bg-foreground)]/5">
+                <Scissors className="w-5 h-5 text-[var(--page-bg-foreground)]/70 mb-1" />
+                <span className="text-xs font-bold text-[var(--page-bg-foreground)]/50 uppercase tracking-wider">Servicio</span>
+                <span className="text-sm font-bold text-[var(--page-bg-foreground)]">Premium</span>
               </div>
-              <div className="flex flex-col gap-1 p-3 rounded-2xl bg-zinc-900/50 border border-white/5">
-                <MapPin className="w-5 h-5 text-zinc-400 mb-1" />
-                <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Ubicación</span>
-                <span className="text-sm font-bold text-zinc-200">Santa Clara, Buenos Aires</span>
+              <div className="flex flex-col gap-1 p-3 rounded-2xl bg-[var(--page-bg)]/50 border border-[var(--page-bg-foreground)]/5">
+                <MapPin className="w-5 h-5 text-[var(--page-bg-foreground)]/70 mb-1" />
+                <span className="text-xs font-bold text-[var(--page-bg-foreground)]/50 uppercase tracking-wider">Ubicación</span>
+                <span className="text-sm font-bold text-[var(--page-bg-foreground)]">Santa Clara, Buenos Aires</span>
               </div>
             </div>
 

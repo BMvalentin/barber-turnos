@@ -46,7 +46,7 @@ export function HorariosForm({
   });
 
   useEffect(() => {
-    if (state.success || state.error) {
+    if (state.success || state.error || state.warning) {
       void retroalimentar(state);
     }
   }, [state, retroalimentar]);
@@ -58,7 +58,7 @@ export function HorariosForm({
 
       {/* HORAS */}
       <div className="space-y-1">
-        <p className="text-xs font-medium" style={{ color: "var(--page-primary-80)" }}>
+        <p className="text-xs font-medium" style={{ color: "var(--page-primary-tinta)" }}>
           Apertura → Cierre
         </p>
         <div className="grid grid-cols-2 gap-3">
@@ -67,9 +67,9 @@ export function HorariosForm({
             name="desde"
             value={desde}
             onChange={(e) => setDesde(e.target.value)}
-            className="rounded-lg px-3 py-2 bg-black/60 text-white focus:outline-none transition-all"
+            className="rounded-lg px-3 py-2 bg-[var(--admin-surface-elevated)] text-[var(--admin-texto-primario)] transition-colors duration-150 focus:outline-none focus:border-[var(--page-primary)]/60 focus:ring-2 focus:ring-[var(--page-focus-ring)]"
             style={{
-              border: `1px solid var(--page-secondary-60)`,
+              border: `1px solid var(--admin-border)`,
             }}
           />
           <input
@@ -77,16 +77,16 @@ export function HorariosForm({
             name="hasta"
             value={hasta}
             onChange={(e) => setHasta(e.target.value)}
-            className="rounded-lg px-3 py-2 bg-black/60 text-white focus:outline-none transition-all"
+            className="rounded-lg px-3 py-2 bg-[var(--admin-surface-elevated)] text-[var(--admin-texto-primario)] transition-colors duration-150 focus:outline-none focus:border-[var(--page-primary)]/60 focus:ring-2 focus:ring-[var(--page-focus-ring)]"
             style={{
-              border: `1px solid var(--page-secondary-60)`,
+              border: `1px solid var(--admin-border)`,
             }}
           />
         </div>
       </div>
 
       {/* ESTADO */}
-      <label className="flex items-center gap-2 text-zinc-300 cursor-pointer select-none">
+      <label className="flex items-center gap-2 text-[var(--admin-texto-secundario)] cursor-pointer select-none">
         <input
           type="checkbox"
           name="estado"
@@ -98,11 +98,6 @@ export function HorariosForm({
         Activo
       </label>
 
-      {/* ERROR del servidor */}
-      {state.error && (
-        <p className="text-red-400 text-sm">{state.error}</p>
-      )}
-
       {/* BOTONES */}
       <div 
         className="flex justify-end gap-2 pt-3 border-t"
@@ -112,7 +107,7 @@ export function HorariosForm({
           type="button"
           variant="ghost"
           onClick={onCancel}
-          className="text-zinc-400 hover:text-white hover:bg-white/5 transition-all"
+          className="text-[var(--admin-texto-muted)] hover:text-[var(--admin-texto-primario)] hover:bg-white/5 transition-colors duration-150"
         >
           <XCircle className="mr-2 h-4 w-4" />
           Cancelar

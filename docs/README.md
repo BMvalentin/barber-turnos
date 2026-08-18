@@ -28,7 +28,7 @@ Esta carpeta contiene los pasos a paso para obtener y configurar cada variable d
 | Secretos y URL de la app | `AUTH_SECRET`, `CRON_SECRET`, `AUTH_TRUST_HOST`, `NEXT_PUBLIC_APP_URL`, `VERCEL_URL`, `IS_PRODUCTION` | [3-secretos-y-url.md](./3-secretos-y-url.md) |
 | Mercado Pago (pagos y conexión) | `MP_CLIENT_ID`, `MP_CLIENT_SECRET`, `MP_AUTH_BASE_URL`, `MP_ACCESS_TOKEN`, `MP_PUBLIC_KEY` | [4-mercadopago.md](./4-mercadopago.md) |
 | Cloudinary (imágenes) | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | [5-cloudinary.md](./5-cloudinary.md) |
-| Resend (emails de turnos) | `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `NOTIFICATION_EMAIL` | [6-resend.md](./6-resend.md) |
+| Resend (emails de turnos) | `RESEND_API_KEY`, `RESEND_FROM_EMAIL` | [6-resend.md](./6-resend.md) |
 
 ## Referencia rápida de variables
 
@@ -49,4 +49,3 @@ Esta carpeta contiene los pasos a paso para obtener y configurar cada variable d
 | `CRON_SECRET` | No | Respaldo para proteger el cron de expiración de turnos |
 | `RESEND_API_KEY` | No (emails opcionales) | Envío de emails de turnos |
 | `RESEND_FROM_EMAIL` | No | Remitente de los emails |
-| `NOTIFICATION_EMAIL` | No | Copia oculta (BCC) de cada email de turno |

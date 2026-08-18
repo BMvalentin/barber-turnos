@@ -3,6 +3,7 @@ import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { redirect } from "next/navigation";
 import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import { confirmarPagoTurno } from "@/actions/mercadopago/confirmar-pago.actions";
+import AvisoErrorSinTurno from "@/components/pago/AvisoErrorSinTurno";
 import { CheckCircle2, Clock, XCircle, Calendar, ArrowRight, RefreshCw, AlertTriangle } from "lucide-react";
 
 interface StatusPageProps {
@@ -26,6 +27,7 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
   if (!turnoId) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
+        <AvisoErrorSinTurno />
         <div className="max-w-md w-full text-center space-y-4 bg-zinc-900/40 border border-red-500/20 rounded-3xl p-8">
           <div className="flex justify-center">
             <XCircle className="w-16 h-16 text-red-500" />
