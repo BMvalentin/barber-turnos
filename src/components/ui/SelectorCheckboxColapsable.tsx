@@ -38,7 +38,7 @@ export default function SelectorCheckboxColapsable({
   maxAltura = "max-h-60",
 }: Props) {
   const claseEtiqueta = grupos
-    ? "flex items-center gap-2 text-white text-xs p-2 bg-black/40 rounded hover:bg-black/60 transition cursor-pointer"
+    ? "flex items-center gap-2 text-[var(--admin-texto-primario)] text-xs p-2 bg-black/40 rounded hover:bg-white/5 transition cursor-pointer"
     : "flex items-center gap-2 p-2 rounded cursor-pointer transition hover:bg-white/5";
 
   const renderOpcion = (opcion: OpcionCheckbox) => (
@@ -48,7 +48,9 @@ export default function SelectorCheckboxColapsable({
         checked={seleccionados.includes(opcion.valor)}
         onChange={() => onAlternarSeleccion(opcion.valor)}
       />
-      <span className={grupos ? "" : "text-white text-sm"}>{opcion.etiqueta}</span>
+      <span className={grupos ? "" : "text-[var(--admin-texto-primario)] text-sm"}>
+        {opcion.etiqueta}
+      </span>
     </label>
   );
 
@@ -57,22 +59,22 @@ export default function SelectorCheckboxColapsable({
       <button
         type="button"
         onClick={onAlternarAbierto}
-        className="w-full flex items-center justify-between p-3 bg-black/60 rounded-lg transition border"
-        style={{ borderColor: "var(--page-primary-30)" }}
+        className="w-full flex items-center justify-between p-3 bg-black/60 rounded-lg transition border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
+        style={{ borderColor: "var(--admin-border)" }}
       >
         <div className="flex flex-col items-start">
-          <span className="text-sm font-semibold" style={{ color: "var(--page-primary-70)" }}>
+          <span className="text-sm font-semibold" style={{ color: "var(--page-primary-tinta)" }}>
             {titulo}
           </span>
-          <span className="text-xs" style={{ color: "var(--page-primary)" }}>
+          <span className="text-xs" style={{ color: "var(--page-primary-tinta)" }}>
             {seleccionados.length} seleccionados
           </span>
         </div>
 
         {abierto ? (
-          <ChevronUp className="h-4 w-4" style={{ color: "var(--page-primary)" }} />
+          <ChevronUp className="h-4 w-4" style={{ color: "var(--page-primary-tinta)" }} />
         ) : (
-          <ChevronDown className="h-4 w-4" style={{ color: "var(--page-primary)" }} />
+          <ChevronDown className="h-4 w-4" style={{ color: "var(--page-primary-tinta)" }} />
         )}
       </button>
 
@@ -81,10 +83,10 @@ export default function SelectorCheckboxColapsable({
           className={`p-4 bg-black/60 rounded-lg ${
             grupos ? "space-y-4" : "space-y-2"
           } ${maxAltura} overflow-y-auto border`}
-          style={{ borderColor: "var(--page-primary-30)" }}
+          style={{ borderColor: "var(--admin-border)" }}
         >
           {seleccionados.length === 0 && (
-            <p className="text-xs italic" style={{ color: "var(--page-primary-80)" }}>
+            <p className="text-xs italic" style={{ color: "var(--page-primary-tinta)" }}>
               {mensajeVacio}
             </p>
           )}
@@ -92,7 +94,7 @@ export default function SelectorCheckboxColapsable({
           {grupos
             ? grupos.map((grupo) => (
                 <div key={grupo.titulo} className="space-y-2">
-                  <p className="text-sm font-semibold" style={{ color: "var(--page-primary)" }}>
+                  <p className="text-sm font-semibold" style={{ color: "var(--page-primary-tinta)" }}>
                     {grupo.titulo}:
                   </p>
                   <div className="grid grid-cols-2 gap-2">

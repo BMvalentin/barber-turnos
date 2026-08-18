@@ -15,8 +15,8 @@ export default function ExcepcionesClient({ excepciones, barberos }: Excepciones
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       {/* Formulario de creación */}
       <div className="lg:col-span-1">
-        <div className="bg-black/40 backdrop-blur-lg rounded-xl shadow-lg border border-amber-900/30 p-6 sticky top-8">
-          <h2 className="text-xl font-semibold mb-4 text-white">Nueva Excepción</h2>
+        <div className="bg-[var(--admin-surface)] rounded-xl border border-[var(--admin-border)] p-6 sticky top-8">
+          <h2 className="text-xl font-semibold mb-4 text-[var(--admin-texto-primario)]">Nueva Excepción</h2>
           <ExcepcionForm
             barberos={barberos}
           />
@@ -25,8 +25,8 @@ export default function ExcepcionesClient({ excepciones, barberos }: Excepciones
 
       {/* Lista de excepciones */}
       <div className="lg:col-span-2">
-        <div className="bg-black/40 backdrop-blur-lg rounded-xl shadow-lg border border-amber-900/30 p-6">
-          <h2 className="text-xl font-semibold mb-4 text-white">
+        <div className="bg-[var(--admin-surface)] rounded-xl border border-[var(--admin-border)] p-6">
+          <h2 className="text-xl font-semibold mb-4 text-[var(--admin-texto-primario)]">
             Excepciones Registradas ({excepciones.length})
           </h2>
           <ExcepcionesList excepciones={excepciones} />

@@ -13,6 +13,7 @@ import { useSession } from "next-auth/react";
 import TurnoList from "@/components/turno/TurnoList";
 import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
+import { toast } from "sonner";
 
 type DatosUsuarioPanel = {
   id: string;
@@ -24,8 +25,6 @@ type DatosUsuarioPanel = {
 export default function DashboardPanel({ user, turnos, session }: { user: DatosUsuarioPanel; turnos: TurnoListado[]; session: Session | null }) {
   const { update } = useSession();
   const [isPending, startTransition] = useTransition();
-  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [msg, setMsg] = useState("");
   const [activeTab, setActiveTab] = useState<'perfil' | 'turnos'>('perfil');
   const [hasPhone, setHasPhone] = useState(!!user.telefono);
 
@@ -54,16 +53,13 @@ export default function DashboardPanel({ user, turnos, session }: { user: DatosU
     startTransition(async () => {
       const res = await updateProfile(user.id, formData);
       if (res.success) {
-        setStatus('success');
-        setMsg("Perfil actualizado correctamente.");
+        toast.success("Perfil actualizado", { description: "Perfil actualizado correctamente." });
         if (res.data) {
           await update({ name: res.data.name, telefono: res.data.telefono });
           if (res.data.telefono) setHasPhone(true);
         }
-        setTimeout(() => setStatus('idle'), 3000);
       } else {
-        setStatus('error');
-        setMsg(res.error || "Error al actualizar");
+        toast.error("Error", { description: res.error || "Error al actualizar" });
       }
     });
   };
@@ -110,12 +106,6 @@ export default function DashboardPanel({ user, turnos, session }: { user: DatosU
                   />
                 </div>
               </div>
-
-              {status === 'error' && (
-                <div className="text-red-500 text-xs font-bold uppercase tracking-tighter">
-                  ⚠ {msg}
-                </div>
-              )}
 
               <Button
                 disabled={isPending}
@@ -239,18 +229,6 @@ export default function DashboardPanel({ user, turnos, session }: { user: DatosU
                   </div>
 
                   <div className="flex items-center gap-4 w-full md:w-auto">
-                    {status === 'success' && (
-                      <span className="text-green-500 text-xs font-bold uppercase tracking-tighter">
-                        ✓ Cambios Guardados
-                      </span>
-                    )}
-
-                    {status === 'error' && (
-                      <span className="text-red-500 text-xs font-bold uppercase tracking-tighter">
-                        ⚠ {msg}
-                      </span>
-                    )}
-
                     <Button
                       disabled={isPending}
                       type="submit"

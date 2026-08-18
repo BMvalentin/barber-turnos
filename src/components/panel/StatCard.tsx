@@ -12,15 +12,20 @@ type StatCardProps = {
 
 export function StatCard({ title, value, icon: Icon, href }: StatCardProps) {
   return (
-    <Link href={href}>
-      <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl p-6 hover:border-[var(--page-primary)]/50 transition group">
-        <div className="flex justify-between">
-          <div>
-            <p className="text-amber-200/70 text-sm">{title}</p>
-            <p className="text-3xl text-white font-bold">{value}</p>
-          </div>
-          <Icon className="text-[var(--page-primary)]" />
+    <Link
+      href={href}
+      className="group rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5 transition-colors duration-150 hover:border-[var(--admin-border-fuerte)]"
+    >
+      <div className="flex justify-between">
+        <div>
+          <p className="text-sm font-medium text-[var(--admin-texto-secundario)]">
+            {title}
+          </p>
+          <p className="mt-1 text-2xl font-semibold tracking-tight text-[var(--admin-texto-primario)]">
+            {value}
+          </p>
         </div>
+        <Icon className="h-5 w-5" style={{ color: "var(--page-primary-tinta)" }} />
       </div>
     </Link>
   );

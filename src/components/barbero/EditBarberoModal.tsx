@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button/Button";
-import { toast } from "@/lib/toast";
+import { toast } from "sonner";
 import { useState, useTransition } from "react";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { updateBarbero } from "@/actions/barberos/editar.actions";
@@ -10,6 +10,7 @@ import { esImagenValida } from "@/lib/es-imagen-valida";
 import { useImagenServicio } from "@/hooks/useImagenServicio";
 import type { ServicioOpcion, DiaLaboral, BarberoEdicion } from "@/types/barbero";
 import CampoNombreBarbero from "./CampoNombreBarbero";
+import CampoEmailBarbero from "./CampoEmailBarbero";
 import SeccionImagenServicio from "@/components/servicio/SeccionImagenServicio";
 import SelectorServicios from "./SelectorServicios";
 import SelectorHorarios from "./SelectorHorarios";
@@ -38,6 +39,7 @@ export default function EditBarberoModal({
     onExito: onClose,
   });
   const [nombre, setNombre] = useState(barbero.nombre || "");
+  const [email, setEmail] = useState(barbero.email || "");
   const [estado, setEstado] = useState(barbero.estado);
   const [selectedServicios, setSelectedServicios] = useState<string[]>(
     barbero.servicios?.map((s) => s.servicio.id) || []
@@ -47,7 +49,6 @@ export default function EditBarberoModal({
   );
   const [showServicios, setShowServicios] = useState(false);
   const [showHorarios, setShowHorarios] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const {
     srcImage,
@@ -55,57 +56,59 @@ export default function EditBarberoModal({
     uploadError,
     establecerSrcImagen,
     quitarImagen,
-    setUploadError,
   } = useImagenServicio({ srcImageInicial: barbero.srcImage || "" });
 
   const handleFileChange = async (file: File) => {
     if (!esImagenValida(file)) {
-      setUploadError("El archivo debe ser una imagen");
+      toast.error("Error", {
+        description: "El archivo debe ser una imagen",
+        duration: 4000,
+      });
       return;
     }
     setUploading(true);
-    setUploadError(null);
     try {
       const result = await uploadBarberImages([file], "barberia/barberos");
       if (result.success && result.images.length > 0) {
         establecerSrcImagen(result.images[0]);
-        toast({
-          title: "Imagen subida",
+        toast.success("Imagen subida", {
           description: "La imagen se ha subido correctamente.",
-          variant: "default",
           duration: 4000,
         });
       } else {
-        toast({
-          title: "Error",
+        toast.error("Error", {
           description: "Error al subir la imagen",
-          variant: "destructive",
           duration: 4000,
         });
-        setUploadError("Error al subir la imagen");
       }
-    } catch (err) {
-      setUploadError("Error al subir la imagen");
+    } catch {
+      toast.error("Error", {
+        description: "Error al subir la imagen",
+        duration: 4000,
+      });
     } finally {
       setUploading(false);
     }
   };
 
   const handleSubmit = () => {
-    setError(null);
     startTransition(async () => {
       const result = await updateBarbero({
         id: barbero.id,
         nombre: nombre.trim(),
+        email: email.trim() === "" ? null : email.trim(),
         srcImage: srcImage.trim() === "" ? null : srcImage.trim(),
         estado: Boolean(estado),
         serviciosIds: selectedServicios || [],
         margenesIds: selectedHorarios,
       });
       if (!result.success) {
-        const errorMsg =
-          typeof result.error === "string" ? result.error : "Datos inválidos";
-        setError(errorMsg);
+        toast.error("Error", {
+          description:
+            typeof result.error === "string" ? result.error : "Datos inválidos",
+          duration: 4000,
+        });
+        return;
       }
       await retroalimentar(result);
     });
@@ -117,15 +120,20 @@ export default function EditBarberoModal({
       titulo="Editar Barbero"
       maxWidth="max-w-2xl"
       overlayClase="bg-black/80 backdrop-blur-md p-4"
-      contenedorClase="max-h-[90vh] overflow-y-auto bg-black/70 rounded-xl p-6 space-y-6 border border-[var(--page-primary)]"
+      contenedorClase="max-h-[90vh] overflow-y-auto bg-[var(--admin-surface)] rounded-xl p-6 space-y-6 border border-[var(--page-primary)]"
       headerClase="flex justify-between items-center border-b pb-4 border-[var(--page-primary-40)]"
-      tituloClase="text-2xl font-bold text-white"
+      tituloClase="text-2xl font-bold text-[var(--admin-texto-primario)]"
     >
       <div className="space-y-4">
           <CampoNombreBarbero
             valor={nombre}
-            error={error}
+            error={null}
             onCambio={setNombre}
+          />
+          <CampoEmailBarbero
+            valor={email}
+            error={null}
+            onCambio={setEmail}
           />
           <SeccionImagenServicio
             previewUrl={previewUrl}
@@ -158,7 +166,7 @@ export default function EditBarberoModal({
               )
             }
           />
-          <label className="flex items-center gap-2 text-sm font-medium text-white">
+          <label className="flex items-center gap-2 text-sm font-medium text-[var(--admin-texto-primario)]">
             <input
               type="checkbox"
               checked={estado}
@@ -167,13 +175,12 @@ export default function EditBarberoModal({
             Barbero Activo
           </label>
         </div>
-        {error && <p className="text-red-400 text-sm">{error}</p>}
         <div className="flex gap-3 pt-4 border-t" style={{ borderColor: `var(--page-primary-40)` }}>
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
-            className="flex-1 bg-transparent text-white hover:bg-white/10"
+            className="flex-1 bg-transparent text-[var(--admin-texto-primario)] hover:bg-white/5"
             style={{
               borderColor: `var(--page-primary-60)`,
               borderWidth: "1px",

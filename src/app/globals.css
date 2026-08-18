@@ -1,6 +1,5 @@
-/* Fuentes Outfit/Playfair ya no se importan acá (era render-blocking): el layout raíz
-   (subfase 1.2) las define con next/font/google en las variables --font-outfit y
-   --font-playfair, aplicadas en <body>. */
+/* La fuente Outfit se define con next/font/google en el layout raíz
+   (variable --font-outfit) y se aplica en <body> y en los títulos h1-h3. */
 @import "tailwindcss";
 
 /* =========================
@@ -8,17 +7,37 @@
 ========================= */
 
 :root {
-  /* Colores parametrizables desde PageConfig (inyectados en layout.tsx).
-     Defaults centralizados acá: NUNCA hardcodear hex de acento en componentes. */
+  /* Colores parametrizables desde PageConfig (inyectados en layout.tsx),
+     incluido el fondo --page-bg. Defaults centralizados acá:
+     NUNCA hardcodear hex de acento en componentes. */
   --page-primary: #d97706;
   --page-secondary: #78350f;
+  --page-bg: #09090b;
 
-  /* Texto/íconos sobre fondo sólido de marca (decidido por src/lib/contraste/) */
+  /* Texto/íconos sobre fondo sólido de marca o de página (decidido por src/lib/contraste/) */
   --page-primary-foreground: #09090b;
   --page-secondary-foreground: #ffffff;
+  --page-bg-foreground: #f5f5f5;
   /* Marca legible como texto sobre fondos oscuros */
   --page-primary-tinta: var(--page-primary);
   --page-secondary-tinta: var(--page-secondary);
+  --page-bg-tinta: var(--page-bg);
+
+  /* Tokens de superficie del admin (derivados de --page-bg) */
+  --admin-background: var(--page-bg);
+  --admin-surface: color-mix(in srgb, var(--page-bg) 94%, #ffffff);
+  --admin-surface-elevated: color-mix(in srgb, var(--page-bg) 88%, #ffffff);
+  --admin-border: color-mix(in srgb, var(--page-bg-foreground) 10%, transparent);
+  --admin-border-fuerte: color-mix(in srgb, var(--page-bg-foreground) 16%, transparent);
+  --admin-texto-primario: var(--page-bg-foreground);
+  --admin-texto-secundario: color-mix(in srgb, var(--page-bg-foreground) 68%, var(--page-bg));
+  --admin-texto-muted: color-mix(in srgb, var(--page-bg-foreground) 44%, var(--page-bg));
+
+  /* Tokens derivados de marca (auto-derivados, NUNCA expuestos al usuario) */
+  --page-primary-hover: color-mix(in srgb, var(--page-primary) 85%, #000000);
+  --page-primary-soft: color-mix(in srgb, var(--page-primary) 12%, transparent);
+  --page-primary-muted: color-mix(in srgb, var(--page-primary) 15%, var(--admin-surface-elevated));
+  --page-focus-ring: color-mix(in srgb, var(--page-primary) 55%, transparent);
 
   /* Variantes alfa derivadas (color-mix) usadas como ${primaryColor}XX antes */
   --page-primary-15: color-mix(in srgb, var(--page-primary) 15%, transparent);
@@ -71,8 +90,8 @@ html {
 }
 
 body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background-color: var(--page-bg);
+  color: var(--page-bg-foreground);
   font-family: var(--font-outfit), sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -81,7 +100,8 @@ body {
 h1,
 h2,
 h3 {
-  font-family: var(--font-playfair), serif;
+  font-family: var(--font-outfit), sans-serif;
+  letter-spacing: -0.02em;
 }
 
 /* =========================

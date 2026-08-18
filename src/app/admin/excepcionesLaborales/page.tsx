@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import ExcepcionesClient from "@/components/excepcionesLaborales/ExcepcionesClient";
-import { Calendar } from "lucide-react";
 import { getBarberos } from "@/actions/barberos/listar.actions";
 
 async function getExcepciones() {
@@ -27,36 +26,21 @@ export default async function ExcepcionesLaboralesPage() {
   const barberos = responseBarberos.success ? (responseBarberos.data ?? []) : [];
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="container mx-auto max-w-7xl mt-20">
-        {/* Header */}
-        <div className="mb-8 flex items-center gap-4">
-          <div className="flex items-center gap-4">
-            <div 
-              className="p-3 rounded-xl border-2"
-              style={{ 
-                backgroundColor: "var(--page-primary-20)",
-                borderColor: "var(--page-primary-40)" 
-              }}
-            >
-              <Calendar className="h-8 w-8" style={{ color: "var(--page-primary)" }} />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">
-                Excepciones Laborales
-              </h1>
-              <p style={{ color: "var(--page-primary-70)" }}>
-                Gestiona feriados y días no laborables
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <ExcepcionesClient 
-          excepciones={excepciones} 
-          barberos={barberos} 
-        />
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight md:text-[28px] text-[var(--admin-texto-primario)]">
+          Excepciones Laborales
+        </h1>
+        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
+          Días y rangos en los que no se atiende.
+        </p>
       </div>
+
+      <ExcepcionesClient 
+        excepciones={excepciones} 
+        barberos={barberos} 
+      />
     </div>
   );
 }

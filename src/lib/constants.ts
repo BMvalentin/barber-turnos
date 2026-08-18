@@ -53,11 +53,11 @@ export const ESTILO_FONDO_MARCA: CSSProperties = {
 
 /* Trío de clases de marca: fondo sólido + hover + texto legible */
 export const CLASES_BOTON_MARCA =
-  "bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)]";
+  "bg-[var(--page-primary)] hover:bg-[var(--page-primary-hover)] text-[var(--page-primary-foreground)] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--admin-background)]";
 
 /* Botón "X" de cierre de modales (consistente con ui/dialog) */
 export const CLASES_BOTON_CERRAR =
-  "rounded-sm ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none p-1 bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] hover:cursor-pointer";
+  "rounded-sm p-1 transition-all duration-150 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-[var(--page-focus-ring)] focus:ring-offset-2 focus:ring-offset-[var(--admin-background)] disabled:pointer-events-none bg-[var(--page-primary)] hover:bg-[var(--page-primary-hover)] text-[var(--page-primary-foreground)] hover:cursor-pointer flex items-center justify-center";
 
 /* TTL de los locks de slots (única fuente; lo usan el hook y las rutas REST) */
 export const TTL_LOCK_SLOT_MS = 5 * 60 * 1000;

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { softDeleteExcepcion } from "@/actions/excepciones/eliminar.actions";
 import { Calendar, Trash2, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { toast } from "@/lib/toast";
+import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
 import EmptyState from "@/components/ui/EmptyState";
 import { formatearHora } from "@/lib/utils/formatear-hora";
@@ -39,18 +39,14 @@ export default function ExcepcionesList({ excepciones }: ExcepcionesListProps) {
       setElementoAEliminar(null);
 
       await softDeleteExcepcion(formData);
-      toast({
-        title: "Excepción desactivada",
+      toast.success("Excepción desactivada", {
         description: "La excepción ha sido desactivada correctamente.",
-        variant: "default",
         duration: 4000,
       });
       router.refresh();
-    } catch (error) {
-      toast({
-        title: "Error",
+    } catch {
+      toast.error("Error", {
         description: "No se pudo desactivar la excepción.",
-        variant: "destructive",
         duration: 4000,
       });
     }
@@ -63,8 +59,8 @@ export default function ExcepcionesList({ excepciones }: ExcepcionesListProps) {
         mensaje="No hay excepciones registradas"
         claseContenedor="py-8"
         claseIcono="h-16 w-16 opacity-30"
-        estiloIcono={{ color: "var(--page-primary)" }}
-        estiloMensaje={{ color: "var(--page-primary-70)" }}
+        estiloIcono={{ color: "var(--page-primary-tinta)" }}
+        estiloMensaje={{ color: "var(--page-primary-tinta)" }}
       />
     );
   }
@@ -74,7 +70,7 @@ export default function ExcepcionesList({ excepciones }: ExcepcionesListProps) {
       {excepciones.map((excepcion) => (
         <div
           key={excepcion.id}
-          className="bg-black/60 rounded-lg p-3 sm:p-4 transition-all space-y-3"
+          className="bg-[var(--admin-surface-elevated)] rounded-lg p-3 sm:p-4 transition-colors duration-150 space-y-3"
           style={{
             border: `1px solid var(--page-secondary-40)`,
           }}
@@ -82,8 +78,8 @@ export default function ExcepcionesList({ excepciones }: ExcepcionesListProps) {
           {/* Cabecera */}
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <Calendar className="h-4 w-4 shrink-0" style={{ color: "var(--page-primary)" }} />
-              <p className="text-white font-semibold truncate">{excepcion.motivo}</p>
+              <Calendar className="h-4 w-4 shrink-0" style={{ color: "var(--page-primary-tinta)" }} />
+              <p className="text-[var(--admin-texto-primario)] font-semibold truncate">{excepcion.motivo}</p>
             </div>
 
             {excepcion.barbero ? (
@@ -113,11 +109,11 @@ export default function ExcepcionesList({ excepciones }: ExcepcionesListProps) {
                 border: `1px solid var(--page-secondary-30)`,
               }}
             >
-              <p className="uppercase mb-0.5" style={{ color: "var(--page-primary-80)" }}>Desde</p>
-              <p className="font-mono font-medium" style={{ color: "var(--page-primary)" }}>
+              <p className="uppercase mb-0.5" style={{ color: "var(--page-primary-tinta)" }}>Desde</p>
+              <p className="font-mono font-medium" style={{ color: "var(--page-primary-tinta)" }}>
                 {new Date(excepcion.desde).toLocaleDateString('es-AR')}
               </p>
-              <p className="text-white">
+              <p className="text-[var(--admin-texto-primario)]">
                 {formatearHora(excepcion.desde)}
               </p>
             </div>
@@ -128,11 +124,11 @@ export default function ExcepcionesList({ excepciones }: ExcepcionesListProps) {
                 border: `1px solid var(--page-secondary-30)`,
               }}
             >
-              <p className="uppercase mb-0.5" style={{ color: "var(--page-primary-80)" }}>Hasta</p>
-              <p className="font-mono font-medium" style={{ color: "var(--page-primary)" }}>
+              <p className="uppercase mb-0.5" style={{ color: "var(--page-primary-tinta)" }}>Hasta</p>
+              <p className="font-mono font-medium" style={{ color: "var(--page-primary-tinta)" }}>
                 {new Date(excepcion.hasta).toLocaleDateString('es-AR')}
               </p>
-              <p className="text-white">
+              <p className="text-[var(--admin-texto-primario)]">
                 {formatearHora(excepcion.hasta)}
               </p>
             </div>

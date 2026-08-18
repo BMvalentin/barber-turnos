@@ -9,7 +9,7 @@ import { Dialog } from "@/components/ui/dialog/Dialog";
 import { DialogContent } from "@/components/ui/dialog/DialogContent";
 import { DialogTitle } from "@/components/ui/dialog/DialogTitle";
 import { useRouter } from "next/navigation";
-import { toast } from "@/lib/toast";
+import { toast } from "sonner";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
 import type { DiaLaboral, MargenLaboralCreado } from "@/types/horarios";
@@ -54,11 +54,9 @@ export function DiaLaboralClient({
         const margenesData = await getMargenesLaborales(dia.id);
         setMargenes(margenesData);
         setIsHorariosDialogOpen(true);
-      } catch (error) {
-        toast({
-          title: "Error",
+      } catch {
+        toast.error("Error", {
           description: "No se pudieron cargar los horarios.",
-          variant: "destructive",
           duration: 4000,
         });
       }

@@ -11,12 +11,14 @@ type DetailCardProps = {
 
 export function DetailCard({ title, icon: Icon, children }: DetailCardProps) {
   return (
-    <div className="bg-black/40 backdrop-blur-lg border border-amber-900/30 rounded-xl p-5">
-      <div className="flex items-center gap-2 mb-4">
-        <Icon className="text-[var(--page-primary)]" />
-        <h2 className="text-white font-bold">{title}</h2>
+    <div className="rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5">
+      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[var(--admin-border)]">
+        <Icon className="h-4 w-4" style={{ color: "var(--page-primary-tinta)" }} />
+        <h2 className="text-sm font-semibold text-[var(--admin-texto-primario)]">
+          {title}
+        </h2>
       </div>
-      <div className="space-y-2">{children}</div>
+      <div className="space-y-1.5">{children}</div>
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { ESTADOS_TURNO } from "@/lib/constants";
+import { enviarEmailsTurnoConfirmado } from "@/lib/email/enviar-emails-turno-confirmado";
+import { INCLUDE_TURNO_CON_DETALLE } from "@/lib/turno-con-detalle";
 
 export type ResultadoConfirmacionPago = {
   ok: boolean;
@@ -64,6 +66,14 @@ export async function confirmarTurnoPorPago(args: {
       ...(args.paymentId ? { mpPaymentId: String(args.paymentId) } : {}),
     },
   });
+
+  const turnoConfirmado = await prisma.turno.findUnique({
+    where: { id: turno.id },
+    include: INCLUDE_TURNO_CON_DETALLE,
+  });
+  if (turnoConfirmado) {
+    enviarEmailsTurnoConfirmado(turnoConfirmado);
+  }
 
   return { ok: true, turnoId: turno.id };
 }

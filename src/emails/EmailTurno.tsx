@@ -27,23 +27,52 @@ type PropsEmailTurno = {
   colores: ColoresEmail;
   barberiaNombre: string;
   moneda: string;
+  destinatario?: "cliente" | "barbero";
 };
 
 const INFO_POR_ESTADO: Record<
   TipoEstadoEmail,
-  { titulo: string; mensaje: string }
+  { cliente: { titulo: string; mensaje: string }; barbero: { titulo: string; mensaje: string } }
 > = {
   CREADO: {
-    titulo: "Turno Confirmado",
-    mensaje: "Tu turno fue agendado con éxito. ¡Te esperamos!",
+    cliente: {
+      titulo: "Turno Confirmado",
+      mensaje: "Tu turno fue agendado con éxito. ¡Te esperamos!",
+    },
+    barbero: {
+      titulo: "Nuevo Turno Reservado",
+      mensaje: "Un cliente reservó un turno con vos. Mirá los detalles:",
+    },
+  },
+  CONFIRMADO: {
+    cliente: {
+      titulo: "Turno Confirmado",
+      mensaje: "Tu turno fue confirmado. ¡Te esperamos!",
+    },
+    barbero: {
+      titulo: "Turno Confirmado",
+      mensaje: "Tenés un turno confirmado. Mirá los detalles:",
+    },
   },
   ACTUALIZADO: {
-    titulo: "Turno Modificado",
-    mensaje: "Los detalles de tu turno fueron actualizados.",
+    cliente: {
+      titulo: "Turno Modificado",
+      mensaje: "Los detalles de tu turno fueron actualizados.",
+    },
+    barbero: {
+      titulo: "Turno Modificado",
+      mensaje: "Los detalles de un turno tuyo fueron actualizados.",
+    },
   },
   CANCELADO: {
-    titulo: "Turno Cancelado",
-    mensaje: "Tu turno fue cancelado. Podés agendar uno nuevo cuando quieras.",
+    cliente: {
+      titulo: "Turno Cancelado",
+      mensaje: "Tu turno fue cancelado. Podés agendar uno nuevo cuando quieras.",
+    },
+    barbero: {
+      titulo: "Turno Cancelado",
+      mensaje: "Un turno tuyo fue cancelado.",
+    },
   },
 };
 
@@ -93,8 +122,9 @@ export function EmailTurno({
   colores,
   barberiaNombre,
   moneda,
+  destinatario = "cliente",
 }: PropsEmailTurno) {
-  const info = INFO_POR_ESTADO[datos.estado];
+  const info = INFO_POR_ESTADO[datos.estado][destinatario];
 
   return (
     <Html lang="es">
@@ -175,7 +205,9 @@ export function EmailTurno({
               </Section>
 
               <Section style={{ marginTop: "24px" }}>
-                <Text style={estiloSubtitulo}>Tus datos</Text>
+                <Text style={estiloSubtitulo}>
+                  {destinatario === "barbero" ? "Datos del cliente" : "Tus datos"}
+                </Text>
                 <Row>
                   {filaDetalle("Nombre y apellido", datos.clienteNombre)}
                 </Row>

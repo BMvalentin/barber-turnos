@@ -26,11 +26,11 @@ export default function BarberoList({
       <EmptyState
         icono={<User />}
         mensaje="No hay barberos disponibles"
-        claseContenedor="bg-black/40 p-8 rounded-lg border"
+        claseContenedor="bg-[var(--admin-surface)] p-8 rounded-lg border"
         estiloContenedor={{ borderColor: "var(--page-primary-30)" }}
         claseIcono="h-16 w-16"
-        estiloIcono={{ color: "var(--page-primary-50)" }}
-        estiloMensaje={{ color: "var(--page-primary-70)" }}
+        estiloIcono={{ color: "var(--page-primary-tinta)" }}
+        estiloMensaje={{ color: "var(--page-primary-tinta)" }}
       />
     );
   }
@@ -81,7 +81,7 @@ function BarberoCard({
   return (
     <>
       <div 
-        className="bg-black/40 rounded-xl overflow-hidden border transition-all"
+        className="bg-[var(--admin-surface)] rounded-xl overflow-hidden border transition-colors duration-150 flex flex-col h-full"
         style={{ borderColor: `var(--page-primary-40)` }}
       >
         {/* IMAGEN */}
@@ -93,17 +93,17 @@ function BarberoCard({
             />
           ) : (
             <div className="flex items-center justify-center h-full">
-              <User className="h-12 w-12" style={{ color: `var(--page-primary-50)` }} />
+              <User className="h-12 w-12" style={{ color: `var(--page-primary-tinta)` }} />
             </div>
           )}
         </div>
 
-        <div className="p-4 space-y-3">
-          <h3 className="text-white font-bold text-lg">{barbero.nombre}</h3>
+        <div className="p-4 space-y-3 flex-1 flex flex-col">
+          <h3 className="text-[var(--admin-texto-primario)] font-bold text-lg">{barbero.nombre}</h3>
 
           {/* SERVICIOS */}
           <div>
-            <p className="text-xs mb-1 font-semibold" style={{ color: "var(--page-primary)" }}>Servicios:</p>
+            <p className="text-xs mb-1 font-semibold" style={{ color: "var(--page-primary-tinta)" }}>Servicios:</p>
             <div className="flex flex-wrap gap-1">
               {barbero.servicios?.length ? (
                 barbero.servicios.map((s) => (
@@ -123,12 +123,12 @@ function BarberoCard({
 
           {/* HORARIOS AGRUPADOS POR DÍA */}
           <div>
-            <p className="text-xs mb-1 font-semibold" style={{ color: "var(--page-primary)" }}>Horarios:</p>
+            <p className="text-xs mb-1 font-semibold" style={{ color: "var(--page-primary-tinta)" }}>Horarios:</p>
             {diasConHorario.length ? (
               <div className="space-y-1.5">
                 {diasConHorario.map((dia) => (
                   <div key={dia} className="flex items-start gap-2">
-                    <span className="text-[11px] font-semibold text-white w-16 flex-shrink-0 pt-0.5">
+                    <span className="text-[11px] font-semibold text-[var(--admin-texto-primario)] w-16 flex-shrink-0 pt-0.5">
                       {dia}
                     </span>
                     <div className="flex flex-wrap gap-1">
@@ -157,7 +157,7 @@ function BarberoCard({
           </div>
 
           {/* BOTONES */}
-          <div className="flex gap-2 pt-3 border-t" style={{ borderColor: `var(--page-primary-20)` }}>
+          <div className="flex gap-2 pt-3 border-t mt-auto" style={{ borderColor: `var(--page-primary-20)` }}>
             <Button
               className="flex-1 text-[var(--page-primary-foreground)] transition-all hover:opacity-90"
               style={ESTILO_FONDO_MARCA}

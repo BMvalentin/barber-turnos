@@ -18,11 +18,12 @@ async function createBarberoBase(data: unknown): Promise<ActionState> {
       };
     }
 
-    const { nombre, srcImage, serviciosIds, margenesIds } = parsed.data;
+    const { nombre, email, srcImage, serviciosIds, margenesIds } = parsed.data;
 
     const nuevoBarbero = await prisma.barbero.create({
       data: {
         nombre,
+        email: email?.trim() ? email.trim() : null,
         srcImage: srcImage || null,
         estado: true,
       },

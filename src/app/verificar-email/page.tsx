@@ -1,5 +1,5 @@
 "use client";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
 import Link from "next/link";
@@ -7,6 +7,7 @@ import AuthLayout from "@/components/auth/AuthLayout";
 import { reenviarVerificacion } from "@/actions/sesion/reenviar-verificacion.actions";
 import type { ActionState } from "@/types/action-state";
 import { Mail, Scissors, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 
 export default function VerificarEmailPage() {
   return (
@@ -26,6 +27,28 @@ function VerificarEmailContenido() {
     reenviarVerificacion,
     { error: "" },
   );
+
+  useEffect(() => {
+    if (errorToken) {
+      toast.error("Link inválido", { description: "El link es inválido. Pedí uno nuevo abajo." });
+    }
+  }, [errorToken]);
+
+  useEffect(() => {
+    if (avisoEnvio) {
+      toast.info("Envío automático no disponible", {
+        description: "No pudimos enviar el email automáticamente. Usá el botón de reenviar.",
+      });
+    }
+  }, [avisoEnvio]);
+
+  useEffect(() => {
+    if (state.success) {
+      toast.success("Email reenviado", { description: "Revisá tu bandeja de entrada." });
+    }
+    if (state.aviso) toast.info("Aviso", { description: state.aviso });
+    if (state.error) toast.error("Error", { description: state.error });
+  }, [state]);
 
   return (
     <AuthLayout>
@@ -61,37 +84,6 @@ function VerificarEmailContenido() {
               <div className="mb-6 p-3 bg-zinc-900/50 border border-white/5 rounded-xl text-center">
                 <p className="text-xs uppercase tracking-widest text-zinc-500 font-bold mb-1">Enviado a</p>
                 <p className="text-sm font-bold text-[var(--page-primary)] break-all">{email}</p>
-              </div>
-            )}
-
-            {errorToken && (
-              <div className="mb-6 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium rounded-xl text-center">
-                El link es inválido. Pedí uno nuevo abajo.
-              </div>
-            )}
-
-            {avisoEnvio && !state.success && (
-              <div className="mb-6 p-3 bg-[var(--page-primary-15)] border border-[var(--page-primary-25)] text-zinc-200 text-sm font-medium rounded-xl text-center">
-                No pudimos enviar el email automáticamente. Usá el botón de
-                reenviar.
-              </div>
-            )}
-
-            {state.success && (
-              <div className="mb-6 p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium rounded-xl text-center">
-                Email reenviado. Revisá tu bandeja de entrada.
-              </div>
-            )}
-
-            {state.aviso && !state.error && (
-              <div className="mb-6 p-3 bg-[var(--page-primary-15)] border border-[var(--page-primary-25)] text-zinc-200 text-sm font-medium rounded-xl text-center">
-                {state.aviso}
-              </div>
-            )}
-
-            {state.error && (
-              <div className="mb-6 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium rounded-xl text-center">
-                {state.error}
               </div>
             )}
 

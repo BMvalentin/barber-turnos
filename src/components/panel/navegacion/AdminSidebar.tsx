@@ -1,171 +1,192 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { ChevronsLeft, ChevronsRight, Scissors } from "lucide-react";
 import {
-  LayoutDashboard,
-  Scissors,
-  Users,
-  Calendar,
-  ClipboardList,
-  Clock,
-  Menu,
-  X,
-  CreditCard,
-  Settings,
-  ChevronsLeft,
-  ChevronsRight,
-  type LucideIcon,
-} from "lucide-react";
+  GRUPOS_NAVEGACION,
+  type ItemNavegacion,
+} from "@/components/panel/navegacion/items-navegacion";
 
-const userMenuItems = [
-  { title: "Turnos", href: "/turno", icon: Calendar },
-];
-const adminMenuItems = [
-  { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { title: "Barberos", href: "/admin/barbero", icon: Users },
-  { title: "Servicios", href: "/admin/servicio", icon: Scissors },
-  { title: "Días Laborales", href: "/admin/diaLaboral", icon: Clock },
-  { title: "Excepciones", href: "/admin/excepcionesLaborales", icon: ClipboardList },
-  { title: "Mercado Pago", href: "/admin/mercadopago", icon: CreditCard },
-  { title: "Configuración", href: "/admin/config", icon: Settings },
-];
+interface AdminSidebarProps {
+  colapsado: boolean;
+  alAlternar: () => void;
+  abierto: boolean;
+  alCerrar: () => void;
+  config?: { name?: string | null; logo?: string | null } | null;
+}
 
 function SidebarItem({
   item,
-  collapsed,
-  onNavigate,
+  colapsado,
+  alCerrar,
 }: {
-  item: { title: string; href: string; icon: LucideIcon };
-  collapsed: boolean;
-  onNavigate: () => void;
+  item: ItemNavegacion;
+  colapsado: boolean;
+  alCerrar: () => void;
 }) {
   const pathname = usePathname();
-  const Icon = item.icon;
-  const isActive = pathname === item.href;
+  const Icono = item.icono;
+  const esActivo = pathname === item.href;
+  const refEnlace = useRef<HTMLAnchorElement>(null);
+  const [posicionSugerencia, setPosicionSugerencia] = useState<{
+    arriba: number;
+    izquierda: number;
+  } | null>(null);
+
+  const alEntrar = () => {
+    const enlace = refEnlace.current;
+    if (!enlace) return;
+    const rect = enlace.getBoundingClientRect();
+    setPosicionSugerencia({
+      arriba: rect.top + rect.height / 2,
+      izquierda: rect.right + 10,
+    });
+  };
+
+  const alSalir = () => setPosicionSugerencia(null);
 
   return (
-    <Link
-      href={item.href}
-      onClick={onNavigate}
-      title={collapsed ? item.title : undefined}
-      className={`
-        flex items-center gap-3 rounded-lg text-sm font-semibold transition-colors duration-200 group overflow-hidden whitespace-nowrap py-2.5
-        ${collapsed ? "justify-center px-0" : "px-3"}
-        ${isActive
-          ? "bg-[var(--page-primary)]/20 text-[var(--page-primary-tinta)] border border-[var(--page-primary)]/30 shadow-inner"
-          : "text-white hover:bg-[var(--page-primary)]/10 hover:text-[var(--page-primary-tinta)]"}
-      `}
-    >
-      <Icon
-        className={`h-5 w-5 shrink-0 transition-colors ${
-          isActive
-            ? "text-[var(--page-primary-tinta)]"
-            : "text-white group-hover:text-[var(--page-primary-tinta)]"
-        }`}
-      />
-      <span
-        className={`transition-opacity duration-300 ${
-          collapsed ? "hidden" : "opacity-100"
-        }`}
+    <>
+      <Link
+        ref={refEnlace}
+        href={item.href}
+        onClick={alCerrar}
+        aria-current={esActivo ? "page" : undefined}
+        target={item.externo ? "_blank" : undefined}
+        rel={item.externo ? "noopener noreferrer" : undefined}
+        onMouseEnter={colapsado ? alEntrar : undefined}
+        onMouseLeave={colapsado ? alSalir : undefined}
+        onFocus={colapsado ? alEntrar : undefined}
+        onBlur={colapsado ? alSalir : undefined}
+        className={`
+          flex items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150
+          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]
+          ${colapsado ? "justify-center px-0" : ""}
+          ${esActivo
+            ? "bg-[var(--page-primary-soft)] text-[var(--page-primary-tinta)]"
+            : "text-[var(--admin-texto-secundario)] hover:bg-white/5 hover:text-[var(--admin-texto-primario)]"}
+        `}
       >
-        {item.title}
-      </span>
-    </Link>
+        <Icono className="h-4 w-4 shrink-0" />
+        <span className={colapsado ? "hidden" : ""}>{item.titulo}</span>
+      </Link>
+      {colapsado &&
+        posicionSugerencia &&
+        createPortal(
+          <span
+            className="pointer-events-none fixed z-[60] -translate-y-1/2 whitespace-nowrap rounded-md border border-white/10 bg-[var(--admin-surface-elevated)] px-2.5 py-1.5 text-xs font-medium text-[var(--admin-texto-primario)] shadow-lg"
+            style={{
+              top: posicionSugerencia.arriba,
+              left: posicionSugerencia.izquierda,
+            }}
+          >
+            {item.titulo}
+          </span>,
+          document.body,
+        )}
+    </>
   );
 }
 
 export default function AdminSidebar({
-  collapsed,
-  onToggle,
-}: {
-  collapsed: boolean;
-  onToggle: () => void;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-
+  colapsado,
+  alAlternar,
+  abierto,
+  alCerrar,
+  config,
+}: AdminSidebarProps) {
   return (
     <>
-      {/* Botón flotante para móvil */}
-      <button
-        className="lg:hidden fixed bottom-6 right-6 z-50 bg-[var(--page-primary)] text-[var(--page-primary-foreground)] p-3 rounded-full shadow-lg shadow-[var(--page-primary)]/20"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-      </button>
-
-      {/* Overlay para móvil */}
-      {isOpen && (
+      {abierto && (
         <div
-          className="fixed inset-0 top-16 bg-black/60 z-30 lg:hidden"
-          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
+          onClick={alCerrar}
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`
-        fixed left-0 top-16 h-[calc(100vh-4rem)] pt-4 shadow-xl z-40 transition-all duration-300
-        bg-black/90 lg:bg-black/60 backdrop-blur-xl border-r border-amber-900/30 flex flex-col shrink-0
-        w-60 ${collapsed ? "lg:w-16" : "lg:w-60"}
-        lg:sticky lg:translate-x-0
-        ${isOpen ? "translate-x-0" : "-translate-x-full"}
-      `}
+          fixed inset-y-0 left-0 z-50 flex w-60 shrink-0 flex-col border-r bg-[var(--admin-background)] transition-transform duration-200
+          lg:sticky lg:translate-x-0
+          ${abierto ? "translate-x-0" : "-translate-x-full"}
+          ${colapsado ? "lg:w-16" : "lg:w-60"}
+        `}
+        style={{ borderColor: "var(--admin-border)" }}
       >
-        {/* Botón colapsar/expandir (solo desktop) */}
-        <button
-          onClick={onToggle}
-          aria-label={collapsed ? "Expandir panel" : "Colapsar panel"}
-          title={collapsed ? "Expandir panel" : "Colapsar panel"}
-          className="hidden lg:flex absolute -right-3 top-4 z-10 h-6 w-6 items-center justify-center rounded-full border border-amber-900/40 bg-black/80 text-white shadow-lg shadow-black/40 backdrop-blur transition-colors duration-200 hover:border-[var(--page-primary)]/60 hover:text-[var(--page-primary-tinta)]"
+        <div
+          className={`flex h-14 shrink-0 items-center gap-3 border-b transition-all duration-200 ${
+            colapsado ? "justify-center px-2" : "px-4"
+          }`}
+          style={{ borderColor: "var(--admin-border)" }}
         >
-          {collapsed ? (
-            <ChevronsRight className="h-4 w-4" />
+          {config?.logo ? (
+            <Image
+              src={config.logo}
+              alt="Logo del negocio"
+              width={28}
+              height={28}
+              className={`shrink-0 rounded object-cover ${
+                colapsado ? "hidden" : "h-7 w-7"
+              }`}
+            />
           ) : (
-            <ChevronsLeft className="h-4 w-4" />
+            <Scissors
+              className={`h-6 w-6 shrink-0 ${colapsado ? "hidden" : ""}`}
+              style={{ color: "var(--page-primary-tinta)" }}
+            />
           )}
-        </button>
-        {/* Header */}
-        <div className="relative p-4 overflow-hidden">
-          <Scissors
-            className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-[var(--page-primary-tinta)] transition-opacity duration-300 ${
-              collapsed ? "opacity-100" : "opacity-0"
-            }`}
-          />
           <div
-            className={`transition-opacity duration-300 ${
-              collapsed ? "opacity-0" : "opacity-100"
+            className={`min-w-0 transition-opacity duration-200 ${
+              colapsado ? "hidden opacity-0" : "opacity-100"
             }`}
           >
-            <h1 className="text-xl font-bold text-white whitespace-nowrap">
-              Admin Panel
-            </h1>
-            <p className="text-xs text-white mt-1 whitespace-nowrap">
-              Gestión de barbería
+            <p className="truncate text-sm font-semibold text-[var(--admin-texto-primario)]">
+              {config?.name || "Barbería"}
+            </p>
+            <p className="text-[11px] text-[var(--admin-texto-muted)]">
+              Panel de administración
             </p>
           </div>
+          <button
+            type="button"
+            onClick={alAlternar}
+            aria-label={colapsado ? "Expandir menú" : "Colapsar menú"}
+            title={colapsado ? "Expandir menú" : "Colapsar menú"}
+            className={`${
+              colapsado ? "" : "ml-auto"
+            } hidden rounded-md p-1.5 text-[var(--admin-texto-secundario)] transition-colors hover:bg-white/5 hover:text-[var(--admin-texto-primario)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] lg:block`}
+          >
+            {colapsado ? (
+              <ChevronsRight className="h-4 w-4 shrink-0" />
+            ) : (
+              <ChevronsLeft className="h-4 w-4 shrink-0" />
+            )}
+          </button>
         </div>
 
-        {/* Menu */}
-        <nav className="flex-1 p-3 space-y-2 overflow-y-auto">
-          <div className="border-t border-amber-900/30 my-2" />
-          {adminMenuItems.map((item) => (
-            <SidebarItem
-              key={item.href}
-              item={item}
-              collapsed={collapsed}
-              onNavigate={() => setIsOpen(false)}
-            />
-          ))}
-          <div className="border-t border-amber-900/30 my-2" />
-          {userMenuItems.map((item) => (
-            <SidebarItem
-              key={item.href}
-              item={item}
-              collapsed={collapsed}
-              onNavigate={() => setIsOpen(false)}
-            />
+        <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-4">
+          {GRUPOS_NAVEGACION.map((grupo) => (
+            <div key={grupo.titulo} className="space-y-0.5">
+              {colapsado ? (
+                <div className="mx-2 my-2 h-px bg-[var(--admin-border)]" />
+              ) : (
+                <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--admin-texto-muted)]">
+                  {grupo.titulo}
+                </p>
+              )}
+              {grupo.items.map((item) => (
+                <SidebarItem
+                  key={item.href}
+                  item={item}
+                  colapsado={colapsado}
+                  alCerrar={alCerrar}
+                />
+              ))}
+            </div>
           ))}
         </nav>
       </aside>

@@ -1,8 +1,6 @@
 "use client";
-import { useState } from "react";
-import { Button } from "@/components/ui/button/Button";
-import { motion, AnimatePresence } from "framer-motion";
-import { DoorOpen, Scissors, Menu, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { DoorOpen, Scissors, Menu, X, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { handleSignOut } from "@/actions/sesion/logout.actions";
 import Image from "next/image";
@@ -17,8 +15,32 @@ interface HeaderProps {
 }
 
 export function Header({ config }: HeaderProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
+  const [menuAbierto, setMenuAbierto] = useState(false);
+  const contenedorSesion = useRef<HTMLDivElement>(null);
   const { data: session } = useSession();
+
+  useEffect(() => {
+    const cerrarAlHacerClickFuera = (evento: MouseEvent) => {
+      if (
+        contenedorSesion.current &&
+        !contenedorSesion.current.contains(evento.target as Node)
+      ) {
+        setMenuAbierto(false);
+      }
+    };
+    const cerrarConEscape = (evento: KeyboardEvent) => {
+      if (evento.key === "Escape") {
+        setMenuAbierto(false);
+      }
+    };
+    document.addEventListener("mousedown", cerrarAlHacerClickFuera);
+    document.addEventListener("keydown", cerrarConEscape);
+    return () => {
+      document.removeEventListener("mousedown", cerrarAlHacerClickFuera);
+      document.removeEventListener("keydown", cerrarConEscape);
+    };
+  }, []);
 
   const businessName = config?.name || "";
   const words = businessName.split(" ");
@@ -26,147 +48,227 @@ export function Header({ config }: HeaderProps) {
   const lastName = words.slice(1).join(" ");
 
   return (
-    <motion.header
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-2xl shadow-md w-full shadow-black text-white"
+    <header
+      className="fixed top-0 inset-x-0 z-50 h-16 w-full backdrop-blur-md text-[var(--page-bg-foreground)]"
       style={{
-        background: `linear-gradient(to bottom right, var(--page-secondary-80), #000000cc)`,
+        backgroundColor: "color-mix(in srgb, var(--page-bg) 90%, transparent)",
+        borderBottom: "1px solid color-mix(in srgb, var(--page-bg-foreground) 8%, transparent)",
       }}
     >
-      <div className="container flex items-center justify-between h-16 mx-auto px-4 select-none">
-        <Link href="/#home" className="flex items-center gap-2 relative z-50">
+      <div className="container mx-auto px-4 h-full flex items-center justify-between">
+        <Link href="/#home" className="flex items-center gap-2">
           {config?.logo ? (
-            <Image 
-              src={config.logo} 
-              alt={businessName} 
-              width={28} 
-              height={28} 
-              className="w-7 h-7 object-contain rounded-full" 
+            <Image
+              src={config.logo}
+              alt={businessName}
+              width={28}
+              height={28}
+              className="w-7 h-7 object-contain rounded-full"
             />
           ) : (
-            <Scissors className="w-6 h-6" style={{ color: "var(--page-primary-tinta)" }} />
+            <Scissors
+              className="w-6 h-6"
+              style={{ color: "var(--page-primary-tinta)" }}
+            />
           )}
           <span>{` ${firstName} `}</span>
           <span style={{ color: "var(--page-primary-tinta)" }}>{`${lastName}`}</span>
         </Link>
 
         {/* DESKTOP NAV & AUTH */}
-        <div className="hidden md:flex items-center gap-8">
-          <nav className="flex items-center gap-8">
-            <Link href="/#servicios" className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <Button variant="link" size="sm">Servicios</Button>
+        <div className="hidden md:flex items-center gap-6">
+          <nav className="flex items-center gap-6">
+            <Link
+              href="/#servicios"
+              className="text-sm font-medium text-[var(--page-bg-foreground)]/70 hover:text-[var(--page-bg-foreground)] transition-colors"
+            >
+              Servicios
             </Link>
 
-            <Link href="/#ubicacion" className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <Button variant="link" size="sm">Ubicación</Button>
+            <Link
+              href="/#ubicacion"
+              className="text-sm font-medium text-[var(--page-bg-foreground)]/70 hover:text-[var(--page-bg-foreground)] transition-colors"
+            >
+              Ubicación
             </Link>
 
             {esAdmin(session) && (
-              <Link href="/admin" className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
-                <Button variant="link" size="sm">Administrador</Button>
+              <Link
+                href="/admin"
+                className="text-sm font-medium text-[var(--page-bg-foreground)]/70 hover:text-[var(--page-bg-foreground)] transition-colors"
+              >
+                Administrador
               </Link>
             )}
-
-            <Link href={session ? "/turno" : "/login"} className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <Button 
-                size="sm"
-                style={{ backgroundColor: "var(--page-primary)", color: "var(--page-primary-foreground)" }}
-              >
-                Turnos
-              </Button>
-            </Link>
           </nav>
 
+          <Link
+            href={session ? "/turno" : "/login"}
+            className="rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors bg-[var(--page-primary)] text-[var(--page-primary-foreground)] hover:bg-[var(--page-primary-hover)]"
+          >
+            Turnos
+          </Link>
+
           {session ? (
-            <div className="flex items-center gap-4 border-l pl-6" style={{ borderColor: "var(--page-primary-40)" }}>
-              <span className="text-sm">
-                <Link className="flex flex-row items-center" href="/dashboard">
-                  <Image src={session.user?.image || "/images/avatar-default.svg"} alt="" className="rounded-full" width={32} height={32} />
-                  <Button variant="link" size="sm">{session.user?.name}</Button>
-                </Link>
-              </span>
-              <form action={handleSignOut}>
-                <Button variant="rojo" size="sm" type="submit">Salir</Button>
-              </form>
+            <div ref={contenedorSesion} className="relative">
+              <button
+                type="button"
+                className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-[var(--page-bg-foreground)]/5"
+                onClick={() => setMenuAbierto(!menuAbierto)}
+                aria-expanded={menuAbierto}
+                aria-haspopup="menu"
+              >
+                <Image
+                  src={session.user?.image || "/images/avatar-default.svg"}
+                  alt=""
+                  className="rounded-full"
+                  width={28}
+                  height={28}
+                />
+                <span className="hidden sm:inline text-sm font-medium text-[var(--page-bg-foreground)]">
+                  {session.user?.name}
+                </span>
+                <ChevronDown className="h-4 w-4 text-[var(--page-bg-foreground)]/50" />
+              </button>
+
+              {menuAbierto && (
+                <div className="absolute right-0 top-full mt-2 w-48 rounded-lg border border-[var(--page-bg-foreground)]/10 bg-[var(--admin-surface-elevated)] shadow-xl py-1">
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMenuAbierto(false)}
+                    className="block w-full px-3 py-2 text-sm text-[var(--page-bg-foreground)]/80 hover:bg-[var(--page-bg-foreground)]/5 hover:text-[var(--page-bg-foreground)] rounded-md"
+                  >
+                    Mi perfil
+                  </Link>
+                  <form action={handleSignOut}>
+                    <button
+                      type="submit"
+                      onClick={() => setMenuAbierto(false)}
+                      className="block w-full px-3 py-2 text-sm text-left text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-md"
+                    >
+                      Cerrar sesión
+                    </button>
+                  </form>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="border-l pl-6" style={{ borderColor: "var(--page-primary-40)" }}>
-              <Link href="/login">
-                <Button 
-                  size="sm"
-                  style={{ backgroundColor: "var(--page-primary)", color: "var(--page-primary-foreground)" }}
-                >
-                  <DoorOpen className="w-4 h-4 mr-2" /> Iniciar Sesión
-                </Button>
-              </Link>
-            </div>
+            <Link
+              href="/login"
+              className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium text-[var(--page-bg-foreground)]/80 hover:text-[var(--page-bg-foreground)] hover:bg-[var(--page-bg-foreground)]/5 transition-colors"
+            >
+              <DoorOpen className="h-4 w-4" />
+              Iniciar Sesión
+            </Link>
           )}
         </div>
 
         {/* MOBILE TOGGLE */}
         <button
-          className="md:hidden relative z-50 p-2"
-          style={{ color: "var(--page-primary-tinta)" }}
-          onClick={() => setIsOpen(!isOpen)}
+          type="button"
+          className="md:hidden p-2 text-[var(--page-bg-foreground)]/70 hover:text-[var(--page-bg-foreground)] transition-colors"
+          onClick={() => setMenuMovilAbierto(!menuMovilAbierto)}
+          aria-label={menuMovilAbierto ? "Cerrar menú" : "Abrir menú"}
         >
-          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {menuMovilAbierto ? (
+            <X className="w-6 h-6" />
+          ) : (
+            <Menu className="w-6 h-6" />
+          )}
         </button>
       </div>
 
       {/* MOBILE MENU */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t bg-black/95 backdrop-blur-xl overflow-hidden"
-            style={{ borderColor: "var(--page-primary-30)" }}
-          >
-            <div className="flex flex-col px-6 py-6 space-y-4">
-              <Link href="/#servicios" onClick={() => setIsOpen(false)} className="text-base text-gray-300 hover:text-white transition-colors py-2">
-                Servicios
-              </Link>
-              <Link href="/#ubicacion" onClick={() => setIsOpen(false)} className="text-base text-gray-300 hover:text-white transition-colors py-2">
-                Ubicación
-              </Link>
+      {menuMovilAbierto && (
+        <div
+          className="md:hidden border-t"
+          style={{
+            borderColor: "color-mix(in srgb, var(--page-bg-foreground) 8%, transparent)",
+            backgroundColor: "color-mix(in srgb, var(--page-bg) 97%, transparent)",
+          }}
+        >
+          <div className="flex flex-col px-6 py-6 space-y-4">
+            <Link
+              href="/#servicios"
+              onClick={() => setMenuMovilAbierto(false)}
+              className="py-2 text-base text-[var(--page-bg-foreground)]/80 hover:text-[var(--page-bg-foreground)] transition-colors"
+            >
+              Servicios
+            </Link>
+            <Link
+              href="/#ubicacion"
+              onClick={() => setMenuMovilAbierto(false)}
+              className="py-2 text-base text-[var(--page-bg-foreground)]/80 hover:text-[var(--page-bg-foreground)] transition-colors"
+            >
+              Ubicación
+            </Link>
 
-              {esAdmin(session) && (
-                <Link href="/admin" onClick={() => setIsOpen(false)} className="text-base font-medium transition-colors py-2" style={{ color: "var(--page-primary-tinta)" }}>
-                  Administrador
+            {esAdmin(session) && (
+              <Link
+                href="/admin"
+                onClick={() => setMenuMovilAbierto(false)}
+                className="py-2 text-base text-[var(--page-bg-foreground)]/80 hover:text-[var(--page-bg-foreground)] transition-colors"
+              >
+                Administrador
+              </Link>
+            )}
+
+            <div className="pt-2">
+              <Link
+                href={session ? "/turno" : "/login"}
+                onClick={() => setMenuMovilAbierto(false)}
+                className="block w-full rounded-lg px-3.5 py-2 text-center text-sm font-semibold transition-colors bg-[var(--page-primary)] text-[var(--page-primary-foreground)] hover:bg-[var(--page-primary-hover)]"
+              >
+                Turnos
+              </Link>
+            </div>
+
+            <div
+              className="border-t pt-6 mt-4"
+              style={{ borderColor: "color-mix(in srgb, var(--page-bg-foreground) 8%, transparent)" }}
+            >
+              {session ? (
+                <div className="flex flex-col gap-4">
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMenuMovilAbierto(false)}
+                    className="flex items-center gap-3 py-2"
+                  >
+                    <Image
+                      src={session.user?.image || "/images/avatar-default.svg"}
+                      alt=""
+                      className="rounded-full"
+                      width={40}
+                      height={40}
+                    />
+                    <span className="text-base font-medium text-[var(--page-bg-foreground)]">
+                      {session.user?.name}
+                    </span>
+                  </Link>
+                  <form action={handleSignOut} className="w-full">
+                    <button
+                      type="submit"
+                      onClick={() => setMenuMovilAbierto(false)}
+                      className="w-full py-2 text-left text-base text-red-400 hover:text-red-300 transition-colors"
+                    >
+                      Cerrar sesión
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setMenuMovilAbierto(false)}
+                  className="flex items-center gap-2 py-2 text-base text-[var(--page-bg-foreground)]/80 hover:text-[var(--page-bg-foreground)] transition-colors"
+                >
+                  <DoorOpen className="h-4 w-4" />
+                  Iniciar Sesión
                 </Link>
               )}
-
-              <div className="pt-2">
-                <Link href={session ? "/turno" : "/login"} onClick={() => setIsOpen(false)}>
-                  <Button variant="amarillo" className="w-full" style={{ backgroundColor: "var(--page-primary)", color: "var(--page-primary-foreground)" }}>Turnos</Button>
-                </Link>
-              </div>
-
-              <div className="border-t pt-6 mt-4" style={{ borderColor: "var(--page-primary-30)" }}>
-                {session ? (
-                  <div className="flex flex-col gap-4">
-                    <Link href="/dashboard" onClick={() => setIsOpen(false)} className="flex items-center gap-3 py-2">
-                      <Image src={session.user?.image || "/images/avatar-default.svg"} alt="" className="rounded-full border" style={{ borderColor: "var(--page-primary-80)" }} width={40} height={40} />
-                      <span className="text-base font-medium text-white">{session.user?.name}</span>
-                    </Link>
-                    <form action={handleSignOut} className="w-full">
-                      <Button variant="rojo" className="w-full" type="submit" onClick={() => setIsOpen(false)}>Cerrar Sesión</Button>
-                    </form>
-                  </div>
-                ) : (
-                  <Link href="/login" onClick={() => setIsOpen(false)} className="w-full">
-                    <Button variant="outline" className="w-full bg-transparent" style={{ borderColor: "var(--page-primary)", color: "var(--page-primary-tinta)" }}>
-                      <DoorOpen className="w-4 h-4 mr-2" /> Iniciar Sesión
-                    </Button>
-                  </Link>
-                )}
-              </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.header>
+          </div>
+        </div>
+      )}
+    </header>
   );
 }

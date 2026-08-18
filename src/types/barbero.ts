@@ -11,6 +11,7 @@ export type ServicioOpcion = {
 export type Barbero = {
   id: string;
   nombre: string | null;
+  email: string | null;
   srcImage: string | null;
   estado: boolean;
 };
@@ -20,6 +21,7 @@ export type Barbero = {
 export type BarberoListado = {
   id: string;
   nombre: string | null;
+  email: string | null;
   srcImage: string | null;
   estado: boolean;
   servicios?: {
@@ -48,6 +50,7 @@ export type DiaLaboral = {
 export type BarberoEdicion = {
   id: string;
   nombre: string | null;
+  email: string | null;
   srcImage: string | null;
   estado: boolean;
   servicios?: { servicio: { id: string; nombre: string } }[];

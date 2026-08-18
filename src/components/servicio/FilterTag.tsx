@@ -20,7 +20,7 @@ export default function FilterTag({ label, onRemove }: FilterTagProps) {
       {label}
       <button
         onClick={onRemove}
-        className="hover:text-white transition-colors leading-none"
+        className="hover:text-[var(--admin-texto-primario)] transition-colors duration-150 leading-none"
       >
         <X className="w-3 h-3" />
       </button>
