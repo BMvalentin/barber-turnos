@@ -90,6 +90,12 @@ export async function createTurno(
         ...turno,
         precioCongelado: Number(turno.precioCongelado),
         seniaCongelada: Number(turno.seniaCongelada),
+        servicio: {
+          ...turno.servicio,
+          precio: Number(turno.servicio.precio),
+          senia: Number(turno.servicio.senia),
+          descuento: Number(turno.servicio.descuento),
+        },
       },
     };
   } catch (error) {

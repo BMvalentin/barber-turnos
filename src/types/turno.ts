@@ -48,8 +48,18 @@ export type TurnoConDetalle = Omit<
       servicio: true;
     };
   }>,
-  "precioCongelado" | "seniaCongelada"
-> & { precioCongelado: number; seniaCongelada: number };
+  "precioCongelado" | "seniaCongelada" | "servicio"
+> & {
+  precioCongelado: number;
+  seniaCongelada: number;
+  /* El servicio se serializa con montos numéricos: los Decimal de Prisma
+     no pueden viajar de Server a Client Components. */
+  servicio: Omit<Prisma.servicioGetPayload<{}>, "precio" | "senia" | "descuento"> & {
+    precio: number;
+    senia: number;
+    descuento: number;
+  };
+};
 
 /* Turno con relaciones mínimas para la confirmación de pago (confirmarPagoTurno). */
 export type TurnoPagoConfirmado = Omit<

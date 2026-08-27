@@ -4,10 +4,13 @@ import { createTurno } from "@/actions/turnos/crear.actions";
 import type { TurnoCreado } from "@/types/turno";
 import { ActionStateInicial } from "@/types/action-state";
 import { useActionState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useSessionId } from "@/hooks/useSessionId";
 import { useDatosFormularioTurno } from "./useDatosFormularioTurno";
 import type { ParametrosDatosTurno } from "./useDatosFormularioTurno";
 import { usePagoTurno } from "./usePagoTurno";
+import { esAdmin } from "@/lib/seguridad/es-admin";
 
 export type ParametrosCrearTurno = ParametrosDatosTurno & {
   whatsappPhone: string;
@@ -35,9 +38,16 @@ export function useCrearTurno({
   const [state, formAction] = useActionState(createTurno, estadoInicial);
   const formRef = useRef<HTMLFormElement>(null);
   const sessionId = useSessionId();
+  const turnoProcesadoRef = useRef<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    if (state.success && state.data) {
+    if (
+      state.success &&
+      state.data &&
+      turnoProcesadoRef.current !== state.data.id
+    ) {
+      turnoProcesadoRef.current = state.data.id;
       const nombreServicio =
         datos.servicios.find((s) => s.id === datos.selectedServicioId)?.nombre || "N/A";
       const nombreBarbero =
@@ -49,13 +59,20 @@ export function useCrearTurno({
         barberoNombre: nombreBarbero,
       };
 
-      pago.setTurnoCreado(nuevoTurno);
       datos.setIsOpen(false);
-      pago.setShowPagoModal(true);
       formRef.current?.reset();
       datos.setSelectedServicioId("");
       datos.setSelectedBarberoId("");
       datos.setSelectedUserId(session?.user?.role === "USER" ? session?.user?.id ?? "" : "");
+
+      if (esAdmin(session)) {
+        // El admin carga el turno directamente: sin modal de seña ni WhatsApp
+        toast.success("Turno creado correctamente");
+        router.refresh();
+      } else {
+        pago.setTurnoCreado(nuevoTurno);
+        pago.setShowPagoModal(true);
+      }
     }
   }, [
     state.success,

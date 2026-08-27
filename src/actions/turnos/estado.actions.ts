@@ -75,6 +75,12 @@ export async function actualizarTurno(
           ...turnoActualizado,
           precioCongelado: Number(turnoActualizado.precioCongelado),
           seniaCongelada: Number(turnoActualizado.seniaCongelada),
+          servicio: {
+            ...turnoActualizado.servicio,
+            precio: Number(turnoActualizado.servicio.precio),
+            senia: Number(turnoActualizado.servicio.senia),
+            descuento: Number(turnoActualizado.servicio.descuento),
+          },
         },
       };
     } else {
@@ -95,6 +101,12 @@ export async function actualizarTurno(
           ...turnoActualizado,
           precioCongelado: Number(turnoActualizado.precioCongelado),
           seniaCongelada: Number(turnoActualizado.seniaCongelada),
+          servicio: {
+            ...turnoActualizado.servicio,
+            precio: Number(turnoActualizado.servicio.precio),
+            senia: Number(turnoActualizado.servicio.senia),
+            descuento: Number(turnoActualizado.servicio.descuento),
+          },
         },
       };
     }
