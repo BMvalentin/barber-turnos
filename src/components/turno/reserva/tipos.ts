@@ -1,8 +1,13 @@
-import type { RefObject } from "react";
+import type { ReactNode, RefObject } from "react";
 import type { Session } from "next-auth";
 import type { ActionState } from "@/types/action-state";
-import type { BarberoData, ServicioData, UsuarioData } from "@/types/turno";
-import type { ParametrosCrearTurno } from "@/hooks/useCrearTurno";
+import type {
+  BarberoData,
+  ServicioData,
+  TurnoListado,
+  UsuarioData,
+} from "@/types/turno";
+import type { ParametrosFormularioTurno } from "@/hooks/useFormularioTurno";
 
 /** Datos de disponibilidad provistos por `useDisponibilidadHorarios`. */
 export type DatosDisponibilidadHorarios = {
@@ -101,6 +106,7 @@ export type PropsResumenReserva = {
   usuarios: UsuarioData[];
   selectedUserId: string;
   onCambiarCliente: (id: string) => void;
+  esEdicion?: boolean;
 };
 
 export type PropsSelectorClienteReserva = {
@@ -126,6 +132,11 @@ export type PropsFormularioReservaTurno = {
   handleBarberoChange: (id: string) => void;
   handleServicioChange: (id: string) => void;
   onCancelar: () => void;
+  turnoInicial?: TurnoListado | null;
 };
 
-export type PropsModalReservaTurno = ParametrosCrearTurno;
+export type PropsModalGestionTurno = ParametrosFormularioTurno & {
+  claseTrigger?: string;
+  contenidoTrigger?: ReactNode;
+  onTriggerClick?: () => void;
+};

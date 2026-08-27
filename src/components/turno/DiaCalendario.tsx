@@ -42,7 +42,7 @@ export default function DiaCalendario({
               "bg-[var(--page-primary)] text-[var(--page-primary-foreground)] font-black shadow-[0_0_10px_color-mix(in_srgb,var(--page-primary)_40%,transparent)]"
             : disponible && !pasado
             ? // Disponible: texto de marca, hover suave
-              "text-[var(--page-primary)] font-semibold hover:bg-[var(--page-primary-15)] cursor-pointer"
+              "text-[var(--page-primary-tinta)] font-semibold hover:bg-[var(--page-primary-15)] cursor-pointer"
             : pasado
             ? // Pasado: muy atenuado
               "text-zinc-700 cursor-not-allowed"

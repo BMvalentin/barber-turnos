@@ -32,6 +32,12 @@ export function useDisponibilidadHorarios({ servicioId, barberoId, turnoIdAExclu
   // Ref para evitar resetear el slot en la carga inicial
   const esPrimeraCarga = useRef(true);
 
+  // Valores iniciales de barbero/servicio: el slot solo se limpia cuando estos
+  // CAMBIAN respecto de la inicialización (no en el montaje). Comparar valores
+  // en vez de un ref booleano es robusto a la doble invocación de efectos que
+  // hace React StrictMode en desarrollo (setup -> cleanup -> setup).
+  const valoresInicialesRef = useRef({ servicioId, barberoId });
+
   // Locks en tiempo real (polling REST)
   const { isSlotBloqueado, lockSlot, unlockSlot } = useSlotLocks({
     barberoId: barberoId ?? "",
@@ -47,14 +53,14 @@ export function useDisponibilidadHorarios({ servicioId, barberoId, turnoIdAExclu
     unlockSlotRef.current = unlockSlot;
   }, [unlockSlot]);
 
-  const primeraSincronizacion = useRef(true);
-
   // Al cambiar barbero/servicio el horario seleccionado deja de ser válido:
-  // se libera el lock y se limpia la selección. En el primer render no se
-  // limpia nada para no romper EditarTurnoModal (que inicializa defaultValue).
+  // se libera el lock y se limpia la selección. En el montaje inicial no se
+  // limpia nada para no romper el modo edición (que inicializa defaultValue).
   useEffect(() => {
-    if (primeraSincronizacion.current) {
-      primeraSincronizacion.current = false;
+    if (
+      servicioId === valoresInicialesRef.current.servicioId &&
+      barberoId === valoresInicialesRef.current.barberoId
+    ) {
       return;
     }
     unlockSlotRef.current();

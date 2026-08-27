@@ -2,16 +2,29 @@
 
 import { useRef, useState } from "react";
 import { getTurnos } from "@/actions/turnos/listar.actions";
+import ModalGestionTurno from "@/components/turno/reserva/ModalGestionTurno";
+import DatosReservaProveedor from "@/contextos/DatosReservaProveedor";
 import TurnoList from "./TurnoList";
 import TurnosFiltros from "./TurnosFiltros";
 import NavegacionFecha from "./NavegacionFecha";
-import type { TurnoListado } from "@/types/turno";
+import type {
+  BarberoData,
+  RelacionData,
+  ServicioData,
+  TurnoListado,
+  UsuarioData,
+} from "@/types/turno";
 import type { Session } from "next-auth";
 
 interface Props {
   turnosIniciales: TurnoListado[];
   totalPaginasInicial: number;
   session: Session | null;
+  initialServicios?: ServicioData[];
+  initialBarberos?: BarberoData[];
+  initialUsuarios?: UsuarioData[];
+  initialRelaciones?: RelacionData[];
+  whatsappPhone: string;
 }
 
 function deduplicarTurnos(lista: TurnoListado[]): TurnoListado[] {
@@ -30,6 +43,11 @@ export default function TurnoManager({
   turnosIniciales,
   totalPaginasInicial,
   session,
+  initialServicios = [],
+  initialBarberos = [],
+  initialUsuarios = [],
+  initialRelaciones = [],
+  whatsappPhone,
 }: Props) {
   const [filtroEstado, setFiltroEstado] = useState("PENDIENTE");
   const [fecha, setFecha] = useState("");
@@ -102,10 +120,37 @@ export default function TurnoManager({
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <TurnosFiltros estado={filtroEstado} onChange={cambiarEstado} />
-        <NavegacionFecha fecha={fecha} onCambiarFecha={cambiarFecha} />
+    <DatosReservaProveedor
+      servicios={initialServicios}
+      barberos={initialBarberos}
+      usuarios={initialUsuarios}
+      relaciones={initialRelaciones}
+      whatsappPhone={whatsappPhone}
+    >
+      <div className="space-y-5">
+      <div className="sticky top-0 z-30 border-b border-[var(--admin-border)] bg-[var(--admin-background)] pb-4">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-[var(--admin-texto-primario)] md:text-[28px]">
+              Gestión de Turnos
+            </h1>
+            <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
+              Administrá y organizá todos los turnos de tu barbería.
+            </p>
+          </div>
+          <ModalGestionTurno
+            session={session}
+            initialServicios={initialServicios}
+            initialBarberos={initialBarberos}
+            initialUsuarios={initialUsuarios}
+            initialRelaciones={initialRelaciones}
+            whatsappPhone={whatsappPhone}
+          />
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <TurnosFiltros estado={filtroEstado} onChange={cambiarEstado} />
+          <NavegacionFecha fecha={fecha} onCambiarFecha={cambiarFecha} />
+        </div>
       </div>
       <TurnoList
         turnos={turnos}
@@ -117,6 +162,7 @@ export default function TurnoManager({
         onCargarMas={cargarMas}
         onEstadoActualizado={actualizarEstadoTurno}
       />
-    </div>
+      </div>
+    </DatosReservaProveedor>
   );
 }

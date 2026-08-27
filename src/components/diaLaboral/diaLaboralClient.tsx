@@ -111,8 +111,8 @@ export function DiaLaboralClient({
         onOpenChange={setIsHorariosDialogOpen}
       >
         <DialogContent
-          className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto bg-black/95 backdrop-blur-xl"
-          style={{ border: "1px solid var(--page-secondary-50)" }}
+          className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto bg-[var(--admin-surface)] backdrop-blur-xl"
+          style={{ border: "1px solid var(--admin-border-fuerte)" }}
           onInteractOutside={(evento) => {
             // Evita que Radix cierre este diálogo cuando la interacción
             // viene del modal de confirmación (montado vía portal en body)

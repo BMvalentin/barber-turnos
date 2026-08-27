@@ -76,42 +76,42 @@ export default function TurnoRow({
   const inicialBarbero = turno.barbero?.nombre?.charAt(0) || "B";
 
   return (
-    <>
-      {/* VISTA DESKTOP */}
-      <div className="hidden md:grid md:grid-cols-12 md:items-center gap-4 mb-2 rounded-xl bg-[var(--admin-item)] px-4 py-3 transition-colors duration-150 hover:bg-[var(--admin-item-hover)]">
-        <div className="col-span-1">
-          <span className="text-sm font-semibold tabular-nums text-[var(--admin-texto-primario)]">
-            {formatearHora(turno.horarioReservado)}
-          </span>
+    <div className="rounded-xl bg-[var(--admin-item)] p-3.5 transition-colors duration-150 hover:bg-[var(--admin-item-hover)]">
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline gap-2.5">
+            <span className="text-sm font-semibold tabular-nums text-[var(--admin-texto-primario)]">
+              {formatearHora(turno.horarioReservado)}
+            </span>
+            <p className="truncate text-sm font-semibold text-[var(--admin-texto-primario)]">
+              {nombreCliente}
+            </p>
+          </div>
+          <div className="mt-0.5">{telefonoCliente}</div>
         </div>
+        <BadgeEstadoTurno estado={turno.estado} />
+      </div>
 
-        <div className="col-span-3 min-w-0">
-          <p className="truncate text-sm font-semibold text-[var(--admin-texto-primario)]">
-            {nombreCliente}
-          </p>
-          {telefonoCliente}
-        </div>
-
-        <div className="col-span-2 min-w-0">
-          <p className="truncate text-sm text-[var(--admin-texto-primario)]">
-            {turno.servicio?.nombre || "Servicio eliminado"}
-          </p>
-          <p className="mt-0.5 flex items-center gap-1 text-xs text-[var(--admin-texto-muted)]">
-            <Clock className="h-3 w-3" />
+      <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[var(--admin-texto-secundario)]">
+        <span className="inline-flex min-w-0 items-center gap-1.5">
+          <Clock className="h-3.5 w-3.5 flex-shrink-0" />
+          <span className="truncate">
+            {turno.servicio?.nombre || "Servicio eliminado"} ·{" "}
             {turno.servicio?.duracion || 0} min
-          </p>
-        </div>
-
-        <div className="col-span-2 flex items-center gap-2 min-w-0">
+          </span>
+        </span>
+        <span className="inline-flex min-w-0 items-center gap-1.5">
           <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[var(--page-primary-20)] text-[10px] font-bold text-[var(--page-primary-tinta)]">
             {inicialBarbero}
           </span>
-          <p className="truncate text-sm text-[var(--admin-texto-secundario)]">
+          <span className="truncate">
             {turno.barbero?.nombre || "Barbero eliminado"}
-          </p>
-        </div>
+          </span>
+        </span>
+      </div>
 
-        <div className="col-span-2">
+      <div className="mt-2.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <div className="flex flex-wrap items-baseline gap-x-2">
           <p className="text-sm font-semibold text-[var(--admin-texto-primario)]">
             ${formatearMoneda(turno.precioCongelado)}
           </p>
@@ -121,9 +121,7 @@ export default function TurnoRow({
             </p>
           )}
         </div>
-
-        <div className="col-span-2 flex items-center justify-end gap-2">
-          <BadgeEstadoTurno estado={turno.estado} />
+        <div className="flex items-center gap-2">
           {ctaPrincipal}
           <MenuAccionesTurno
             turno={turno}
@@ -132,60 +130,6 @@ export default function TurnoRow({
           />
         </div>
       </div>
-
-      {/* VISTA MOBILE */}
-      <div className="md:hidden mb-2 rounded-xl bg-[var(--admin-item)] p-4 transition-colors hover:bg-[var(--admin-item-hover)] space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold tabular-nums text-[var(--admin-texto-primario)]">
-            {formatearHora(turno.horarioReservado)}
-          </span>
-          <BadgeEstadoTurno estado={turno.estado} />
-        </div>
-
-        <div>
-          <p className="truncate text-sm font-semibold text-[var(--admin-texto-primario)]">
-            {nombreCliente}
-          </p>
-          {telefonoCliente}
-        </div>
-
-        <div className="flex items-center justify-between gap-2">
-          <p className="truncate text-xs text-[var(--admin-texto-secundario)]">
-            {turno.servicio?.nombre || "Servicio eliminado"} ·{" "}
-            {turno.servicio?.duracion || 0} min
-          </p>
-          <p className="flex items-center gap-1 text-xs text-[var(--admin-texto-secundario)]">
-            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[var(--page-primary-20)] text-[9px] font-bold text-[var(--page-primary-tinta)]">
-              {inicialBarbero}
-            </span>
-            {turno.barbero?.nombre || "Barbero eliminado"}
-          </p>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-[var(--admin-texto-primario)]">
-            ${formatearMoneda(turno.precioCongelado)}
-          </p>
-          {turno.seniaCongelada > 0 && (
-            <span className="text-xs text-[var(--admin-texto-muted)]">
-              Seña {formatearMoneda(turno.seniaCongelada)}
-            </span>
-          )}
-        </div>
-
-        <div
-          className={`flex items-center pt-1 ${
-            ctaPrincipal ? "justify-between" : "justify-end"
-          }`}
-        >
-          {ctaPrincipal}
-          <MenuAccionesTurno
-            turno={turno}
-            session={session}
-            onCancelar={onCancelar}
-          />
-        </div>
-      </div>
-    </>
+    </div>
   );
 }

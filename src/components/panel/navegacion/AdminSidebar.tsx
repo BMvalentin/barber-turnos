@@ -136,7 +136,7 @@ export default function AdminSidebar({
           ) : (
             <Scissors
               className={`h-6 w-6 shrink-0 ${colapsado ? "hidden" : ""}`}
-              style={{ color: "var(--page-primary)" }}
+              style={{ color: "var(--page-primary-tinta)" }}
             />
           )}
           <div

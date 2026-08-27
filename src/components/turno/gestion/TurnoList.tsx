@@ -10,7 +10,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-modal";
 import EmptyState from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ESTADOS_TURNO } from "@/lib/constants";
-import TurnoRow from "./TurnoRow";
+import LineaTiempoTurnos from "./LineaTiempoTurnos";
 import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
 
@@ -26,24 +26,6 @@ interface Props {
 }
 
 type AccionConfirmacion = "cancelar" | "completar" | "confirmar";
-
-type GrupoPorHora = { hora: number; fechaClave: string; turnos: TurnoListado[] };
-
-function agruparPorHora(turnos: TurnoListado[]): GrupoPorHora[] {
-  const grupos: GrupoPorHora[] = [];
-  for (const turno of turnos) {
-    const fecha = new Date(turno.horarioReservado);
-    const hora = fecha.getHours();
-    const fechaClave = fecha.toDateString();
-    const ultimo = grupos[grupos.length - 1];
-    if (ultimo && ultimo.hora === hora && ultimo.fechaClave === fechaClave) {
-      ultimo.turnos.push(turno);
-    } else {
-      grupos.push({ hora, fechaClave, turnos: [turno] });
-    }
-  }
-  return grupos;
-}
 
 export default function TurnoList({
   turnos,
@@ -63,8 +45,6 @@ export default function TurnoList({
       ),
     [turnos],
   );
-
-  const grupos = useMemo(() => agruparPorHora(turnosOrdenados), [turnosOrdenados]);
 
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [accionConfirmacion, setAccionConfirmacion] = useState<AccionConfirmacion | null>(null);
@@ -204,30 +184,13 @@ export default function TurnoList({
 
   return (
     <div>
-      {grupos.map((grupo, indice) => (
-        <div key={`${grupo.fechaClave}-${grupo.hora}`}>
-          <div
-            className={`flex items-center gap-3 px-4 ${indice === 0 ? "pt-3" : "pt-4"} pb-1`}
-          >
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--admin-texto-muted)]">
-              {grupo.hora}:00
-            </span>
-            <div className="h-px flex-1 bg-[var(--admin-border)]" />
-          </div>
-          <div>
-            {grupo.turnos.map((turno) => (
-              <TurnoRow
-                key={turno.id}
-                turno={turno}
-                session={session}
-                onCancelar={solicitarCancelar}
-                onCompletar={solicitarCompletar}
-                onConfirmar={solicitarConfirmar}
-              />
-            ))}
-          </div>
-        </div>
-      ))}
+      <LineaTiempoTurnos
+        turnos={turnosOrdenados}
+        session={session}
+        onCancelar={solicitarCancelar}
+        onCompletar={solicitarCompletar}
+        onConfirmar={solicitarConfirmar}
+      />
 
       <div ref={sentinelRef} aria-hidden="true" className="h-1" />
 

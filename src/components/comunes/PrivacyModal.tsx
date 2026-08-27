@@ -82,7 +82,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
             >
               <ShieldCheck
                 className="h-5 w-5"
-                style={{ color: "var(--page-primary)" }}
+                style={{ color: "var(--admin-texto-primario)" }}
               />
             </div>
             <div>

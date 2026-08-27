@@ -2,8 +2,14 @@
 
 import { useState } from "react";
 import type { Session } from "next-auth";
-import { useConfiguracionTurno } from "@/hooks/useConfiguracionTurno";
-import type { BarberoData, RelacionData, ServicioData, UsuarioData } from "@/types/turno";
+import { useDatosReserva } from "@/hooks/useDatosReserva";
+import type {
+  BarberoData,
+  RelacionData,
+  ServicioData,
+  TurnoListado,
+  UsuarioData,
+} from "@/types/turno";
 
 export type ParametrosDatosTurno = {
   session: Session | null;
@@ -11,6 +17,8 @@ export type ParametrosDatosTurno = {
   initialBarberos?: BarberoData[];
   initialUsuarios?: UsuarioData[];
   initialRelaciones?: RelacionData[];
+  /* Turno a editar: si viene, el formulario arranca precargado. */
+  turnoInicial?: TurnoListado | null;
 };
 
 export function useDatosFormularioTurno({
@@ -19,26 +27,30 @@ export function useDatosFormularioTurno({
   initialBarberos = [],
   initialUsuarios = [],
   initialRelaciones = [],
+  turnoInicial,
 }: ParametrosDatosTurno) {
+  const datosContexto = useDatosReserva();
+
   const [isOpen, setIsOpen] = useState(false);
-  const tieneDatosIniciales = initialServicios.length > 0;
-  const { datos, cargando, error: errorCarga, recargar } = useConfiguracionTurno(
-    isOpen && !tieneDatosIniciales,
-  );
 
   const servicios =
-    datos.servicios.length > 0 ? datos.servicios : initialServicios;
-  const barberos = datos.barberos.length > 0 ? datos.barberos : initialBarberos;
-  const usuarios = datos.usuarios.length > 0 ? datos.usuarios : initialUsuarios;
+    initialServicios.length > 0 ? initialServicios : datosContexto.servicios;
+  const barberos =
+    initialBarberos.length > 0 ? initialBarberos : datosContexto.barberos;
+  const usuarios =
+    initialUsuarios.length > 0 ? initialUsuarios : datosContexto.usuarios;
   const relaciones =
-    datos.relaciones.length > 0 ? datos.relaciones : initialRelaciones;
-  const cargandoDatos = tieneDatosIniciales ? false : cargando;
-  const error = tieneDatosIniciales ? null : errorCarga;
+    initialRelaciones.length > 0 ? initialRelaciones : datosContexto.relaciones;
 
-  const [selectedServicioId, setSelectedServicioId] = useState("");
-  const [selectedBarberoId, setSelectedBarberoId] = useState("");
+  const [selectedServicioId, setSelectedServicioId] = useState(
+    turnoInicial?.servicio?.id || "",
+  );
+  const [selectedBarberoId, setSelectedBarberoId] = useState(
+    turnoInicial?.barbero?.id || "",
+  );
   const [selectedUserId, setSelectedUserId] = useState(
-    session?.user?.role === "USER" ? session?.user?.id ?? "" : "",
+    turnoInicial?.user?.id ||
+      (session?.user?.role === "USER" ? session?.user?.id ?? "" : ""),
   );
 
   const serviciosFiltrados = selectedBarberoId
@@ -76,9 +88,6 @@ export function useDatosFormularioTurno({
     servicios,
     barberos,
     usuarios,
-    cargandoDatos,
-    error,
-    recargar,
     selectedServicioId,
     setSelectedServicioId,
     selectedBarberoId,

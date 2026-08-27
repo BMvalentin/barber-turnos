@@ -67,7 +67,7 @@ export async function createTurno(
     });
     if (hayChoque) return { success: false, error: "Horario ocupado" };
 
-    if (await existeLockAjeno(barberoId, inicio, userId)) {
+    if (await existeLockAjeno(barberoId, inicio, session.user.id)) {
       return { success: false, error: "Este horario está siendo seleccionado por otro usuario en este momento. Intentá con otro horario." };
     }
 

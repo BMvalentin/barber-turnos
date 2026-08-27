@@ -2,6 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
+import { listarLocksDelDia } from "@/actions/turnos/locks/listar-locks.actions";
+import { crearLockSlot } from "@/actions/turnos/locks/crear-lock.actions";
+import { eliminarLockSlot } from "@/actions/turnos/locks/eliminar-lock.actions";
+import { renovarLockSlot } from "@/actions/turnos/locks/renovar-lock.actions";
 
 interface UseSlotLocksOptions {
   barberoId: string;
@@ -13,18 +17,16 @@ interface UseSlotLocksOptions {
 
 interface SlotLockEntry {
   slot: string;
-  sessionId: string;
-  userId: string;
 }
 
 /**
- * Hook de bloqueo de slots con polling REST.
+ * Hook de bloqueo de slots con server actions y caché.
  */
 export function useSlotLocks({
   barberoId,
   fecha,
   sessionId,
-  userId,
+  userId: _userId,
   activo = true,
 }: UseSlotLocksOptions) {
   const [slotsBlockeados, setSlotsBlockeados] = useState<SlotLockEntry[]>([]);
@@ -38,45 +40,33 @@ export function useSlotLocks({
   const fetchLocks = useCallback(async () => {
     if (!barberoId || !fechaStr) return;
     try {
-      const res = await fetch(
-        `/api/slot-locks?barberoId=${barberoId}&fecha=${fechaStr}&sessionId=${sessionId}`
-      );
-      if (!res.ok) return;
-      const data = await res.json();
-      if (Array.isArray(data.locks)) {
-        setSlotsBlockeados(data.locks);
+      const resultado = await listarLocksDelDia(barberoId, fechaStr);
+      if (resultado.success && Array.isArray(resultado.data)) {
+        setSlotsBlockeados(resultado.data.map((slot) => ({ slot })));
       }
     } catch {
       // Silencioso
     }
-  }, [barberoId, fechaStr, sessionId]);
+  }, [barberoId, fechaStr]);
 
-  // ── POST: crear / actualizar lock via REST ─────────────────
-  const crearLockREST = useCallback(
+  // ── POST: crear / actualizar lock via action ─────────────────
+  const crearLockAction = useCallback(
     async (slot: string) => {
-      if (!barberoId || !userId) return;
+      if (!barberoId) return;
       try {
-        await fetch("/api/slot-locks", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ barberoId, slot, sessionId, userId }),
-        });
+        await crearLockSlot(barberoId, slot, sessionId);
         await fetchLocks();
       } catch {
         // Silencioso
       }
     },
-    [barberoId, userId, sessionId, fetchLocks]
+    [barberoId, sessionId, fetchLocks]
   );
 
-  // ── DELETE: eliminar lock via REST ──────────────────────────
-  const eliminarLockREST = useCallback(async () => {
+  // ── DELETE: eliminar lock via action ──────────────────────────
+  const eliminarLockAction = useCallback(async () => {
     try {
-      await fetch("/api/slot-locks", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId }),
-      });
+      await eliminarLockSlot(sessionId);
       await fetchLocks();
     } catch {
       // Silencioso
@@ -92,11 +82,7 @@ export function useSlotLocks({
     heartbeatRef.current = setInterval(async () => {
       if (!slotActivoRef.current) return;
       try {
-        await fetch("/api/slot-locks", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId }),
-        });
+        await renovarLockSlot(sessionId);
       } catch {
         // Silencioso
       }
@@ -108,11 +94,7 @@ export function useSlotLocks({
       clearInterval(polling);
       if (heartbeatRef.current) clearInterval(heartbeatRef.current);
       if (slotActivoRef.current) {
-        fetch("/api/slot-locks", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId }),
-        }).catch(() => {});
+        eliminarLockSlot(sessionId).catch(() => {});
       }
     };
   }, [fetchLocks, sessionId, activo]);
@@ -120,22 +102,19 @@ export function useSlotLocks({
   const lockSlot = useCallback(
     (slot: string) => {
       slotActivoRef.current = slot;
-      crearLockREST(slot);
+      crearLockAction(slot);
     },
-    [crearLockREST]
+    [crearLockAction]
   );
 
   const unlockSlot = useCallback(() => {
     slotActivoRef.current = null;
-    eliminarLockREST();
-  }, [eliminarLockREST]);
+    eliminarLockAction();
+  }, [eliminarLockAction]);
 
   const isSlotBloqueado = useCallback(
-    (slot: string) =>
-      slotsBlockeados.some(
-        (l) => l.slot === slot && l.sessionId !== sessionId
-      ),
-    [slotsBlockeados, sessionId]
+    (slot: string) => slotsBlockeados.some((l) => l.slot === slot),
+    [slotsBlockeados]
   );
 
   return { slotsBlockeados, lockSlot, unlockSlot, isSlotBloqueado };

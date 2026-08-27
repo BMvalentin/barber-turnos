@@ -108,6 +108,13 @@ h3 {
   letter-spacing: -0.02em;
 }
 
+/* Tailwind v4 pone cursor: default en los botones (preflight).
+   Se restaura la manito para todos los botones habilitados. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
 /* =========================
    UTILITIES
 ========================= */

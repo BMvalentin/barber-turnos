@@ -20,7 +20,7 @@ export async function obtenerHorariosDisponibles(
   };
 
   try {
-    const data = await getCachedData(cacheKey, cacheTags, calcularSlotsFinales, 60);
+    const data = await getCachedData(cacheKey, cacheTags, calcularSlotsFinales, 120);
     return { success: true, data };
   } catch (error) {
     return { success: false, error: "Error al obtener horarios" };

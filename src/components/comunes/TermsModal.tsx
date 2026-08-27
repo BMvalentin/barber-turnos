@@ -114,7 +114,7 @@ export default function TermsModal({ isOpen, onClose }: TermsModalProps) {
               className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: "var(--page-primary-15)" }}
             >
-              <FileText className="h-5 w-5" style={{ color: "var(--page-primary)" }} />
+              <FileText className="h-5 w-5" style={{ color: "var(--admin-texto-primario)" }} />
             </div>
             <div>
               <h2 className="text-lg font-bold text-[var(--admin-texto-primario)]">

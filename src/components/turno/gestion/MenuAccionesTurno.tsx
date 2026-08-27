@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MoreHorizontal, Ban } from "lucide-react";
-import EditTurnoModal from "../EditarTurnoModal";
+import { MoreHorizontal, Ban, Pencil } from "lucide-react";
+import ModalGestionTurno from "../reserva/ModalGestionTurno";
 import { esAdmin } from "@/lib/seguridad/es-admin";
 import { ESTADOS_TURNO } from "@/lib/constants";
 import type { TurnoListado } from "@/types/turno";
@@ -68,28 +68,38 @@ export default function MenuAccionesTurno({
         <MoreHorizontal className="h-4 w-4" />
       </button>
 
-      {abierto && (
-        <div className="absolute right-0 top-full z-30 mt-1 w-48 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-1 shadow-2xl shadow-black/40">
-          <EditTurnoModal
-            turno={turno}
-            claseTrigger="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[var(--admin-texto-primario)] hover:bg-white/5 transition-colors"
-            onTriggerClick={cerrarMenu}
-          />
-          {puedeCancelar && (
-            <button
-              type="button"
-              onClick={() => {
-                cerrarMenu();
-                onCancelar(turno.id);
-              }}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors text-red-400 hover:bg-red-500/10"
-            >
-              <Ban className="h-4 w-4" />
-              Cancelar turno
-            </button>
-          )}
-        </div>
-      )}
+      <div
+        className={`absolute right-0 top-full z-30 mt-1 w-48 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-1 shadow-2xl shadow-black/40 ${
+          abierto ? "" : "pointer-events-none invisible"
+        }`}
+      >
+        <ModalGestionTurno
+          session={session}
+          turnoInicial={turno}
+          whatsappPhone=""
+          claseTrigger="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[var(--admin-texto-primario)] hover:bg-white/5 transition-colors"
+          contenidoTrigger={
+            <>
+              <Pencil className="h-4 w-4" />
+              Editar Turno
+            </>
+          }
+          onTriggerClick={cerrarMenu}
+        />
+        {puedeCancelar && (
+          <button
+            type="button"
+            onClick={() => {
+              cerrarMenu();
+              onCancelar(turno.id);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors text-red-400 hover:bg-red-500/10"
+          >
+            <Ban className="h-4 w-4" />
+            Cancelar turno
+          </button>
+        )}
+      </div>
     </div>
   );
 }

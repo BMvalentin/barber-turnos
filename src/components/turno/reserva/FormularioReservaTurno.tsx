@@ -25,12 +25,15 @@ export default function FormularioReservaTurno({
   handleBarberoChange,
   handleServicioChange,
   onCancelar,
+  turnoInicial,
 }: PropsFormularioReservaTurno) {
   const disponibilidad = useDisponibilidadHorarios({
     servicioId: selectedServicioId,
     barberoId: selectedBarberoId,
     sessionId,
     userId: selectedUserId,
+    turnoIdAExcluir: turnoInicial?.id,
+    defaultValue: turnoInicial?.horarioReservado.toISOString(),
   });
 
   useEffect(() => {
@@ -87,6 +90,7 @@ export default function FormularioReservaTurno({
     >
       <input type="hidden" name="servicioId" value={selectedServicioId} />
       <input type="hidden" name="barberoId" value={selectedBarberoId} />
+      {turnoInicial && <input type="hidden" name="id" value={turnoInicial.id} />}
       <input
         type="hidden"
         name="horarioReservado"
@@ -125,6 +129,7 @@ export default function FormularioReservaTurno({
             usuarios={usuarios}
             selectedUserId={selectedUserId}
             onCambiarCliente={setSelectedUserId}
+            esEdicion={Boolean(turnoInicial)}
           />
         </div>
       </div>

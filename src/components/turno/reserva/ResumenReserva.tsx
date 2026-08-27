@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Check, Clock, Scissors, User } from "lucide-react";
+import { CalendarDays, Check, Clock, Save, Scissors, User } from "lucide-react";
 import SelectorClienteReserva from "@/components/turno/reserva/SelectorClienteReserva";
 import type { PropsResumenReserva } from "@/components/turno/reserva/tipos";
 import { formatearFecha } from "@/lib/utils/formatear-fecha";
@@ -25,6 +25,7 @@ export default function ResumenReserva({
   usuarios,
   selectedUserId,
   onCambiarCliente,
+  esEdicion = false,
 }: PropsResumenReserva) {
   return (
     <aside className="flex flex-col gap-5 rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-5 lg:sticky lg:top-0 lg:self-start">
@@ -120,11 +121,15 @@ export default function ResumenReserva({
       <BotonSubmitFormStatus
         texto={
           <span className="flex items-center justify-center gap-2">
-            <Check className="h-4 w-4" />
-            CONFIRMAR TURNO
+            {esEdicion ? (
+              <Save className="h-4 w-4" />
+            ) : (
+              <Check className="h-4 w-4" />
+            )}
+            {esEdicion ? "GUARDAR CAMBIOS" : "CONFIRMAR TURNO"}
           </span>
         }
-        textoMientrasCarga="Procesando..."
+        textoMientrasCarga={esEdicion ? "Guardando..." : "Procesando..."}
         deshabilitado={!completo}
         claseAdicional="w-full py-3.5 font-bold uppercase tracking-wider"
       />

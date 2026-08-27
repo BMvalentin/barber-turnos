@@ -68,11 +68,11 @@ export function Header({ config }: HeaderProps) {
           ) : (
             <Scissors
               className="w-6 h-6"
-              style={{ color: "var(--page-primary)" }}
+              style={{ color: "var(--page-primary-tinta)" }}
             />
           )}
           <span>{` ${firstName} `}</span>
-          <span style={{ color: "var(--page-primary)" }}>{`${lastName}`}</span>
+          <span style={{ color: "var(--page-primary-tinta)" }}>{`${lastName}`}</span>
         </Link>
 
         {/* DESKTOP NAV & AUTH */}

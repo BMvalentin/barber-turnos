@@ -1,6 +1,5 @@
-// app/admin/turnos/page.tsx
+// app/turno/page.tsx
 import { getTurnos } from "@/actions/turnos/listar.actions";
-import ModalReservaTurno from "@/components/turno/reserva/ModalReservaTurno";
 import TurnoManager from "@/components/turno/gestion/TurnoManager";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { obtenerDatosReserva } from "@/lib/consultas/obtener-datos-reserva";
@@ -27,25 +26,18 @@ export default async function TurnoPage() {
   const totalPaginasInicial = result.success && result.totalPages ? result.totalPages : 1;
 
   return (
-    <div className="min-h-screen w-full p-2 sm:p-6 pt-24 md:pt-24 overflow-x-hidden">
+    <div className="min-h-screen w-full p-2 sm:p-6 pt-24 md:pt-24 overflow-x-clip">
       <div className="container mx-auto max-w-7xl">
-        <div className="mb-8 flex flex-col gap-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-[var(--admin-texto-primario)] md:text-[28px]">Gestión de Turnos</h1>
-              <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">Administrá y organizá todos los turnos de tu barbería.</p>
-            </div>
-            <ModalReservaTurno
-              session={session}
-              initialServicios={servicios}
-              initialBarberos={barberos}
-              initialUsuarios={usuarios}
-              initialRelaciones={relaciones}
-              whatsappPhone={config?.whatsapp || ""}
-            />
-          </div>
-          <TurnoManager turnosIniciales={turnosData} totalPaginasInicial={totalPaginasInicial} session={session} />
-        </div>
+        <TurnoManager
+          turnosIniciales={turnosData}
+          totalPaginasInicial={totalPaginasInicial}
+          session={session}
+          initialServicios={servicios}
+          initialBarberos={barberos}
+          initialUsuarios={usuarios}
+          initialRelaciones={relaciones}
+          whatsappPhone={config?.whatsapp || ""}
+        />
       </div>
     </div>
   );
