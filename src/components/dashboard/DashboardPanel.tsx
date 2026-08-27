@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button/Button";
 import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import { updateProfile } from "@/actions/sesion/perfil.actions";
 import { useSession } from "next-auth/react";
-import TurnoList from "@/components/turno/TurnoList";
+import TurnoList from "@/components/turno/gestion/TurnoList";
 import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
 import { toast } from "sonner";
@@ -250,7 +250,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: DatosU
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="bg-neutral-900/40 rounded-3xl border border-amber-900/20 overflow-hidden backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-4 md:p-8 min-h-[500px]">
+              <div className="bg-neutral-900/40 rounded-3xl border border-amber-900/20 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-4 md:p-8 min-h-[500px]">
                 <div className="mb-6 pb-6 border-b border-amber-900/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <h2 className="text-xl font-bold text-white tracking-widest uppercase">
                     Historial de <span className="text-[var(--page-primary-tinta)]">Turnos</span>

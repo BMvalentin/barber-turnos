@@ -1,11 +1,9 @@
 // app/admin/turnos/page.tsx
 import { getTurnos } from "@/actions/turnos/listar.actions";
-import TurnoList from "@/components/turno/TurnoList";
 import ModalReservaTurno from "@/components/turno/reserva/ModalReservaTurno";
+import TurnoManager from "@/components/turno/gestion/TurnoManager";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
-import { esAdmin } from "@/lib/seguridad/es-admin";
 import { obtenerDatosReserva } from "@/lib/consultas/obtener-datos-reserva";
-import TurnoManager from "@/components/turno/TurnoManager";
 
 async function getTurnoData() {
   const { servicios, barberos, usuarios, relaciones, config } = await obtenerDatosReserva(true);
@@ -23,30 +21,20 @@ async function getTurnoData() {
 export default async function TurnoPage() {
   const session = await requerirSesion();
   const { servicios, barberos, usuarios, relaciones, config } = await getTurnoData();
-  const result = await getTurnos(1);
+  const result = await getTurnos(1, "PENDIENTE");
 
   const turnosData = (result.success && result.data) ? result.data : [];
+  const totalPaginasInicial = result.success && result.totalPages ? result.totalPages : 1;
 
   return (
-    <div
-      className="min-h-screen w-full p-2 sm:p-6 pt-24 md:pt-24 overflow-x-hidden"
-      style={{
-        background: `linear-gradient(to bottom right, var(--page-bg), var(--page-secondary-30))`,
-      }}
-    >
+    <div className="min-h-screen w-full p-2 sm:p-6 pt-24 md:pt-24 overflow-x-hidden">
       <div className="container mx-auto max-w-7xl">
         <div className="mb-8 flex flex-col gap-6">
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1
-                className="text-3xl font-bold"
-                style={{ color: "var(--page-primary-tinta)" }}
-              >
-                Gestión de Turnos
-              </h1>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-[var(--admin-texto-primario)] md:text-[28px]">Gestión de Turnos</h1>
+              <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">Administrá y organizá todos los turnos de tu barbería.</p>
             </div>
-
             <ModalReservaTurno
               session={session}
               initialServicios={servicios}
@@ -56,18 +44,7 @@ export default async function TurnoPage() {
               whatsappPhone={config?.whatsapp || ""}
             />
           </div>
-
-          {esAdmin(session) ? (
-            <TurnoManager
-              initialTurnos={turnosData}
-              session={session}
-            />
-          ) : (
-            <TurnoList
-              session={session}
-              turnos={turnosData}
-            />
-          )}
+          <TurnoManager turnosIniciales={turnosData} totalPaginasInicial={totalPaginasInicial} session={session} />
         </div>
       </div>
     </div>

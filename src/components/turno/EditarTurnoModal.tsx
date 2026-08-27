@@ -31,9 +31,16 @@ const estadoInicial = ActionStateInicial;
 interface Props {
   turno: TurnoListado;
   userId?: string;
+  claseTrigger?: string;
+  onTriggerClick?: () => void;
 }
 
-export default function EditTurnoModal({ turno, userId = "" }: Props) {
+export default function EditTurnoModal({
+  turno,
+  userId = "",
+  claseTrigger,
+  onTriggerClick,
+}: Props) {
   const [abierto, setAbierto] = useState(false);
   const { datos, cargando, error, recargar } = useConfiguracionTurno(abierto);
   const servicios = datos.servicios;
@@ -83,7 +90,10 @@ export default function EditTurnoModal({ turno, userId = "" }: Props) {
   return (
     <Dialog open={abierto} onOpenChange={setAbierto}>
       <DialogTrigger asChild>
-        <button className="w-full bg-[var(--page-primary)]/10 hover:bg-[var(--page-primary)]/20 text-[var(--page-primary)] border border-[var(--page-primary)]/20 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all">
+        <button
+          onClick={onTriggerClick}
+          className={claseTrigger ?? "w-full bg-[var(--page-primary)]/10 hover:bg-[var(--page-primary)]/20 text-[var(--page-primary)] border border-[var(--page-primary)]/20 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"}
+        >
           Editar Turno
         </button>
       </DialogTrigger>
