@@ -61,6 +61,7 @@ export default function EditTurnoModal({ turno, userId = "" }: Props) {
     defaultValue: turno.horarioReservado.toISOString(),
     sessionId,
     userId: userId || turno.user?.id || "",
+    activo: abierto,
   });
 
   const [state, formAction] = useActionState(actualizarTurno, estadoInicial);

@@ -34,8 +34,20 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
     const fechaStr = `${anio}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
     const { inicio: inicioDia, fin: finDia } = obtenerRangoDelDia(fechaStr);
 
-    if (finDia.getTime() < ahora.getTime()) continue;
-    if (excepciones.some((ex) => inicioDia < ex.hasta && finDia > ex.desde)) continue;
+    // Avanzar siempre al día siguiente, incluso en los `continue` (evita loop infinito)
+    const siguienteDia = new Date(anio, mes - 1, dia + 1);
+    const avanzarDia = () => {
+      [anio, mes, dia] = [siguienteDia.getFullYear(), siguienteDia.getMonth() + 1, siguienteDia.getDate()];
+    };
+
+    if (finDia.getTime() < ahora.getTime()) {
+      avanzarDia();
+      continue;
+    }
+    if (excepciones.some((ex) => inicioDia < ex.hasta && finDia > ex.desde)) {
+      avanzarDia();
+      continue;
+    }
 
     const diaEnum = MAPA_DIA_SEMANA_DB[toZonedTime(inicioDia, ZONA_HORARIA).getDay()];
     const horariosDia = horariosBarbero
@@ -65,8 +77,7 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
 
     resultado[fechaStr] = [...new Set(slots)].sort();
 
-    const siguiente = new Date(anio, mes - 1, dia + 1);
-    [anio, mes, dia] = [siguiente.getFullYear(), siguiente.getMonth() + 1, siguiente.getDate()];
+    avanzarDia();
   }
 
   return resultado;

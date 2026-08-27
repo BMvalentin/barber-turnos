@@ -1,7 +1,7 @@
 // app/admin/turnos/page.tsx
 import { getTurnos } from "@/actions/turnos/listar.actions";
 import TurnoList from "@/components/turno/TurnoList";
-import CreateTurnoModal from "@/components/turno/CreateTurnoModal";
+import ModalReservaTurno from "@/components/turno/reserva/ModalReservaTurno";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { esAdmin } from "@/lib/seguridad/es-admin";
 import { obtenerDatosReserva } from "@/lib/consultas/obtener-datos-reserva";
@@ -47,7 +47,7 @@ export default async function TurnoPage() {
               </h1>
             </div>
 
-            <CreateTurnoModal
+            <ModalReservaTurno
               session={session}
               initialServicios={servicios}
               initialBarberos={barberos}

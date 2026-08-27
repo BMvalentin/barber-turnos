@@ -22,7 +22,7 @@ export function useDatosFormularioTurno({
 }: ParametrosDatosTurno) {
   const [isOpen, setIsOpen] = useState(false);
   const tieneDatosIniciales = initialServicios.length > 0;
-  const { datos, cargando } = useConfiguracionTurno(
+  const { datos, cargando, error: errorCarga, recargar } = useConfiguracionTurno(
     isOpen && !tieneDatosIniciales,
   );
 
@@ -33,6 +33,7 @@ export function useDatosFormularioTurno({
   const relaciones =
     datos.relaciones.length > 0 ? datos.relaciones : initialRelaciones;
   const cargandoDatos = tieneDatosIniciales ? false : cargando;
+  const error = tieneDatosIniciales ? null : errorCarga;
 
   const [selectedServicioId, setSelectedServicioId] = useState("");
   const [selectedBarberoId, setSelectedBarberoId] = useState("");
@@ -53,14 +54,9 @@ export function useDatosFormularioTurno({
     : barberos;
 
   const handleBarberoChange = (nuevoBarberoId: string) => {
+    if (nuevoBarberoId === selectedBarberoId) return;
     setSelectedBarberoId(nuevoBarberoId);
-    if (
-      selectedServicioId &&
-      nuevoBarberoId &&
-      !relaciones.some((r) => r.barberoId === nuevoBarberoId && r.servicioId === selectedServicioId)
-    ) {
-      setSelectedServicioId("");
-    }
+    setSelectedServicioId("");
   };
 
   const handleServicioChange = (nuevoServicioId: string) => {
@@ -81,6 +77,8 @@ export function useDatosFormularioTurno({
     barberos,
     usuarios,
     cargandoDatos,
+    error,
+    recargar,
     selectedServicioId,
     setSelectedServicioId,
     selectedBarberoId,

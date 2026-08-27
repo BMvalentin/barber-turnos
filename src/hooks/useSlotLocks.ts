@@ -8,6 +8,7 @@ interface UseSlotLocksOptions {
   fecha: Date | undefined;
   sessionId: string;
   userId: string;
+  activo?: boolean;
 }
 
 interface SlotLockEntry {
@@ -24,6 +25,7 @@ export function useSlotLocks({
   fecha,
   sessionId,
   userId,
+  activo = true,
 }: UseSlotLocksOptions) {
   const [slotsBlockeados, setSlotsBlockeados] = useState<SlotLockEntry[]>([]);
 
@@ -83,6 +85,8 @@ export function useSlotLocks({
 
   // ── Efecto principal: polling + heartbeat ────────────────────
   useEffect(() => {
+    if (!activo) return;
+
     const polling = setInterval(fetchLocks, 10_000);
 
     heartbeatRef.current = setInterval(async () => {
@@ -111,7 +115,7 @@ export function useSlotLocks({
         }).catch(() => {});
       }
     };
-  }, [fetchLocks, sessionId]);
+  }, [fetchLocks, sessionId, activo]);
 
   const lockSlot = useCallback(
     (slot: string) => {

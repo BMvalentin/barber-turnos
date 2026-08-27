@@ -1,23 +1,22 @@
 "use client";
 
 import { useCrearTurno } from "@/hooks/useCrearTurno";
-import type { ParametrosCrearTurno } from "@/hooks/useCrearTurno";
-import { Plus, X } from "lucide-react";
+import type { PropsModalReservaTurno } from "@/components/turno/reserva/tipos";
+import { AlertCircle, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button/Button";
 import ModalBase from "@/components/ui/ModalBase";
-import FormularioTurno from "./FormularioTurno";
-import ModalPagoTurno from "./ModalPagoTurno";
+import FormularioReservaTurno from "@/components/turno/reserva/FormularioReservaTurno";
+import ModalPagoTurno from "@/components/turno/ModalPagoTurno";
+import { CLASES_BOTON_CERRAR } from "@/lib/constants";
 
-type Props = ParametrosCrearTurno;
-
-export default function CreateTurnoModal({
+export default function ModalReservaTurno({
   session,
   initialServicios = [],
   initialBarberos = [],
   initialUsuarios = [],
   initialRelaciones = [],
   whatsappPhone,
-}: Props) {
+}: PropsModalReservaTurno) {
   const {
     isOpen,
     setIsOpen,
@@ -29,12 +28,13 @@ export default function CreateTurnoModal({
     barberos,
     usuarios,
     cargandoDatos,
+    error,
+    recargar,
     selectedServicioId,
     selectedBarberoId,
     selectedUserId,
     setSelectedUserId,
     serviciosFiltrados,
-    barberosFiltrados,
     handleBarberoChange,
     handleServicioChange,
     turnoCreado,
@@ -61,9 +61,8 @@ export default function CreateTurnoModal({
         "--primary-tinta": "var(--page-primary-tinta)",
       } as React.CSSProperties}
     >
-      {/* Botón para abrir modal */}
       <Button
-        className="flex items-center gap-2 px-6 py-3 text-[var(--primary-foreground)] font-medium shadow-lg transition-all hover:opacity-90"
+        className="flex items-center gap-2 px-6 py-3 font-medium text-[var(--primary-foreground)] shadow-lg transition-all hover:opacity-90"
         style={{ backgroundColor: "var(--primary)" }}
         onClick={() => setIsOpen(true)}
       >
@@ -71,36 +70,51 @@ export default function CreateTurnoModal({
         Nuevo Turno
       </Button>
 
-      {/* MODAL CREAR TURNO */}
       {isOpen && (
         <ModalBase
-          maxWidth="max-w-5xl"
-          overlayClase="bg-black/80 backdrop-blur-md p-4"
-          contenedorClase="bg-zinc-900 border border-zinc-700/80 rounded-2xl max-h-[92vh] overflow-hidden flex flex-col"
+          maxWidth="max-w-6xl"
+          overlayClase="bg-black/80 backdrop-blur-md p-2 sm:p-4"
+          contenedorClase="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-2xl max-h-[92vh] overflow-hidden flex flex-col"
+          onClose={() => setIsOpen(false)}
           header={
-            /* Header sticky con botón X propio */
-            <div className="sticky top-0 bg-zinc-900/95 backdrop-blur border-b border-zinc-800 p-6 flex items-center justify-between z-10">
-              <h2 className="text-2xl font-bold text-white tracking-wide">Nuevo Turno</h2>
+            <div className="flex items-center justify-between border-b border-[var(--admin-border)] p-5 sm:p-6">
+              <h2 className="text-2xl font-bold text-[var(--admin-texto-primario)]">
+                Reservar turno
+              </h2>
               <button
+                type="button"
                 onClick={() => setIsOpen(false)}
-                className="text-zinc-400 hover:text-white bg-zinc-800/60 hover:bg-zinc-800 p-2 rounded-full transition-colors"
+                className={CLASES_BOTON_CERRAR}
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
           }
         >
-          {/* Content */}
           {cargandoDatos ? (
-            <div className="p-12 text-center">
+            <div className="flex flex-col items-center gap-4 p-12 text-center">
               <div
-                className="animate-spin rounded-full h-10 w-10 border-b-2 mx-auto"
+                className="h-10 w-10 animate-spin rounded-full border-b-2"
                 style={{ borderColor: "var(--primary)" }}
-              ></div>
-              <p className="text-zinc-400 mt-4 text-sm">Cargando opciones disponibles...</p>
+              />
+              <p className="text-sm text-[var(--admin-texto-secundario)]">
+                Cargando opciones disponibles...
+              </p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center gap-4 p-12 text-center">
+              <AlertCircle className="h-10 w-10 text-[#ef4444]" />
+              <p className="text-sm text-[var(--admin-texto-secundario)]">{error}</p>
+              <button
+                type="button"
+                onClick={() => void recargar()}
+                className="rounded-lg border border-[var(--page-primary)]/30 px-5 py-2.5 text-sm font-medium text-[var(--page-primary-tinta)] transition-colors hover:bg-[var(--page-primary-15)]"
+              >
+                Reintentar
+              </button>
             </div>
           ) : (
-            <FormularioTurno
+            <FormularioReservaTurno
               session={session}
               formRef={formRef}
               state={state}
@@ -114,7 +128,6 @@ export default function CreateTurnoModal({
               selectedUserId={selectedUserId}
               setSelectedUserId={setSelectedUserId}
               serviciosFiltrados={serviciosFiltrados}
-              barberosFiltrados={barberosFiltrados}
               handleBarberoChange={handleBarberoChange}
               handleServicioChange={handleServicioChange}
               onCancelar={() => setIsOpen(false)}
@@ -123,7 +136,6 @@ export default function CreateTurnoModal({
         </ModalBase>
       )}
 
-      {/* MODAL DE PAGO (SEÑA) */}
       {showPagoModal && turnoCreado && (
         <ModalPagoTurno
           turnoCreado={turnoCreado}
