@@ -70,37 +70,37 @@ export default function GrillaCalendario({
 
   return (
     <div className="space-y-2">
-      <label className="block text-[10px] font-bold text-[#8E8675] uppercase tracking-widest ml-1">
-        Fecha de Reserva <span className="text-[#E8B031]">*</span>
+      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">
+        Fecha de Reserva <span className="text-[var(--page-primary)]">*</span>
       </label>
 
       {/*
         Contenedor con ancho máximo fijo para que las 7 columnas
         queden compactas y no se estiren al ancho completo del formulario.
       */}
-      <div className="bg-[#18150F] border border-[#2A2318] rounded-2xl overflow-hidden w-full max-w-[340px]">
+      <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden w-full max-w-[340px]">
 
         {/* Encabezado: nombre del mes + flechas de navegación */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
-          <span className="text-base font-bold text-white tracking-wide flex items-center gap-2">
+          <span className="text-base font-bold text-zinc-100 tracking-wide flex items-center gap-2">
             {tituloMes}
             {/* Spinner mientras se cargan los días disponibles */}
             {cargandoDias && (
-              <span className="w-3 h-3 border border-[#E8B031]/40 border-t-[#E8B031] rounded-full animate-spin inline-block" />
+              <span className="w-3 h-3 border border-[var(--page-primary-40)] border-t-[var(--page-primary)] rounded-full animate-spin inline-block" />
             )}
           </span>
           <div className="flex items-center gap-0.5">
             <button
               type="button"
               onClick={onMesAnterior}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-[#8E8675] hover:text-white hover:bg-white/5 transition-all"
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800 transition-all"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               type="button"
               onClick={onMesSiguiente}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-[#8E8675] hover:text-white hover:bg-white/5 transition-all"
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800 transition-all"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -112,7 +112,7 @@ export default function GrillaCalendario({
           {ABREVIATURAS_DIAS.map((dia) => (
             <div
               key={dia}
-              className="text-center text-[9px] font-bold text-[#6B6355] uppercase tracking-wider py-1.5"
+              className="text-center text-[9px] font-bold text-zinc-500 uppercase tracking-wider py-1.5"
             >
               {dia}
             </div>
@@ -145,25 +145,25 @@ export default function GrillaCalendario({
         </div>
 
         {/* Leyenda compacta */}
-        <div className="flex items-center gap-3 px-4 pb-3 pt-1 border-t border-[#2A2318]">
+        <div className="flex items-center gap-3 px-4 pb-3 pt-1 border-t border-zinc-800">
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-sm bg-[#E8B031]" />
-            <span className="text-[9px] text-[#6B6355]">Seleccionado</span>
+            <div className="w-2 h-2 rounded-sm bg-[var(--page-primary)]" />
+            <span className="text-[9px] text-zinc-500">Seleccionado</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-[9px] text-[#E8B031] font-bold">7</span>
-            <span className="text-[9px] text-[#6B6355]">Disponible</span>
+            <span className="text-[9px] text-[var(--page-primary)] font-bold">7</span>
+            <span className="text-[9px] text-zinc-500">Disponible</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-[9px] text-[#4A4438] font-bold">7</span>
-            <span className="text-[9px] text-[#6B6355]">Sin turnos</span>
+            <span className="text-[9px] text-zinc-600 font-bold">7</span>
+            <span className="text-[9px] text-zinc-500">Sin turnos</span>
           </div>
         </div>
       </div>
 
       {/* Fecha seleccionada como texto descriptivo */}
       {fecha && (
-        <p className="text-[11px] text-[#E8B031] ml-1 font-medium tracking-wide">
+        <p className="text-[11px] text-[var(--page-primary)] ml-1 font-medium tracking-wide">
           📅{" "}
           {format(fecha, "EEEE d 'de' MMMM", { locale: es }).replace(
             /^\w/,

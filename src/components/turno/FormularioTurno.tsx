@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, type RefObject } from "react";
+import { useEffect, type FormEvent, type RefObject } from "react";
 import type { Session } from "next-auth";
 import { toast } from "sonner";
 import type { ActionState } from "@/types/action-state";
 import type { BarberoData, ServicioData, UsuarioData } from "@/types/turno";
+import { useDisponibilidadHorarios } from "@/hooks/useDisponibilidadHorarios";
 import SeleccionadorHorario from "./SeleccionadorHorario";
 import SeccionBarbero from "./SeccionBarbero";
-import SeccionCliente from "./SeccionCliente";
 import SeccionServicio from "./SeccionServicio";
-import BotonSubmitFormStatus from "@/components/ui/boton-submit-form-status";
+import SeccionConfirmacion from "./SeccionConfirmacion";
+import ResumenTurno from "./ResumenTurno";
 
 type Props = {
   session: Session | null;
@@ -18,6 +19,7 @@ type Props = {
   formAction: (formData: FormData) => void;
   sessionId: string;
   servicios: ServicioData[];
+  barberos: BarberoData[];
   usuarios: UsuarioData[];
   selectedServicioId: string;
   selectedBarberoId: string;
@@ -37,6 +39,7 @@ export default function FormularioTurno({
   formAction,
   sessionId,
   servicios,
+  barberos,
   usuarios,
   selectedServicioId,
   selectedBarberoId,
@@ -48,62 +51,105 @@ export default function FormularioTurno({
   handleServicioChange,
   onCancelar,
 }: Props) {
+  const disponibilidad = useDisponibilidadHorarios({
+    servicioId: selectedServicioId,
+    barberoId: selectedBarberoId,
+    sessionId,
+    userId: selectedUserId,
+  });
+
   useEffect(() => {
     if (state.error) {
       toast.error("Error", { description: state.error });
     }
   }, [state]);
 
+  const servicio =
+    servicios.find((s) => s.id === selectedServicioId) ?? null;
+  const barbero = barberos.find((b) => b.id === selectedBarberoId) ?? null;
+
+  const esUsuarioNormal = session?.user?.role === "USER";
+  const clienteCompleto = esUsuarioNormal || Boolean(selectedUserId);
+  const completo = Boolean(
+    selectedServicioId &&
+      selectedBarberoId &&
+      disponibilidad.fecha &&
+      disponibilidad.slotSeleccionado &&
+      clienteCompleto,
+  );
+
+  const manejarEnvio = (e: FormEvent<HTMLFormElement>) => {
+    if (completo) return;
+    e.preventDefault();
+    if (!selectedServicioId) {
+      toast.error("Elegí un servicio.", {
+        description: "Seleccioná el servicio para tu turno.",
+      });
+    } else if (!selectedBarberoId) {
+      toast.error("Elegí un barbero.", {
+        description: "Seleccioná el barbero que realizará el turno.",
+      });
+    } else if (!disponibilidad.fecha) {
+      toast.error("Elegí una fecha.", {
+        description: "Seleccioná el día de tu turno.",
+      });
+    } else if (!disponibilidad.slotSeleccionado) {
+      toast.error("Elegí un horario.", {
+        description: "Seleccioná un horario disponible.",
+      });
+    } else if (!clienteCompleto) {
+      toast.error("Elegí un cliente.", {
+        description: "Seleccioná el cliente que tomará el turno.",
+      });
+    }
+  };
+
   return (
-    <form ref={formRef} action={formAction} className="p-6 md:p-8 space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <SeccionCliente
-          session={session}
-          selectedUserId={selectedUserId}
-          setSelectedUserId={setSelectedUserId}
-          usuarios={usuarios}
-        />
-
-        <SeccionBarbero
-          selectedBarberoId={selectedBarberoId}
-          selectedServicioId={selectedServicioId}
-          barberosFiltrados={barberosFiltrados}
-          handleBarberoChange={handleBarberoChange}
-        />
-
-        <SeccionServicio
-          selectedServicioId={selectedServicioId}
-          servicios={servicios}
-          serviciosFiltrados={serviciosFiltrados}
-          handleServicioChange={handleServicioChange}
-        />
-      </div>
-
-      {/* FECHA Y HORA */}
-      <div className="bg-zinc-950/60 p-4 rounded-xl border border-zinc-800">
-        <SeleccionadorHorario
-          name="horarioReservado"
-          servicioId={selectedServicioId}
-          barberoId={selectedBarberoId}
-          sessionId={sessionId}
-          userId={selectedUserId}
-        />
-      </div>
-
-      {/* Botones de acción inferior */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800">
-        <button
-          type="button"
-          onClick={onCancelar}
-          className="px-6 py-2.5 border border-zinc-700 text-zinc-300 rounded-xl hover:bg-zinc-800 transition-colors font-medium text-sm"
-        >
-          Cancelar
-        </button>
-        <BotonSubmitFormStatus
-          texto="Confirmar Reserva"
-          textoMientrasCarga="Procesando..."
-          mostrarSpinner={false}
-          claseAdicional="px-6 py-2.5 font-medium rounded-xl shadow-md hover:opacity-90 text-sm"
+    <form
+      ref={formRef}
+      action={formAction}
+      onSubmit={manejarEnvio}
+      className="p-6 md:p-8 space-y-6 flex-1 min-h-0 flex flex-col overflow-y-auto lg:overflow-hidden"
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 lg:flex-1 lg:min-h-0">
+        {/* Panel izquierdo: scroll independiente en desktop */}
+        <div className="space-y-6 min-w-0 lg:overflow-y-auto lg:pr-1">
+          <SeccionServicio
+            selectedServicioId={selectedServicioId}
+            servicios={servicios}
+            serviciosFiltrados={serviciosFiltrados}
+            handleServicioChange={handleServicioChange}
+          />
+          <SeccionBarbero
+            selectedBarberoId={selectedBarberoId}
+            selectedServicioId={selectedServicioId}
+            barberosFiltrados={barberosFiltrados}
+            handleBarberoChange={handleBarberoChange}
+          />
+          {/* FECHA Y HORA */}
+          <div className="bg-zinc-950/60 p-4 rounded-xl border border-zinc-800">
+            <SeleccionadorHorario
+              name="horarioReservado"
+              servicioId={selectedServicioId}
+              barberoId={selectedBarberoId}
+              disponibilidad={disponibilidad}
+            />
+          </div>
+          <SeccionConfirmacion
+            session={session}
+            selectedUserId={selectedUserId}
+            setSelectedUserId={setSelectedUserId}
+            usuarios={usuarios}
+          />
+        </div>
+        {/* Sidebar resumen */}
+        <ResumenTurno
+          servicio={servicio}
+          barbero={barbero}
+          fecha={disponibilidad.fecha}
+          slotSeleccionado={disponibilidad.slotSeleccionado}
+          completo={completo}
+          onCancelar={onCancelar}
         />
       </div>
     </form>

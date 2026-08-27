@@ -515,3 +515,476 @@ checklist y cierra el ciclo:
 7. **Acta final**: checklist completada + lista de archivos modificados/creados/eliminados por fase
    + cualquier pendiente documentado explícitamente (nunca silenciado).
 8. **Actualizar `AUDITORIA.md`** (con OK del usuario) con el resultado del ciclo.
+
+---
+
+# APÉNDICE A — PENDIENTE NUEVO: Selector visual de barberos con tarjetas de foto (registrado 27-ago-2026)
+
+> **Documento directivo de SOLO LECTURA (sigue vigente para su sección).** Este apéndice se
+> AGREGA al plan directivo del ciclo de ordenamiento (Fases 9-15) y es un pendiente NUEVO,
+> independiente de ese ciclo. No forma parte de las Fases 9-15. Los números de línea citados
+> fueron **verificados contra el repo el 27-ago-2026** y pueden desplazarse: **verificar la línea
+> exacta antes de editar** (regla transversal §5.11).
+>
+> **Estado: APROBADO en plan por el usuario el 27-ago-2026** (alcance y estilo definidos en §A.5).
+> **Aún NO implementado.**
+
+## A.1. Objetivo
+
+Reemplazar la interfaz de selección de barbero del flujo de reserva de turnos: pasar del selector
+tradicional de texto (`<select>` / dropdown) a un **selector visual de tarjetas con foto circular**,
+tipo:
+
+```
+[FOTO CIRCULAR]    [FOTO CIRCULAR]    [FOTO CIRCULAR]
+FRANCO PASCHETTO   JUAN MARCOS MAYORAL ...
+```
+
+Estética de referencia: fondo oscuro, fotos circulares grandes, nombre debajo, presentación
+elegante y minimalista. La selección se hace con clic/tap sobre la tarjeta y mantiene **exactamente
+la lógica actual** de la reserva. NO se crea un sistema paralelo de selección: solo se reemplaza la
+interfaz visual del selector, reutilizando la lógica existente.
+
+## A.2. Contexto actual (verificado el 27-ago-2026)
+
+### A.2.1. Selector del flujo de reserva ("Nuevo Turno")
+
+- **`src/components/turno/SeccionBarbero.tsx`** (47 líneas): `<select name="barberoId" required>`
+  que solo muestra `b.nombre` (`src/components/turno/SeccionBarbero.tsx:23-37`). Ignora `srcImage`
+  aunque el tipo ya la trae.
+- La página es un único modal/formulario (no wizard): `src/app/turno/page.tsx` →
+  `CreateTurnoModal` → `FormularioTurno` (grid `grid-cols-1 md:grid-cols-2` con secciones
+  **Cliente | Barbero | Servicio**, y luego **Fecha/Hora**).
+
+### A.2.2. Selector del modal de edición/reprogramación de turno
+
+- **`src/components/turno/EditarTurnoModal.tsx`** (297 líneas): campo `CampoSelect` "Asignar
+  Barbero" (`src/components/turno/EditarTurnoModal.tsx:203-215`), que usa el helper local
+  `CampoSelect` (`:267-296`). Estado local `barberoSeleccionadoId` (`:50-52`).
+
+### A.2.3. Datos disponibles (NO requieren cambios de backend)
+
+- **`src/types/turno.ts:16-20`**: `BarberoData = { id: string; nombre: string; srcImage?: string | null }`
+  — la foto YA viaja con el barbero.
+- **`src/lib/consultas/obtener-barberos-activos.ts`**: `findMany({ where: { estado: true } })`
+  devuelve el objeto completo (incluye `srcImage`). Fuente del flujo de reserva.
+- Caminos de datos (ambos incluyen `srcImage`):
+  1. Server-side: `src/app/turno/page.tsx:10-21` `getTurnoData()` → `obtenerDatosReserva(true)`
+     → `initialBarberos`.
+  2. Client-side: `src/hooks/useConfiguracionTurno.ts` → `fetch("/api/configuracion-turno")` →
+     `src/app/api/configuracion-turno/route.ts` → `obtenerDatosReserva(esAdmin(sesion))` (los
+     barberos se serializan tal cual, incluye `srcImage`).
+- El modal de edición usa `useConfiguracionTurno(abierto)` → `datos.barberos` también con `srcImage`.
+
+### A.2.4. Lógica de selección a PRESERVAR (NO modificar)
+
+- **`src/hooks/useDatosFormularioTurno.ts`** (95 líneas): `useState` local + prop-drilling.
+  - `selectedBarberoId` / `setSelectedBarberoId` (`:38`).
+  - `handleBarberoChange(nuevoBarberoId)` (`:55-64`): setea el barbero y **resetea el servicio**
+    si el nuevo barbero no lo ofrece (filtrado cruzado vía `relaciones`).
+  - Filtrado `barberosFiltrados` por `selectedServicioId` (`:49-53`).
+- **Envío del ID al flujo de reserva**:
+  - `src/actions/turnos/crear.actions.ts:30`: `const barberoId = formData.get("barberoId")`.
+  - `src/actions/turnos/estado.actions.ts:31-37`: lee `rawBarberoId` (si vacío usa el barbero
+    actual del turno).
+  - Por eso el campo **DEBE mantener el nombre `barberoId`** en el FormData (via `input hidden`).
+
+### A.2.5. Patrones visuales de referencia ya existentes
+
+- Tarjeta con foto de barbero: `src/components/barbero/BarberoList.tsx:64-99` (`<img src={srcImage}>
+  object-cover` + fallback icono `User`).
+- Patrón de "selección activa" (slot dorado con glow + indicador check absoluto):
+  `src/components/turno/ListaHorarios.tsx:66-121` y `DiaCalendario.tsx`.
+- Modal de reserva (`CreateTurnoModal.tsx:54-61`) aliasea en un wrapper:
+  `--primary` → `var(--page-primary)`, `--secondary`, `--primary-foreground`, `--primary-tinta`.
+  El modal usa `bg-zinc-900 border-zinc-700/80`. El modal de edición usa la paleta oscura
+  `#14110C` / `#1C1812` / `#2C261D`.
+
+## A.3. Alcance (decisiones del usuario, registradas el 27-ago-2026 — NO reversibles sin confirmación)
+
+1. **Alcance de archivos: Reserva + Edición de turno.** Reemplazar el dropdown de
+   `SeccionBarbero.tsx` (reserva) **y** el dropdown "Asignar Barbero" de `EditarTurnoModal.tsx`.
+2. **Estilo visual: colores configurados de la página.** El selector DEBE tomar la paleta de los
+   colores de marca parametrizados (`var(--page-primary)`, `var(--page-primary-tinta)`,
+   `var(--page-primary-foreground)`, variantes alfa `--page-primary-*`), NO hex hardcodeado
+   (regla de AGENTS.md "Sistema de color"). Se respetan neutros (zinc) existentes.
+3. **NO crear sistema paralelo de selección**: reemplazo solo de la interfaz; se reutiliza
+   `handleBarberoChange`, `selectedBarberoId`, `setBarberoSeleccionadoId` y el envío por `barberoId`.
+4. **NO modificar** lógica de disponibilidad, horarios, turnos ni backend salvo lo estrictamente
+   necesario para el selector. No se cambian tipos (`BarberoData` ya trae `srcImage`).
+
+## A.4. Diseño de la solución
+
+### A.4.1. Nuevo componente compartido — `src/components/turno/SelectorBarberoTarjetas.tsx`
+
+- `"use client"`, **una sola función exportada** (regla AGENTS.md), ≤200 líneas.
+- Props: `barberos: BarberoData[]`, `seleccionadoId: string`, `onChange: (id: string) => void`,
+  `name?: string` (si se provee, renderiza `<input type="hidden" name={name} value={seleccionadoId}>`
+  para mantener el envío del `barberoId` por FormData).
+- Layout responsive: contenedor `flex flex-wrap gap-4` (fila cuando hay espacio; **wrap
+  automático** en tablet/celular). Cada barbero es un `<button type="button" aria-pressed={seleccionado}>`.
+- Cada tarjeta:
+  - **Avatar circular**: `<img>` con `rounded-full object-cover`, tamaño ~`w-20 h-20 sm:w-24 sm:h-24`
+    (imagen sin deformar, circular independientemente de las dimensiones originales).
+  - **Fallback con iniciales** si `srcImage` es null: círculo `bg-[var(--page-primary-30)]` con la
+    inicial del nombre en `var(--page-primary-tinta)`.
+  - **Nombre completo** centrado debajo del avatar (`text-[var(--page-primary-tinta)]`, truncado).
+- Estado de selección (solo uno activo; lo garantiza `seleccionadoId` único):
+  - **Seleccionado**: borde `var(--page-primary)`, fondo `var(--page-primary-15)`, anillo en el
+    avatar `ring-2 ring-[var(--page-primary)] ring-offset-2`, escala sutil `scale-[1.03]` e
+    indicador check en la esquina con `var(--page-primary-foreground)`.
+  - **No seleccionado**: borde `var(--page-primary-20)`, hover `var(--page-primary-60)`.
+  - Contraste según `src/lib/contraste.ts` y reglas de `--page-primary-tinta`/`-foreground` de
+    AGENTS.md (prohibido `text-white`/`#000` sobre fondo de marca).
+
+### A.4.2. `src/components/turno/SeccionBarbero.tsx` (reemplazo)
+
+- Mantiene props actuales (`selectedBarberoId`, `selectedServicioId`, `barberosFiltrados`,
+  `handleBarberoChange`) → **la lógica de `useDatosFormularioTurno` queda intacta**.
+- Sustituye el `<select>` por `<SelectorBarberoTarjetas name="barberoId" barberos={barberosFiltrados}
+  seleccionadoId={selectedBarberoId} onChange={handleBarberoChange} />`.
+- Conserva el label "Barbero *" y el mensaje de lista vacía
+  (`SeccionBarbero.tsx:38-44`). Se elimina el atributo `required` del select (el bloqueo de envío
+  pasa a un guard en el form, ver §A.4.3).
+
+### A.4.3. `src/components/turno/FormularioTurno.tsx` (ajuste mínimo)
+
+- El `<form>` (`FormularioTurno.tsx:58`) gana un `onSubmit` que **bloquea el envío** (con toast)
+  si `selectedBarberoId` está vacío, replicando el comportamiento del `required` actual del select.
+  La validación de servicio/cliente (siguen siendo `<select required>` nativos) NO se toca.
+- Se reordena la grilla para que la sección de barbero ocupe ancho completo
+  (`md:col-span-2`), quedando barberos en fila como la referencia. Orden resultante sugerido:
+  [Cliente | Servicio] y luego Barbero a todo el ancho, antes de Fecha/Hora. (Si el reorden
+  resultara confuso visualmente, mantener el orden actual con el selector en la columna y
+  `flex-wrap`; el coordinador decide en implementación, preservando funcionamiento.)
+
+### A.4.4. `src/components/turno/EditarTurnoModal.tsx` (reemplazo)
+
+- Sustituye el `CampoSelect` "Asignar Barbero" (`EditarTurnoModal.tsx:203-215`) por
+  `<SelectorBarberoTarjetas name="barberoId" barberos={barberos} seleccionadoId={barberoSeleccionadoId}
+  onChange={(id) => setBarberoSeleccionadoId(id)} />`, envuelto en `md:col-span-2` para la fila.
+- `CampoSelect` (`:267-296`) queda solo para "Cambiar Servicio" (no se elimina).
+- `actualizarTurno` ya tolera `barberoId` vacío (usa el barbero actual) → **no requiere guard**.
+
+## A.5. Decisiones registradas del usuario
+
+| # | Decisión |
+|---|---|
+| 1 | Alcance: **Reserva + Edición de turno** (ambos dropdowns se reemplazan por el selector visual). |
+| 2 | Estilo: paleta tomada de **los colores configurados de la página** (`var(--page-primary*)`, `-tinta`, `-foreground`, variantes alfa). NO paleta dorada fija `#E8B031` ni `#1C1812` como base del selector; neutros zinc permitidos como base del modal. |
+
+## A.6. Lo que NO se modifica (explicitamente fuera de alcance)
+
+- Backend, Prisma (`schema.prisma`), consultas (`lib/consultas/`), server actions de turnos
+  (`crear/estado/disponibilidad`), lógica de disponibilidad/horarios, pagos (Mercado Pago),
+  tipos (`src/types/turno.ts`), `useDatosFormularioTurno`, `useConfiguracionTurno`,
+  `useCrearTurno`, `SeleccionadorHorario`, `ListaHorarios`, `GrillaCalendario`, `DiaCalendario`.
+- No se instalan dependencias nuevas.
+- No se crean tests (no hay framework).
+
+## A.7. Archivos involucrados (resumen)
+
+| Archivo | Acción |
+|---|---|
+| `src/components/turno/SelectorBarberoTarjetas.tsx` | **NUEVO** — selector visual de tarjetas compartido |
+| `src/components/turno/SeccionBarbero.tsx` | **MODIFICAR** — usa el nuevo selector + hidden input `barberoId` |
+| `src/components/turno/FormularioTurno.tsx` | **MODIFICAR** — guard `onSubmit` de barbero + grid (ancho completo) |
+| `src/components/turno/EditarTurnoModal.tsx` | **MODIFICAR** — reemplaza `CampoSelect` de barbero por el nuevo selector |
+
+## A.8. Verificación (obligatoria al terminar)
+
+1. `npx tsc --noEmit` = **0 errores** (el build NO typechequea; obligatorio AGENTS.md).
+2. `npm run lint`.
+3. Revisión manual:
+   - **Render**: todos los barberos activos se renderizan como tarjetas.
+   - **Foto correcta**: `srcImage` de cada barbero es la correspondiente; sin deformación
+     (`object-cover`, circular).
+   - **Fallback**: barbero sin foto muestra avatar de iniciales.
+   - **Selección**: clic/tap selecciona; solo un barbero activo a la vez; estado visual claro.
+   - **Flujo**: el `barberoId` real (ID, no nombre) llega a `createTurno` / `actualizarTurno`
+     (el hidden input `name="barberoId"` mantiene el FormData).
+   - **Responsive**: desktop (fila), tablet y celular (wrap sin romper el layout).
+   - **Sin regresiones**: servicio, cliente, fecha/hora y pago funcionan igual.
+4. Reglas del repo (AGENTS.md): 1 export por archivo nuevo, ≤400 líneas (objetivo 300),
+   imports `@/`, sin `any`/`@ts-ignore`, nombres y mensajes en español, colores vía
+   `var(--page-*)` sin hex hardcodeado.
+
+## A.9. Ejecución (cumple AGENTS.md "Uso de subagentes")
+
+1. Un subagente implementador recibe este apéndice + AGENTS.md y aplica los 4 cambios de §A.7.
+2. Un subagente **verificador** revisa TODO el código producido (reglas de §A.8.4, contraste,
+   límites de líneas, multi-función), repara fallas y **certifica** el pendiente.
+3. La orquestación y la decisión final son del agente principal (nunca de los subagentes).
+4. Al aprobarse, registrar el resultado como tarea cerrada en el acta del ciclo (o en
+   `AUDITORIA.md` si el usuario lo confirma).
+
+---
+
+# APÉNDICE B — PENDIENTE NUEVO: Rediseño del modal "Nuevo Turno" en flujo completo de reserva (registrado 27-ago-2026)
+
+> **Documento directivo de SOLO LECTURA (sigue vigente para su sección).** Este apéndice se
+> AGREGA al plan directivo del ciclo de ordenamiento (Fases 9-15) y al Apéndice A (selector de
+> barberos) como un pendiente NUEVO e independiente. No forma parte de las Fases 9-15. Los números
+> de línea citados fueron **verificados contra el repo el 27-ago-2026** y pueden desplazarse:
+> **verificar la línea exacta antes de editar** (regla transversal §5.11).
+>
+> **Estado: APROBADO en plan por el usuario el 27-ago-2026** (alcance y estilo definidos en §B.3).
+> **Aún NO implementado.**
+
+## B.1. Objetivo
+
+Rediseñar el modal de **"Nuevo Turno"** para que integre todo el proceso de creación del turno en
+una única interfaz con flujo **Servicio → Profesional → Fecha y Hora → Confirmación**, tomando como
+referencia la estructura de la imagen adjunta (calendario, horarios disponibles, sidebar de resumen
+y botón de confirmación) **PERO conservando la tarjeta del barbero actual** (`SelectorBarberoTarjetas`,
+implementada en el Apéndice A), que el usuario quiere mantener tal cual.
+
+El resultado debe sentirse como un **flujo completo de reserva** con un **resumen del turno fijo y
+actualizado en tiempo real** en el lado derecho del modal.
+
+## B.2. Contexto actual (verificado el 27-ago-2026)
+
+### B.2.1. Componentes del flujo de "Nuevo Turno"
+
+- **`src/app/turno/page.tsx`** (75 líneas): página server. Carga `obtenerDatosReserva(true)` →
+  `initialServicios`, `initialBarberos`, `initialUsuarios`, `initialRelaciones` y los pasa a
+  `CreateTurnoModal`. También le pasa `whatsappPhone` desde `config?.whatsapp`.
+- **`src/components/turno/CreateTurnoModal.tsx`** (136 líneas): wrapper que abre `ModalBase`
+  (`max-w-4xl`, `bg-zinc-900 border-zinc-700/80`), alias de color
+  (`--primary` → `var(--page-primary)`, `--secondary`, `--primary-foreground`, `--primary-tinta`)
+  y renderiza `FormularioTurno` o el spinner de carga. Tras crear el turno, muestra `ModalPagoTurno`.
+- **`src/components/turno/FormularioTurno.tsx`** (125 líneas): `<form>` único con grid
+  `grid-cols-1 md:grid-cols-2`: `SeccionCliente` → `SeccionServicio` → `SeccionBarbero`
+  (`md:col-span-2`) → `SeleccionadorHorario` → botones **Cancelar** + **Confirmar Reserva**
+  (`BotonSubmitFormStatus`). Guard `onSubmit` (`:57-64`) que bloquea el envío si no hay barbero.
+- **`src/components/turno/SeccionServicio.tsx`** (61 líneas): `<select name="servicioId" required>`
+  con `serviciosFiltrados` (filtrado por barbero seleccionado vía `relaciones`).
+- **`src/components/turno/SeccionBarbero.tsx`** (39 líneas): label "Barbero *" + envuelve
+  `<SelectorBarberoTarjetas name="barberoId" ...>` + mensaje de lista vacía. **NO se modifica.**
+- **`src/components/turno/SelectorBarberoTarjetas.tsx`** (90 líneas): tarjeta actual del barbero
+  (avatar circular con `srcImage`, fallback de iniciales, check de selección con
+  `var(--page-primary)`). **NO se modifica.**
+- **`src/components/turno/SeccionCliente.tsx`** (53 líneas): select de cliente para admins
+  (`name="userId"`); para rol `USER` muestra un select deshabilitado con el usuario autologgeado.
+- **`src/components/turno/SeleccionadorHorario.tsx`** (79 líneas): llama a
+  `useDisponibilidadHorarios`, renderiza `GrillaCalendario` + `ListaHorarios` y el hidden input
+  `name="horarioReservado"`. Hoy **contiene el estado de disponibilidad en su interior**.
+- **`src/components/turno/GrillaCalendario.tsx`** (176 líneas) y **`DiaCalendario.tsx`** (67 líneas):
+  calendario del mes con días disponibles/seleccionados; acento dorado fijo `#E8B031` y paleta
+  oscura fija (`#18150F`, `#2A2318`, `#8E8675`, `#4A4438`, `#3A342C`).
+- **`src/components/turno/ListaHorarios.tsx`** (134 líneas): grilla de slots disponibles/ocupados/
+  bloqueados por otro usuario (`Lock`); mismo acento dorado fijo.
+
+### B.2.2. Estado y datos del flujo (a preservar y/o reutilizar)
+
+- **`src/hooks/useDatosFormularioTurno.ts`** (95 líneas): estado de selección
+  (`selectedServicioId`, `selectedBarberoId`, `selectedUserId`), filtrado cruzado por `relaciones`
+  (`serviciosFiltrados` / `barberosFiltrados`) y handlers `handleBarberoChange` / `handleServicioChange`.
+- **`src/hooks/useDisponibilidadHorarios.ts`** (145 líneas): estado de disponibilidad (`fecha`,
+  `mesVisible`, `diasDisponibles`, `cargandoDias`, `slots`, `cargando`, `slotSeleccionado`) +
+  handlers (`irAlMesAnterior/Siguiente`, `manejarSeleccionFecha`, `manejarSeleccionSlot`).
+  Usa `obtenerDiasDisponibles` / `obtenerHorariosDisponibles` (server actions) y `useSlotLocks`
+  (locks en tiempo real). **Se debe SUBIR a `FormularioTurno`** para que el resumen lo consuma.
+- **`src/components/ui/boton-submit-form-status.tsx`** (48 líneas): botón submit con
+  `useFormStatus` (`disabled={pending}`). Se le agrega una prop opcional de deshabilitado.
+- **Server action `createTurno`** (`src/actions/turnos/crear.actions.ts`): lee del FormData
+  `servicioId`, `userId`, `barberoId`, `horarioReservado`. **NO se modifica.**
+- **`src/lib/utils/`**: `formatearMoneda`, `formatearFecha`, `formatearHora`, `formatearFechaHora`.
+- **Sistema de color**: variables globales `--page-primary*` / `-tinta` / `-foreground` /
+  variantes alfa `--page-primary-08/15/18/20/25/30/40/44/50/60/70/80` inyectadas en `layout.tsx`
+  desde `page_config` (BD). Fuente única de contraste: `src/lib/contraste.ts`.
+
+## B.3. Alcance y decisiones del usuario (registradas el 27-ago-2026 — NO reversibles sin confirmación)
+
+1. **SIN barra de progreso.** El modal NO lleva stepper/barra de progreso
+   (SERVICIO → PROFESIONAL → FECHA & HORA → CONF): se omitió por decisión explícita del usuario.
+2. **Selector de servicio → tarjetas visuales.** Se reemplaza el `<select>` de
+   `SeccionServicio.tsx` por una grilla de tarjetas (nombre + duración + precio), respetando la
+   lógica de filtrado existente (`serviciosFiltrados` por barbero y `relaciones`).
+3. **Selector de cliente (solo admin) → sección "Confirmación".** Se conserva la funcionalidad
+   actual; el cliente se elige en una sección final del panel izquierdo, justo antes de confirmar.
+   Para rol `USER` se auto-asigna (comportamiento actual intacto).
+4. **Acentos de selección/activos/progreso → `var(--page-primary)`.** El calendario, los horarios
+   y el resumen usan el color primario de la BD en estados activos/seleccionados. Se mantienen
+   FIJOS solo los neutros y superficies oscuras (zinc, `#18150F`, `#2A2318`, `#8E8675`, bloqueados).
+5. **NO se modifica la tarjeta del barbero** (`SelectorBarberoTarjetas` + `SeccionBarbero`): se
+   conserva exactamente el diseño, estilos y comportamiento actuales (el usuario prefiere el diseño
+   actual sobre el de la imagen de referencia).
+6. **No eliminar funcionalidades existentes ni duplicar lógica.** Se reutilizan componentes, hooks,
+   servicios, consultas y server actions existentes. No se instalan dependencias nuevas.
+7. **Colores desde la BD**: NO hardcodear hex de marca; usar `var(--page-primary*)` / `-tinta` /
+   `-foreground` y `CLASES_BOTON_MARCA`. Los colores primarios (botones, selección, estados
+   activos, elementos destacados) provienen de `page_config`.
+
+## B.4. Diseño de la solución
+
+### B.4.1. Layout del nuevo modal
+
+```
+┌──────────────────────────────────────────────────┬──────────────────────┐
+│  [Header sticky: "Nuevo Turno" + botón X]          │                      │
+├──────────────────────────────────────────────────┤  RESUMEN DEL TURNO    │
+│  1. SERVICIO (tarjetas: nombre · duración · precio)│  · Servicio          │
+│  2. PROFESIONAL (tarjeta ACTUAL del barbero)       │  · Duración/precio   │
+│  3. FECHA Y HORA (calendario + horarios)           │  · Barbero           │
+│  4. CONFIRMACIÓN (cliente para admins)             │  · Fecha y hora      │
+│                                                    │  · Total             │
+│                                                    │  [CONFIRMAR TURNO]   │
+│                                                    │  [Cancelar]          │
+└──────────────────────────────────────────────────┴──────────────────────┘
+```
+
+- **Desktop**: `grid lg:grid-cols-[1fr_320px]` (o `lg:grid-cols-[1fr_340px]`). El sidebar derecho
+  es fijo/visible (`lg:sticky`) y se actualiza en tiempo real; si se alarga, scroll propio dentro
+  del contenedor del modal (`max-h-[92vh]`).
+- **Mobile**: las columnas se apilan (el resumen queda debajo del formulario) — el modal debe
+  seguir siendo responsive (decisión §B.3.5 del usuario: "Mantener responsive el modal").
+- El `<form>` envuelve TODO el contenido (panel izquierdo + sidebar) para que los hidden inputs
+  (`servicioId`, `barberoId`, `horarioReservado`, `userId`) sigan funcionando con `createTurno`
+  sin tocar la action.
+- **Ancho del modal**: ampliar `max-w-4xl` → `max-w-5xl` (o `max-w-6xl`) en `CreateTurnoModal.tsx`
+  para acomodar el sidebar.
+
+### B.4.2. Panel izquierdo
+
+1. **`SeccionServicio.tsx` — reescribir (tarjetas de servicio).**
+   - Grilla de tarjetas (patrón visual idéntico a `SelectorBarberoTarjetas`): cada tarjeta es un
+     `<button type="button" aria-pressed>` con nombre, `duracion min` y precio
+     (`formatearMoneda`). Estados: seleccionado = borde `var(--page-primary)`, fondo
+     `var(--page-primary-15)`, check con `var(--page-primary)`/`var(--page-primary-foreground)`;
+     no seleccionado = borde `var(--page-primary-20)`, hover `var(--page-primary-60)`. Texto con
+     `var(--page-primary-tinta)` (no `text-white`/`#000` sobre marca).
+   - Incluye `<input type="hidden" name="servicioId" value={selectedServicioId}>` para mantener
+     el FormData (reemplaza el `name="servicioId"` del `<select>`).
+   - Sigue usando `serviciosFiltrados` (filtrado por barbero) y `handleServicioChange`. Estado de
+     lista vacía ("Ningún servicio disponible").
+   - Quitar el `required` del select; el envío se valida por el estado completo (§B.4.4).
+2. **`SeccionBarbero.tsx` + `SelectorBarberoTarjetas.tsx` — NO se tocan** (tarjeta actual del
+   barbero se conserva; ya maneja el hidden `name="barberoId"`).
+3. **`GrillaCalendario.tsx` / `DiaCalendario.tsx` / `ListaHorarios.tsx` — solo color.**
+   - Convertir los acentos `#E8B031` a `var(--page-primary)` en: día seleccionado (fondo
+     `var(--page-primary)`, texto `var(--page-primary-foreground)`, shadow/glow con `color-mix`),
+     día disponible (texto `var(--page-primary)`, hover `var(--page-primary-15/20)`), puntito de
+     disponibilidad (`var(--page-primary)`/70), anillo de "hoy" (`var(--page-primary)`/30),
+     slot activo (fondo `var(--page-primary)`, texto `var(--page-primary-foreground)`, glow
+     `color-mix`), hover de slot inactivo (`var(--page-primary)`/50), asteriscos de labels y
+     leyenda del calendario ("Seleccionado"/"Disponible").
+   - Mantener fijos los neutros/superficies: `#18150F`, `#2A2318`, `#8E8675`, `#4A4438`,
+     `#3A342C`, bloqueados (`#1A1612`/`#2A2318`/`#4A4438`), texto base `#E4E0D9`.
+4. **`SeleccionadorHorario.tsx` — refactor a presentacional.** Recibe por props todo lo que hoy
+   devuelve `useDisponibilidadHorarios` (el hook se sube a `FormularioTurno`). Mantiene el hidden
+   input `name="horarioReservado"` con `slotSeleccionado`. Sigue componiendo
+   `GrillaCalendario` + `ListaHorarios`.
+5. **`SeccionConfirmacion.tsx` — NUEVO.** Sección final del panel izquierdo: reutiliza
+   `SeccionCliente` (select de cliente para admins, auto-asignado para `USER`) + nota breve de
+   confirmación. Una sola función exportada, ≤200 líneas.
+
+### B.4.3. Sidebar derecho — `ResumenTurno.tsx` (NUEVO)
+
+- `"use client"`, una sola función exportada, ≤200 líneas.
+- Props: `servicio: ServicioData | null`, `barbero: BarberoData | null`, `fecha: Date | undefined`,
+  `slotSeleccionado: string`, `completo: boolean`, `onCancelar: () => void`.
+- Contenido (se actualiza en tiempo real desde el estado levantado):
+  - **Servicio**: nombre + `duracion min` (+ descripción corta si existe).
+  - **Barbero**: nombre del seleccionado.
+  - **Fecha y hora**: `formatearFecha(fecha)` + `formatearHora(slot)` (o `slotSeleccionado`).
+  - **Total**: `formatearMoneda(servicio.precio)`.
+- **Botón `[CONFIRMAR TURNO]`**: `type="submit"` dentro del `<form>`. Deshabilitado
+  (`BotonSubmitFormStatus` con la nueva prop `deshabilitado`) hasta que el turno esté completo
+  (servicio + barbero + fecha + hora; y `userId` si el usuario es admin).
+- **Botón `[Cancelar]`**: ghost, `onCancelar` (cierra el modal).
+- Acentos con `var(--page-primary)` / `var(--page-primary-tinta)` / `var(--page-primary-foreground)`
+  según contraste de `src/lib/contraste.ts`.
+
+### B.4.4. Integración — `FormularioTurno.tsx` (reescritura del layout)
+
+- Llama a **`useDisponibilidadHorarios`** (sube el estado de disponibilidad) y lo pasa como props
+  a `SeleccionadorHorario`; el resumen consume `fecha` / `slotSeleccionado` directamente.
+- Compone el layout de §B.4.1: columna izquierda (Servicio → Barbero → Fecha y Hora → Confirmación)
+  + `ResumenTurno` en la columna derecha.
+- Calcula `completo` (todas las selecciones presentes + cliente si admin) para el botón del resumen.
+- Conserva el guard actual `manejarEnvio` (bloqueo de envío con toast si falta alguna selección).
+- Sigue recibiendo los mismos props desde `CreateTurnoModal` (session, state, formAction, sessionId,
+  servicios, usuarios, selecciones, handlers, onCancelar) — `useDatosFormularioTurno` y
+  `useCrearTurno` quedan intactos.
+
+### B.4.5. Cambios menores
+
+- **`src/components/ui/boton-submit-form-status.tsx`**: agregar prop opcional
+  `deshabilitado?: boolean` → `disabled={pending || deshabilitado}`. Cambio no rompe otros usos.
+- **`src/components/turno/CreateTurnoModal.tsx`**: solo ampliar `maxWidth` del modal
+  (p. ej. `max-w-5xl`). El resto queda igual.
+
+## B.5. Lógica que se conserva intacta (NO tocar)
+
+- `useDatosFormularioTurno` (estado de selección + filtrado cruzado + handlers), `useCrearTurno`,
+  `useConfiguracionTurno`, `useSlotLocks`, `useSessionId`.
+- Server actions de turnos: `createTurno`, `obtenerDiasDisponibles`, `obtenerHorariosDisponibles`.
+- `obtenerDatosReserva` y `/api/configuracion-turno`.
+- `SelectorBarberoTarjetas` y `SeccionBarbero` (tarjeta actual del barbero).
+- `ModalPagoTurno`, `usePagoTurno`, Mercado Pago, emails.
+
+## B.6. Lo que NO se modifica (explicitamente fuera de alcance)
+
+- Backend, Prisma (`schema.prisma`), consultas (`lib/consultas/`), server actions de turnos.
+- Pagos (Mercado Pago), emails, auth.
+- La tarjeta del barbero (`SelectorBarberoTarjetas`, `SeccionBarbero`).
+- Otros modales y páginas ajenas a este flujo.
+- No se instalan dependencias nuevas. No se crean tests (no hay framework).
+
+## B.7. Archivos involucrados (resumen)
+
+| Archivo | Acción |
+|---|---|
+| `src/components/turno/SeccionServicio.tsx` | **REESCRIBIR** — `<select>` → tarjetas de servicio + hidden `servicioId` |
+| `src/components/turno/SeleccionadorHorario.tsx` | **MODIFICAR** — presentacional (recibe por props el estado de disponibilidad) |
+| `src/components/turno/GrillaCalendario.tsx` | **MODIFICAR** — acentos `#E8B031` → `var(--page-primary)` |
+| `src/components/turno/DiaCalendario.tsx` | **MODIFICAR** — acentos `#E8B031` → `var(--page-primary)` |
+| `src/components/turno/ListaHorarios.tsx` | **MODIFICAR** — acentos `#E8B031` → `var(--page-primary)` |
+| `src/components/turno/ResumenTurno.tsx` | **NUEVO** — sidebar de resumen + CONFIRMAR/Cancelar |
+| `src/components/turno/SeccionConfirmacion.tsx` | **NUEVO** — sección final (reutiliza `SeccionCliente`) |
+| `src/components/turno/FormularioTurno.tsx` | **REESCRIBIR** — layout 2 columnas + sube `useDisponibilidadHorarios` |
+| `src/components/turno/CreateTurnoModal.tsx` | **MODIFICAR** — ampliar ancho del modal |
+| `src/components/ui/boton-submit-form-status.tsx` | **MODIFICAR** — prop opcional `deshabilitado` |
+| `src/components/turno/SeccionBarbero.tsx` / `SelectorBarberoTarjetas.tsx` | **NO se tocan** (tarjeta actual del barbero) |
+| `src/components/turno/SeccionCliente.tsx` | **REUTILIZAR** (dentro de `SeccionConfirmacion`) |
+
+## B.8. Verificación (obligatoria al terminar)
+
+1. `npx tsc --noEmit` = **0 errores** (el build NO typechequea; obligatorio AGENTS.md).
+2. `npm run lint`.
+3. Revisión manual:
+   - **Render**: el modal muestra las 4 secciones + sidebar de resumen; el sidebar se actualiza en
+     tiempo real al seleccionar servicio, barbero, fecha y hora.
+   - **Filtrado cruzado**: al cambiar de barbero se actualizan servicios, días y horarios; no se
+     muestran servicios que el barbero no realiza (relaciones).
+   - **Tarjeta del barbero**: intacta (diseño actual, avatar, fallback, check).
+   - **Calendario/horarios**: acento de selección = color primario de la BD; los horarios ocupados
+     / bloqueados por otro usuario siguen ocultándose o mostrándose bloqueados.
+   - **Resumen**: servicio (duración/precio), barbero, fecha y hora, total — correctos.
+   - **Confirmación**: el botón CONFIRMAR TURNO queda deshabilitado hasta tener servicio + barbero +
+     fecha + hora (y cliente si admin); el `createTurno` recibe los IDs reales por FormData.
+   - **Responsive**: desktop (2 columnas con sidebar fijo) y mobile (apilado).
+   - **Sin regresiones**: pago (seña / pagar después), edición de turnos y resto del sistema intactos.
+4. Reglas del repo (AGENTS.md): 1 export por archivo nuevo, ≤400 líneas (objetivo 300),
+   imports `@/`, sin `any`/`@ts-ignore`, nombres y mensajes en español, colores vía
+   `var(--page-*)` sin hex de marca hardcodeado, contraste según `src/lib/contraste.ts`.
+
+## B.9. Ejecución (cumple AGENTS.md "Uso de subagentes")
+
+1. **Fase con 3 sub-tareas** (AGENTS.md §"Uso de subagentes": desglose obligatorio + paralelización):
+   - **B-A**: `SeccionServicio` (tarjetas) + `SeccionConfirmacion` (nueva).
+   - **B-B**: colores de `GrillaCalendario` / `DiaCalendario` / `ListaHorarios` + refactor
+     presentacional de `SeleccionadorHorario`.
+   - **B-C** (después de A y B, las integra): `ResumenTurno` (nuevo), `FormularioTurno`
+     (layout + subir `useDisponibilidadHorarios`), `CreateTurnoModal` (ancho) y
+     `boton-submit-form-status` (prop `deshabilitado`).
+2. B-A y B-B pueden correr **en paralelo** (archivos disjuntos). B-C se lanza al recibir sus
+   interfaces (definidas en §B.4). La orquestación y las interfaces entre sub-tareas las define el
+   agente principal (AGENTS.md, punto 5).
+3. **Agente verificador** (3 o más subagentes → verificador obligatorio): revisa TODO el código
+   producido en la fase (reglas de §B.8.4, contraste, límites de líneas, 1 export por archivo,
+   archivos fuera de límites, tarjeta de barbero intacta), repara fallas y **certifica** el pendiente.
+4. La decisión final sobre resultados es del agente principal (nunca de los subagentes).
+5. Al aprobarse, registrar el resultado como tarea cerrada en el acta del ciclo (o en
+   `AUDITORIA.md` si el usuario lo confirma).

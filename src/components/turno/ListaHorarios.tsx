@@ -34,23 +34,23 @@ export default function ListaHorarios({
   return (
     <div className="space-y-2">
       {/* Encabezado de la grilla */}
-      <label className="block ml-1 text-[10px] font-bold text-[#8E8675] uppercase tracking-widest">
-        Horarios Disponibles <span className="text-[#E8B031]">*</span>
+      <label className="block ml-1 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+        Horarios Disponibles <span className="text-[var(--page-primary)]">*</span>
       </label>
 
       {!fecha || !servicioId || !barberoId ? (
         /* Estado: faltan datos */
-        <div className="p-5 bg-black/60 border border-[#2C261D] rounded-xl border-dashed">
-          <p className="text-[11px] text-[#8E8675] flex items-center gap-2">
+        <div className="p-5 bg-zinc-900/50 border border-zinc-800 rounded-xl border-dashed">
+          <p className="text-[11px] text-zinc-400 flex items-center gap-2">
             <span className="text-[var(--page-primary)]">ℹ️</span> Seleccione servicio,
             barbero y fecha para ver disponibilidad
           </p>
         </div>
       ) : cargando ? (
         /* Estado: cargando horarios */
-        <div className="p-5 bg-black/20 border border-[#2C261D] rounded-xl flex items-center gap-3 animate-pulse">
-          <div className="w-4 h-4 border-2 border-[#E8B031]/30 border-t-[#E8B031] rounded-full animate-spin" />
-          <p className="text-[11px] text-[#8E8675]">Consultando agenda...</p>
+        <div className="p-5 bg-zinc-900/40 border border-zinc-800 rounded-xl flex items-center gap-3 animate-pulse">
+          <div className="w-4 h-4 border-2 border-[var(--page-primary-30)] border-t-[var(--page-primary)] rounded-full animate-spin" />
+          <p className="text-[11px] text-zinc-400">Consultando agenda...</p>
         </div>
       ) : slots.length === 0 ? (
         /* Estado: sin disponibilidad */
@@ -82,12 +82,12 @@ export default function ListaHorarios({
                     ${
                       estaBloqueado
                         ? // Bloqueado por otro usuario: gris con candado
-                          "bg-[#1A1612] border-[#2A2318] text-[#4A4438] cursor-not-allowed opacity-70"
+                          "bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed opacity-70"
                         : estaSeleccionado
-                        ? // Activo: dorado
-                          "bg-[#E8B031] border-[#E8B031] text-[#14110C] shadow-[0_0_12px_rgba(232,176,49,0.35)] cursor-pointer"
+                        ? // Activo: color de marca
+                          "bg-[var(--page-primary)] border-[var(--page-primary)] text-[var(--page-primary-foreground)] shadow-[0_0_12px_color-mix(in_srgb,var(--page-primary)_35%,transparent)] cursor-pointer"
                         : // Inactivo: oscuro con borde sutil
-                          "bg-[#1C1812] border-[#2C261D] text-[#E4E0D9] hover:border-[#E8B031]/50 hover:text-[#E8B031] cursor-pointer"
+                          "bg-zinc-900 border-zinc-700 text-zinc-300 hover:border-[var(--page-primary-50)] hover:text-[var(--page-primary)] cursor-pointer"
                     }
                   `}
                 >
@@ -103,11 +103,11 @@ export default function ListaHorarios({
 
                   {/* Indicador visual de selección activa */}
                   {estaSeleccionado && (
-                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#E8B031] rounded-full border-2 border-[#14110C] flex items-center justify-center">
-                      <svg viewBox="0 0 8 8" className="w-2 h-2 fill-[#14110C]">
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-[var(--page-primary)] rounded-full border-2 border-[var(--page-primary-foreground)] flex items-center justify-center">
+                      <svg viewBox="0 0 8 8" className="w-2 h-2 fill-[var(--page-primary-foreground)]">
                         <path
                           d="M1 4l2 2 4-4"
-                          stroke="#14110C"
+                          stroke="var(--page-primary-foreground)"
                           strokeWidth="1.5"
                           fill="none"
                           strokeLinecap="round"

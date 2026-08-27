@@ -11,6 +11,7 @@ type BotonSubmitFormStatusProps = {
   texto: ReactNode;
   textoMientrasCarga?: string;
   mostrarSpinner?: boolean;
+  deshabilitado?: boolean;
   claseAdicional?: string;
   estiloAdicional?: CSSProperties;
 };
@@ -19,6 +20,7 @@ export default function BotonSubmitFormStatus({
   texto,
   textoMientrasCarga = "Guardando...",
   mostrarSpinner = true,
+  deshabilitado = false,
   claseAdicional,
   estiloAdicional,
 }: BotonSubmitFormStatusProps) {
@@ -27,7 +29,7 @@ export default function BotonSubmitFormStatus({
   return (
     <Button
       type="submit"
-      disabled={pending}
+      disabled={pending || deshabilitado}
       className={cn(
         CLASES_BOTON_MARCA,
         "flex items-center gap-2 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed",

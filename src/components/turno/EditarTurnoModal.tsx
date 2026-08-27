@@ -5,7 +5,9 @@ import { toast } from "sonner";
 import { actualizarTurno } from "@/actions/turnos/estado.actions";
 import { useConfiguracionTurno } from "@/hooks/useConfiguracionTurno";
 import { useSessionId } from "@/hooks/useSessionId";
+import { useDisponibilidadHorarios } from "@/hooks/useDisponibilidadHorarios";
 import SeleccionadorHorario from "./SeleccionadorHorario";
+import SelectorBarberoTarjetas from "./SelectorBarberoTarjetas";
 import { Dialog } from "@/components/ui/dialog/Dialog";
 import { DialogContent } from "@/components/ui/dialog/DialogContent";
 import { DialogHeader } from "@/components/ui/dialog/DialogHeader";
@@ -51,6 +53,15 @@ export default function EditTurnoModal({ turno, userId = "" }: Props) {
     turno.barbero?.id || ""
   );
   const formularioRef = useRef<HTMLFormElement>(null);
+
+  const disponibilidad = useDisponibilidadHorarios({
+    servicioId: servicioSeleccionadoId,
+    barberoId: barberoSeleccionadoId,
+    turnoIdAExcluir: turno.id,
+    defaultValue: turno.horarioReservado.toISOString(),
+    sessionId,
+    userId: userId || turno.user?.id || "",
+  });
 
   const [state, formAction] = useActionState(actualizarTurno, estadoInicial);
 
@@ -199,20 +210,6 @@ export default function EditTurnoModal({ turno, userId = "" }: Props) {
                         label: `${s.nombre} ($${s.precio})`,
                       }))}
                     />
-
-                    <CampoSelect
-                      label="Asignar Barbero"
-                      name="barberoId"
-                      value={barberoSeleccionadoId}
-                      onChange={(e) =>
-                        setBarberoSeleccionadoId(e.target.value)
-                      }
-                      icono={Users}
-                      opciones={barberos.map((b) => ({
-                        value: b.id,
-                        label: b.nombre,
-                      }))}
-                    />
                   </div>
                 </div>
               </div>
@@ -237,12 +234,23 @@ export default function EditTurnoModal({ turno, userId = "" }: Props) {
                     name="horarioReservado"
                     servicioId={servicioSeleccionadoId}
                     barberoId={barberoSeleccionadoId}
-                    turnoIdAExcluir={turno.id}
-                    defaultValue={turno.horarioReservado.toISOString()}
-                    sessionId={sessionId}
-                    userId={userId || turno.user?.id || ""}
+                    disponibilidad={disponibilidad}
                   />
                 </div>
+              </div>
+
+              {/* Barbero a todo el ancho */}
+              <div className="md:col-span-2 space-y-4">
+                <h3 className="text-[10px] font-bold text-[#E8B031] uppercase tracking-widest flex items-center gap-2">
+                  <Users className="w-3 h-3" />
+                  Asignar Barbero
+                </h3>
+                <SelectorBarberoTarjetas
+                  name="barberoId"
+                  barberos={barberos}
+                  seleccionadoId={barberoSeleccionadoId}
+                  onChange={(id) => setBarberoSeleccionadoId(id)}
+                />
               </div>
             </>
           )}

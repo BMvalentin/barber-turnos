@@ -26,6 +26,7 @@ export default function CreateTurnoModal({
     formAction,
     sessionId,
     servicios,
+    barberos,
     usuarios,
     cargandoDatos,
     selectedServicioId,
@@ -73,9 +74,9 @@ export default function CreateTurnoModal({
       {/* MODAL CREAR TURNO */}
       {isOpen && (
         <ModalBase
-          maxWidth="max-w-4xl"
+          maxWidth="max-w-5xl"
           overlayClase="bg-black/80 backdrop-blur-md p-4"
-          contenedorClase="bg-zinc-900 border border-zinc-700/80 rounded-2xl max-h-[92vh] overflow-y-auto"
+          contenedorClase="bg-zinc-900 border border-zinc-700/80 rounded-2xl max-h-[92vh] overflow-hidden flex flex-col"
           header={
             /* Header sticky con botón X propio */
             <div className="sticky top-0 bg-zinc-900/95 backdrop-blur border-b border-zinc-800 p-6 flex items-center justify-between z-10">
@@ -106,6 +107,7 @@ export default function CreateTurnoModal({
               formAction={formAction}
               sessionId={sessionId}
               servicios={servicios}
+              barberos={barberos}
               usuarios={usuarios}
               selectedServicioId={selectedServicioId}
               selectedBarberoId={selectedBarberoId}

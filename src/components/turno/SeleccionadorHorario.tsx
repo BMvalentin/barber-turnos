@@ -2,30 +2,43 @@
 
 import GrillaCalendario from "./GrillaCalendario";
 import ListaHorarios from "./ListaHorarios";
-import { useDisponibilidadHorarios } from "@/hooks/useDisponibilidadHorarios";
 
-interface Props {
+/**
+ * Datos de disponibilidad que vive en el padre (provenientes de
+ * `useDisponibilidadHorarios`). El padre es dueño del estado.
+ */
+export type DatosDisponibilidadHorarios = {
+  fecha: Date | undefined;
+  mesVisible: Date;
+  diasDisponibles: string[];
+  cargandoDias: boolean;
+  slots: string[];
+  cargando: boolean;
+  slotSeleccionado: string;
+  isSlotBloqueado: (slot: string) => boolean;
+  irAlMesAnterior: () => void;
+  irAlMesSiguiente: () => void;
+  manejarSeleccionFecha: (dia: Date) => void;
+  manejarSeleccionSlot: (slot: string) => void;
+};
+
+type Props = {
+  name: string;
   servicioId?: string;
   barberoId?: string;
-  turnoIdAExcluir?: string;
-  defaultValue?: string;
-  name: string;
-  sessionId?: string;
-  userId?: string;
-}
+  disponibilidad: DatosDisponibilidadHorarios;
+};
 
 /**
  * Seleccionador de fecha y horario para el formulario de turnos.
+ * Componente presentacional: recibe el estado de disponibilidad por props.
  * Compone el calendario del mes y la cuadrícula de horarios disponibles.
  */
 export default function SeleccionadorHorario({
+  name,
   servicioId,
   barberoId,
-  turnoIdAExcluir,
-  defaultValue,
-  name,
-  sessionId = "no-session",
-  userId = "no-user",
+  disponibilidad,
 }: Props) {
   const {
     fecha,
@@ -40,14 +53,7 @@ export default function SeleccionadorHorario({
     irAlMesSiguiente,
     manejarSeleccionFecha,
     manejarSeleccionSlot,
-  } = useDisponibilidadHorarios({
-    servicioId,
-    barberoId,
-    turnoIdAExcluir,
-    defaultValue,
-    sessionId,
-    userId,
-  });
+  } = disponibilidad;
 
   return (
     <div className="space-y-4">
