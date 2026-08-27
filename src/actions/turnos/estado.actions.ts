@@ -55,7 +55,7 @@ export async function actualizarTurno(
         return { success: false, error: "El horario seleccionado no está disponible para este barbero/servicio" };
       }
 
-      if (await existeLockAjeno(barberoId, horario, turnoActual.userId)) {
+      if (await existeLockAjeno(barberoId, horario, sesion.user.id)) {
         return { success: false, error: "Este horario está siendo seleccionado por otro usuario. Intentá con otro horario." };
       }
       const dataUpdate: Prisma.turnoUncheckedUpdateInput = { servicioId, barberoId, horarioReservado: horario, estado, ...(cambioServicio ? { precioCongelado: servicio.precio, seniaCongelada: servicio.senia } : {}) };
@@ -75,6 +75,12 @@ export async function actualizarTurno(
           ...turnoActualizado,
           precioCongelado: Number(turnoActualizado.precioCongelado),
           seniaCongelada: Number(turnoActualizado.seniaCongelada),
+          servicio: {
+            ...turnoActualizado.servicio,
+            precio: Number(turnoActualizado.servicio.precio),
+            senia: Number(turnoActualizado.servicio.senia),
+            descuento: Number(turnoActualizado.servicio.descuento),
+          },
         },
       };
     } else {
@@ -95,6 +101,12 @@ export async function actualizarTurno(
           ...turnoActualizado,
           precioCongelado: Number(turnoActualizado.precioCongelado),
           seniaCongelada: Number(turnoActualizado.seniaCongelada),
+          servicio: {
+            ...turnoActualizado.servicio,
+            precio: Number(turnoActualizado.servicio.precio),
+            senia: Number(turnoActualizado.servicio.senia),
+            descuento: Number(turnoActualizado.servicio.descuento),
+          },
         },
       };
     }

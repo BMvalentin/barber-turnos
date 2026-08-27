@@ -13,13 +13,14 @@ interface OpcionesDisponibilidadHorarios {
   defaultValue?: string;
   sessionId?: string;
   userId?: string;
+  activo?: boolean;
 }
 
 /**
  * Hook del seleccionador de horarios: estado de la fecha, los días del mes,
  * los slots horarios y la selección con locks en tiempo real.
  */
-export function useDisponibilidadHorarios({ servicioId, barberoId, turnoIdAExcluir, defaultValue, sessionId = "no-session", userId = "no-user" }: OpcionesDisponibilidadHorarios) {
+export function useDisponibilidadHorarios({ servicioId, barberoId, turnoIdAExcluir, defaultValue, sessionId = "no-session", userId = "no-user", activo = true }: OpcionesDisponibilidadHorarios) {
   const [fecha, setFecha] = useState<Date | undefined>(defaultValue ? new Date(defaultValue) : undefined);
   const [mesVisible, setMesVisible] = useState<Date>(defaultValue ? new Date(defaultValue) : new Date());
   const [diasDisponibles, setDiasDisponibles] = useState<string[]>([]);
@@ -31,13 +32,40 @@ export function useDisponibilidadHorarios({ servicioId, barberoId, turnoIdAExclu
   // Ref para evitar resetear el slot en la carga inicial
   const esPrimeraCarga = useRef(true);
 
+  // Valores iniciales de barbero/servicio: el slot solo se limpia cuando estos
+  // CAMBIAN respecto de la inicialización (no en el montaje). Comparar valores
+  // en vez de un ref booleano es robusto a la doble invocación de efectos que
+  // hace React StrictMode en desarrollo (setup -> cleanup -> setup).
+  const valoresInicialesRef = useRef({ servicioId, barberoId });
+
   // Locks en tiempo real (polling REST)
   const { isSlotBloqueado, lockSlot, unlockSlot } = useSlotLocks({
     barberoId: barberoId ?? "",
     fecha,
     sessionId,
     userId,
+    activo,
   });
+
+  // Ref para usar siempre la última referencia de unlockSlot
+  const unlockSlotRef = useRef(unlockSlot);
+  useEffect(() => {
+    unlockSlotRef.current = unlockSlot;
+  }, [unlockSlot]);
+
+  // Al cambiar barbero/servicio el horario seleccionado deja de ser válido:
+  // se libera el lock y se limpia la selección. En el montaje inicial no se
+  // limpia nada para no romper el modo edición (que inicializa defaultValue).
+  useEffect(() => {
+    if (
+      servicioId === valoresInicialesRef.current.servicioId &&
+      barberoId === valoresInicialesRef.current.barberoId
+    ) {
+      return;
+    }
+    unlockSlotRef.current();
+    setSlotSeleccionado("");
+  }, [servicioId, barberoId]);
 
   const cargarDiasDelMes = useCallback(async () => {
     if (!servicioId || !barberoId) {
@@ -67,10 +95,12 @@ export function useDisponibilidadHorarios({ servicioId, barberoId, turnoIdAExclu
   }, [mesVisible, servicioId, barberoId, turnoIdAExcluir]);
 
   useEffect(() => {
+    if (!activo) return;
     cargarDiasDelMes();
-  }, [cargarDiasDelMes]);
+  }, [cargarDiasDelMes, activo]);
 
   useEffect(() => {
+    if (!activo) return;
     (async () => {
       if (!fecha || !servicioId || !barberoId) {
         setSlots([]);
@@ -99,7 +129,7 @@ export function useDisponibilidadHorarios({ servicioId, barberoId, turnoIdAExclu
         esPrimeraCarga.current = false;
       }
     })();
-  }, [fecha, servicioId, barberoId, turnoIdAExcluir]);
+  }, [fecha, servicioId, barberoId, turnoIdAExcluir, activo]);
 
   const irAlMesAnterior = useCallback(() => setMesVisible((m) => subMonths(m, 1)), []);
   const irAlMesSiguiente = useCallback(() => setMesVisible((m) => addMonths(m, 1)), []);

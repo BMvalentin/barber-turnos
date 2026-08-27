@@ -69,10 +69,10 @@ function VerificarEmailContenido() {
           <div className="p-8 sm:p-10">
             <div className="flex flex-col items-center text-center mb-8">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-zinc-900 mb-5 border border-[var(--page-primary)]/30">
-                <Mail className="w-8 h-8 text-[var(--page-primary)]" />
+                <Mail className="w-8 h-8 text-[var(--page-primary-tinta)]" />
               </div>
               <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tighter uppercase mb-2">
-                Revisá tu <span className="text-[var(--page-primary)]">Correo</span>
+                Revisá tu <span className="text-[var(--page-primary-tinta)]">Correo</span>
               </h1>
               <p className="text-zinc-400 text-sm font-medium">
                 Te enviamos un link para activar tu cuenta. Tocá el botón{" "}
@@ -83,7 +83,7 @@ function VerificarEmailContenido() {
             {email && !state.success && (
               <div className="mb-6 p-3 bg-zinc-900/50 border border-white/5 rounded-xl text-center">
                 <p className="text-xs uppercase tracking-widest text-zinc-500 font-bold mb-1">Enviado a</p>
-                <p className="text-sm font-bold text-[var(--page-primary)] break-all">{email}</p>
+                <p className="text-sm font-bold text-[var(--page-primary-tinta)] break-all">{email}</p>
               </div>
             )}
 
@@ -92,7 +92,7 @@ function VerificarEmailContenido() {
                 <input type="hidden" name="email" value={email} />
               ) : (
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary)] transition-colors" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary-tinta)] transition-colors" />
                   <input
                     name="email"
                     type="email"
@@ -119,7 +119,7 @@ function VerificarEmailContenido() {
             <div className="mt-6 text-center">
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-[var(--page-primary)] font-bold transition-colors"
+                className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-[var(--page-primary-tinta)] font-bold transition-colors"
               >
                 <Scissors className="w-4 h-4" />
                 Volver a iniciar sesión

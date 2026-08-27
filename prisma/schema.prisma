@@ -78,6 +78,11 @@ model turno {
   @@index([userId])
   @@index([barberoId])
   @@index([servicioId])
+  /* Índices compuestos para las consultas de disponibilidad y listado:
+     evitan el escaneo completo de turnos del barbero/usuario filtrando por fecha. */
+  @@index([barberoId, horarioReservado])
+  @@index([estado, horarioReservado])
+  @@index([userId, horarioReservado])
 }
 
 model user {

@@ -42,7 +42,7 @@ export default function ModalPagoTurno({
             className="w-10 h-10 rounded-full border border-zinc-700 flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: "color-mix(in srgb, var(--primary) 20%, transparent)" }}
           >
-            <CheckCircle2 className="w-5 h-5" style={{ color: "var(--primary)" }} />
+            <CheckCircle2 className="w-5 h-5" style={{ color: "var(--primary-tinta)" }} />
           </div>
           <div>
             <h2 className="text-lg font-bold text-white">¡Turno Reservado!</h2>
@@ -54,10 +54,10 @@ export default function ModalPagoTurno({
       <div className="p-6 space-y-4">
           <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 space-y-3">
             <div className="flex items-center gap-2 mb-1">
-              <Scissors className="w-4 h-4" style={{ color: "var(--primary)" }} />
+              <Scissors className="w-4 h-4" style={{ color: "var(--primary-tinta)" }} />
               <span
                 className="text-xs font-semibold uppercase tracking-widest"
-                style={{ color: "var(--primary)" }}
+                style={{ color: "var(--primary-tinta)" }}
               >
                 Detalle del pago
               </span>

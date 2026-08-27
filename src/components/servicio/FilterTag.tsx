@@ -14,7 +14,7 @@ export default function FilterTag({ label, onRemove }: FilterTagProps) {
       style={{
         backgroundColor: "var(--page-primary-15)",
         borderColor: "var(--page-primary-40)",
-        color: "var(--page-primary)",
+        color: "var(--admin-texto-primario)",
       }}
     >
       {label}

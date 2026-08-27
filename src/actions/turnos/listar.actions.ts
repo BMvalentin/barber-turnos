@@ -12,7 +12,8 @@ export async function getTurnos(page: number = 1, estadoFiltro?: string, fechaFi
     if (!session?.user) return { success: false, error: "No autorizado" };
 
     const usuarioEsAdmin = esAdmin(session);
-    const pageSize = 6;
+    /* Páginas de 10 turnos: alimenta el scroll infinito de la vista de turnos. */
+    const pageSize = 10;
     const skip = (page - 1) * pageSize;
 
     const where: Prisma.turnoWhereInput = {};

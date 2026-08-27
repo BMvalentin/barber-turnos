@@ -58,7 +58,7 @@ export function HorariosList({
             className="p-2 rounded-xl"
             style={{
               backgroundColor: `var(--page-primary-20)`,
-              color: "var(--page-primary)",
+              color: "var(--admin-texto-primario)",
               border: `1px solid var(--page-primary-40)`
             }}
           >
@@ -73,7 +73,7 @@ export function HorariosList({
                 className="border text-xs px-2.5 py-0.5"
                 style={{
                   backgroundColor: `var(--page-primary-20)`,
-                  color: "var(--page-primary)",
+                  color: "var(--admin-texto-primario)",
                   borderColor: `var(--page-primary-60)`,
                 }}
               >
@@ -130,7 +130,7 @@ export function HorariosList({
                   className="p-2 rounded-lg"
                   style={{
                     backgroundColor: `var(--page-primary-20)`,
-                    color: "var(--page-primary)",
+                    color: "var(--admin-texto-primario)",
                   }}
                 >
                   <Clock className="h-5 w-5" />
@@ -190,7 +190,7 @@ export function HorariosList({
 
       {/* MODAL */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md p-0 bg-transparent border-none [&>button]:text-white [&>button]:hover:opacity-80">
+        <DialogContent className="max-w-md p-0 bg-transparent border-none [&>button]:text-[var(--admin-texto-primario)] [&>button]:hover:opacity-80">
           <div
             className="backdrop-blur-xl rounded-xl p-6 space-y-6 shadow-2xl"
             style={{

@@ -39,7 +39,7 @@ export default function CookieModal({ onAccept }: CookieModalProps) {
             >
               <Cookie
                 className="h-5 w-5"
-                style={{ color: "var(--page-primary)" }}
+                style={{ color: "var(--admin-texto-primario)" }}
               />
             </div>
             <h2 className="flex-1 text-sm font-bold uppercase tracking-wider text-[var(--page-bg-foreground)]">

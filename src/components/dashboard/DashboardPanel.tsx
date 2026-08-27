@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button/Button";
 import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import { updateProfile } from "@/actions/sesion/perfil.actions";
 import { useSession } from "next-auth/react";
-import TurnoList from "@/components/turno/TurnoList";
+import TurnoList from "@/components/turno/gestion/TurnoList";
 import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
 import { toast } from "sonner";
@@ -85,7 +85,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: DatosU
                 </label>
                 <div className="flex bg-black/40 border border-amber-900/30 rounded-2xl overflow-hidden focus-within:ring-1 focus-within:ring-[var(--page-primary)] focus-within:border-[var(--page-primary)] transition-all">
                   <div className="flex items-center justify-center px-2 bg-[var(--page-primary)]/10 border-r border-amber-900/30">
-                    <select name="prefix" defaultValue={defaultPrefix} className="bg-transparent text-[var(--page-primary)] font-bold outline-none cursor-pointer pr-2 text-sm">
+                    <select name="prefix" defaultValue={defaultPrefix} className="bg-transparent text-[var(--page-primary-tinta)] font-bold outline-none cursor-pointer pr-2 text-sm">
                       <option value="+54 9" className="bg-neutral-900 text-white">🇦🇷 +54 9</option>
                       <option value="+598" className="bg-neutral-900 text-white">🇺🇾 +598</option>
                       <option value="+56" className="bg-neutral-900 text-white">🇨🇱 +56</option>
@@ -136,13 +136,13 @@ export default function DashboardPanel({ user, turnos, session }: { user: DatosU
           <div className="flex bg-[var(--page-primary)]/10 p-1 rounded-2xl w-full md:w-fit border border-[var(--page-primary)]/20">
             <button
               onClick={() => setActiveTab('perfil')}
-              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'perfil' ? 'bg-[var(--page-primary)] text-[var(--page-primary-foreground)] shadow-lg shadow-[var(--page-primary)]/20' : 'text-[var(--page-primary)] hover:bg-[var(--page-primary)]/10'}`}
+              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'perfil' ? 'bg-[var(--page-primary)] text-[var(--page-primary-foreground)] shadow-lg shadow-[var(--page-primary)]/20' : 'text-[var(--page-primary-tinta)] hover:bg-[var(--page-primary)]/10'}`}
             >
               <User className="w-4 h-4" /> Mi Perfil
             </button>
             <button
               onClick={() => setActiveTab('turnos')}
-              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'turnos' ? 'bg-[var(--page-primary)] text-[var(--page-primary-foreground)] shadow-lg shadow-[var(--page-primary)]/20' : 'text-[var(--page-primary)] hover:bg-[var(--page-primary)]/10'}`}
+              className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'turnos' ? 'bg-[var(--page-primary)] text-[var(--page-primary-foreground)] shadow-lg shadow-[var(--page-primary)]/20' : 'text-[var(--page-primary-tinta)] hover:bg-[var(--page-primary)]/10'}`}
             >
               <Calendar className="w-4 h-4" /> Mis Turnos
             </button>
@@ -162,7 +162,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: DatosU
             >
               <div className="p-6 md:p-8 border-b border-amber-900/10 bg-[var(--page-primary)]/5">
                 <h2 className="text-lg font-bold flex items-center gap-3 text-white uppercase tracking-widest">
-                  <Settings className="w-5 h-5 text-[var(--page-primary)]" />
+                  <Settings className="w-5 h-5 text-[var(--page-primary-tinta)]" />
                   Detalles de usuario
                 </h2>
               </div>
@@ -200,7 +200,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: DatosU
                   </label>
                   <div className="flex bg-black/40 border border-amber-900/30 rounded-2xl overflow-hidden focus-within:ring-1 focus-within:ring-[var(--page-primary)] focus-within:border-[var(--page-primary)] transition-all">
                     <div className="flex items-center justify-center px-2 bg-[var(--page-primary)]/10 border-r border-amber-900/30">
-                      <select name="prefix" defaultValue={defaultPrefix} className="bg-transparent text-[var(--page-primary)] font-bold outline-none cursor-pointer pr-2 text-sm">
+                      <select name="prefix" defaultValue={defaultPrefix} className="bg-transparent text-[var(--page-primary-tinta)] font-bold outline-none cursor-pointer pr-2 text-sm">
                         <option value="+54 9" className="bg-neutral-900 text-white">🇦🇷 +54 9</option>
                         <option value="+598" className="bg-neutral-900 text-white">🇺🇾 +598</option>
                         <option value="+56" className="bg-neutral-900 text-white">🇨🇱 +56</option>
@@ -250,7 +250,7 @@ export default function DashboardPanel({ user, turnos, session }: { user: DatosU
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="bg-neutral-900/40 rounded-3xl border border-amber-900/20 overflow-hidden backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-4 md:p-8 min-h-[500px]">
+              <div className="bg-neutral-900/40 rounded-3xl border border-amber-900/20 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-4 md:p-8 min-h-[500px]">
                 <div className="mb-6 pb-6 border-b border-amber-900/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <h2 className="text-xl font-bold text-white tracking-widest uppercase">
                     Historial de <span className="text-[var(--page-primary-tinta)]">Turnos</span>

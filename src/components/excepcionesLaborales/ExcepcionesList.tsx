@@ -87,14 +87,14 @@ export default function ExcepcionesList({ excepciones }: ExcepcionesListProps) {
                 className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] whitespace-nowrap"
                 style={{
                   backgroundColor: `var(--page-primary-15)`,
-                  color: "var(--page-primary)",
+                  color: "var(--admin-texto-primario)",
                   border: `1px solid var(--page-primary-30)`
                 }}
               >
                 <User className="h-3 w-3" /> {excepcion.barbero.nombre}
               </span>
             ) : (
-              <span className="bg-[var(--page-primary)]/10 text-[var(--page-primary)] px-2 py-0.5 rounded-full text-[10px] border border-[var(--page-primary)]/20">
+              <span className="bg-[var(--page-primary)]/10 text-[var(--admin-texto-primario)] px-2 py-0.5 rounded-full text-[10px] border border-[var(--page-primary)]/20">
                 Global
               </span>
             )}

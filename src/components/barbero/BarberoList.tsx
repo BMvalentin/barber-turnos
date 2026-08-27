@@ -110,13 +110,13 @@ function BarberoCard({
                   <span
                     key={s.servicio.id}
                     className="text-xs px-2 py-1 rounded"
-                    style={{ backgroundColor: `var(--page-primary-20)`, color: "var(--page-primary)" }}
+                    style={{ backgroundColor: `var(--page-primary-20)`, color: "var(--admin-texto-primario)" }}
                   >
                     {s.servicio.nombre}
                   </span>
                 ))
               ) : (
-                <span className="text-xs text-zinc-500">Sin servicios</span>
+                <span className="text-xs text-[var(--admin-texto-muted)]">Sin servicios</span>
               )}
             </div>
           </div>
@@ -142,7 +142,7 @@ function BarberoCard({
                           <span
                             key={h.margenLaboralId}
                             className="text-xs px-2 py-1 rounded"
-                            style={{ backgroundColor: `var(--page-primary-20)`, color: "var(--page-primary)" }}
+                            style={{ backgroundColor: `var(--page-primary-20)`, color: "var(--admin-texto-primario)" }}
                           >
                             {h.margenLaboral.desde} - {h.margenLaboral.hasta}
                           </span>
@@ -152,7 +152,7 @@ function BarberoCard({
                 ))}
               </div>
             ) : (
-              <span className="text-xs text-zinc-500">Sin horarios</span>
+              <span className="text-xs text-[var(--admin-texto-muted)]">Sin horarios</span>
             )}
           </div>
 
