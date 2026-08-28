@@ -67,7 +67,7 @@ export async function createTurno(
     });
     if (hayChoque) return { success: false, error: "Horario ocupado" };
 
-    if (await existeLockAjeno(barberoId, inicio, userId)) {
+    if (await existeLockAjeno(barberoId, inicio, session.user.id)) {
       return { success: false, error: "Este horario está siendo seleccionado por otro usuario en este momento. Intentá con otro horario." };
     }
 
@@ -90,6 +90,12 @@ export async function createTurno(
         ...turno,
         precioCongelado: Number(turno.precioCongelado),
         seniaCongelada: Number(turno.seniaCongelada),
+        servicio: {
+          ...turno.servicio,
+          precio: Number(turno.servicio.precio),
+          senia: Number(turno.servicio.senia),
+          descuento: Number(turno.servicio.descuento),
+        },
       },
     };
   } catch (error) {

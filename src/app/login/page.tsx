@@ -81,7 +81,7 @@ function LoginPageContenido() {
             
             <div className="absolute bottom-12 left-12 right-12 text-left">
               <h2 className="text-4xl font-black text-white uppercase tracking-tighter mb-2">
-                Domina tu <span className="text-[var(--page-primary)]">Estilo</span>
+                Domina tu <span className="text-[var(--page-primary-tinta)]">Estilo</span>
               </h2>
               <p className="text-zinc-400 font-medium">El corte perfecto es solo el principio. Bienvenido al club.</p>
             </div>
@@ -94,10 +94,10 @@ function LoginPageContenido() {
 
             <div className="text-center lg:text-left mb-10">
               <div className="inline-flex lg:hidden items-center justify-center w-16 h-16 rounded-full bg-zinc-900 mb-6 border border-[var(--page-primary)]/30 shadow-">
-                <Scissors className="w-8 h-8 text-[var(--page-primary)]" />
+                <Scissors className="w-8 h-8 text-[var(--page-primary-tinta)]" />
               </div>
               <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tighter uppercase">
-                MAYORAZ <span className="text-[var(--page-primary)]">Barber</span>
+                MAYORAZ <span className="text-[var(--page-primary-tinta)]">Barber</span>
               </h1>
               <p className="text-zinc-400 text-sm mt-2 font-medium tracking-wide">INGRESA A TU CUENTA</p>
             </div>
@@ -115,9 +115,9 @@ function LoginPageContenido() {
 
             <form action={action} className="space-y-6">
               <div className="space-y-2">
-                <label className="text- font-black text-[var(--page-primary)] uppercase tracking- ml-1">Email</label>
+                <label className="text- font-black text-[var(--page-primary-tinta)] uppercase tracking- ml-1">Email</label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary)] transition-colors" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary-tinta)] transition-colors" />
                   <input 
                     name="email" 
                     type="email" 
@@ -129,9 +129,9 @@ function LoginPageContenido() {
               </div>
 
               <div className="space-y-2">
-                <label className="text- font-black text-[var(--page-primary)] uppercase tracking- ml-1">Contraseña</label>
+                <label className="text- font-black text-[var(--page-primary-tinta)] uppercase tracking- ml-1">Contraseña</label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary)] transition-colors" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary-tinta)] transition-colors" />
                   <input 
                     name="password" 
                     type="password" 
@@ -158,7 +158,7 @@ function LoginPageContenido() {
 
             <p className="text-center lg:text-left text-sm text-zinc-500 mt-8 font-medium">
               ¿No eres miembro aún?{" "}
-              <Link href="/register" className="text-[var(--page-primary)] hover:text-[var(--page-primary-80)] font-bold underline-offset-4 hover:underline transition-colors">
+              <Link href="/register" className="text-[var(--page-primary-tinta)] hover:text-[var(--page-primary-tinta)] font-bold underline-offset-4 hover:underline transition-colors">
                 Regístrate aquí
               </Link>
             </p>

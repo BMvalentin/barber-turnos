@@ -38,16 +38,16 @@ export default function DiaCalendario({
             ? // Días fuera del mes: invisibles
               "opacity-0 pointer-events-none"
             : seleccionado
-            ? // Seleccionado: cuadrado naranja fuerte
-              "bg-[#E8B031] text-[#14110C] font-black shadow-[0_0_10px_rgba(232,176,49,0.4)]"
+            ? // Seleccionado: cuadrado con color de marca
+              "bg-[var(--page-primary)] text-[var(--page-primary-foreground)] font-black shadow-[0_0_10px_color-mix(in_srgb,var(--page-primary)_40%,transparent)]"
             : disponible && !pasado
-            ? // Disponible: texto naranja, hover suave
-              "text-[#E8B031] font-semibold hover:bg-[#E8B031]/15 cursor-pointer"
+            ? // Disponible: texto de marca, hover suave
+              "text-[var(--page-primary-tinta)] font-semibold hover:bg-[var(--page-primary-15)] cursor-pointer"
             : pasado
             ? // Pasado: muy atenuado
-              "text-[#3A342C] cursor-not-allowed"
+              "text-zinc-700 cursor-not-allowed"
             : // Sin disponibilidad
-              "text-[#4A4438] cursor-not-allowed"
+              "text-zinc-600 cursor-not-allowed"
         }
       `}
     >
@@ -55,12 +55,12 @@ export default function DiaCalendario({
 
       {/* Puntito naranja debajo del número en días disponibles no seleccionados */}
       {disponible && !seleccionado && !pasado && estesMes && (
-        <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-[3px] h-[3px] rounded-full bg-[#E8B031]/70" />
+        <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-[3px] h-[3px] rounded-full bg-[var(--page-primary-70)]" />
       )}
 
       {/* Anillo para el día de hoy (si no está seleccionado) */}
       {hoy && !seleccionado && estesMes && (
-        <span className="absolute inset-0 rounded-lg ring-1 ring-[#E8B031]/30 pointer-events-none" />
+        <span className="absolute inset-0 rounded-lg ring-1 ring-[var(--page-primary-30)] pointer-events-none" />
       )}
     </button>
   );

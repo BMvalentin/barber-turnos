@@ -55,7 +55,7 @@ export default function AdminTopbar({
       className="flex h-14 shrink-0 items-center justify-between gap-3 border-b px-4"
       style={{
         borderColor: "var(--admin-border)",
-        backgroundColor: "var(--admin-background)",
+        backgroundColor: "var(--admin-surface)",
       }}
     >
       <div className="flex min-w-0 items-center gap-2">
@@ -64,7 +64,7 @@ export default function AdminTopbar({
           onClick={alAlternarMenu}
           aria-label="Abrir menú de navegación"
           aria-expanded={menuAbierto}
-          className="-ml-1 rounded-md p-2 text-[var(--admin-texto-secundario)] transition-colors hover:bg-white/5 hover:text-[var(--admin-texto-primario)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] lg:hidden"
+          className="-ml-1 rounded-md p-2 text-[var(--admin-texto-secundario)] transition-colors hover:bg-[var(--admin-border)] hover:text-[var(--admin-texto-primario)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] lg:hidden"
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -88,7 +88,7 @@ export default function AdminTopbar({
             onClick={() => setMenuUsuarioAbierto((v) => !v)}
             aria-haspopup="menu"
             aria-expanded={menuUsuarioAbierto}
-            className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
+            className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-[var(--admin-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
           >
             <Image
               src={session?.user?.image || "/images/avatar-default.svg"}
@@ -104,11 +104,11 @@ export default function AdminTopbar({
           </button>
 
           {menuUsuarioAbierto && (
-            <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-lg border border-white/10 bg-[var(--admin-surface-elevated)] p-1 shadow-xl">
+            <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-1 shadow-xl">
               <Link
                 href="/dashboard"
                 onClick={() => setMenuUsuarioAbierto(false)}
-                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[var(--admin-texto-secundario)] transition-colors hover:bg-white/5 hover:text-[var(--admin-texto-primario)]"
+                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[var(--admin-texto-secundario)] transition-colors hover:bg-[var(--admin-border)] hover:text-[var(--admin-texto-primario)]"
               >
                 <User className="h-4 w-4 shrink-0" />
                 Mi perfil

@@ -77,7 +77,7 @@ export function DiaLaboralList({
               dia.estado ? "" : "opacity-60"
             }`}
             style={{
-              borderColor: dia.estado ? `var(--page-secondary-50)` : "#374151",
+                    borderColor: dia.estado ? `var(--page-secondary-50)` : "var(--admin-border-fuerte)",
             }}
           >
             <div className="p-6 space-y-4">
@@ -117,7 +117,7 @@ export function DiaLaboralList({
                     className="gap-1 border"
                     style={{
                       backgroundColor: `var(--page-primary-20)`,
-                      color: "var(--page-primary)",
+                      color: "var(--admin-texto-primario)",
                       borderColor: `var(--page-primary-50)`,
                     }}
                   >

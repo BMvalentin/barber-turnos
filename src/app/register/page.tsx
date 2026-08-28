@@ -75,7 +75,7 @@ export default function RegisterPage() {
             
             <div className="absolute bottom-12 left-12 right-12 text-right">
               <h2 className="text-4xl font-black text-white uppercase tracking-tighter mb-2">
-                Forja tu <span className="text-[var(--page-primary)]">Identidad</span>
+                Forja tu <span className="text-[var(--page-primary-tinta)]">Identidad</span>
               </h2>
               <p className="text-zinc-400 font-medium">Únete a la hermandad. Reserva tus turnos al instante.</p>
             </div>
@@ -87,10 +87,10 @@ export default function RegisterPage() {
 
             <div className="text-center lg:text-left mb-8">
               <div className="inline-flex lg:hidden items-center justify-center w-16 h-16 rounded-full bg-zinc-900 mb-6 border border-[var(--page-primary)]/30 shadow-">
-                <Scissors className="w-8 h-8 text-[var(--page-primary)]" />
+                <Scissors className="w-8 h-8 text-[var(--page-primary-tinta)]" />
               </div>
               <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tighter uppercase">
-                Únete al <span className="text-[var(--page-primary)]">Club</span>
+                Únete al <span className="text-[var(--page-primary-tinta)]">Club</span>
               </h1>
               <p className="text-zinc-400 text-sm mt-2 font-medium tracking-wide">CREA TU CUENTA EXCLUSIVA</p>
             </div>
@@ -108,9 +108,9 @@ export default function RegisterPage() {
 
             <form action={action} className="space-y-5">
               <div className="space-y-2">
-                <label className="text- font-black text-[var(--page-primary)] uppercase tracking- ml-1">Nombre Completo</label>
+                <label className="text- font-black text-[var(--page-primary-tinta)] uppercase tracking- ml-1">Nombre Completo</label>
                 <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary)] transition-colors" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary-tinta)] transition-colors" />
                   <input
                     name="name"
                     type="text"
@@ -124,9 +124,9 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text- font-black text-[var(--page-primary)] uppercase tracking- ml-1">Email</label>
+                <label className="text- font-black text-[var(--page-primary-tinta)] uppercase tracking- ml-1">Email</label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary)] transition-colors" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary-tinta)] transition-colors" />
                   <input
                     name="email"
                     type="email"
@@ -140,9 +140,9 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text- font-black text-[var(--page-primary)] uppercase tracking- ml-1">Contraseña</label>
+                <label className="text- font-black text-[var(--page-primary-tinta)] uppercase tracking- ml-1">Contraseña</label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary)] transition-colors" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary-tinta)] transition-colors" />
                   <input
                     name="password"
                     type={verPassword ? "text" : "password"}
@@ -155,7 +155,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => setVerPassword((v) => !v)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-[var(--page-primary)] transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-[var(--page-primary-tinta)] transition-colors"
                     aria-label={verPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                   >
                     {verPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -164,9 +164,9 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text- font-black text-[var(--page-primary)] uppercase tracking- ml-1">Confirmar Contraseña</label>
+                <label className="text- font-black text-[var(--page-primary-tinta)] uppercase tracking- ml-1">Confirmar Contraseña</label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary)] transition-colors" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary-tinta)] transition-colors" />
                   <input
                     name="confirmPassword"
                     type={verConfirmPassword ? "text" : "password"}
@@ -179,7 +179,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => setVerConfirmPassword((v) => !v)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-[var(--page-primary)] transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-[var(--page-primary-tinta)] transition-colors"
                     aria-label={verConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                   >
                     {verConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -204,7 +204,7 @@ export default function RegisterPage() {
             <div className="text-center lg:text-left mt-8">
               <p className="text-sm text-zinc-500 font-medium">
                 ¿Ya eres miembro?{" "}
-                <Link href="/login" className="text-[var(--page-primary)] font-bold hover:text-[var(--page-primary-80)] transition-colors underline-offset-4 hover:underline">
+                <Link href="/login" className="text-[var(--page-primary-tinta)] font-bold hover:text-[var(--page-primary-tinta)] transition-colors underline-offset-4 hover:underline">
                   Inicia Sesión
                 </Link>
               </p>

@@ -37,11 +37,11 @@ export function AboutSection() {
             
             <div className="relative z-10">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--page-bg)]/80 border border-[var(--page-bg-foreground)]/5 mb-6">
-                <span className="text-xs font-bold uppercase tracking-widest text-[var(--page-primary)]">Nuestra Esencia</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-[var(--page-primary-tinta)]">Nuestra Esencia</span>
               </div>
               
               <h2 className="font-black text-3xl md:text-5xl text-[var(--page-bg-foreground)] uppercase tracking-tighter mb-6">
-                Sobre <span className="text-[var(--page-primary)] italic pr-1">Nosotros</span>
+                Sobre <span className="text-[var(--page-primary-tinta)] italic pr-1">Nosotros</span>
               </h2>
               <p className="text-[var(--page-bg-foreground)]/70 text-lg mb-6 leading-relaxed">
                 Somos una barbería nacida de la pasión por el estilo y la excelencia. 
@@ -73,7 +73,7 @@ export function AboutSection() {
                 className="flex gap-4 p-5 md:p-6 rounded-2xl bg-[var(--admin-surface)] border border-[var(--page-bg-foreground)]/5 hover:border-[var(--page-primary)]/30 hover:bg-[var(--admin-surface-elevated)] transition-all shadow-xl group"
               >
                 <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-[var(--page-bg)] border border-[var(--page-bg-foreground)]/10 flex items-center justify-center group-hover:border-[var(--page-primary)]/30 transition-colors">
-                  <feature.icon className="w-6 h-6 text-[var(--page-primary)]" />
+                  <feature.icon className="w-6 h-6 text-[var(--page-primary-tinta)]" />
                 </div>
                 <div>
                   <h3 className="font-bold text-[var(--page-bg-foreground)] text-lg tracking-wide mb-1">{feature.title}</h3>

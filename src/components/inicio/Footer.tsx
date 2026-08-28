@@ -102,7 +102,7 @@ export function Footer({
                     borderColor: "var(--page-primary-30)",
                   }}
                 >
-                  <Scissors className="w-5 h-5" style={{ color: "var(--page-primary)" }} />
+                  <Scissors className="w-5 h-5" style={{ color: "var(--admin-texto-primario)" }} />
                 </div>
               )}
               <span className="font-bold text-[var(--page-bg-foreground)] tracking-wider uppercase text-lg">
@@ -127,7 +127,7 @@ export function Footer({
                     className="group flex w-9 h-9 items-center justify-center rounded-full border transition-all duration-300 hover:-translate-y-0.5 hover:bg-[var(--page-primary)]"
                     style={ESTILO_BOTON_SOCIAL}
                   >
-                    <Instagram className="w-4 h-4 text-[var(--page-primary)] transition-colors group-hover:text-[var(--page-primary-foreground)]" />
+                    <Instagram className="w-4 h-4 text-[var(--admin-texto-primario)] transition-colors group-hover:text-[var(--page-primary-foreground)]" />
                   </a>
                 )}
                 {whatsapp && (
@@ -138,7 +138,7 @@ export function Footer({
                     aria-label="WhatsApp"
                     className="group flex items-center gap-2 text-sm text-[var(--page-bg-foreground)]/70 hover:text-[var(--page-bg-foreground)] transition-colors"
                   >
-                    <MessageCircle className="w-4 h-4 shrink-0" style={{ color: "var(--page-primary)" }} />
+                    <MessageCircle className="w-4 h-4 shrink-0" style={{ color: "var(--page-primary-tinta)" }} />
                     <span>{whatsapp}</span>
                   </a>
                 )}
@@ -159,28 +159,28 @@ export function Footer({
                 href="/"
                 className="group flex items-center gap-2 text-sm text-[var(--page-bg-foreground)]/70 hover:text-[var(--page-bg-foreground)] hover:translate-x-1 transition-all"
               >
-                <ChevronRight className="w-4 h-4" style={{ color: "var(--page-primary)" }} />
+                <ChevronRight className="w-4 h-4" style={{ color: "var(--page-primary-tinta)" }} />
                 Inicio
               </Link>
               <Link
                 href="/#servicios"
                 className="group flex items-center gap-2 text-sm text-[var(--page-bg-foreground)]/70 hover:text-[var(--page-bg-foreground)] hover:translate-x-1 transition-all"
               >
-                <ChevronRight className="w-4 h-4" style={{ color: "var(--page-primary)" }} />
+                <ChevronRight className="w-4 h-4" style={{ color: "var(--page-primary-tinta)" }} />
                 Servicios
               </Link>
               <Link
                 href="/#ubicacion"
                 className="group flex items-center gap-2 text-sm text-[var(--page-bg-foreground)]/70 hover:text-[var(--page-bg-foreground)] hover:translate-x-1 transition-all"
               >
-                <ChevronRight className="w-4 h-4" style={{ color: "var(--page-primary)" }} />
+                <ChevronRight className="w-4 h-4" style={{ color: "var(--page-primary-tinta)" }} />
                 Ubicación
               </Link>
               <Link
                 href="/turno"
                 className="group flex items-center gap-2 text-sm text-[var(--page-bg-foreground)]/70 hover:text-[var(--page-bg-foreground)] hover:translate-x-1 transition-all"
               >
-                <ChevronRight className="w-4 h-4" style={{ color: "var(--page-primary)" }} />
+                <ChevronRight className="w-4 h-4" style={{ color: "var(--page-primary-tinta)" }} />
                 Turnos
               </Link>
             </nav>
@@ -201,7 +201,7 @@ export function Footer({
                     className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                     style={ESTILO_CAJA_ICONO}
                   >
-                    <MapPin className="w-4 h-4" style={{ color: "var(--page-primary)" }} />
+                    <MapPin className="w-4 h-4" style={{ color: "var(--admin-texto-primario)" }} />
                   </div>
                   <span className="text-sm text-[var(--page-bg-foreground)]/70">
                     {direccion}
@@ -215,7 +215,7 @@ export function Footer({
                     className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                     style={ESTILO_CAJA_ICONO}
                   >
-                    <Phone className="w-4 h-4" style={{ color: "var(--page-primary)" }} />
+                    <Phone className="w-4 h-4" style={{ color: "var(--admin-texto-primario)" }} />
                   </div>
                   <a
                     href={`tel:${telefono}`}
@@ -231,7 +231,7 @@ export function Footer({
                     className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                     style={ESTILO_CAJA_ICONO}
                   >
-                    <Mail className="w-4 h-4" style={{ color: "var(--page-primary)" }} />
+                    <Mail className="w-4 h-4" style={{ color: "var(--admin-texto-primario)" }} />
                   </div>
                   <a
                     href={`mailto:${email}`}
@@ -298,9 +298,9 @@ export function Footer({
               outlineColor: "var(--primary)",
             }}
           >
-            <Code2 className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-[-8deg] group-hover:scale-110" style={{ color: "var(--primary)" }} />
+            <Code2 className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-[-8deg] group-hover:scale-110" style={{ color: "var(--admin-texto-primario)" }} />
             <span className="text-xs font-light tracking-wide text-[var(--page-bg-foreground)]/60">Creado por</span>
-            <span className="text-xs font-bold tracking-wider uppercase" style={{ color: "var(--primary)" }}>Logabyte</span>
+            <span className="text-xs font-bold tracking-wider uppercase" style={{ color: "var(--admin-texto-primario)" }}>Logabyte</span>
           </a>
           {localidad && (
             <p className="text-xs text-[var(--page-bg-foreground)]/50 sm:justify-self-end sm:text-right text-center">

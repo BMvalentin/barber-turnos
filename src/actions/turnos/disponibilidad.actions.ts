@@ -29,7 +29,7 @@ export async function obtenerDiasDisponibles(
   };
 
   try {
-    const data = await getCachedData(cacheKey, cacheTags, calcularDiasDisponibles, 60);
+    const data = await getCachedData(cacheKey, cacheTags, calcularDiasDisponibles, 120);
     return { success: true, data };
   } catch (error) {
     return { success: false, error: "Error al calcular disponibilidad" };

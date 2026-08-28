@@ -56,7 +56,7 @@ export function LocationSection({ config }: LocationSectionProps) {
               borderColor: "var(--page-primary-30)" 
             }}
           >
-            <Scissors className="w-5 h-5" style={{ color: "var(--page-primary)" }} />
+            <Scissors className="w-5 h-5" style={{ color: "var(--admin-texto-primario)" }} />
           </div>
           <h2 className="font-display text-3xl md:text-5xl font-bold mb-4 text-[var(--page-bg-foreground)]">
             Nuestra <span className="italic" style={{ color: "var(--page-primary-tinta)" }}>Ubicación</span>
@@ -79,7 +79,7 @@ export function LocationSection({ config }: LocationSectionProps) {
                 className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
                 style={{ backgroundColor: "var(--page-primary-15)" }}
               >
-                <MapPin className="w-6 h-6" style={{ color: "var(--page-primary)" }} />
+                <MapPin className="w-6 h-6" style={{ color: "var(--admin-texto-primario)" }} />
               </div>
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary-tinta)" }}>Dirección</h3>
@@ -93,7 +93,7 @@ export function LocationSection({ config }: LocationSectionProps) {
                 className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
                 style={{ backgroundColor: "var(--page-primary-15)" }}
               >
-                <Phone className="w-6 h-6" style={{ color: "var(--page-primary)" }} />
+                <Phone className="w-6 h-6" style={{ color: "var(--admin-texto-primario)" }} />
               </div>
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary-tinta)" }}>Turnos y Consultas</h3>
@@ -107,7 +107,7 @@ export function LocationSection({ config }: LocationSectionProps) {
                 className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
                 style={{ backgroundColor: "var(--page-primary-15)" }}
               >
-                <Clock className="w-6 h-6" style={{ color: "var(--page-primary)" }} />
+                <Clock className="w-6 h-6" style={{ color: "var(--admin-texto-primario)" }} />
               </div>
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary-tinta)" }}>Horarios</h3>

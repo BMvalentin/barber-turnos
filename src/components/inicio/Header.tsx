@@ -49,10 +49,10 @@ export function Header({ config }: HeaderProps) {
 
   return (
     <header
-      className="fixed top-0 inset-x-0 z-50 h-16 w-full backdrop-blur-md text-[var(--page-bg-foreground)]"
+      className="fixed top-0 inset-x-0 z-50 h-16 w-full text-[var(--page-bg-foreground)]"
       style={{
-        backgroundColor: "color-mix(in srgb, var(--page-bg) 90%, transparent)",
-        borderBottom: "1px solid color-mix(in srgb, var(--page-bg-foreground) 8%, transparent)",
+        backgroundColor: "var(--admin-surface)",
+        borderBottom: "1px solid var(--admin-border)",
       }}
     >
       <div className="container mx-auto px-4 h-full flex items-center justify-between">
@@ -113,7 +113,7 @@ export function Header({ config }: HeaderProps) {
             <div ref={contenedorSesion} className="relative">
               <button
                 type="button"
-                className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-[var(--page-bg-foreground)]/5"
+                className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-[var(--admin-border)]"
                 onClick={() => setMenuAbierto(!menuAbierto)}
                 aria-expanded={menuAbierto}
                 aria-haspopup="menu"
@@ -132,11 +132,11 @@ export function Header({ config }: HeaderProps) {
               </button>
 
               {menuAbierto && (
-                <div className="absolute right-0 top-full mt-2 w-48 rounded-lg border border-[var(--page-bg-foreground)]/10 bg-[var(--admin-surface-elevated)] shadow-xl py-1">
+                <div className="absolute right-0 top-full mt-2 w-48 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] shadow-xl py-1">
                   <Link
                     href="/dashboard"
                     onClick={() => setMenuAbierto(false)}
-                    className="block w-full px-3 py-2 text-sm text-[var(--page-bg-foreground)]/80 hover:bg-[var(--page-bg-foreground)]/5 hover:text-[var(--page-bg-foreground)] rounded-md"
+                    className="block w-full px-3 py-2 text-sm text-[var(--page-bg-foreground)]/80 hover:bg-[var(--admin-border)] hover:text-[var(--page-bg-foreground)] rounded-md"
                   >
                     Mi perfil
                   </Link>
@@ -155,7 +155,7 @@ export function Header({ config }: HeaderProps) {
           ) : (
             <Link
               href="/login"
-              className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium text-[var(--page-bg-foreground)]/80 hover:text-[var(--page-bg-foreground)] hover:bg-[var(--page-bg-foreground)]/5 transition-colors"
+              className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium text-[var(--page-bg-foreground)]/80 hover:text-[var(--page-bg-foreground)] hover:bg-[var(--admin-border)] transition-colors"
             >
               <DoorOpen className="h-4 w-4" />
               Iniciar Sesión
@@ -183,8 +183,8 @@ export function Header({ config }: HeaderProps) {
         <div
           className="md:hidden border-t"
           style={{
-            borderColor: "color-mix(in srgb, var(--page-bg-foreground) 8%, transparent)",
-            backgroundColor: "color-mix(in srgb, var(--page-bg) 97%, transparent)",
+            borderColor: "var(--admin-border)",
+            backgroundColor: "var(--admin-surface)",
           }}
         >
           <div className="flex flex-col px-6 py-6 space-y-4">
@@ -225,7 +225,7 @@ export function Header({ config }: HeaderProps) {
 
             <div
               className="border-t pt-6 mt-4"
-              style={{ borderColor: "color-mix(in srgb, var(--page-bg-foreground) 8%, transparent)" }}
+              style={{ borderColor: "var(--admin-border)" }}
             >
               {session ? (
                 <div className="flex flex-col gap-4">

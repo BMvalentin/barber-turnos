@@ -620,3 +620,76 @@ re-exports documentados del framework/store), 0 patrones duplicados ≥3 copias,
   aprobada para no re-mover imports; la centralización del objetivo se cumple igual.
 - **V14**: `ui/boton-submit.tsx` del plan se materializó como 2 archivos
   (`boton-submit-form-status.tsx` + `boton-submit-pending.tsx`) para cumplir 1 export por archivo.
+
+## 12. Apéndices A y B del ciclo completados — 2026-08-27
+
+Pendientes NUEVOS de `PENDIENTES.md` (Apéndices A y B), aprobados en plan el 27-ago-2026 e
+implementados en la misma fecha. Orquestación con 3 subagentes implementadores (B-A, B-B, B-C en
+paralelo+secuencial según §B.9) + agente verificador que **certificó** la fase sin requerir
+reparaciones.
+
+### 12.1 Apéndice A — Selector visual de barberos (tarjetas de foto)
+
+| Archivo | Acción |
+|---|---|
+| `src/components/turno/SelectorBarberoTarjetas.tsx` | **NUEVO** — selector de tarjetas con avatar circular (`srcImage` o iniciales con `var(--page-primary-30)`), nombre centrado, estados seleccionado/no seleccionado con `var(--page-primary)`/`-15`/`-20`/`-60`, check con `-foreground`, hidden input `name="barberoId"` |
+| `src/components/turno/SeccionBarbero.tsx` | Usa el nuevo selector + mensaje de lista vacía conservado |
+| `src/components/turno/FormularioTurno.tsx` | Guard `onSubmit` que bloquea el envío (toast) si no hay barbero; barbero a ancho completo |
+| `src/components/turno/EditarTurnoModal.tsx` | Reemplaza el `CampoSelect` "Asignar Barbero" por el selector (hidden `barberoId`); `CampoSelect` queda solo para servicio |
+
+### 12.2 Apéndice B — Rediseño del modal "Nuevo Turno" (flujo completo de reserva)
+
+| Archivo | Acción |
+|---|---|
+| `src/components/turno/SeccionServicio.tsx` | `select` → tarjetas de servicio (nombre, duración, precio con `formatearMoneda`) + hidden `servicioId` |
+| `src/components/turno/SeccionConfirmacion.tsx` | **NUEVO** — sección final que reutiliza `SeccionCliente` + nota de confirmación |
+| `src/components/turno/ResumenTurno.tsx` | **NUEVO** — sidebar de resumen en tiempo real (servicio, barbero, fecha, hora, total) + botón CONFIRMAR TURNO (`BotonSubmitFormStatus` con `deshabilitado`) + Cancelar |
+| `src/components/turno/SeleccionadorHorario.tsx` | Refactor presentacional: recibe `disponibilidad` por props; exporta el tipo `DatosDisponibilidadHorarios` |
+| `src/components/turno/GrillaCalendario.tsx` / `DiaCalendario.tsx` / `ListaHorarios.tsx` | Acentos `#E8B031` → `var(--page-primary*)`; neutros/superficies oscuras fijos intactos |
+| `src/components/turno/FormularioTurno.tsx` | Layout 2 columnas `lg:grid-cols-[1fr_320px]`, sube `useDisponibilidadHorarios`, guard `manejarEnvio` por selección completa |
+| `src/components/turno/CreateTurnoModal.tsx` | Ancho `max-w-4xl` → `max-w-5xl`; pasa `barberos` a `FormularioTurno` |
+| `src/components/ui/boton-submit-form-status.tsx` | Prop opcional `deshabilitado` → `disabled={pending || deshabilitado}` |
+
+### 12.3 Gates y decisiones
+
+- `npx tsc --noEmit` = **0 errores** ✓
+- `npm run build` = **OK** (28 rutas) ✓
+- `npm run lint`: sin errores en los archivos de la fase; solo `warning` `no-img-element` en
+  `SelectorBarberoTarjetas` (marcado `<img>` exigido por el Apéndice A.4.1, consistente con
+  `BarberoList.tsx`). Los errores de lint reportados son preexistentes y ajenos a esta fase
+  (`types/barbero|horarios|servicio|turno.ts`, `usoPruebasMercadoPago.ts`, `requerir-sesion.ts`).
+- **Decisión de coordinación**: `SeleccionadorHorario` pasó a presentacional; el estado de
+  disponibilidad (`useDisponibilidadHorarios`) se subió a `FormularioTurno` y `EditarTurnoModal`
+  (consumidor que no figuraba en la tabla §B.7 pero era necesario actualizar para no romper el modal
+  de edición). El plan §B.7 no lo listaba; se documenta como ajuste necesario.
+- **Sin regresiones esperadas**: hidden inputs (`servicioId`, `barberoId`, `horarioReservado`,
+  `userId`, `id`) intactos dentro de sus `<form>`; `createTurno`/`actualizarTurno` no se tocaron.
+- **Pendiente explícito**: `EditarTurnoModal.tsx` quedó en 305 líneas (>200 objetivo con 1 sola
+  función); cubierto por la decisión §4.3 (no se desglosa por tamaño en este ciclo). El smoke test
+  visual/interactivo en navegador sigue pendiente (requiere sesión), como ya se documentó en §11.
+
+### 12.4 Correcciones posteriores (2026-08-27)
+
+1. **Overflow de descripción larga de servicios** (modal Nuevo Turno): la descripción de un
+   servicio con cadenas sin espacios expandía el ancho del modal y generaba scroll horizontal.
+   Corrección robusta: `break-words` + `[overflow-wrap:anywhere]` en la descripción de
+   `SeccionServicio.tsx` y en nombre/descripción de `ResumenTurno.tsx`; `line-clamp-3` + `title`
+   (tooltip con el texto completo) en la descripción del modal; `min-w-0` en tarjetas, panel
+   izquierdo y sidebar para permitir que la columna `1fr` se encoja. Sin cambios de diseño.
+2. **Calendario con colores de la BD**: se eliminaron los superficies/accesorios dorados fijos
+   (`#18150F`, `#2A2318`, `#8E8675`, `#6B6355`, `#4A4438`, `#3A342C`, `#1A1612`, `#2C261D`,
+   `#1C1812`, `#E4E0D9`) de `GrillaCalendario.tsx`, `DiaCalendario.tsx` y `ListaHorarios.tsx`,
+   reemplazándolos por neutros zinc (`zinc-900/60`, `zinc-800`, `zinc-400/500/600/700`) consistentes
+   con el modal, manteniendo el acento dinámico `var(--page-primary)`/`-foreground`/`-tinta` y las
+   variantes alfa `--page-primary-XX` (ya inyectadas desde `page_config` en `layout.tsx`). No se
+   creó configuración de color nueva ni se reemplazó el sistema existente. `EditarTurnoModal.tsx`
+   conserva su paleta dorada propia (diseño preexistente del modal de edición, fuera del alcance).
+   Gates: `npx tsc --noEmit` = 0, `npm run build` = OK, lint sin errores en los archivos tocados.
+3. **Layout del modal Nuevo Turno (scroll independiente + resumen sticky)**: el contenedor del modal
+   dejó de scrollear como un todo (`overflow-y-auto` → `overflow-hidden flex flex-col` en
+   `CreateTurnoModal.tsx`). El `<form>` de `FormularioTurno.tsx` pasó a ser el cuerpo con altura
+   acotada (`flex-1 min-h-0`) y, en desktop, la columna izquierda scrollea internamente
+   (`lg:overflow-y-auto`) mientras el panel derecho (`ResumenTurno`) queda fijo alineado arriba
+   (`lg:self-start lg:sticky lg:top-0`) con el botón de confirmación siempre visible. En mobile el
+   form scrollea completo (`overflow-y-auto`, resumen debajo). Gates: `npx tsc --noEmit` = 0,
+   `npm run build` = OK.
