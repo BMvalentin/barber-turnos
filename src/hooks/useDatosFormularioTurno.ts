@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Session } from "next-auth";
+import { ESTADOS_PAGO } from "@/lib/constants";
 import { useDatosReserva } from "@/hooks/useDatosReserva";
 import type {
   BarberoData,
@@ -52,6 +53,9 @@ export function useDatosFormularioTurno({
     turnoInicial?.user?.id ||
       (session?.user?.role === "USER" ? session?.user?.id ?? "" : ""),
   );
+  const [estadoPago, setEstadoPago] = useState<(typeof ESTADOS_PAGO)[number]>(
+    turnoInicial?.estadoPago ?? ESTADOS_PAGO[0],
+  );
 
   const serviciosFiltrados = selectedBarberoId
     ? servicios.filter((s) =>
@@ -94,6 +98,8 @@ export function useDatosFormularioTurno({
     setSelectedBarberoId,
     selectedUserId,
     setSelectedUserId,
+    estadoPago,
+    setEstadoPago,
     serviciosFiltrados,
     barberosFiltrados,
     handleBarberoChange,

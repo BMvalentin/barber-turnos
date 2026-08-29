@@ -4,9 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { Preference } from "mercadopago";
 import { obtenerClienteMP } from "@/lib/mercadopago/obtener-cliente";
 import { requerirPropietarioOAdmin } from "@/lib/seguridad/requerir-propietario";
-import { ZONA_HORARIA, ESTADOS_TURNO } from "@/lib/constants";
-import type { ActionState } from "@/types/action-state";
-import type { DatosPreferenciaPago } from "@/types/mercadopago";
+import { ZONA_HORARIA, ESTADOS_TURNO, ESTADOS_PAGO } from "@/lib/constants";
+import type { ActionState } from "@/types/action-state"; import type { DatosPreferenciaPago } from "@/types/mercadopago";
 
 /** Crea la preferencia de pago en Mercado Pago para la seña de un turno. */
 export async function crearPreferenciaPago(turnoId: string): Promise<ActionState<DatosPreferenciaPago>> {
@@ -27,6 +26,7 @@ export async function crearPreferenciaPago(turnoId: string): Promise<ActionState
     const sesionAutorizada = await requerirPropietarioOAdmin(turno.userId);
     if (!sesionAutorizada) return { success: false, error: "No autorizado" };
 
+    if (turno.estadoPago !== ESTADOS_PAGO[0]) return { success: false, error: "Este turno ya no admite más pagos" };
     if (turno.estado === ESTADOS_TURNO[1]) return { success: false, error: "Este turno ya fue pagado" };
     if (turno.estado === ESTADOS_TURNO[3]) return { success: false, error: "Este turno está cancelado" };
     const seniaAmount = Number(turno.seniaCongelada);

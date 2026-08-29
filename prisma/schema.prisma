@@ -67,6 +67,7 @@ model turno {
   precioCongelado  Decimal      @db.Decimal(10, 2)
   seniaCongelada   Decimal      @db.Decimal(10, 2)
   estado           turno_estado @default(PENDIENTE)
+  estadoPago       estado_pago  @default(PENDIENTE)
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
   mpPaymentId      String?
@@ -263,4 +264,10 @@ enum dias_laborales {
   Viernes
   Sabado
   Domingo
+}
+
+enum estado_pago {
+  PENDIENTE
+  SEÑADO
+  PAGADO
 }

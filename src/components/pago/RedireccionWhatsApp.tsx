@@ -5,6 +5,7 @@ import { MessageCircle, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { formatearFecha } from "@/lib/utils/formatear-fecha";
 import { formatearHora } from "@/lib/utils/formatear-hora";
+import { formatearMoneda } from "@/lib/utils/formatear-moneda";
 
 type Props = {
   numeroWhatsApp: string;
@@ -12,6 +13,9 @@ type Props = {
   barberoNombre?: string;
   clienteNombre?: string | null;
   horarioReservado?: string | Date | null;
+  precioTotal?: number;
+  señaPagada?: number;
+  saldoPendiente?: number;
 };
 
 export default function RedireccionWhatsApp({
@@ -20,6 +24,9 @@ export default function RedireccionWhatsApp({
   barberoNombre,
   clienteNombre,
   horarioReservado,
+  precioTotal,
+  señaPagada,
+  saldoPendiente,
 }: Props) {
   const [mostrarBoton, setMostrarBoton] = useState(false);
 
@@ -42,9 +49,12 @@ export default function RedireccionWhatsApp({
     if (servicioNombre) partes.push(`✂️ Servicio: ${servicioNombre}`);
     if (barberoNombre) partes.push(`💈 Barbero: ${barberoNombre}`);
     if (clienteNombre) partes.push(`👤 Cliente: ${clienteNombre}`);
+    if (precioTotal != null) partes.push(`💰 Precio total: $${formatearMoneda(precioTotal)}`);
+    if (señaPagada != null) partes.push(`💵 Seña pagada: $${formatearMoneda(señaPagada)}`);
+    if (saldoPendiente != null) partes.push(`⏳ Saldo a abonar en el local: $${formatearMoneda(saldoPendiente)}`);
 
     return `https://wa.me/${numeroLimpio}?text=${encodeURIComponent(partes.join("\n"))}`;
-  }, [numeroWhatsApp, servicioNombre, barberoNombre, clienteNombre, horarioReservado]);
+  }, [numeroWhatsApp, servicioNombre, barberoNombre, clienteNombre, horarioReservado, precioTotal, señaPagada, saldoPendiente]);
 
   useEffect(() => {
     if (!urlWhatsApp) return;

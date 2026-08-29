@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { ESTADOS_TURNO } from "@/lib/constants";
+import { ESTADOS_TURNO, ESTADOS_PAGO } from "@/lib/constants";
 import { enviarEmailsTurnoConfirmado } from "@/lib/email/enviar-emails-turno-confirmado";
 import { INCLUDE_TURNO_CON_DETALLE } from "@/lib/turno-con-detalle";
 
@@ -63,6 +63,7 @@ export async function confirmarTurnoPorPago(args: {
     where: { id: turno.id },
     data: {
       estado: ESTADOS_TURNO[1],
+      estadoPago: ESTADOS_PAGO[1],
       ...(args.paymentId ? { mpPaymentId: String(args.paymentId) } : {}),
     },
   });

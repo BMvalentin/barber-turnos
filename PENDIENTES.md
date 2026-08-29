@@ -988,3 +988,465 @@ actualizado en tiempo real** en el lado derecho del modal.
 4. La decisión final sobre resultados es del agente principal (nunca de los subagentes).
 5. Al aprobarse, registrar el resultado como tarea cerrada en el acta del ciclo (o en
    `AUDITORIA.md` si el usuario lo confirma).
+
+---
+
+# APÉNDICE C — PENDIENTE NUEVO: Flujo de turnos (USER vs ADMIN), estado de pago de la seña, calendario tras ícono y completar perfil (registrado 28-ago-2026)
+
+> **Documento directivo de SOLO LECTURA (sigue vigente para su sección).** Este apéndice se
+> AGREGA al plan directivo del ciclo de ordenamiento (Fases 9-15) y a los Apéndices A y B como un
+> pendiente NUEVO e independiente. No forma parte de las Fases 9-15. Los números de línea citados
+> fueron **verificados contra el repo el 28-ago-2026** y pueden desplazarse: **verificar la línea
+> exacta antes de editar** (regla transversal §5.11).
+>
+> **Estado: APROBADO en plan por el usuario el 28-ago-2026** (decisiones en §C.3).
+> **Aún NO implementado.**
+
+## C.1. Objetivo
+
+Modificar el flujo de creación de turnos para separar claramente dos caminos —usuarios (`USER`)
+y administración (`ADMIN`)—, agregar el **estado de pago de la seña** como dato modelado, hacer que
+el calendario de reserva se **despliegue al hacer clic en un ícono** (mostrando solo días con
+disponibilidad real) y ajustar el **flujo de completar perfil** al iniciar sesión. Todo reutilizando
+la lógica existente (disponibilidad, Mercado Pago, WhatsApp, emails, locks) sin duplicar código.
+
+## C.2. Contexto actual (verificado el 28-ago-2026)
+
+### C.2.1. Rutas y flujo de turnos
+
+- **No existe `/admin/turno`.** El admin gestiona turnos en `/turno` (el layout
+  `src/app/turno/layout.tsx` envuelve en `AdminShell` solo si `role === "ADMIN"`). El middleware
+  (`src/middleware.ts`) protege `/turno` (login) y redirige a `/dashboard` si el usuario no tiene
+  `telefono` (§C.2.4).
+- **`src/app/turno/page.tsx`** (server) carga `obtenerDatosReserva(true)` (servicios, barberos,
+  usuarios, relaciones, config) + `getTurnos` y renderiza `TurnoManager`.
+- **`src/components/turno/gestion/TurnoManager.tsx`** (168 líneas): lista + filtros +
+  `ModalGestionTurno` (botón "Nuevo Turno"). Compartido entre USER y ADMIN.
+- **Flujo de creación** (componentes de `src/components/turno/reserva/`):
+  `ModalGestionTurno` → `FormularioReservaTurno` → `PanelBarberoServicio` + `PanelFechaHorario`
+  (calendario siempre visible) + `ResumenReserva`. Estado levantado en
+  `useFormularioTurno` (`src/hooks/`) que combina `useDatosFormularioTurno` + `usePagoTurno`.
+- **Server action `createTurno`** (`src/actions/turnos/crear.actions.ts`): crea el turno con
+  `estado: PENDIENTE`, congela `precioCongelado`/`seniaCongelada` desde el servicio, valida
+  disponibilidad (márgenes, excepciones, choques, locks, anticipación 10 min) y envía emails
+  "CREADO" al cliente y al barbero.
+- **Edición**: `actualizarTurno` (`src/actions/turnos/estado.actions.ts`); **confirmación rápida**:
+  `confirmarTurno` (`src/actions/turnos/confirmar.actions.ts`, solo admin); **completar**:
+  `completedTurno`; **cancelar**: `cancelTurno`.
+
+### C.2.2. Modelo de datos (Prisma, `prisma/schema.prisma`)
+
+- `turno_estado` enum: `PENDIENTE`, `CONFIRMADO`, `COMPLETADO`, `CANCELADO`. Hoy `CONFIRMADO`
+  significa "seña pagada" (lo setea el webhook de MP).
+- `servicio.senia` (Decimal) = valor de la seña; `turno.seniaCongelada` = seña congelada al crear.
+- **No existe ningún estado de pago de la seña** modelado (no hay enum/campo para Pendiente/Señado/
+  Pagado por separado).
+
+### C.2.3. Mercado Pago, WhatsApp y emails
+
+- **MP**: `crearPreferenciaPago` (`src/actions/mercadopago/crear-preferencia.actions.ts`) cobra SOLO
+  la seña (`seniaCongelada`), expira en 5 min, usa `external_reference = turnoId` y `notification_url
+  = /api/mercadopago/webhook`. El webhook valida la firma `X-Signature` (`MP_WEBHOOK_SECRET`) y
+  confirma vía helper único **`confirmarTurnoPorPago`** (`src/lib/confirmar-turno-por-pago.ts`):
+  `status=approved`, `external_reference === turnoId`, monto ≥ seña, idempotencia (`yaConfirmado`).
+  Respaldado por `back_url` `/pago/success` → `confirmarPagoTurno`. Ya NO se confía en la vuelta del
+  usuario (webhook primero).
+- **WhatsApp**: el número vive en `PageConfig.whatsapp` (configurado en `/admin/config`, sección
+  contacto → `SeccionContacto.tsx`). `RedireccionWhatsApp` (`src/components/pago/`) ya arma el
+  mensaje, pero **no se usa** en ninguna página. `usePagoTurno.enviarMensajeWhatsApp` solo se usa en
+  "Pagar después" (mensaje mínimo).
+- **Emails**: `src/lib/email/` con Resend. `createTurno` envía "CREADO" al cliente
+  (`enviarEmailTurnoSeguro`) y al barbero (`enviarEmailTurnoBarberoSeguro`, solo si `barbero.email`).
+  Al confirmar (webhook/back_url/confirmación admin) se envían "CONFIRMADO". El template
+  `EmailTurno.tsx` ya incluye cliente, servicio, barbero, fecha, hora, precio total, seña y saldo.
+
+### C.2.4. Completar perfil al iniciar sesión
+
+- El middleware redirige `/turno` → `/dashboard` si `!req.auth?.user?.telefono`.
+- `DashboardPanel` muestra un modal obligatorio de teléfono solo si `!user.telefono` (valida contra
+  BD, no frontend). Al guardar, `updateProfile` + `useSession().update()` refrescan el JWT.
+- **Bug detectado**: `authorize` en `src/auth.ts` devuelve `{ id, name, email, role }` SIN `telefono`.
+  Tras login por credentials el token JWT queda sin `telefono` y el middleware bloquea a usuarios que
+  YA tienen teléfono (los manda a `/dashboard` y no pueden entrar a `/turno`).
+
+### C.2.5. Disponibilidad y calendario
+
+- `obtenerDiasDisponibles` / `obtenerHorariosDisponibles` (`src/actions/turnos/`) envuelven con caché
+  a `obtenerDisponibilidad` (`src/lib/disponibilidad.ts`): márgenes por barbero/día, excepciones,
+  choques de turnos, anticipación mínima, granularidad 15 min.
+- El calendario del modal (`CalendarioReserva` + `DiaCalendarioReserva`) YA deshabilita días sin
+  slots y muestra solo los horarios libres (`ListaHorariosReserva`). Está **siempre visible**
+  (sin ícono de apertura). El filtro de la lista de turnos del admin usa un date nativo
+  (`NavegacionFecha`), ajeno a la disponibilidad.
+
+## C.3. Decisiones del usuario (registradas el 28-ago-2026 — NO reversibles sin confirmación)
+
+1. **Ruta admin de turnos: crear `/admin/turno` NUEVA.** Reutiliza `TurnoManager`/
+   `ModalGestionTurno`; `/turno` queda para rol `USER`. (Respuesta a la consulta de ambigüedad.)
+2. **Estado de pago de la seña: NUEVO campo `estadoPago`** con enum
+   `estado_pago { PENDIENTE SEÑADO PAGADO }` en el modelo `turno` (default `PENDIENTE`),
+   conservando `turno_estado` como ciclo de vida. Requiere migración Prisma.
+3. **Calendario: oculto tras ícono.** El calendario de reserva NO está siempre visible: se despliega
+   grande al hacer clic en un ícono/triggers de fecha, mostrando días disponibles habilitados y días
+   sin disponibilidad deshabilitados.
+
+## C.4. Diseño de la solución
+
+### C.4.1. Modelo Prisma (con migración)
+
+- `prisma/schema.prisma` — modelo `turno`: agregar
+  `estadoPago estado_pago @default(PENDIENTE)` y el enum
+  `enum estado_pago { PENDIENTE SEÑADO PAGADO }`. Compatible con datos existentes (los turnos
+  actuales quedan `PENDIENTE`).
+- Migración: `npx prisma migrate dev --name turno_estado_pago` (o `prisma db push`; el build ya
+  corre `db push --accept-data-loss`).
+- Semántica: `PENDIENTE` (sin seña, `estado=PENDIENTE`) · `SEÑADO` (seña abonada,
+  `estado=CONFIRMADO`) · `PAGADO` (pago total, `estado=CONFIRMADO`).
+
+### C.4.2. Ruta `/admin/turno`
+
+- **Crear `src/app/admin/turno/page.tsx`** (server): `obtenerDatosReserva(true)` + `getTurnos` +
+  `TurnoManager`. El `admin/layout.tsx` ya autentica (ADMIN) y envuelve en `AdminShell`.
+- **`src/app/turno/layout.tsx`**: si `role === "ADMIN"` → `redirect("/admin/turno")`.
+- **`src/app/turno/page.tsx`**: usar `obtenerDatosReserva(false)` (no listar usuarios a clientes);
+  guard de redirect a `/admin/turno` para ADMIN.
+- **Navegación**: `items-navegacion.ts` ("Turnos" → `/admin/turno`), `AdminTopbar.tsx`
+  (botón "Turnos" → `/admin/turno`), StatCard de `app/admin/page.tsx` (href → `/admin/turno`).
+
+### C.4.3. Flujo `/turno` (rol USER)
+
+1. **Cliente autocompletado**: `useDatosFormularioTurno` ya setea `selectedUserId = session.user.id`
+   para USER. Se agrega en `ResumenReserva` una fila "Cliente" de SOLO lectura (nombre + teléfono del
+   usuario autenticado); sin selector editable. En `createTurno` (backend): validar que el USER tenga
+   `telefono` y que `userId === session.user.id` (no confiar en el frontend).
+2. **Resumen del turno**: `ResumenReserva` muestra además **Seña** (`servicio.senia`, o
+   `seniaCongelada` en edición) y **Saldo restante** (`precio − seña`), además de Servicio, Barbero,
+   Fecha, Hora y Total.
+3. **Confirmación y MP** (existe, se ajusta):
+   - `createTurno` agrega **guard anti-duplicado**: si ya existe un turno `PENDIENTE` con el mismo
+     `userId + barberoId + horarioReservado` creado recientemente, devolver ese en vez de crear otro
+     (evita doble submit / refresh / doble checkout).
+   - `crearPreferenciaPago`: rechazar si `turno.estadoPago !== "PENDIENTE"` (no pagar dos veces).
+   - El turno NO queda confirmado hasta que MP acredite (webhook con firma + back_url); ya no se
+     confía solo en la vuelta del usuario.
+4. **WhatsApp post-pago**: en `src/app/pago/success/page.tsx` (y el bloque de éxito de
+   `/pago/status`), tras confirmar el pago, renderizar `RedireccionWhatsApp` con:
+   - número desde `PageConfig.whatsapp` vía `obtenerConfigCacheada()` (nunca hardcodeado);
+   - datos del turno confirmado (cliente, servicio, barbero, fecha, hora, precio total, seña, saldo).
+   - Ampliar `RedireccionWhatsApp` con props `precioTotal`, `señaPagada`, `saldoPendiente`.
+
+### C.4.4. Flujo `/admin/turno` (rol ADMIN)
+
+- **Sin Mercado Pago**: se conserva (el modal ya no muestra pago para admin) y NO hay redirección a
+  MP ni WhatsApp al confirmar.
+- **Selector de estado de pago** (`Pendiente` / `Señado` / `Pago`) en el formulario cuando `esAdmin`:
+  nuevo componente `SelectorEstadoPago.tsx`.
+- **`createTurno`** acepta `estadoPago` (validado en backend contra el enum; solo admin). Si
+  `SEÑADO`/`PAGADO` → `estado=CONFIRMADO` y emails "CONFIRMADO" (cliente + barbero); si `PENDIENTE` →
+  comportamiento actual ("CREADO"). Sin duplicar emails.
+- **Edición**: `actualizarTurno` acepta `estadoPago`; al pasar a `CONFIRMADO` envía el email de
+  barbero "CONFIRMADO" (lógica ya existente). Botón rápido **Confirmar** (`confirmarTurno`): además
+  de `estado=CONFIRMADO`, setea `estadoPago=SEÑADO`.
+- **Visualización**: nuevo badge de `estadoPago` (`BadgeEstadoPago.tsx`) en `TurnoRow`.
+
+### C.4.5. Calendario oculto tras ícono
+
+- Nuevo componente `SelectorFechaCalendario.tsx` (en `components/turno/reserva/`): campo compacto
+  con ícono de calendario y la fecha seleccionada; al hacer clic despliega el calendario grande
+  (`CalendarioReserva` REUTILIZADO tal cual), que ya deshabilita días sin disponibilidad
+  (`diasDisponibles`) y habilita solo días con turnos reales.
+- `PanelFechaHorario` reemplaza el calendario siempre visible por este trigger. Se conservan
+  `ListaHorariosReserva` y la lógica de slots (sin duplicar disponibilidad: se sigue usando
+  `obtenerDiasDisponibles` / `obtenerHorariosDisponibles`). Al seleccionar un día disponible se
+  muestran únicamente los horarios libres de ese día (regla actual intacta).
+
+### C.4.6. Completar perfil
+
+- **`src/auth.ts`**: incluir `telefono: user.telefono` en el objeto devuelto por `authorize`.
+- **`src/auth.config.ts`**: en el callback `jwt`, si `token.id` existe y `token.telefono` es
+  null/undefined, hidratar desde BD (corrige sesiones existentes con token viejo).
+- Resultado: usuario sin teléfono → tras login `/turno` redirige a `/dashboard` (modal obligatorio
+  validado contra BD); usuario con teléfono → `/turno` directo sin pedir el dato otra vez. Funciona
+  tras cerrar sesión y volver a iniciar sesión (login por credentials y por Google).
+
+### C.4.7. Correo al barbero
+
+- Ya implementado (Resend, `barbero.email` de la BD, sin hardcodear) en creación ("CREADO") y
+  confirmación ("CONFIRMADO") para ambos flujos. Solo se ajusta el estado del email según
+  `estadoPago` en creación (§C.4.4). Sin correos duplicados (el email se envía UNA vez por evento;
+  el edit solo envía "CONFIRMADO" al barbero si el estado pasó a CONFIRMADO).
+
+### C.4.8. Validación en backend (no confiar en el frontend)
+
+- Precio/seña: `servicio.precio` / `servicio.senia` de BD (ya así en `createTurno`).
+- Usuario: `requerirSesion` + `requerirPropietarioOAdmin` / `requerirAdmin`.
+- Disponibilidad: `obtenerContextoDeReserva` + `obtenerDisponibilidad` (ya así).
+- `estadoPago`: validado contra el enum en la server action.
+- Pago: webhook con firma + consulta a la API de MP (`Payment.get`).
+- Duplicados: guard en `createTurno` + `estadoPago` en `crearPreferenciaPago` + idempotencia del
+  webhook (`yaConfirmado`).
+
+## C.5. Tipos, constantes y serialización
+
+- `src/lib/constants.ts`: `ESTADOS_PAGO = ["PENDIENTE", "SEÑADO", "PAGADO"]`.
+- `src/types/turno.ts`: agregar `estadoPago` a `TurnoListado`, `TurnoConDetalle`,
+  `TurnoPagoConfirmado`, `TurnoCreado` (y al tipo de estado).
+- `src/actions/turnos/listar.actions.ts` y `src/actions/sesion/listar-turnos-usuario.actions.ts`:
+  serializar `estadoPago`.
+- `BadgeEstadoTurno.tsx` / nuevo `BadgeEstadoPago.tsx` en `components/turno/gestion/`.
+
+## C.6. Archivos involucrados (resumen)
+
+| Archivo | Acción |
+|---|---|
+| `prisma/schema.prisma` + migración | **MODIFICAR** — campo `estadoPago` + enum `estado_pago` |
+| `src/app/admin/turno/page.tsx` | **NUEVO** — página de turnos del admin (reutiliza `TurnoManager`) |
+| `src/app/turno/layout.tsx` / `page.tsx` | **MODIFICAR** — redirect ADMIN a `/admin/turno`; `obtenerDatosReserva(false)` |
+| `src/components/panel/navegacion/items-navegacion.ts` / `AdminTopbar.tsx` | **MODIFICAR** — "Turnos" → `/admin/turno` |
+| `src/app/admin/page.tsx` | **MODIFICAR** — StatCard "Total Turnos" → `/admin/turno` |
+| `src/actions/turnos/crear.actions.ts` | **MODIFICAR** — `estadoPago`, validación telefono/USER, guard anti-duplicado, emails según estado |
+| `src/actions/turnos/estado.actions.ts` | **MODIFICAR** — aceptar `estadoPago` en edición |
+| `src/actions/turnos/confirmar.actions.ts` | **MODIFICAR** — setear `estadoPago=SEÑADO` |
+| `src/actions/mercadopago/crear-preferencia.actions.ts` | **MODIFICAR** — rechazar si `estadoPago !== PENDIENTE` |
+| `src/lib/confirmar-turno-por-pago.ts` | **MODIFICAR** — setear `estadoPago=SEÑADO` al confirmar |
+| `src/lib/constants.ts` / `src/types/turno.ts` | **MODIFICAR** — `ESTADOS_PAGO` + tipos |
+| `src/actions/turnos/listar.actions.ts` / `src/actions/sesion/listar-turnos-usuario.actions.ts` | **MODIFICAR** — serializar `estadoPago` |
+| `src/components/turno/reserva/SelectorFechaCalendario.tsx` | **NUEVO** — trigger de ícono + calendario desplegable |
+| `src/components/turno/reserva/PanelFechaHorario.tsx` | **MODIFICAR** — usar el trigger |
+| `src/components/turno/reserva/ResumenReserva.tsx` | **MODIFICAR** — fila Cliente (USER, solo lectura), Seña, Saldo restante; selector `estadoPago` (admin) |
+| `src/components/turno/reserva/SelectorEstadoPago.tsx` | **NUEVO** — selector Pendiente/Señado/Pago (admin) |
+| `src/components/turno/reserva/FormularioReservaTurno.tsx` / `tipos.ts` | **MODIFICAR** — props/estado de `estadoPago` + hidden input |
+| `src/hooks/useDatosFormularioTurno.ts` / `useFormularioTurno.ts` | **MODIFICAR** — estado `estadoPago` |
+| `src/components/turno/gestion/BadgeEstadoTurno.tsx` / `TurnoRow.tsx` | **MODIFICAR** — badge de pago |
+| `src/components/turno/gestion/BadgeEstadoPago.tsx` | **NUEVO** |
+| `src/components/pago/RedireccionWhatsApp.tsx` | **MODIFICAR** — `precioTotal`, `señaPagada`, `saldoPendiente` |
+| `src/app/pago/success/page.tsx` (y bloque de éxito de `/pago/status`) | **MODIFICAR** — WhatsApp post-pago con número de `page_config` |
+| `src/auth.ts` / `src/auth.config.ts` | **MODIFICAR** — `telefono` en `authorize` + hidratación del token |
+
+## C.7. Lógica que se conserva intacta (NO tocar)
+
+- Disponibilidad: `obtenerDisponibilidad`, `obtenerDiasDisponibles`, `obtenerHorariosDisponibles`,
+  `obtenerContextoDeReserva`, `useDisponibilidadHorarios`, `useSlotLocks`, locks.
+- Mercado Pago: `obtenerClienteMP`, `confirmarTurnoPorPago` (helper único), webhook, `back_url`.
+- Emails: `src/lib/email/` (Resend) y templates.
+- Config de WhatsApp: `PageConfig.whatsapp` (única fuente) y `SeccionContacto.tsx`.
+- `NavegacionFecha` (filtro de fecha de la lista): NO se toca (no aplica disponibilidad).
+- Sistema de color y contraste (`var(--page-*)`, `src/lib/contraste/`).
+
+## C.8. Verificación (obligatoria al terminar)
+
+1. `npx tsc --noEmit` = **0 errores** (el build NO typechequea; obligatorio AGENTS.md).
+2. `npm run lint`.
+3. `npm run build` OK.
+4. Revisión manual:
+   - **Flujo USER (`/turno`)**: cliente autocompletado (sin selector), resumen con seña y saldo,
+     confirmación → MP por la seña → webhook/back_url → estado CONFIRMADO + `estadoPago=SEÑADO` →
+     redirección a WhatsApp con mensaje completo al número de `page_config`. Sin turnos/pagos
+     duplicados al recargar.
+   - **Flujo ADMIN (`/admin/turno`)**: sin MP; selector de pago (Pendiente/Señado/Pago); el turno se
+     guarda con el estado elegido; email al barbero al confirmar.
+   - **Calendario**: se abre al hacer clic en el ícono; solo días con disponibilidad habilitados;
+     horarios del día disponibles al elegirlo.
+   - **Completar perfil**: usuario sin teléfono → redirige a completarlo tras login; con teléfono →
+     acceso directo (login por credentials y por Google, y tras logout/login).
+   - **Sin regresiones**: edición/cancelación/completar turnos, dashboard, cron de expiración,
+     sistema de color.
+5. Reglas del repo (AGENTS.md): 1 export por archivo nuevo, ≤400 líneas (objetivo 300), imports `@/`,
+   sin `any`/`@ts-ignore`, nombres y mensajes en español, colores vía `var(--page-*)` sin hex de
+   marca hardcodeado, contraste según `src/lib/contraste.ts`.
+
+## C.9. Ejecución (cumple AGENTS.md "Uso de subagentes")
+
+1. **Fase con sub-tareas** (desglose obligatorio + paralelización):
+   - **C-A**: Prisma (`estado_pago` + migración) + tipos/constantes + serialización en listados +
+     backend (`createTurno`, `actualizarTurno`, `confirmarTurno`, `crearPreferenciaPago`,
+     `confirmarTurnoPorPago`) + fix de auth (`authorize`/`jwt`).
+   - **C-B** (independiente, paralelo): UI de reserva — `SelectorFechaCalendario` (ícono + calendario
+     desplegable), `PanelFechaHorario`, `ResumenReserva` (cliente read-only, seña/saldo,
+     `SelectorEstadoPago`), `FormularioReservaTurno`/`tipos`, hooks de formulario, `BadgeEstadoPago`
+     + `TurnoRow`.
+   - **C-C** (independiente, paralelo): rutas y navegación — `/admin/turno` (página nueva),
+     redirects en `/turno`, `items-navegacion`, `AdminTopbar`, StatCard de `/admin`, WhatsApp
+     post-pago en `/pago/success` (+ bloque de éxito de `/pago/status`) y `RedireccionWhatsApp`.
+   - La orquestación y las interfaces entre sub-tareas las define el agente principal (AGENTS.md,
+     punto 5). B y C dependen de la interfaz de `createTurno`/tipos de C-A (coordinación previa).
+2. **Agente verificador** (3 o más subagentes → verificador obligatorio): revisa TODO el código de la
+   fase (reglas de §C.8.5, límites de líneas, 1 export por archivo, contraste, schema/migración,
+   redirects, no-duplicación de turnos/pagos/emails), repara fallas y **certifica** el pendiente.
+3. La decisión final sobre resultados es del agente principal (nunca de los subagentes).
+4. Al aprobarse, registrar el resultado como tarea cerrada en el acta del ciclo (o en `AUDITORIA.md`
+   si el usuario lo confirma).
+
+---
+
+# APÉNDICE D — PENDIENTE NUEVO: Corrección del "calendario tras ícono" — revertir el modal de reserva y aplicarlo al calendario de navegación de `/admin/turno` (registrado 29-ago-2026)
+
+> **Documento directivo de SOLO LECTURA (sigue vigente para su sección).** Este apéndice se
+> AGREGA al plan directivo (Fases 9-15) y a los Apéndices A, B y C como un pendiente NUEVO que
+> CORRIGE un alcance mal entendido del Apéndice C. No forma parte de las Fases 9-15.
+>
+> **Estado: APROBADO en plan por el usuario el 29-ago-2026** (decisiones en §D.3).
+> **Aún NO implementado.**
+
+## D.1. Objetivo
+
+Corregir el alcance de la funcionalidad "calendario tras ícono" del Apéndice C (§C.4.5). El
+Apéndice C se implementó y certificó (V-C) con el calendario desplegable aplicado al **modal de
+reserva de turnos** (`PanelFechaHorario` → `SelectorFechaCalendario`). El usuario aclaró que esa
+funcionalidad NO era para el modal de reserva, sino para el **calendario de navegación de fechas de
+`/admin/turno`** (el de la parte superior de la gestión de turnos, con flechas ‹ ›, ícono 📅 y botón
+"Hoy").
+
+Resultado buscado:
+1. **REVERTIR** el modal de reserva de turnos a su estado original (calendario siempre visible).
+2. Aplicar el calendario grande tras ícono al **calendario de navegación** de `/admin/turno`.
+
+El resto de las modificaciones del Apéndice C (pago de seña con Mercado Pago para `/turno`, estado
+de seña en `/admin/turno`, WhatsApp post-pago, email al barbero y validación del teléfono del
+usuario) **se mantienen** sin cambios.
+
+## D.2. Contexto actual (verificado el 29-ago-2026)
+
+### D.2.1. Los dos calendarios y cuál corresponde a cada flujo
+
+| Calendario | Archivo | Flujo | Estado actual |
+|---|---|---|---|
+| **Calendario de RESERVA** ("Nuevo Turno") | `src/components/turno/reserva/PanelFechaHorario.tsx` → `CalendarioReserva` + `DiaCalendarioReserva` + `ListaHorariosReserva` | Modal `ModalGestionTurno` → `FormularioReservaTurno` (clientes `USER` y `ADMIN`) | Fue modificado por C-B: hoy se despliega tras ícono vía `SelectorFechaCalendario.tsx`. **HAY QUE REVERTIRLO** a calendario siempre visible. |
+| **Calendario de NAVEGACIÓN** de `/admin/turno` | `src/components/turno/gestion/NavegacionFecha.tsx` | Parte superior de la gestión de turnos (`TurnoManager`, compartido por `/turno` y `/admin/turno`) | Hoy: flechas ‹ › (día anterior/siguiente), botón con ícono 📅 + `<input type="date">` nativo oculto (picker del navegador) y botón "Hoy". **ESTE es el que hay que modificar** (reemplazar el date nativo por un calendario grande con solo días habilitados). |
+
+> IMPORTANTE para futuros subagentes: NO volver a confundir ambos componentes. El calendario de
+> reserva NO se modifica; el de navegación de `/admin/turno` SÍ.
+
+### D.2.2. Estado del Apéndice C en el repo (29-ago-2026, sin commit)
+
+- Implementado y certificado (V-C): `estadoPago` (schema + enum `estado_pago`), `ESTADOS_PAGO`
+  (`lib/constants.ts`), backend (`createTurno`, `actualizarTurno`, `confirmarTurno`,
+  `crearPreferenciaPago`, `confirmarTurnoPorPago`), fix auth, `/admin/turno`, WhatsApp post-pago,
+  `BadgeEstadoPago`, seña/saldo y cliente read-only en `ResumenReserva`.
+- El cambio a revertir es SOLO el de C-B sobre el calendario de reserva: `SelectorFechaCalendario.tsx`
+  (archivo nuevo) + `PanelFechaHorario.tsx` + `PropsSelectorFechaCalendario` y prop
+  `deshabilitado?` en `tipos.ts`.
+
+## D.3. Decisiones del usuario (registradas el 29-ago-2026 — NO reversibles sin confirmación)
+
+1. **Revertir el modal de reserva**: el calendario vuelve a estar SIEMPRE visible
+   (`CalendarioReserva`), exactamente como antes del Apéndice C. NO se tocan el diseño del modal, la
+   estructura del formulario, la selección de servicio/barbero/horario, la distribución de campos ni
+   el comportamiento visual original. NO se elimina ninguna otra modificación de C (estadoPago,
+   seña/saldo, cliente read-only, selector de estado de pago, badge, WhatsApp, emails, teléfono).
+2. **Calendario de `/admin/turno`**: al hacer click en el ícono 📅 se despliega un calendario grande
+   que permite seleccionar una fecha.
+3. **Días habilitados = "días con turnos"** en la BD, respetando:
+   - el **rol** de la sesión (admin → todos los turnos; `USER` → solo sus turnos, igual que la lista);
+   - el **filtro de estado** seleccionado en `TurnosFiltros` (TODOS → sin filtro de estado;
+     PENDIENTE/CONFIRMADO/COMPLETADO/CANCELADO → solo turnos con ese estado).
+4. **Días pasados deshabilitados** (solo se habilitan días de hoy en adelante que tengan turnos),
+   igual que el comportamiento del calendario de reserva actual.
+5. Al seleccionar un día habilitado, la pantalla **muestra los turnos de esa fecha**
+   (`onCambiarFecha` de `NavegacionFecha`); el popup se cierra.
+6. Se conservan las **flechas anterior/siguiente** y el botón **"Hoy"** tal como funcionan hoy.
+7. El cambio afecta **solamente** al calendario de navegación de fechas de `TurnoManager`
+   (visible en `/admin/turno` y, por compartir componente, en `/turno` para `USER`). NO afecta al
+   calendario de reserva.
+
+## D.4. Diseño de la solución
+
+### D.4.1. Parte 1 — Revertir el calendario del modal de reserva (solo calendario)
+
+| Archivo | Acción |
+|---|---|
+| `src/components/turno/reserva/PanelFechaHorario.tsx` | **REVERTIR** a la versión original de HEAD: renderiza `<CalendarioReserva ...>` **siempre visible** (con `mesVisible`, `diasDisponibles`, `cargandoDias`, `fecha`, `onMesAnterior`, `onMesSiguiente`, `onSeleccionarDia`) + `<ListaHorariosReserva>`; SIN prop `deshabilitado`. |
+| `src/components/turno/reserva/SelectorFechaCalendario.tsx` | **ELIMINAR** (archivo creado por C-B; su único consumidor era `PanelFechaHorario`). |
+| `src/components/turno/reserva/tipos.ts` | **REVERTIR** `PropsPanelFechaHorario` a `{ disponibilidad; servicioId?; barberoId? }` (quitar `deshabilitado?: boolean`) y **eliminar** el tipo `PropsSelectorFechaCalendario`. |
+
+- NO se tocan: `FormularioReservaTurno` (no pasa `deshabilitado` a `PanelFechaHorario`),
+  `ResumenReserva`, `SelectorEstadoPago`, `ModalGestionTurno`, `useDatosFormularioTurno`,
+  `useFormularioTurno`, `BadgeEstadoPago`, `TurnoRow`, backend ni auth.
+
+### D.4.2. Parte 2 — Calendario grande en `/admin/turno` (NavegacionFecha)
+
+1. **NUEVO server action** `src/actions/turnos/obtener-dias-con-turnos.actions.ts`
+   (1 export, ≤100 líneas): `obtenerDiasConTurnos(mes: string, estadoFiltro?: string)` → devuelve
+   `ActionState<string[]>` con las fechas "yyyy-MM-dd" (en `ZONA_HORARIA`, vía `obtenerFechaSola`)
+   que tienen turnos. Filtro: `horarioReservado` dentro del mes (`yyyy-MM`); si NO es admin →
+   `userId = session.user.id`; si `estadoFiltro` está definido y es distinto de `"TODOS"` →
+   `estado = estadoFiltro` (misma lógica de scope/estado que `getTurnos`).
+2. **NUEVO componente** `src/components/turno/gestion/CalendarioNavegacion.tsx`
+   ("use client", 1 export, ≤200 líneas): grilla mensual que **REUTILIZA `CalendarioReserva`**
+   (de `components/turno/reserva/`, SIN modificarlo) pasándole `diasDisponibles = días con turnos`
+   del mes visible, `fecha` = la fecha del filtro actual, `cargandoDias` mientras se consulta la
+   action y `onSeleccionarDia`. `CalendarioReserva`/`DiaCalendarioReserva` ya deshabilitan días
+   pasados y días sin disponibilidad (requisito §D.3.4). Maneja el mes visible (inicializado desde la
+   fecha filtrada o hoy) y refetch al cambiar de mes o de filtro de estado.
+3. **MODIFICAR** `src/components/turno/gestion/NavegacionFecha.tsx`: agregar prop nueva
+   `estado?: string`; reemplazar el `<input type="date">` nativo (overlay sobre el botón del ícono 📅)
+   por un botón que alterna un **popup** (estado local `abierto`; panel absoluto con
+   `bg-[var(--admin-surface-elevated)]`, borde `--admin-border`, `rounded-xl`, `shadow`, `z-40`;
+   cierre al seleccionar un día, al hacer click afuera o con Escape, patrón de `MenuAccionesTurno`).
+   El popup contiene `<CalendarioNavegacion fecha={fecha} estado={estado ?? "TODOS"}
+   onSeleccionar={(d) => { onCambiarFecha(d); setAbierto(false); }} />`. Se conservan las flechas
+   ‹ › y el botón "Hoy" sin cambios.
+4. **MODIFICAR** `src/components/turno/gestion/TurnoManager.tsx`: pasar
+   `estado={filtroEstado}` a `<NavegacionFecha ... />`.
+
+## D.5. Archivos involucrados (resumen)
+
+| Archivo | Acción |
+|---|---|
+| `src/components/turno/reserva/PanelFechaHorario.tsx` | **REVERTIR** — calendario siempre visible (HEAD) |
+| `src/components/turno/reserva/SelectorFechaCalendario.tsx` | **ELIMINAR** |
+| `src/components/turno/reserva/tipos.ts` | **REVERTIR/QUITAR** `PropsSelectorFechaCalendario` y `deshabilitado?` de `PropsPanelFechaHorario` |
+| `src/actions/turnos/obtener-dias-con-turnos.actions.ts` | **NUEVO** — días con turnos del mes (rol + filtro de estado) |
+| `src/components/turno/gestion/CalendarioNavegacion.tsx` | **NUEVO** — popup de calendario (reutiliza `CalendarioReserva`) |
+| `src/components/turno/gestion/NavegacionFecha.tsx` | **MODIFICAR** — popup en click del ícono + prop `estado` |
+| `src/components/turno/gestion/TurnoManager.tsx` | **MODIFICAR** — pasar `estado={filtroEstado}` a `NavegacionFecha` |
+
+## D.6. Lo que NO se modifica (explicitamente fuera de alcance)
+
+- **Calendario de reserva** (`CalendarioReserva.tsx`, `DiaCalendarioReserva.tsx`,
+  `ListaHorariosReserva.tsx`, `PanelFechaHorario.tsx` final, `SelectorBarberosReserva`,
+  `SelectorServiciosReserva`, `SeccionBarbero`/`SeccionServicio` si existieran en este flujo):
+  comportamiento original intacto. `CalendarioReserva` solo se REUTILIZA (import) desde el
+  calendario de navegación, nunca se edita.
+- Todas las demás modificaciones del Apéndice C (estado de pago de la seña, resumen con seña/saldo,
+  cliente read-only, `SelectorEstadoPago`, `BadgeEstadoPago`, `/admin/turno`, redirects,
+  navegación, WhatsApp post-pago, `RedireccionWhatsApp`, fix de auth, validación de teléfono).
+- Backend, Prisma, disponibilidad, pagos, emails, `NavegacionFecha` en su comportamiento de
+  flechas/Hoy.
+- No se instalan dependencias nuevas. No se crean tests (no hay framework).
+
+## D.7. Verificación (obligatoria al terminar)
+
+1. `npx tsc --noEmit` = **0 errores** (el build NO typechequea; obligatorio AGENTS.md).
+2. `npm run lint`.
+3. `npx next build` OK (NO `npm run build`: el script corre `prisma db push` contra la BD remota;
+   el usuario decidió no migrar la BD en este ciclo).
+4. Revisión manual:
+   - **Modal de reserva**: el calendario vuelve a verse **siempre visible** en el modal de
+     "Nuevo Turno" (y en edición), idéntico a antes del Apéndice C; selección de barbero/servicio/
+     fecha/hora y resumen con seña/saldo funcionando; selector de estado de pago presente para admin.
+   - **`/admin/turno`**: al hacer click en el ícono 📅 se despliega el calendario grande; solo días
+     con turnos (según filtro de estado y rol) habilitados; días pasados y días sin turnos
+     deshabilitados; al elegir un día la lista muestra los turnos de esa fecha; flechas ‹ › y botón
+     "Hoy" intactos; el popup cierra al seleccionar/click afuera/Escape.
+   - **Sin regresiones**: flujo USER `/turno` (cliente autocompletado, MP por seña, WhatsApp),
+     edición de turnos, resto del sistema y sistema de color.
+5. Reglas del repo (AGENTS.md): 1 export por archivo nuevo, ≤400 líneas (objetivo 300), imports `@/`,
+   sin `any`/`@ts-ignore`, nombres y mensajes en español, colores vía `var(--page-*)`/`var(--admin-*)`
+   sin hex de marca hardcodeado, contraste según `src/lib/contraste.ts`.
+
+## D.8. Ejecución (cumple AGENTS.md "Uso de subagentes")
+
+1. **Fase con 2 sub-tareas** (archivos disjuntos, pueden correr en paralelo):
+   - **D-A** (revert): `PanelFechaHorario.tsx` a HEAD, eliminar `SelectorFechaCalendario.tsx` y
+     quitar `PropsSelectorFechaCalendario`/`deshabilitado?` de `tipos.ts`.
+   - **D-B** (navegación): `obtener-dias-con-turnos.actions.ts` (nuevo), `CalendarioNavegacion.tsx`
+     (nuevo, reutiliza `CalendarioReserva`), `NavegacionFecha.tsx` (popup + prop `estado`) y
+     `TurnoManager.tsx` (pasa `estado`).
+2. **Agente verificador V-D** (revisa TODO el código producido): confirma que el modal de reserva
+   quedó idéntico al original (diff vs HEAD de `PanelFechaHorario`/`tipos.ts`, `SelectorFechaCalendario`
+   eliminado), que el calendario de navegación NO contaminó el flujo de reserva, reglas de §D.7.5,
+   límites de líneas, 1 export por archivo, contraste; repara fallas y **certifica** el pendiente.
+3. La decisión final sobre resultados es del agente principal (nunca de los subagentes).
+4. Al aprobarse, registrar el resultado como tarea cerrada en el acta del ciclo (o en `AUDITORIA.md`
+   si el usuario lo confirma).

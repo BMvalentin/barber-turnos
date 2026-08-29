@@ -9,6 +9,9 @@ export const ESTADOS_TURNO = ["PENDIENTE", "CONFIRMADO", "COMPLETADO", "CANCELAD
 /* Estados que cuentan como turnos vigentes/activos */
 export const ESTADOS_TURNO_ACTIVOS = ["PENDIENTE", "CONFIRMADO"] as const;
 
+/* Estados de pago de la seña (alineados al enum Prisma `estado_pago`) */
+export const ESTADOS_PAGO = ["PENDIENTE", "SEÑADO", "PAGADO"] as const;
+
 /* Anticipación mínima (ms) para reservar o reprogramar un turno */
 export const MINIMO_ANTICIPACION_MS = 10 * 60 * 1000;
 

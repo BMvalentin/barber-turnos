@@ -1,10 +1,13 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import CalendarioNavegacion from "./CalendarioNavegacion";
 
 interface Props {
   fecha: string;
   onCambiarFecha: (fecha: string) => void;
+  estado?: string;
 }
 
 const FORMATO_LARGO = new Intl.DateTimeFormat("es-AR", {
@@ -36,7 +39,34 @@ function desplazarDia(fecha: string, cantidad: number): string {
   return formatearInput(nueva);
 }
 
-export default function NavegacionFecha({ fecha, onCambiarFecha }: Props) {
+export default function NavegacionFecha({ fecha, onCambiarFecha, estado }: Props) {
+  const [abierto, setAbierto] = useState(false);
+  const contenedorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!abierto) return;
+
+    const manejarClickFuera = (event: MouseEvent) => {
+      const objetivo = event.target as Node;
+      if (contenedorRef.current && !contenedorRef.current.contains(objetivo)) {
+        setAbierto(false);
+      }
+    };
+
+    const manejarTeclaEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setAbierto(false);
+      }
+    };
+
+    window.addEventListener("mousedown", manejarClickFuera);
+    window.addEventListener("keydown", manejarTeclaEscape);
+    return () => {
+      window.removeEventListener("mousedown", manejarClickFuera);
+      window.removeEventListener("keydown", manejarTeclaEscape);
+    };
+  }, [abierto]);
+
   const base = fechaBase(fecha);
   const textoFecha = FORMATO_LARGO.format(base);
   const textoVisible =
@@ -53,20 +83,33 @@ export default function NavegacionFecha({ fecha, onCambiarFecha }: Props) {
         <ChevronLeft className="h-4 w-4" />
       </button>
 
-      <button
-        type="button"
-        className="relative flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-[var(--admin-texto-primario)] transition-colors hover:bg-white/5"
-      >
-        <Calendar className="h-4 w-4 text-[var(--page-primary-tinta)]" />
-        <span>{textoVisible}</span>
-        <input
-          type="date"
-          value={fecha}
-          onChange={(e) => onCambiarFecha(e.target.value)}
-          className="absolute inset-0 cursor-pointer opacity-0"
+      <div ref={contenedorRef} className="relative">
+        <button
+          type="button"
           aria-label="Elegir fecha"
-        />
-      </button>
+          aria-expanded={abierto}
+          onClick={() => setAbierto((prev) => !prev)}
+          className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-[var(--admin-texto-primario)] transition-colors hover:bg-white/5"
+        >
+          <Calendar className="h-4 w-4 text-[var(--page-primary-tinta)]" />
+          <span>{textoVisible}</span>
+        </button>
+
+        <div
+          className={`absolute left-1/2 top-full z-40 mt-2 w-[min(320px,80vw)] -translate-x-1/2 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-2 shadow-2xl shadow-black/40 ${
+            abierto ? "" : "pointer-events-none invisible"
+          }`}
+        >
+          <CalendarioNavegacion
+            fecha={fecha}
+            estado={estado ?? "TODOS"}
+            onSeleccionar={(dia) => {
+              onCambiarFecha(dia);
+              setAbierto(false);
+            }}
+          />
+        </div>
+      </div>
 
       <button
         type="button"

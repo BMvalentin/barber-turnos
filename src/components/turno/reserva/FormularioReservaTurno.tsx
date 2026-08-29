@@ -26,6 +26,8 @@ export default function FormularioReservaTurno({
   handleServicioChange,
   onCancelar,
   turnoInicial,
+  estadoPago,
+  setEstadoPago,
 }: PropsFormularioReservaTurno) {
   const disponibilidad = useDisponibilidadHorarios({
     servicioId: selectedServicioId,
@@ -46,6 +48,7 @@ export default function FormularioReservaTurno({
   const barbero = barberos.find((b) => b.id === selectedBarberoId) ?? null;
 
   const esUsuarioNormal = session?.user?.role === "USER";
+  const esAdmin = session?.user?.role === "ADMIN";
   const clienteCompleto = esUsuarioNormal || Boolean(selectedUserId);
   const completo = Boolean(
     selectedServicioId &&
@@ -54,6 +57,10 @@ export default function FormularioReservaTurno({
       disponibilidad.slotSeleccionado &&
       clienteCompleto,
   );
+
+  const senia = turnoInicial
+    ? Number(turnoInicial.seniaCongelada)
+    : (servicio?.senia ?? 0);
 
   const manejarEnvio = (e: FormEvent<HTMLFormElement>) => {
     if (completo) return;
@@ -91,6 +98,7 @@ export default function FormularioReservaTurno({
       <input type="hidden" name="servicioId" value={selectedServicioId} />
       <input type="hidden" name="barberoId" value={selectedBarberoId} />
       {turnoInicial && <input type="hidden" name="id" value={turnoInicial.id} />}
+      {esAdmin && <input type="hidden" name="estadoPago" value={estadoPago} />}
       <input
         type="hidden"
         name="horarioReservado"
@@ -125,11 +133,22 @@ export default function FormularioReservaTurno({
             slotSeleccionado={disponibilidad.slotSeleccionado}
             completo={completo}
             onCancelar={onCancelar}
-            esAdmin={session?.user?.role === "ADMIN"}
+            esAdmin={esAdmin}
             usuarios={usuarios}
             selectedUserId={selectedUserId}
             onCambiarCliente={setSelectedUserId}
             esEdicion={Boolean(turnoInicial)}
+            estadoPago={estadoPago}
+            onCambiarEstadoPago={setEstadoPago}
+            clienteUsuario={
+              session?.user
+                ? {
+                    nombre: session.user.name,
+                    telefono: session.user.telefono,
+                  }
+                : undefined
+            }
+            senia={senia}
           />
         </div>
       </div>

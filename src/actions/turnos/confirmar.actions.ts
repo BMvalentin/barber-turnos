@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
-import { ESTADOS_TURNO } from "@/lib/constants";
+import { ESTADOS_TURNO, ESTADOS_PAGO } from "@/lib/constants";
 import { enviarEmailsTurnoConfirmado } from "@/lib/email/enviar-emails-turno-confirmado";
 import { INCLUDE_TURNO_CON_DETALLE } from "@/lib/turno-con-detalle";
 
@@ -17,7 +17,7 @@ export const confirmarTurno = exigirAdmin(async (turnoId: string) => {
 
     await prisma.turno.update({
       where: { id: turnoId },
-      data: { estado: ESTADOS_TURNO[1] },
+      data: { estado: ESTADOS_TURNO[1], estadoPago: ESTADOS_PAGO[1] },
     });
 
     if (turnoPrevio.estado === ESTADOS_TURNO[1]) {

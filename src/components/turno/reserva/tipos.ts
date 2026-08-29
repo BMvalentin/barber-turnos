@@ -1,5 +1,6 @@
 import type { ReactNode, RefObject } from "react";
 import type { Session } from "next-auth";
+import type { ESTADOS_PAGO } from "@/lib/constants";
 import type { ActionState } from "@/types/action-state";
 import type {
   BarberoData,
@@ -29,6 +30,11 @@ export type PropsPanelFechaHorario = {
   disponibilidad: DatosDisponibilidadHorarios;
   servicioId?: string;
   barberoId?: string;
+};
+
+export type PropsSelectorEstadoPago = {
+  valor: (typeof ESTADOS_PAGO)[number];
+  onChange: (valor: (typeof ESTADOS_PAGO)[number]) => void;
 };
 
 export type PropsCalendarioReserva = {
@@ -107,6 +113,10 @@ export type PropsResumenReserva = {
   selectedUserId: string;
   onCambiarCliente: (id: string) => void;
   esEdicion?: boolean;
+  estadoPago: (typeof ESTADOS_PAGO)[number];
+  onCambiarEstadoPago: (valor: (typeof ESTADOS_PAGO)[number]) => void;
+  clienteUsuario?: { nombre?: string | null; telefono?: string | null };
+  senia?: number;
 };
 
 export type PropsSelectorClienteReserva = {
@@ -133,6 +143,8 @@ export type PropsFormularioReservaTurno = {
   handleServicioChange: (id: string) => void;
   onCancelar: () => void;
   turnoInicial?: TurnoListado | null;
+  estadoPago: (typeof ESTADOS_PAGO)[number];
+  setEstadoPago: (valor: (typeof ESTADOS_PAGO)[number]) => void;
 };
 
 export type PropsModalGestionTurno = ParametrosFormularioTurno & {

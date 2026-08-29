@@ -2,6 +2,8 @@
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { redirect } from "next/navigation";
 import { confirmarPagoTurno } from "@/actions/mercadopago/confirmar-pago.actions";
+import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
+import RedireccionWhatsApp from "@/components/pago/RedireccionWhatsApp";
 import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import Link from "next/link";
 import { CheckCircle2, Calendar, ArrowRight } from "lucide-react";
@@ -34,6 +36,9 @@ export default async function PagoSuccessPage({
 
   const turnoConfirmado = result.success === true;
   const datosTurno = result.success ? result.data : null;
+
+  const config = await obtenerConfigCacheada();
+  const whatsappPhone = config?.whatsapp ?? "";
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
@@ -76,22 +81,35 @@ export default async function PagoSuccessPage({
         )}
 
         {/* Acciones */}
-        <div className="flex flex-col gap-3">
-          <Link
-            href="/dashboard"
-            className={`flex items-center justify-center gap-2 w-full ${CLASES_BOTON_MARCA} font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm`}
-          >
-            <Calendar className="w-5 h-5" />
-            Ver mis turnos
-          </Link>
-          <Link
-            href="/"
-            className="flex items-center justify-center gap-2 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium py-3 rounded-2xl transition-all text-sm"
-          >
-            Volver al inicio
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
+        {turnoConfirmado && datosTurno && whatsappPhone ? (
+          <RedireccionWhatsApp
+            numeroWhatsApp={whatsappPhone}
+            clienteNombre={datosTurno.user.name}
+            servicioNombre={datosTurno.servicio.nombre}
+            barberoNombre={datosTurno.barbero.nombre}
+            horarioReservado={datosTurno.horarioReservado}
+            precioTotal={datosTurno.precioCongelado}
+            señaPagada={datosTurno.seniaCongelada}
+            saldoPendiente={datosTurno.precioCongelado - datosTurno.seniaCongelada}
+          />
+        ) : (
+          <div className="flex flex-col gap-3">
+            <Link
+              href="/dashboard"
+              className={`flex items-center justify-center gap-2 w-full ${CLASES_BOTON_MARCA} font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm`}
+            >
+              <Calendar className="w-5 h-5" />
+              Ver mis turnos
+            </Link>
+            <Link
+              href="/"
+              className="flex items-center justify-center gap-2 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium py-3 rounded-2xl transition-all text-sm"
+            >
+              Volver al inicio
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ export const authConfig = {
   session: { strategy: "jwt" },
   providers: [],
   callbacks: {
-    jwt({ token, user, trigger, session }) {
+    async jwt({ token, user, trigger, session }) {
       if (user){
         token.id = user.id;
         token.role = user.role;
@@ -14,6 +14,19 @@ export const authConfig = {
       if (trigger === "update" && session) {
         token.name = session.name;
         token.telefono = session.telefono;
+      }
+      // Hidrata el teléfono desde la BD si el token quedó viejo (runtime Node únicamente; Edge salta este bloque).
+      if (token.id && !token.telefono && process.env.NEXT_RUNTIME !== "edge") {
+        try {
+          const { prisma } = await import("@/lib/prisma");
+          const usuario = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { telefono: true },
+          });
+          if (usuario?.telefono) token.telefono = usuario.telefono;
+        } catch (error) {
+          console.error("No se pudo hidratar el teléfono del token:", error);
+        }
       }
       return token;
     },

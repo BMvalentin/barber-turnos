@@ -75,7 +75,7 @@ export default function AdminTopbar({
 
       <div className="flex items-center gap-3">
         <Link
-          href="/turno"
+          href="/admin/turno"
           className="hidden items-center gap-2 rounded-lg bg-[var(--page-primary)] px-3.5 py-2 text-sm font-semibold text-[var(--page-primary-foreground)] transition-colors hover:bg-[var(--page-primary-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] sm:inline-flex"
         >
           <Calendar className="h-4 w-4" />

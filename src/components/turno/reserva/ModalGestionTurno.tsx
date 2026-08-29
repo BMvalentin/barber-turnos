@@ -45,6 +45,8 @@ export default function ModalGestionTurno({
     selectedBarberoId,
     selectedUserId,
     setSelectedUserId,
+    estadoPago,
+    setEstadoPago,
     serviciosFiltrados,
     handleBarberoChange,
     handleServicioChange,
@@ -138,6 +140,8 @@ export default function ModalGestionTurno({
                 handleServicioChange={handleServicioChange}
                 onCancelar={() => setIsOpen(false)}
                 turnoInicial={turnoInicial}
+                estadoPago={estadoPago}
+                setEstadoPago={setEstadoPago}
               />
             </ModalBase>
 
