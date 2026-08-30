@@ -2122,3 +2122,165 @@ cron, gestión de clientes/presupuestos/mensajes, plantillas.
    si el usuario lo confirma).
 
 ---
+
+# APÉNDICE I — PENDIENTE NUEVO: Modal "Reservar turno" — mostrar únicamente horarios realmente disponibles (registrado 30-ago-2026)
+
+> **Documento directivo de SOLO LECTURA (sigue vigente para su sección).** Este apéndice se
+> AGREGA al plan directivo (Fases 9-15) y a los Apéndices A-H como un pendiente NUEVO e
+> independiente. No forma parte de las Fases 9-15. Los números de línea citados fueron
+> **verificados contra el repo el 30-ago-2026** y pueden desplazarse: **verificar la línea exacta
+> antes de editar** (regla transversal §5.11).
+>
+> **Estado: APROBADO en plan por el usuario el 30-ago-2026** (decisiones en §I.3).
+> **Aún NO implementado.**
+
+## I.1. Objetivo
+
+Hacer que el modal **"Reservar turno"** (`ModalGestionTurno` → `FormularioReservaTurno`) muestre
+**únicamente los horarios realmente disponibles**:
+
+- Al seleccionar una fecha, consultar la disponibilidad real de ese día.
+- No mostrar horarios ya reservados, fuera del horario laboral configurado, ni bloqueados/no
+  disponibles por cualquier otra configuración del sistema.
+- Si un horario ya fue reservado por otro usuario, debe desaparecer de la lista de horarios.
+- La disponibilidad debe validarse también en el backend (evitar reservas simultáneas o
+  inconsistentes).
+- Si no quedan horarios disponibles: "No hay horarios disponibles para esta fecha."
+- Sin modificar el diseño general del modal ni componentes ajenos a esta lógica.
+- Solución **dinámica**: si se reserva un horario, ese horario debe dejar de aparecer como
+  disponible sin necesidad de modificarlo manualmente.
+
+## I.2. Contexto actual (verificado el 30-ago-2026)
+
+### I.2.1. Lo que YA funciona (no rehacer)
+
+- **Turnos ocupados ya ocultos:** `src/lib/disponibilidad.ts` (`obtenerDisponibilidad`) calcula slots
+  cada 15 min dentro del margen laboral del barbero y **excluye** los que se solapan con un `turno`
+  activo (`disponibilidad.ts:70-71`), además de días pasados, días con `excepcion_laboral` y slots a
+  menos de `MINIMO_ANTICIPACION_MS` (10 min). `obtenerDiasDisponibles` / `obtenerHorariosDisponibles`
+  (server actions) devuelven solo los días/slots con `slots.length > 0`.
+- **Validación anti doble-reserva en backend — ya resuelta (Apéndice F/G):**
+  `src/lib/crear-turno-transaccion.ts` usa una transacción (`RepeatableRead` según el fix del Apéndice
+  G) + cheques de excepción/cerrado/margen/choque/lock ajeno + índice único `claveSlot` en
+  `prisma/schema.prisma`. **NO se reimplementa** (requisito §I.1 "validar también en el backend").
+- **Revalidación de caché al crear/editar/eliminar — ya existe:**
+  `src/lib/revalidar/revalidar-cache-turno.ts` invalida `turnos-${barberoId}-${fecha}`,
+  `turnos-mes-*`, `turnos-global`, `turnos-user-*` y revalida `/turno` y `/admin`. Ya la usan
+  `crear.actions.ts`, `estado.actions.ts` y `eliminar.actions.ts`.
+
+### I.2.2. Brechas detectadas (lo que se corrige)
+
+1. **Horarios bloqueados por otro usuario (lock temporal de 5 min) NO se ocultan:**
+   `src/components/turno/reserva/ListaHorariosReserva.tsx:56-72` los renderiza **en gris con candado
+   (`Lock`) y `disabled`** vía `isSlotBloqueado(slot)`. El usuario quiere que desaparezcan de la lista.
+2. **Los slots reales no se refrescan solos:** `useDisponibilidadHorarios` solo vuelve a consultar
+   `obtenerHorariosDisponibles` al cambiar fecha/servicio/barbero o al montar — no hay polling de
+   slots (los locks SÍ pollean cada 10 s en `useSlotLocks`). Por eso, si otro usuario reserva mientras
+   el modal está abierto, el horario sigue apareciendo hasta la próxima interacción. La caché
+   (`getCachedData`, TTL 120 s) devuelve datos frescos al re-consultar.
+3. **`cancelar-turno.actions.ts` no revalida la caché de disponibilidad:** `cancelTurno` solo hace
+   `revalidatePath("/dashboard")` (`cancelar-turno.actions.ts:38`), por lo que un horario liberado por
+   una cancelación **sigue oculto** hasta que venza la caché (120 s) u otra acción revalide.
+   (En cambio `completar.actions.ts:26-29` sí revalida `turnos-global` y `turnos-user-*`, lo que cubre
+   las caches de días y horarios; `estado.actions.ts` y `eliminar.actions.ts` usan `revalidarCacheTurno`.)
+4. **Mensaje de lista vacía inexacto:** `ListaHorariosReserva.tsx:48` dice
+   `"No hay horarios disponibles para esta fecha. Probá con otro día."` → debe ser exactamente
+   `"No hay horarios disponibles para esta fecha."`
+
+### I.2.3. Nota menor (fuera del alcance elegido)
+
+- **Discrepancia `COMPLETADO`:** `disponibilidad.ts:21` excluye solo `estado notIn [CANCELADO]` (el
+  `COMPLETADO` bloquea la pantalla), mientras que `obtenerContextoDeReserva` (validación de creación)
+  usa `ESTADOS_TURNO_ACTIVOS = [PENDIENTE, CONFIRMADO]` (el `COMPLETADO` NO cuenta como choque). Es un
+  caso muy poco frecuente (turnos ya realizados). **NO se corrige en este pendiente.**
+
+## I.3. Decisiones del usuario (registradas el 30-ago-2026 — NO reversibles sin confirmación)
+
+1. **Refresco de slots: "solo al interactuar".** NO se agrega polling de horarios. La lista de
+   horarios se actualiza al cambiar fecha/servicio/barbero o al reabrir el modal (comportamiento
+   actual de `useDisponibilidadHorarios`). Los horarios **bloqueados por otro usuario** sí desaparecen
+   en vivo (≤ ~10 s) porque los locks SÍ pollean en `useSlotLocks`.
+2. **Alcance: "también consistencia de caché".** Además de ocultar los slots bloqueados, se corrige que
+   **cancelar** revalide la disponibilidad (horario liberado reaparece pronto). NO se incluye el caso
+   `COMPLETADO` (§I.2.3).
+3. La validación anti doble-reserva en backend es responsabilidad del **Apéndice F/G** (ya resuelta);
+   este apéndice NO la reimplementa.
+
+## I.4. Diseño de la solución
+
+### I.4.1. Ocultar horarios bloqueados (locks de otros) — `ListaHorariosReserva.tsx`
+
+- Computar `slotsVisibles = slots.filter((s) => !isSlotBloqueado(s))`.
+- Usar `slotsVisibles` para el render **y** para el chequeo de lista vacía (evita que, si quedan todos
+  bloqueados, se muestre la grilla vacía en vez del mensaje).
+- Eliminar la rama del botón deshabilitado con `<Lock>` + `disabled` + tooltip y el import `Lock`.
+- Mantener sin cambios el resto (el slot seleccionado por el propio usuario sigue visible porque
+  `isSlotBloqueado` excluye los locks propios, `listar-locks.actions.ts:44-46`).
+
+### I.4.2. Mensaje de lista vacía — `ListaHorariosReserva.tsx`
+
+- `"No hay horarios disponibles para esta fecha. Probá con otro día."` →
+  `"No hay horarios disponibles para esta fecha."`
+
+### I.4.3. Revalidación al cancelar — `src/actions/sesion/cancelar-turno.actions.ts`
+
+- Tomar `barberoId` y `horarioReservado` del turno actualizado (`actualizarTurnoConDetalle` ya los
+  incluye) y, tras la actualización, llamar
+  `revalidarCacheTurno(barberoId, obtenerFechaSola(horario), userId)`.
+- Ampliar el `revalidatePath("/dashboard")`; agregar imports de `revalidarCacheTurno` y
+  `obtenerFechaSola`. No cambia el comportamiento visible de la cancelación.
+
+## I.5. Archivos involucrados (resumen)
+
+| Archivo | Acción |
+|---|---|
+| `src/components/turno/reserva/ListaHorariosReserva.tsx` | **MODIFICAR** — filtrar `isSlotBloqueado`; ocultar en vez de deshabilitar; mensaje de vacío exacto |
+| `src/actions/sesion/cancelar-turno.actions.ts` | **MODIFICAR** — `revalidarCacheTurno` al cancelar (horario liberado reaparece) |
+
+Sin cambios en: `src/lib/disponibilidad.ts`, acciones de disponibilidad/horarios, `useSlotLocks`,
+`useDisponibilidadHorarios`, `PanelFechaHorario`, `tipos.ts`, locks, `crear-turno-transaccion.ts`
+(validación anti doble-reserva, ya resuelta en F/G), `prisma/schema.prisma`, Mercado Pago, emails,
+auth y el sistema de color.
+
+## I.6. Lo que NO se modifica (explicitamente fuera de alcance)
+
+- El diseño general del modal, la estructura del formulario, la selección de servicio/barbero/cliente,
+  `ResumenReserva`, `PanelFechaHorario`, `CalendarioReserva` / `DiaCalendarioReserva`.
+- La lógica de generación/disponibilidad (`disponibilidad.ts`), los locks (`SlotLock`, acciones,
+  `useSlotLocks`) y la validación anti doble-reserva (Apéndice F/G).
+- El caso `COMPLETADO` (§I.2.3). No se instalan dependencias nuevas. No se crean tests (no hay
+  framework).
+
+## I.7. Verificación (obligatoria al terminar)
+
+1. `npx tsc --noEmit` = **0 errores** (el build NO typechequea; obligatorio AGENTS.md).
+2. `npm run lint`.
+3. Revisión manual:
+   - **Solo horarios libres:** al elegir una fecha se ven únicamente los horarios dentro del margen
+     laboral del barbero, sin excepciones laborales, y sin los ya reservados.
+   - **Bloqueados ocultos:** un horario con lock de otro usuario no aparece en la grilla (desaparece,
+     no se muestra en gris). El del propio usuario (seleccionado) sigue visible y seleccionable.
+   - **Dinámico:** al reservar un horario (otro usuario), desaparece al volver a esa fecha o reabrir el
+     modal (refresco al interactuar). Los bloqueados desaparecen en vivo (polling 10 s).
+   - **Cancelación:** al cancelar un turno, su horario vuelve a aparecer como disponible pronto (sin
+     esperar a que venza la caché).
+   - **Mensaje vacío:** si no quedan horarios (o todos quedaron bloqueados), se muestra
+     "No hay horarios disponibles para esta fecha."
+   - **Backend:** al intentar reservar un horario recién ocupado, el backend lo rechaza
+     ("Horario ocupado" — validación §I.3.3, ya resuelta).
+4. Reglas del repo (AGENTS.md): 1 export por archivo nuevo, ≤400 líneas (objetivo 300), imports `@/`,
+   sin `any`/`@ts-ignore`, nombres y mensajes en español, colores vía `var(--page-*)` / `var(--admin-*)`
+   sin hex de marca hardcodeado, contraste según `src/lib/contraste.ts`.
+
+## I.8. Ejecución (cumple AGENTS.md "Uso de subagentes")
+
+1. Fase pequeña (2 archivos relacionados, disjuntos): puede ejecutarse con un único subagente
+   implementador que reciba este apéndice + AGENTS.md y aplique los 2 cambios de §I.5.
+2. **Agente verificador V-I**: revisa TODO el código producido (reglas de §I.7.4, límites de líneas,
+   1 export por archivo, que la interfaz de selección siga intacta y que `MenuAccionesTurno`/edición
+   no se contamine), repara fallas y **certifica** el pendiente. Gate: `npx tsc --noEmit` = 0.
+3. La decisión final sobre resultados es del agente principal (nunca de los subagentes).
+4. Al aprobarse, registrar el resultado como tarea cerrada en el acta del ciclo (o en `AUDITORIA.md`
+   si el usuario lo confirma).
+
+---
