@@ -72,6 +72,7 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
   const mostrarExito = esPagoAprobado && verificadoCorrectamente;
   const mostrarFallo = status === "rejected" || status === "null" || (esPagoAprobado && !verificadoCorrectamente);
   const mostrarPendiente = status === "pending" || status === "in_process";
+  const esPagoTotal = datosTurnoConfirmado?.tipoPago === "TOTAL";
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4 py-8">
@@ -90,7 +91,7 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
             </div>
             <div>
               <h1 className="text-3xl font-black text-white uppercase tracking-tight mb-2">
-                ¡Seña Pagada!
+                {esPagoTotal ? "¡Pago Total!" : "¡Seña Pagada!"}
               </h1>
               <p className="text-zinc-400">
                 Tu turno quedó confirmado. Te esperamos.
@@ -193,6 +194,8 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
             precioTotal={datosTurnoConfirmado.precioCongelado}
             señaPagada={datosTurnoConfirmado.seniaCongelada}
             saldoPendiente={datosTurnoConfirmado.precioCongelado - datosTurnoConfirmado.seniaCongelada}
+            tipoPago={datosTurnoConfirmado.tipoPago}
+            estadoPago={datosTurnoConfirmado.estadoPago}
           />
         )}
 

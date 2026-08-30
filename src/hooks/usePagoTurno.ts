@@ -3,6 +3,7 @@
 import { crearPreferenciaPago } from "@/actions/mercadopago/crear-preferencia.actions";
 import { useState } from "react";
 import type { TurnoCreado } from "@/types/turno";
+import type { TipoPago } from "@/types/mercadopago";
 import { formatearFechaHora } from "@/lib/utils/formatear-fecha-hora";
 
 export type ParametrosPagoTurno = {
@@ -34,13 +35,13 @@ export function usePagoTurno({ whatsappPhone }: ParametrosPagoTurno) {
     window.open(url, "_blank");
   };
 
-  const handlePagarSenia = async () => {
+  const handlePagar = async (tipoPago: TipoPago) => {
     if (!turnoCreado) return;
     setCargandoPago(true);
     setErrorPago(null);
 
     try {
-      const result = await crearPreferenciaPago(turnoCreado.id);
+      const result = await crearPreferenciaPago(turnoCreado.id, tipoPago);
 
       if (!result.success || !result.data?.checkoutUrl) {
         setErrorPago(result.error ?? "No se pudo generar el enlace de pago");
@@ -77,7 +78,7 @@ export function usePagoTurno({ whatsappPhone }: ParametrosPagoTurno) {
     setShowPagoModal,
     cargandoPago,
     errorPago,
-    handlePagarSenia,
+    handlePagar,
     handlePagarDespues,
   };
 }

@@ -2,8 +2,9 @@
 
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, Clock, CreditCard, Loader2, Scissors } from "lucide-react";
+import { CheckCircle2, Clock, CreditCard, Loader2, Scissors, Wallet } from "lucide-react";
 import type { TurnoCreado } from "@/types/turno";
+import type { TipoPago } from "@/types/mercadopago";
 import { formatearMoneda } from "@/lib/utils/formatear-moneda";
 import ModalBase from "@/components/ui/ModalBase";
 
@@ -11,7 +12,7 @@ type Props = {
   turnoCreado: TurnoCreado;
   cargandoPago: boolean;
   errorPago: string | null;
-  onPagarSenia: () => void;
+  onPagar: (tipoPago: TipoPago) => void;
   onPagarDespues: () => void;
 };
 
@@ -19,7 +20,7 @@ export default function ModalPagoTurno({
   turnoCreado,
   cargandoPago,
   errorPago,
-  onPagarSenia,
+  onPagar,
   onPagarDespues,
 }: Props) {
   useEffect(() => {
@@ -27,6 +28,10 @@ export default function ModalPagoTurno({
       toast.error("Error de pago", { description: errorPago });
     }
   }, [errorPago]);
+
+  const total = turnoCreado.precioCongelado;
+  const senia = turnoCreado.seniaCongelada;
+  const saldo = Math.max(total - senia, 0);
 
   return (
     <ModalBase
@@ -46,7 +51,7 @@ export default function ModalPagoTurno({
           </div>
           <div>
             <h2 className="text-lg font-bold text-white">¡Turno Reservado!</h2>
-            <p className="text-xs text-zinc-300">Aboná la seña para confirmar tu lugar.</p>
+            <p className="text-xs text-zinc-300">Aboná para confirmar tu lugar.</p>
           </div>
         </div>
       }
@@ -65,25 +70,23 @@ export default function ModalPagoTurno({
 
             <div className="flex items-center justify-between">
               <span className="text-sm text-zinc-400">Precio del servicio</span>
-              <span className="text-sm text-white font-medium">
-                ${formatearMoneda(turnoCreado.precioCongelado)}
-              </span>
+              <span className="text-sm text-white font-medium">${formatearMoneda(total)}</span>
             </div>
 
-            <div className="border-t border-zinc-800 pt-3 flex items-center justify-between">
-              <div>
-                <span className="text-sm font-semibold text-white">Seña requerida</span>
-                <p className="text-xs text-zinc-500 mt-0.5">El resto se abona en el local</p>
-              </div>
-              <span className="text-2xl font-black" style={{ color: "var(--primary-tinta)" }}>
-                ${formatearMoneda(turnoCreado.seniaCongelada)}
-              </span>
+            <div className="flex items-center justify-between border-t border-zinc-800 pt-3">
+              <span className="text-sm text-zinc-400">Seña (a abonar ya)</span>
+              <span className="text-sm text-zinc-200 font-medium">${formatearMoneda(senia)}</span>
+            </div>
+
+            <div className="flex items-center justify-between border-t border-zinc-800 pt-3">
+              <span className="text-sm text-zinc-400">Saldo en el local</span>
+              <span className="text-sm text-zinc-200 font-medium">${formatearMoneda(saldo)}</span>
             </div>
           </div>
 
           <button
             id="btn-pagar-senia"
-            onClick={onPagarSenia}
+            onClick={() => onPagar("SEÑA")}
             disabled={cargandoPago}
             className="w-full flex items-center justify-center gap-3 disabled:opacity-50 text-[var(--primary-foreground)] font-black py-3.5 rounded-xl transition-all text-sm uppercase tracking-wider shadow-lg hover:opacity-90"
             style={{ backgroundColor: "var(--primary)" }}
@@ -96,9 +99,19 @@ export default function ModalPagoTurno({
             ) : (
               <>
                 <CreditCard className="w-5 h-5" />
-                Pagar Seña · ${formatearMoneda(turnoCreado.seniaCongelada)}
+                Pagar Seña · ${formatearMoneda(senia)}
               </>
             )}
+          </button>
+
+          <button
+            id="btn-pagar-total"
+            onClick={() => onPagar("TOTAL")}
+            disabled={cargandoPago}
+            className="w-full flex items-center justify-center gap-3 disabled:opacity-50 text-white font-black py-3.5 rounded-xl transition-all text-sm uppercase tracking-wider bg-zinc-800 hover:bg-zinc-700"
+          >
+            <Wallet className="w-5 h-5" />
+            Pagar Total · ${formatearMoneda(total)}
           </button>
 
           <button

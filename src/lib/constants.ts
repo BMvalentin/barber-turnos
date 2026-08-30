@@ -9,8 +9,24 @@ export const ESTADOS_TURNO = ["PENDIENTE", "CONFIRMADO", "COMPLETADO", "CANCELAD
 /* Estados que cuentan como turnos vigentes/activos */
 export const ESTADOS_TURNO_ACTIVOS = ["PENDIENTE", "CONFIRMADO"] as const;
 
-/* Estados de pago de la seña (alineados al enum Prisma `estado_pago`) */
-export const ESTADOS_PAGO = ["PENDIENTE", "SEÑADO", "PAGADO"] as const;
+/* Estados de pago de la seña (alineados al enum Prisma `estado_pago`).
+   Incluye los estados que setea el backend de Mercado Pago. */
+export const ESTADOS_PAGO = [
+  "PENDIENTE",
+  "SEÑADO",
+  "PAGADO",
+  "APROBADO",
+  "RECHAZADO",
+  "CANCELADO",
+  "EN_ACREDITACION",
+] as const;
+
+/* Estados de pago que se pueden seleccionar/cargar de forma MANUAL (sin Mercado Pago):
+   el selector del admin y la acción de creación usan SOLO estos. */
+export const ESTADOS_PAGO_MANUALES = ["PENDIENTE", "SEÑADO", "PAGADO"] as const;
+
+/* Tipos de pago de Mercado Pago (seña o valor total del servicio). */
+export const TIPOS_PAGO = ["SEÑA", "TOTAL"] as const;
 
 /* Anticipación mínima (ms) para reservar o reprogramar un turno */
 export const MINIMO_ANTICIPACION_MS = 10 * 60 * 1000;

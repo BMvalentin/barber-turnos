@@ -8,17 +8,15 @@ import { esAdmin } from "@/lib/seguridad/es-admin";
 import { enviarEmailTurnoSeguro } from "@/lib/email/enviar-email-turno-seguro";
 import { enviarEmailTurnoBarberoSeguro } from "@/lib/email/enviar-email-turno-barbero-seguro";
 import { enviarEmailsTurnoConfirmado } from "@/lib/email/enviar-emails-turno-confirmado";
-import { existeLockAjeno } from "@/lib/locks";
-import { entraEnMargen } from "@/lib/margenes";
-import { obtenerContextoDeReserva } from "@/lib/contexto-reserva";
 import { revalidarCacheTurno } from "@/lib/revalidar/revalidar-cache-turno";
-import { INCLUDE_TURNO_CON_DETALLE } from "@/lib/turno-con-detalle";
 import { obtenerServicioPorId } from "@/lib/consultas/obtener-servicio-por-id";
 import { obtenerTurnoDuplicado } from "@/lib/consultas/obtener-turno-duplicado";
 import { serializarTurnoConDetalle } from "@/lib/serializar-turno-con-detalle";
-import { ZONA_HORARIA, MINIMO_ANTICIPACION_MS, ESTADOS_TURNO, ESTADOS_PAGO } from "@/lib/constants";
+import { crearTurnoEnTransaccion } from "@/lib/crear-turno-transaccion";
+import { ZONA_HORARIA, MINIMO_ANTICIPACION_MS, ESTADOS_TURNO, ESTADOS_PAGO, ESTADOS_PAGO_MANUALES } from "@/lib/constants";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
-import type { ActionState } from "@/types/action-state"; import type { TurnoConDetalle } from "@/types/turno";
+import type { ActionState } from "@/types/action-state";
+import type { TurnoConDetalle } from "@/types/turno";
 
 export async function createTurno(
   prevState: ActionState<TurnoConDetalle>,
@@ -45,7 +43,6 @@ export async function createTurno(
     if (inicio.getTime() <= ahora.getTime() + MINIMO_ANTICIPACION_MS) {
       return { success: false, error: "Reservá con 10 minutos de anticipación" };
     }
-    /* Guard anti-duplicado: si ya existe un turno PENDIENTE reciente del mismo usuario/barbero/horario (doble submit, refresh), se devuelve ese en vez de crear otro; no se re-envían emails. */
     const turnoDuplicado = await obtenerTurnoDuplicado({ userId, barberoId, horarioReservado: inicio });
     if (turnoDuplicado) {
       try { await prisma.slotLock.deleteMany({ where: { userId, barberoId, horarioReservado: inicio } }); } catch { /* No bloquear el flujo si falla la limpieza */ }
@@ -54,41 +51,27 @@ export async function createTurno(
     }
     const servicio = await obtenerServicioPorId(servicioId);
     if (!servicio) return { success: false, error: "Servicio no encontrado" };
-    const fin = addMinutes(inicio, servicio.duracion);
     const zonedInicio = toZonedTime(inicio, ZONA_HORARIA);
-    const fechaSolo = obtenerFechaSola(inicio);
-    const { diaLaboral, excepciones, turnosDelDia } = await obtenerContextoDeReserva(
-      barberoId,
-      zonedInicio.getDay(),
-      inicio,
-      fin,
-    );
-    if (excepciones.length > 0) return { success: false, error: excepciones[0].motivo };
-    if (!diaLaboral) return { success: false, error: "El negocio está cerrado ese día" };
-    const minInicio = zonedInicio.getHours() * 60 + zonedInicio.getMinutes();
-    const minFin = minInicio + servicio.duracion;
-    if (!entraEnMargen(diaLaboral.margenes, minInicio, minFin)) {
-      return { success: false, error: "Horario fuera del rango laboral" };
-    }
-    const hayChoque = turnosDelDia.some((t) => {
-      const tFin = addMinutes(new Date(t.horarioReservado), t.servicio.duracion);
-      return inicio < tFin && fin > t.horarioReservado;
-    });
-    if (hayChoque) return { success: false, error: "Horario ocupado" };
-    if (await existeLockAjeno(barberoId, inicio, session.user.id)) {
-      return { success: false, error: "Este horario está siendo seleccionado por otro usuario en este momento. Intentá con otro horario." };
-    }
-    const estadoPago = usuarioEsAdmin && (ESTADOS_PAGO as readonly string[]).includes(estadoPagoRaw) ? (estadoPagoRaw as (typeof ESTADOS_PAGO)[number]) : ESTADOS_PAGO[0];
+    const estadoPago = usuarioEsAdmin && (ESTADOS_PAGO_MANUALES as readonly string[]).includes(estadoPagoRaw) ? (estadoPagoRaw as (typeof ESTADOS_PAGO_MANUALES)[number]) : ESTADOS_PAGO[0];
     const estadoFinal = estadoPago === ESTADOS_PAGO[1] || estadoPago === ESTADOS_PAGO[2] ? ESTADOS_TURNO[1] : ESTADOS_TURNO[0];
-    const turno = await prisma.turno.create({
-      data: {
-        servicioId, userId, barberoId, horarioReservado: inicio,
-        precioCongelado: servicio.precio, seniaCongelada: servicio.senia, estado: estadoFinal,
-        estadoPago,
-      },
-      include: INCLUDE_TURNO_CON_DETALLE,
+    const resultado = await crearTurnoEnTransaccion({
+      servicioId,
+      userId,
+      barberoId,
+      idUsuarioActual: session.user.id,
+      inicio,
+      fin: addMinutes(inicio, servicio.duracion),
+      diaSemana: zonedInicio.getDay(),
+      minInicio: zonedInicio.getHours() * 60 + zonedInicio.getMinutes(),
+      duracion: servicio.duracion,
+      precioCongelado: Number(servicio.precio),
+      seniaCongelada: Number(servicio.senia),
+      estadoPago,
+      estadoFinal,
     });
-    revalidarCacheTurno(barberoId, fechaSolo, userId);
+    if (!resultado.ok) return { success: false, error: resultado.error };
+    const turno = resultado.turno;
+    revalidarCacheTurno(barberoId, obtenerFechaSola(inicio), userId);
     try { await prisma.slotLock.deleteMany({ where: { userId, barberoId, horarioReservado: inicio } }); } catch { /* No bloquear el flujo si falla la limpieza */ }
     if (estadoFinal === ESTADOS_TURNO[1]) enviarEmailsTurnoConfirmado(turno);
     else { enviarEmailTurnoSeguro(turno, "CREADO"); enviarEmailTurnoBarberoSeguro(turno, "CREADO"); }

@@ -38,6 +38,7 @@ export type TurnoCreado = {
   barberoNombre?: string;
   horarioReservado?: Date | string;
   estadoPago?: string;
+  tipoPago?: string | null;
 };
 
 /* Turno con cliente, barbero y servicio incluidos (createTurno, actualizarTurno). */

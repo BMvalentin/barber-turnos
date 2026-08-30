@@ -29,6 +29,7 @@ export default function ModalGestionTurno({
   claseTrigger,
   contenidoTrigger,
   onTriggerClick,
+  onTurnoCreado,
 }: PropsModalGestionTurno) {
   const {
     esEdicion,
@@ -54,7 +55,7 @@ export default function ModalGestionTurno({
     showPagoModal,
     cargandoPago,
     errorPago,
-    handlePagarSenia,
+    handlePagar,
     handlePagarDespues,
   } = useFormularioTurno({
     session,
@@ -64,6 +65,7 @@ export default function ModalGestionTurno({
     initialRelaciones,
     whatsappPhone,
     turnoInicial,
+    onTurnoCreado,
   });
 
   const abrir = () => {
@@ -150,7 +152,7 @@ export default function ModalGestionTurno({
                 turnoCreado={turnoCreado}
                 cargandoPago={cargandoPago}
                 errorPago={errorPago}
-                onPagarSenia={handlePagarSenia}
+                onPagar={handlePagar}
                 onPagarDespues={handlePagarDespues}
               />
             )}

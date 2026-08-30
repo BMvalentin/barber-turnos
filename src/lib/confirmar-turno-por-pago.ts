@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { ESTADOS_TURNO, ESTADOS_PAGO } from "@/lib/constants";
+import { ESTADOS_TURNO } from "@/lib/constants";
+import { evaluarPagoTurno } from "@/lib/mercadopago/evaluar-pago-turno";
 import { enviarEmailsTurnoConfirmado } from "@/lib/email/enviar-emails-turno-confirmado";
 import { INCLUDE_TURNO_CON_DETALLE } from "@/lib/turno-con-detalle";
 
@@ -12,15 +13,14 @@ export type ResultadoConfirmacionPago = {
 
 /**
  * Helper transversal que valida un pago de Mercado Pago y confirma el turno
- * (pasándolo a CONFIRMADO y guardando mpPaymentId). Lo consumen la server
- * action `confirmarPagoTurno` y el webhook de Mercado Pago para evitar lógica
- * duplicada/divergente. No hace revalidaciones: cada caller decide las suyas.
+ * (pasándolo a CONFIRMADO y guardando estadoPago/tipoPago/mpPaymentId). Lo
+ * consumen la server action `confirmarPagoTurno` y el webhook de Mercado Pago
+ * para evitar lógica duplicada/divergente.
  *
- * `soloSiPendiente` preserva el comportamiento del webhook original (solo
- * confirmaba turnos PENDIENTES): cuando es `true`, los turnos que ya están en
- * otro estado (COMPLETADO/CANCELADO) se devuelven como `yaConfirmado` sin
- * modificar. La acción `confirmarPagoTurno` lo omite y conserva su
- * comportamiento original de confirmar cualquier turno no CONFIRMADO.
+ * La confirmación es IDEMPOTENTE: se hace con `updateMany` sobre
+ * `estado = PENDIENTE`. Si la fila no matchea (`count === 0`), el turno ya fue
+ * confirmado por otra petición y se devuelve `yaConfirmado` sin duplicar emails
+ * ni acciones (protege de reintentos del webhook).
  */
 export async function confirmarTurnoPorPago(args: {
   turnoId: string;
@@ -28,53 +28,48 @@ export async function confirmarTurnoPorPago(args: {
   referencia: string;
   montoPago: number;
   paymentId?: string | number;
+  tipoPago?: string;
   soloSiPendiente?: boolean;
 }): Promise<ResultadoConfirmacionPago> {
   const turno = await prisma.turno.findUnique({
     where: { id: args.turnoId },
-    select: { id: true, estado: true, seniaCongelada: true },
+    select: { id: true, estado: true, tipoPago: true, precioCongelado: true, seniaCongelada: true },
   });
 
-  if (!turno) {
-    return { ok: false, error: "Turno no encontrado" };
-  }
+  if (!turno) return { ok: false, error: "Turno no encontrado" };
 
-  if (args.estadoPago !== "approved") {
-    return { ok: false, error: "El pago no está acreditado todavía" };
-  }
+  const validacion = evaluarPagoTurno({
+    turnoId: turno.id,
+    estado: turno.estado,
+    tipoPagoAlmacenado: turno.tipoPago,
+    precioCongelado: Number(turno.precioCongelado),
+    seniaCongelada: Number(turno.seniaCongelada),
+    estadoPago: args.estadoPago,
+    referencia: args.referencia,
+    montoPago: args.montoPago,
+    tipoPago: args.tipoPago,
+    soloSiPendiente: args.soloSiPendiente,
+  });
 
-  if (args.referencia !== args.turnoId) {
-    return { ok: false, error: "El pago no corresponde a este turno" };
-  }
+  if (!validacion.ok) return { ok: false, error: validacion.error };
+  if (validacion.yaConfirmado) return { ok: true, yaConfirmado: true, turnoId: turno.id };
 
-  if (args.montoPago < Number(turno.seniaCongelada)) {
-    return { ok: false, error: "El monto del pago no es válido" };
-  }
-
-  if (turno.estado === ESTADOS_TURNO[1]) {
-    return { ok: true, yaConfirmado: true, turnoId: turno.id };
-  }
-
-  if (args.soloSiPendiente && turno.estado !== ESTADOS_TURNO[0]) {
-    return { ok: true, yaConfirmado: true, turnoId: turno.id };
-  }
-
-  await prisma.turno.update({
-    where: { id: turno.id },
+  const resultado = await prisma.turno.updateMany({
+    where: { id: turno.id, estado: ESTADOS_TURNO[0] },
     data: {
       estado: ESTADOS_TURNO[1],
-      estadoPago: ESTADOS_PAGO[1],
+      estadoPago: validacion.nuevoEstadoPago,
+      tipoPago: validacion.tipoPagoGuardar,
       ...(args.paymentId ? { mpPaymentId: String(args.paymentId) } : {}),
     },
   });
+  if (resultado.count === 0) return { ok: true, yaConfirmado: true, turnoId: turno.id };
 
   const turnoConfirmado = await prisma.turno.findUnique({
     where: { id: turno.id },
     include: INCLUDE_TURNO_CON_DETALLE,
   });
-  if (turnoConfirmado) {
-    enviarEmailsTurnoConfirmado(turnoConfirmado);
-  }
+  if (turnoConfirmado) enviarEmailsTurnoConfirmado(turnoConfirmado);
 
   return { ok: true, turnoId: turno.id };
 }

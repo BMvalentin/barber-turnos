@@ -40,6 +40,8 @@ export default async function PagoSuccessPage({
   const config = await obtenerConfigCacheada();
   const whatsappPhone = config?.whatsapp ?? "";
 
+  const esPagoTotal = datosTurno?.tipoPago === "TOTAL";
+
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center space-y-6">
@@ -54,7 +56,7 @@ export default async function PagoSuccessPage({
         {/* Título */}
         <div>
           <h1 className="text-3xl font-black text-white uppercase tracking-tight mb-2">
-            ¡Seña Pagada!
+            {esPagoTotal ? "¡Pago Total!" : "¡Seña Pagada!"}
           </h1>
           <p className="text-zinc-400">
             Tu turno quedó confirmado. Te esperamos.
@@ -91,6 +93,8 @@ export default async function PagoSuccessPage({
             precioTotal={datosTurno.precioCongelado}
             señaPagada={datosTurno.seniaCongelada}
             saldoPendiente={datosTurno.precioCongelado - datosTurno.seniaCongelada}
+            tipoPago={datosTurno.tipoPago}
+            estadoPago={datosTurno.estadoPago}
           />
         ) : (
           <div className="flex flex-col gap-3">

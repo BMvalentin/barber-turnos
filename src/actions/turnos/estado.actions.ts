@@ -10,11 +10,17 @@ import { revalidarCacheTurno } from "@/lib/revalidar/revalidar-cache-turno";
 import { actualizarTurnoConDetalle } from "@/lib/turno-con-detalle";
 import { obtenerHorariosDisponibles } from "@/actions/turnos/horarios-disponibles.actions";
 import { obtenerServicioPorId } from "@/lib/consultas/obtener-servicio-por-id";
-import { MINIMO_ANTICIPACION_MS, ESTADOS_TURNO, ESTADOS_PAGO } from "@/lib/constants";
+import { MINIMO_ANTICIPACION_MS, ESTADOS_TURNO, ESTADOS_PAGO_MANUALES } from "@/lib/constants";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import type { ActionState } from "@/types/action-state";
 import type { TurnoConDetalle } from "@/types/turno";
 import type { Prisma, turno_estado } from "../../../generated/prisma/client";
+
+const esEstadoActivo = (estado: turno_estado): boolean =>
+  estado === ESTADOS_TURNO[0] || estado === ESTADOS_TURNO[1];
+
+const crearClaveSlot = (barberoId: string, horario: Date): string =>
+  `${barberoId}|${horario.toISOString()}`;
 
 export async function actualizarTurno(
   prevState: ActionState<TurnoConDetalle>,
@@ -38,7 +44,7 @@ export async function actualizarTurno(
     const barberoId = rawBarberoId || turnoActual.barberoId;
     const horarioStr = rawHorarioStr || turnoActual.horarioReservado.toISOString();
     const estado = (rawEstado as turno_estado) || turnoActual.estado;
-    const estadoPago = rawEstadoPago && (ESTADOS_PAGO as readonly string[]).includes(rawEstadoPago) ? (rawEstadoPago as (typeof ESTADOS_PAGO)[number]) : turnoActual.estadoPago;
+    const estadoPago = rawEstadoPago && (ESTADOS_PAGO_MANUALES as readonly string[]).includes(rawEstadoPago) ? (rawEstadoPago as (typeof ESTADOS_PAGO_MANUALES)[number]) : turnoActual.estadoPago;
     const horario = new Date(horarioStr);
     const cambioFecha = horario.getTime() !== turnoActual.horarioReservado.getTime();
     const cambioBarbero = barberoId !== turnoActual.barberoId;
@@ -60,7 +66,15 @@ export async function actualizarTurno(
       if (await existeLockAjeno(barberoId, horario, sesion.user.id)) {
         return { success: false, error: "Este horario está siendo seleccionado por otro usuario. Intentá con otro horario." };
       }
-      const dataUpdate: Prisma.turnoUncheckedUpdateInput = { servicioId, barberoId, horarioReservado: horario, estado, ...(cambioServicio ? { precioCongelado: servicio.precio, seniaCongelada: servicio.senia } : {}), ...(estadoPago !== turnoActual.estadoPago ? { estadoPago } : {}) };
+      const dataUpdate: Prisma.turnoUncheckedUpdateInput = {
+        servicioId,
+        barberoId,
+        horarioReservado: horario,
+        estado,
+        ...(cambioServicio ? { precioCongelado: servicio.precio, seniaCongelada: servicio.senia } : {}),
+        ...(estadoPago !== turnoActual.estadoPago ? { estadoPago } : {}),
+        claveSlot: esEstadoActivo(estado) ? crearClaveSlot(barberoId, horario) : null,
+      };
 
       const turnoActualizado = await actualizarTurnoConDetalle(id, dataUpdate);
       const fechaAnterior = obtenerFechaSola(turnoActual.horarioReservado);
@@ -86,7 +100,13 @@ export async function actualizarTurno(
         },
       };
     } else {
-      const turnoActualizado = await actualizarTurnoConDetalle(id, { estado, ...(estadoPago !== turnoActual.estadoPago ? { estadoPago } : {}) });
+      const turnoActualizado = await actualizarTurnoConDetalle(id, {
+        estado,
+        ...(estadoPago !== turnoActual.estadoPago ? { estadoPago } : {}),
+        claveSlot: esEstadoActivo(estado)
+          ? crearClaveSlot(turnoActual.barberoId, turnoActual.horarioReservado)
+          : null,
+      });
 
       revalidateTag("turnos-global");
       revalidateTag(`turnos-user-${turnoActual.userId}`);

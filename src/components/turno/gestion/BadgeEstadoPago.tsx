@@ -15,6 +15,22 @@ const MAPA_ESTADOS: Record<string, { etiqueta: string; clases: string }> = {
     etiqueta: "Pagado",
     clases: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
   },
+  APROBADO: {
+    etiqueta: "Aprobado",
+    clases: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
+  },
+  RECHAZADO: {
+    etiqueta: "Rechazado",
+    clases: "text-red-400 bg-red-400/10 border-red-400/20",
+  },
+  CANCELADO: {
+    etiqueta: "Cancelado",
+    clases: "text-zinc-400 bg-zinc-400/10 border-zinc-400/20",
+  },
+  EN_ACREDITACION: {
+    etiqueta: "En acreditación",
+    clases: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
+  },
 };
 
 const ESTADO_FALLBACK = {

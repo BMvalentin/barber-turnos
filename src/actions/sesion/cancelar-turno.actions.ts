@@ -28,7 +28,10 @@ export async function cancelTurno(turnoId: string): Promise<ActionState> {
       return { success: false, error: "No autorizado" };
     }
 
-    const turnoActualizado = await actualizarTurnoConDetalle(turnoId, { estado: ESTADOS_TURNO[3] });
+    const turnoActualizado = await actualizarTurnoConDetalle(turnoId, {
+      estado: ESTADOS_TURNO[3],
+      claveSlot: null,
+    });
 
     enviarEmailTurnoSeguro(turnoActualizado, ESTADOS_TURNO[3]);
 
