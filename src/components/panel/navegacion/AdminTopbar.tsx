@@ -23,9 +23,9 @@ export default function AdminTopbar({
   const [menuUsuarioAbierto, setMenuUsuarioAbierto] = useState(false);
   const contenedorRef = useRef<HTMLDivElement>(null);
 
-  const itemActual = GRUPOS_NAVEGACION.flatMap((grupo) => grupo.items).find(
-    (item) => item.href === pathname,
-  );
+  const itemActual = GRUPOS_NAVEGACION.flatMap((grupo) => grupo.items)
+    .flatMap((entrada) => ("href" in entrada ? [entrada] : entrada.items))
+    .find((item) => item.href === pathname);
 
   useEffect(() => {
     if (!menuUsuarioAbierto) return;
