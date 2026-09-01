@@ -19,3 +19,28 @@ export type DiaLaboral = Omit<
   dia: number;
   margenes?: MargenLaboralCreado[];
 };
+
+/* Fila de horario por día que se envía al guardar (guardarHorariosBarbero). */
+export type HorarioDiaBarbero = {
+  diaId: string;
+  trabaja: boolean;
+  desde: string;
+  hasta: string;
+};
+
+/* Asignación de un margen a un barbero (editor de horarios por empleado). */
+export type MargenAsignadoBarbero = {
+  id: string;
+  estado: boolean;
+  diaId: string;
+  dia: { id: string; dia: string };
+  margenLaboral: { desde: string; hasta: string };
+};
+
+/* Barbero listado para el editor de horarios (obtenerBarberosParaHorarios). */
+export type BarberoParaHorarios = {
+  id: string;
+  nombre: string | null;
+  srcImage: string | null;
+  horarios: MargenAsignadoBarbero[];
+};

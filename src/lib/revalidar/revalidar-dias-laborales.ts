@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 
 export function revalidarDiasLaborales(): void {
-  revalidatePath("/diaLaboral");
+  revalidatePath("/admin/config/empleados/horarios-laborales");
+  revalidatePath("/admin/barbero");
 }

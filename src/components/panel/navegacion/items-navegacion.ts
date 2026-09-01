@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   Users,
   Scissors,
-  Clock,
   ClipboardList,
   CreditCard,
   Calendar,
@@ -39,7 +38,6 @@ export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
   {
     titulo: "Operación",
     items: [
-      { titulo: "Días Laborales", href: "/admin/diaLaboral", icono: Clock },
       { titulo: "Excepciones", href: "/admin/excepcionesLaborales", icono: ClipboardList },
       { titulo: "Mercado Pago", href: "/admin/mercadopago", icono: CreditCard },
       { titulo: "Turnos", href: "/admin/turno", icono: Calendar },

@@ -1,6 +1,7 @@
 // app/admin/config/page.tsx
 import { getPageConfig } from "@/actions/configuracion/leer-config.actions";
 import GeneralConfigForm from "@/components/admin/config/GeneralConfigForm";
+import TarjetaHorariosBarberos from "@/components/admin/config/TarjetaHorariosBarberos";
 
 export default async function ConfigPage() {
   const config = await getPageConfig();
@@ -14,7 +15,8 @@ export default async function ConfigPage() {
         Administrá la información y apariencia de tu barbería.
       </p>
 
-      <div className="mt-8">
+      <div className="mt-8 space-y-8">
+        <TarjetaHorariosBarberos />
         <GeneralConfigForm initialData={config} />
       </div>
     </div>

@@ -2284,3 +2284,245 @@ auth y el sistema de color.
    si el usuario lo confirma).
 
 ---
+
+# APÉNDICE J — PENDIENTE NUEVO: "Configuración" como grupo desplegable del sidebar principal del admin (registrado 01-sep-2026)
+
+> **Documento directivo de SOLO LECTURA (sigue vigente para su sección).** Este apéndice se
+> AGREGA al plan directivo (Fases 9-15) y a los Apéndices A-I como un pendiente NUEVO e
+> independiente. No forma parte de las Fases 9-15. Los números de línea citados fueron
+> **verificados contra el repo el 01-sep-2026** y pueden desplazarse: **verificar la línea exacta
+> antes de editar** (regla transversal §5.11).
+>
+> **Estado: APROBADO en plan por el usuario el 01-sep-2026** (decisiones en §J.3).
+> **Aún NO implementado.**
+
+## J.1. Objetivo
+
+Convertir **"Configuración"** en un **grupo desplegable (expandible/contraíble) del sidebar
+principal del administrador**, tomando como referencia SOLO el comportamiento visual de un
+desplegable (p. ej. "Gestión Items" en la captura de referencia: ˅ expande/contrae hijos
+indentados). NO se copia ni modifica el contenido de "Gestión Items".
+
+- Las opciones que hoy viven dentro de la página de Configuración pasan a ser **opciones hijas**
+  del desplegable del sidebar:
+  - Información general
+  - Ubicación y contacto
+  - Apariencia
+  - Imágenes
+  - Empleados
+  - Horarios
+- **Empleados** y **Horarios** quedan dentro de Configuración como opciones independientes.
+- Se elimina el **menú lateral interno** ("SECCIONES": Información general, Ubicación y contacto,
+  Apariencia, Imágenes) de la página actual.
+- Se elimina la **tarjeta superior "Horarios de barberos / Configurar horarios →"**. La
+  funcionalidad de horarios NO se elimina: pasa a `Sidebar → Configuración → Horarios`. Lo mismo
+  para Empleados: `Sidebar → Configuración → Empleados`.
+- **No duplicar funcionalidades.** Reutilizar las rutas, componentes y lógica existentes. Mantener
+  el diseño general del sidebar (iconos, espaciados, estados activos y responsive).
+
+## J.2. Contexto actual (verificado el 01-sep-2026)
+
+### J.2.1. Sidebar principal
+
+- **`src/components/panel/navegacion/items-navegacion.ts`** (52 líneas): `GRUPOS_NAVEGACION` con
+  grupos planos (`ItemNavegacion { titulo, href, icono }`), SIN desplegables. El grupo
+  "Configuración" tiene un único item `{ titulo: "Configuración", href: "/admin/config" }`
+  (`:46-51`).
+- **`src/components/panel/navegacion/AdminSidebar.tsx`** (195 líneas): renderiza los grupos
+  (etiqueta uppercase + lista de `SidebarItem`). `SidebarItem` (`:22-93`) es un helper no exportado
+  que marca `esActivo = pathname === item.href` y muestra tooltip en modo colapsado (w-16).
+- **`src/components/panel/navegacion/AdminTopbar.tsx`** (`:26-28`): busca el item actual con
+  `GRUPOS_NAVEGACION.flatMap((g) => g.items).find(...)` para el título de la barra superior.
+
+### J.2.2. Página de Configuración
+
+- **`src/app/admin/config/page.tsx`** (24 líneas): server page que renderiza
+  `TarjetaHorariosBarberos` (card "Horarios de barberos / Configurar horarios →") + 
+  `GeneralConfigForm`.
+- **`src/components/admin/config/GeneralConfigForm.tsx`** (192 líneas): client form con estado
+  `seccionActiva` (default `"informacion-general"`), renderiza `NavegacionConfig` (menú interno)
+  y las 4 secciones condicionales + botón "Guardar cambios" (guarda solo `CAMPOS_POR_MODULO[seccion]`).
+- **`src/components/admin/config/NavegacionConfig.tsx`** (80 líneas): menú interno — chips móviles
+  + columna vertical desktop ("Secciones") con las 4 secciones.
+- **`src/components/admin/config/modulos-config.ts`** (27 líneas): `IdModuloConfig`,
+  `MODULOS_CONFIG` (4 etiquetas) y `CAMPOS_POR_MODULO`.
+- **`src/components/admin/config/TarjetaHorariosBarberos.tsx`** (40 líneas): card que enlaza a
+  `/admin/config/empleados/horarios-laborales`.
+
+### J.2.3. Rutas existentes (REUTILIZAR)
+
+- **Horarios**: `src/app/admin/config/empleados/horarios-laborales/page.tsx` (49 líneas, breadcrumb
+  "Configuración → Empleados → Horarios laborales"). NO se mueve ni se reescribe.
+- **Empleados**: NO existe página propia. El sidebar hoy tiene **"Barberos" → `/admin/barbero`**
+  en el grupo "Principal" (`items-navegacion.ts:34`), página `src/app/admin/barbero/page.tsx`
+  ("Gestión de Barberos").
+
+### J.2.4. Secciones del config (a convertir en rutas)
+
+- `SeccionIdentidad.tsx` (información-general), `SeccionContacto.tsx` (ubicacion-contacto),
+  `SeccionApariencia.tsx` (apariencia), `SeccionImagenes.tsx` (imagenes). Cada una recibe sus
+  valores + `manejarCambio` y ya tiene su propio `h2`/descripción.
+
+## J.3. Decisiones del usuario (registradas el 01-sep-2026 — NO reversibles sin confirmación)
+
+1. **"Empleados" → `/admin/barbero`** (la página existente de gestión de barberos) y se **quita
+   "Barberos" del grupo Principal** del sidebar para evitar duplicación. El grupo "Principal"
+   queda con `Dashboard` y `Servicios`.
+2. **Rutas separadas por sección.** Cada opción de Configuración es una URL propia:
+   `/admin/config` (Información general), `/admin/config/ubicacion-contacto`,
+   `/admin/config/apariencia`, `/admin/config/imagenes`. `/admin/config` pasa a ser la página de
+   "Información general". Estados activos limpios en el sidebar.
+3. La segunda captura (desplegable "Gestión Items") es SOLO referencia visual de comportamiento:
+   NO se copia su contenido ni se modifica "Gestión Items".
+4. Se reutilizan rutas, componentes y lógica existentes; no se duplica funcionalidad.
+
+## J.4. Diseño de la solución
+
+### J.4.1. Datos de navegación — `src/components/panel/navegacion/items-navegacion.ts`
+
+- Nuevo tipo `GrupoDesplegable { titulo: string; icono: LucideIcon; items: ItemNavegacion[] }` y
+  unión `EntradaNavegacion = ItemNavegacion | GrupoDesplegable`.
+- `GrupoNavegacion.items` pasa a `EntradaNavegacion[]`. Se distingue con `"href" in entrada`
+  (el desplegable no tiene `href`).
+- Datos: se elimina `{ titulo: "Barberos", href: "/admin/barbero", icono: Users }` de "Principal"
+  (`items-navegacion.ts:34`). El grupo "Configuración" contiene UN desplegable:
+  - `{ titulo: "Configuración", icono: Settings, items: [...] }` con hijos:
+    - Información general → `/admin/config` (`Building2`)
+    - Ubicación y contacto → `/admin/config/ubicacion-contacto` (`MapPin`)
+    - Apariencia → `/admin/config/apariencia` (`Palette`)
+    - Imágenes → `/admin/config/imagenes` (`Image` como `ImageIcon`)
+    - Empleados → `/admin/barbero` (`Users`)
+    - Horarios → `/admin/config/empleados/horarios-laborales` (`Clock`)
+- Iconos nuevos a importar de `lucide-react`: `Building2`, `MapPin`, `Palette`, `Image`,
+  `Clock` (además de los ya presentes).
+
+### J.4.2. Sidebar — `AdminSidebar.tsx` + 2 archivos nuevos (1 export por archivo)
+
+- **Extraer** `SidebarItem` a **`src/components/panel/navegacion/ItemNavegacionEnlace.tsx`**
+  (client, 1 export): recibe `item: ItemNavegacion`, `colapsado`, `alCerrar`. Conserva exactamente
+  el marcado, clases, tooltip y `esActivo = pathname === item.href` actuales.
+- **Nuevo** **`src/components/panel/navegacion/DesplegableNavegacion.tsx`** (client, 1 export,
+  ≤200 líneas): recibe `grupo: GrupoDesplegable`, `colapsado`, `alCerrar`.
+  - Botón (mismo estilo base de `SidebarItem`: `flex items-center gap-3 rounded-lg px-3 py-2
+    text-sm font-medium`) con el icono del grupo + título + chevron (`ChevronDown` expandido /
+    `ChevronRight` contraído).
+  - **Auto-expande** si algún hijo está activo (`pathname === item.href`) recalculado con
+    `usePathname`; el estado local (`useState`) solo permite contraerlo manualmente
+    (`expandido = estadoLocal ?? contieneHijoActivo`).
+  - Hijos renderizados con `ItemNavegacionEnlace`, indentados (`pl-6` o similar) con el mismo
+    estilo de item (estado activo `bg-[var(--page-primary)] text-[var(--page-primary-foreground)]`,
+    hover, focus ring).
+  - **Modo colapsado (w-16)**: el botón muestra solo el icono (centrado) y reutiliza el patrón de
+    tooltip actual; los hijos (si expandido) se muestran como iconos con tooltip.
+  - Misma paleta CSS vars del admin (`--admin-surface`, `--admin-border`, `--admin-texto-*`).
+- **`AdminSidebar.tsx`**: en el map de `grupo.items`, si la entrada es desplegable
+  (`!("href" in entrada)`) renderiza `DesplegableNavegacion`, si no `ItemNavegacionEnlace`. El
+  resto del layout (grupos, etiqueta uppercase, colapso) queda igual.
+
+### J.4.3. Topbar — `src/components/panel/navegacion/AdminTopbar.tsx`
+
+- Aplanar los desplegables anidados para el título actual:
+  `GRUPOS_NAVEGACION.flatMap(g => g.items).flatMap(e => "href" in e ? [e] : e.items).find(...)`.
+
+### J.4.4. Páginas de sección (reutilizando la lógica existente)
+
+- **Nuevo** server component **`src/components/admin/config/PaginaConfigSeccion.tsx`** (1 export):
+  trae `getPageConfig()` (`@/actions/configuracion/leer-config.actions`) y renderiza `<h1>`
+  (etiqueta desde `MODULOS_CONFIG`) + `<GeneralConfigForm initialData={config}
+  seccionInicial={seccion} />`.
+- **`src/app/admin/config/page.tsx`**: elimina `TarjetaHorariosBarberos` y queda como página de
+  "Información general" → renderiza `<PaginaConfigSeccion seccion="informacion-general" />`.
+- **Nuevos** (cada uno con una sola función exportada):
+  - `src/app/admin/config/ubicacion-contacto/page.tsx`
+  - `src/app/admin/config/apariencia/page.tsx`
+  - `src/app/admin/config/imagenes/page.tsx`
+
+### J.4.5. `src/components/admin/config/GeneralConfigForm.tsx`
+
+- Nueva prop obligatoria `seccionInicial: IdModuloConfig`; elimina el estado `seccionActiva` y la
+  función `alCambiarSeccion`; elimina el import/uso de `NavegacionConfig`; renderiza SOLO la
+  sección de `seccionInicial`. Conserva `CAMPOS_POR_MODULO`, el guard de colores de apariencia y el
+  botón "Guardar cambios".
+
+### J.4.6. Eliminaciones
+
+- **Eliminar** `src/components/admin/config/NavegacionConfig.tsx` (queda sin uso).
+- **Eliminar** `src/components/admin/config/TarjetaHorariosBarberos.tsx` (queda sin uso).
+- **Conservar** `modulos-config.ts` (lo usa `PaginaConfigSeccion` y `GeneralConfigForm`).
+- El breadcrumb de horarios (`page.tsx:12`) sigue apuntando a `/admin/config` (válido como
+  "Información general").
+
+## J.5. Archivos involucrados (resumen)
+
+| Archivo | Acción |
+|---|---|
+| `src/components/panel/navegacion/items-navegacion.ts` | **MODIFICAR** — tipos `GrupoDesplegable`/`EntradaNavegacion` + datos (quitar Barberos de Principal, desplegable Configuración con 6 hijos) |
+| `src/components/panel/navegacion/AdminSidebar.tsx` | **MODIFICAR** — renderizar `DesplegableNavegacion` / `ItemNavegacionEnlace` |
+| `src/components/panel/navegacion/ItemNavegacionEnlace.tsx` | **NUEVO** — extracción de `SidebarItem` (1 export) |
+| `src/components/panel/navegacion/DesplegableNavegacion.tsx` | **NUEVO** — grupo expandible/contraíble (1 export, ≤200 líneas) |
+| `src/components/panel/navegacion/AdminTopbar.tsx` | **MODIFICAR** — aplanar desplegables en el título actual |
+| `src/app/admin/config/page.tsx` | **MODIFICAR** — "Información general" (sin tarjeta) |
+| `src/app/admin/config/ubicacion-contacto/page.tsx` | **NUEVO** |
+| `src/app/admin/config/apariencia/page.tsx` | **NUEVO** |
+| `src/app/admin/config/imagenes/page.tsx` | **NUEVO** |
+| `src/components/admin/config/PaginaConfigSeccion.tsx` | **NUEVO** — server component común (1 export) |
+| `src/components/admin/config/GeneralConfigForm.tsx` | **MODIFICAR** — prop `seccionInicial`, sin menú interno |
+| `src/components/admin/config/NavegacionConfig.tsx` | **ELIMINAR** |
+| `src/components/admin/config/TarjetaHorariosBarberos.tsx` | **ELIMINAR** |
+
+Sin cambios en: `src/app/admin/config/empleados/horarios-laborales/` (Horarios, se reutiliza),
+`src/app/admin/barbero/` (Empleados), `Seccion*.tsx`, `modulos-config.ts`, `admin/layout.tsx`,
+`AdminShell.tsx`.
+
+## J.6. Lo que NO se modifica (explicitamente fuera de alcance)
+
+- **Gestión Items** (la segunda captura es solo referencia visual; no se copia ni se toca).
+- La funcionalidad de Horarios (`horarios-laborales`) y de Empleados (`/admin/barbero`): solo se
+  re-enlazan desde el desplegable.
+- El diseño general del sidebar (iconos, espaciados, estados activos, responsive, modo colapsado
+  w-16 y tooltips).
+- `modulos-config.ts`, las secciones (`Seccion*.tsx`), la lógica de guardado y `CAMPOS_POR_MODULO`.
+- Backend, Prisma, auth, Mercado Pago, emails, sistema de color.
+- No se instalan dependencias nuevas. No se crean tests (no hay framework).
+
+## J.7. Verificación (obligatoria al terminar)
+
+1. `npx tsc --noEmit` = **0 errores** (el build NO typechequea; obligatorio AGENTS.md). Respetar
+   los errores preexistentes registrados en AGENTS.md (no tocarlos).
+2. `npm run lint`.
+3. Revisión manual:
+   - **Sidebar**: "Configuración" se ve como grupo desplegable con icono + chevron; clic expande/
+     contrae; al estar en una ruta hija se auto-expande y marca el hijo activo
+     (`bg-[var(--page-primary)]`); los 6 hijos navegan a sus rutas.
+   - **/admin/config**: ya NO muestra la tarjeta "Horarios de barberos" ni el menú interno
+     "Secciones"; muestra solo "Información general" + botón "Guardar cambios".
+   - **Empleados** → `/admin/barbero`; **Horarios** → `/admin/config/empleados/horarios-laborales`.
+   - **"Barberos" ya no aparece** en el grupo Principal (no duplicado).
+   - **Responsive**: móvil (menú hamburguesa) y colapso w-16 (iconos + tooltips) siguen
+     funcionando; el desplegable también en colapsado.
+   - **Sin regresiones**: guardado de cada sección (identidad, contacto, apariencia, imágenes),
+     topbar con el título correcto por ruta.
+4. Reglas del repo (AGENTS.md): 1 export por archivo nuevo, ≤400 líneas (objetivo 300), imports
+   `@/`, sin `any`/`@ts-ignore`, nombres y mensajes en español, colores vía `var(--page-*)` /
+   `var(--admin-*)` sin hex de marca hardcodeado, contraste según `src/lib/contraste.ts`.
+
+## J.8. Ejecución (cumple AGENTS.md "Uso de subagentes")
+
+1. **Fase con sub-tareas** (desglose obligatorio + paralelización; archivos disjuntos):
+   - **J-A** (navegación): `items-navegacion.ts`, `ItemNavegacionEnlace.tsx` (nuevo),
+     `DesplegableNavegacion.tsx` (nuevo), `AdminSidebar.tsx`, `AdminTopbar.tsx`.
+   - **J-B** (config): `PaginaConfigSeccion.tsx` (nuevo), las 4 páginas de ruta
+     (`page.tsx` + 3 nuevas), `GeneralConfigForm.tsx` (prop `seccionInicial`), eliminar
+     `NavegacionConfig.tsx` y `TarjetaHorariosBarberos.tsx`.
+   - J-A y J-B pueden correr **en paralelo** (no tocan los mismos archivos). La orquestación y las
+     interfaces las define el agente principal (AGENTS.md, punto 5).
+2. **Agente verificador V-J** (2 o más subagentes que tocan código compartido → verificador
+   obligatorio): revisa TODO el código producido (reglas de §J.7.4, límites de líneas, 1 export por
+   archivo, que no queden imports huérfanos de `NavegacionConfig`/`TarjetaHorariosBarberos`, que el
+   grupo colapsado/activo funcione), repara fallas y **certifica** el pendiente. Gate:
+   `npx tsc --noEmit` = 0.
+3. La decisión final sobre resultados es del agente principal (nunca de los subagentes).
+4. Al aprobarse, registrar el resultado como tarea cerrada en el acta del ciclo (o en `AUDITORIA.md`
+   si el usuario lo confirma).
+
+---
