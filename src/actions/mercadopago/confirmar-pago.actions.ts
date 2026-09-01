@@ -64,6 +64,7 @@ export async function confirmarPagoTurno(
       referencia: String(datosPago.external_reference ?? ""),
       montoPago: Number(datosPago.transaction_amount ?? 0),
       paymentId,
+      tipoPago: typeof datosPago.metadata?.tipoPago === "string" ? datosPago.metadata.tipoPago : undefined,
     });
 
     if (!resultado.ok) return { success: false, error: resultado.error };

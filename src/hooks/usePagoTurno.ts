@@ -3,44 +3,28 @@
 import { crearPreferenciaPago } from "@/actions/mercadopago/crear-preferencia.actions";
 import { useState } from "react";
 import type { TurnoCreado } from "@/types/turno";
-import { formatearFechaHora } from "@/lib/utils/formatear-fecha-hora";
+import type { TipoPago } from "@/types/mercadopago";
 
 export type ParametrosPagoTurno = {
   whatsappPhone: string;
 };
 
 export function usePagoTurno({ whatsappPhone }: ParametrosPagoTurno) {
+  // El envío de WhatsApp al barbero ocurre en /pago/success (RedireccionWhatsApp).
+  // Se conserva el parámetro por compatibilidad con la cadena de Props existente.
+  void whatsappPhone;
   const [turnoCreado, setTurnoCreado] = useState<TurnoCreado | null>(null);
   const [showPagoModal, setShowPagoModal] = useState(false);
   const [cargandoPago, setCargandoPago] = useState(false);
   const [errorPago, setErrorPago] = useState<string | null>(null);
 
-  const enviarMensajeWhatsApp = (
-    turno: TurnoCreado,
-    servicioNombre: string,
-    barberoNombre: string,
-    fecha: Date | string,
-    estado: "Pagado" | "Pendiente de pago",
-  ) => {
-    const fechaFormateada = formatearFechaHora(fecha);
-
-    const mensaje = `Hola! Confirmé mi turno:
-    📅 Fecha: ${fechaFormateada}
-    ✂️ Servicio: ${servicioNombre}
-    💈 Barbero: ${barberoNombre}
-    Estado: ${estado}`;
-
-    const url = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(mensaje)}`;
-    window.open(url, "_blank");
-  };
-
-  const handlePagarSenia = async () => {
+  const handlePagar = async (tipoPago: TipoPago) => {
     if (!turnoCreado) return;
     setCargandoPago(true);
     setErrorPago(null);
 
     try {
-      const result = await crearPreferenciaPago(turnoCreado.id);
+      const result = await crearPreferenciaPago(turnoCreado.id, tipoPago);
 
       if (!result.success || !result.data?.checkoutUrl) {
         setErrorPago(result.error ?? "No se pudo generar el enlace de pago");
@@ -57,19 +41,6 @@ export function usePagoTurno({ whatsappPhone }: ParametrosPagoTurno) {
     }
   };
 
-  const handlePagarDespues = () => {
-    enviarMensajeWhatsApp(
-      turnoCreado!,
-      turnoCreado?.servicioNombre || "N/A",
-      turnoCreado?.barberoNombre || "N/A",
-      turnoCreado?.horarioReservado || new Date(),
-      "Pendiente de pago",
-    );
-    setShowPagoModal(false);
-    setTurnoCreado(null);
-    setErrorPago(null);
-  };
-
   return {
     turnoCreado,
     setTurnoCreado,
@@ -77,7 +48,6 @@ export function usePagoTurno({ whatsappPhone }: ParametrosPagoTurno) {
     setShowPagoModal,
     cargandoPago,
     errorPago,
-    handlePagarSenia,
-    handlePagarDespues,
+    handlePagar,
   };
 }

@@ -29,6 +29,7 @@ export default function ModalGestionTurno({
   claseTrigger,
   contenidoTrigger,
   onTriggerClick,
+  onTurnoCreado,
 }: PropsModalGestionTurno) {
   const {
     esEdicion,
@@ -45,6 +46,8 @@ export default function ModalGestionTurno({
     selectedBarberoId,
     selectedUserId,
     setSelectedUserId,
+    estadoPago,
+    setEstadoPago,
     serviciosFiltrados,
     handleBarberoChange,
     handleServicioChange,
@@ -52,8 +55,7 @@ export default function ModalGestionTurno({
     showPagoModal,
     cargandoPago,
     errorPago,
-    handlePagarSenia,
-    handlePagarDespues,
+    handlePagar,
   } = useFormularioTurno({
     session,
     initialServicios,
@@ -62,6 +64,7 @@ export default function ModalGestionTurno({
     initialRelaciones,
     whatsappPhone,
     turnoInicial,
+    onTurnoCreado,
   });
 
   const abrir = () => {
@@ -138,18 +141,23 @@ export default function ModalGestionTurno({
                 handleServicioChange={handleServicioChange}
                 onCancelar={() => setIsOpen(false)}
                 turnoInicial={turnoInicial}
+                estadoPago={estadoPago}
+                setEstadoPago={setEstadoPago}
               />
             </ModalBase>
+          </div>,
+          document.body,
+        )}
 
-            {!esEdicion && showPagoModal && turnoCreado && (
-              <ModalPagoTurno
-                turnoCreado={turnoCreado}
-                cargandoPago={cargandoPago}
-                errorPago={errorPago}
-                onPagarSenia={handlePagarSenia}
-                onPagarDespues={handlePagarDespues}
-              />
-            )}
+      {!esEdicion && showPagoModal && turnoCreado &&
+        createPortal(
+          <div style={ESTILO_TEMAS}>
+            <ModalPagoTurno
+              turnoCreado={turnoCreado}
+              cargandoPago={cargandoPago}
+              errorPago={errorPago}
+              onPagar={handlePagar}
+            />
           </div>,
           document.body,
         )}

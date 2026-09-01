@@ -1,11 +1,12 @@
 // app/api/mercadopago/webhook/route.ts
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { Payment } from "mercadopago";
 import { obtenerClienteMP } from "@/lib/mercadopago/obtener-cliente";
 import { confirmarTurnoPorPago } from "@/lib/confirmar-turno-por-pago";
-import { ESTADOS_TURNO } from "@/lib/constants";
+import { ESTADOS_TURNO, ESTADOS_PAGO } from "@/lib/constants";
 
 export const runtime = "nodejs";
 
@@ -141,25 +142,31 @@ export async function POST(req: NextRequest) {
       case "approved": {
         // Validar el pago contra la API de MP a través del helper compartido
         const montoAcreditado = Number(paymentData.transaction_amount ?? 0);
+        const tipoPago =
+          typeof paymentData.metadata?.tipoPago === "string" ? paymentData.metadata.tipoPago : undefined;
         const resultado = await confirmarTurnoPorPago({
           turnoId,
           estadoPago: "approved",
           referencia: String(paymentData.external_reference ?? ""),
           montoPago: montoAcreditado,
           paymentId: paymentData.id,
+          tipoPago,
           soloSiPendiente: true,
         });
 
         if (resultado.ok && !resultado.yaConfirmado) {
-          console.log(`✅ Turno ${turnoId} CONFIRMADO por pago ${paymentData.id}`);
+          console.log(`✅ Turno ${turnoId} CONFIRMADO por pago ${paymentData.id} (${tipoPago ?? "seña"})`);
+          revalidatePath("/turno");
+          revalidatePath("/admin");
+          revalidatePath("/dashboard");
         } else if (resultado.yaConfirmado) {
           console.log(`ℹ️ Turno ${turnoId} ya no está PENDIENTE: ${turno.estado}`);
         } else if (resultado.error === "El monto del pago no es válido") {
           console.error(
-            `❌ Monto insuficiente para turno ${turnoId}: acreditado ${montoAcreditado}, seña ${turno.seniaCongelada}`
+            `❌ Monto insuficiente para turno ${turnoId}: acreditado ${montoAcreditado}.`
           );
           return NextResponse.json(
-            { error: "Monto no coincide con la seña" },
+            { error: "Monto no coincide con la seña/total" },
             { status: 400 }
           );
         } else {
@@ -171,32 +178,41 @@ export async function POST(req: NextRequest) {
 
       case "pending":
       case "in_process": {
-        // Pago pendiente → turno sigue PENDIENTE, guardar el paymentId
+        // Pago en acreditación → turno sigue PENDIENTE, guarda el paymentId y el estado
         await prisma.turno.update({
           where: { id: turnoId },
-          data: { mpPaymentId: String(paymentData.id) },
+          data: { mpPaymentId: String(paymentData.id), estadoPago: ESTADOS_PAGO[6] },
         });
-        console.log(`⏳ Pago ${paymentData.id} pendiente para turno ${turnoId}`);
+        console.log(`⏳ Pago ${paymentData.id} en acreditación para turno ${turnoId}`);
         break;
       }
 
-      case "rejected":
-      case "cancelled": {
-        // Pago rechazado/cancelado → turno vuelve a PENDIENTE sin paymentId confirmado
+      case "rejected": {
+        // Pago rechazado → turno vuelve a PENDIENTE con estado de pago RECHAZADO
         await prisma.turno.update({
           where: { id: turnoId },
-          data: { estado: ESTADOS_TURNO[0] },
+          data: { estado: ESTADOS_TURNO[3], estadoPago: ESTADOS_PAGO[4] },
         });
-        console.log(`❌ Pago rechazado/cancelado para turno ${turnoId}`);
+        console.log(`❌ Pago rechazado para turno ${turnoId}`);
+        break;
+      }
+
+      case "cancelled": {
+        // Pago cancelado → turno vuelve a PENDIENTE con estado de pago CANCELADO
+        await prisma.turno.update({
+          where: { id: turnoId },
+          data: { estado: ESTADOS_TURNO[3], estadoPago: ESTADOS_PAGO[5] },
+        });
+        console.log(`❌ Pago cancelado para turno ${turnoId}`);
         break;
       }
 
       case "refunded":
       case "charged_back": {
-        // Devolución → cancelar el turno
+        // Devolución → cancelar el turno y el estado de pago
         await prisma.turno.update({
           where: { id: turnoId },
-          data: { estado: ESTADOS_TURNO[3] },
+          data: { estado: ESTADOS_TURNO[3], estadoPago: ESTADOS_PAGO[5] },
         });
         console.log(`↩️ Turno ${turnoId} CANCELADO por devolución/contracargo`);
         break;

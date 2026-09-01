@@ -7,6 +7,8 @@ import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { ESTADOS_TURNO } from "@/lib/constants";
 import { actualizarTurnoConDetalle } from "@/lib/turno-con-detalle";
+import { revalidarCacheTurno } from "@/lib/revalidar/revalidar-cache-turno";
+import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import type { ActionState } from "@/types/action-state";
 
 export async function cancelTurno(turnoId: string): Promise<ActionState> {
@@ -28,9 +30,18 @@ export async function cancelTurno(turnoId: string): Promise<ActionState> {
       return { success: false, error: "No autorizado" };
     }
 
-    const turnoActualizado = await actualizarTurnoConDetalle(turnoId, { estado: ESTADOS_TURNO[3] });
+    const turnoActualizado = await actualizarTurnoConDetalle(turnoId, {
+      estado: ESTADOS_TURNO[3],
+      claveSlot: null,
+    });
 
     enviarEmailTurnoSeguro(turnoActualizado, ESTADOS_TURNO[3]);
+
+    revalidarCacheTurno(
+      turnoActualizado.barberoId,
+      obtenerFechaSola(turnoActualizado.horarioReservado),
+      turnoActualizado.userId,
+    );
 
     revalidatePath("/dashboard");
 

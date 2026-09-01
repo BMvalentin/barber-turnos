@@ -20,7 +20,7 @@ export async function completedTurno(
 
     const turno = await prisma.turno.update({
       where: { id },
-      data: { estado: ESTADOS_TURNO[2] },
+      data: { estado: ESTADOS_TURNO[2], claveSlot: null },
     });
 
     revalidateTag("turnos-global");

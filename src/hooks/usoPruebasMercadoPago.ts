@@ -54,7 +54,7 @@ export function usoPruebasMercadoPago(initialTurnos: Turno[]) {
     if (!selectedTurno) return;
     setLoading("crear");
     log("request", "crearPreferenciaPago()", { turnoId: selectedTurno.id });
-    const result = await crearPreferenciaPago(selectedTurno.id);
+    const result = await crearPreferenciaPago(selectedTurno.id, "SEÑA");
     if (result.success) {
       log("success", "Preferencia creada correctamente", result.data);
       await syncTurno(selectedTurno.id);

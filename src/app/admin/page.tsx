@@ -147,13 +147,13 @@ export default async function AdminDashboard() {
           title="Total Turnos"
           value={stats.totalTurnos}
           icon={Calendar}
-          href="/turno"
+          href="/admin/turno"
         />
         <StatCard
           title="Turnos activos"
           value={stats.turnosPendientes}
           icon={DollarSign}
-          href="/turno?filtro=activos"
+          href="/admin/turno?filtro=activos"
         />
       </div>
 

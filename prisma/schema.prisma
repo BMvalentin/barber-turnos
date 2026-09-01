@@ -67,14 +67,18 @@ model turno {
   precioCongelado  Decimal      @db.Decimal(10, 2)
   seniaCongelada   Decimal      @db.Decimal(10, 2)
   estado           turno_estado @default(PENDIENTE)
+  estadoPago       estado_pago  @default(PENDIENTE)
+  tipoPago         String?      @db.VarChar(10)
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
   mpPaymentId      String?
   mpPreferenceId   String?
+  claveSlot        String?      @db.VarChar(120)
   user             user         @relation(fields: [userId], references: [id], onDelete: Cascade)
   barbero          barbero      @relation(fields: [barberoId], references: [id], onDelete: Cascade)
   servicio         servicio     @relation(fields: [servicioId], references: [id], onDelete: Cascade)
 
+  @@unique([claveSlot])
   @@index([userId])
   @@index([barberoId])
   @@index([servicioId])
@@ -263,4 +267,14 @@ enum dias_laborales {
   Viernes
   Sabado
   Domingo
+}
+
+enum estado_pago {
+  PENDIENTE
+  SEÑADO
+  PAGADO
+  APROBADO
+  RECHAZADO
+  CANCELADO
+  EN_ACREDITACION
 }

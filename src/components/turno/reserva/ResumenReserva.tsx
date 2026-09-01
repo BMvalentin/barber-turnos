@@ -1,7 +1,16 @@
 "use client";
 
-import { CalendarDays, Check, Clock, Save, Scissors, User } from "lucide-react";
+import {
+  CalendarDays,
+  Check,
+  Clock,
+  Save,
+  Scissors,
+  User,
+  UserRound,
+} from "lucide-react";
 import SelectorClienteReserva from "@/components/turno/reserva/SelectorClienteReserva";
+import SelectorEstadoPago from "@/components/turno/reserva/SelectorEstadoPago";
 import type { PropsResumenReserva } from "@/components/turno/reserva/tipos";
 import { formatearFecha } from "@/lib/utils/formatear-fecha";
 import { formatearHora } from "@/lib/utils/formatear-hora";
@@ -10,6 +19,8 @@ import BotonSubmitFormStatus from "@/components/ui/boton-submit-form-status";
 
 const CLASE_LABEL_FILA =
   "text-[11px] uppercase tracking-wider text-[var(--admin-texto-muted)]";
+const CLASE_LABEL_MONTO =
+  "text-[11px] font-semibold uppercase tracking-wider text-[var(--admin-texto-muted)]";
 const CLASE_VALOR_FILA = "text-sm text-[var(--admin-texto-primario)]";
 const CLASE_ICONO =
   "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--page-primary-15)] text-[var(--page-primary-tinta)]";
@@ -26,7 +37,14 @@ export default function ResumenReserva({
   selectedUserId,
   onCambiarCliente,
   esEdicion = false,
+  estadoPago,
+  onCambiarEstadoPago,
+  clienteUsuario,
+  senia,
 }: PropsResumenReserva) {
+  const montoSeña = senia ?? 0;
+  const montoSaldo = (servicio?.precio ?? 0) - montoSeña;
+
   return (
     <aside className="flex flex-col gap-5 rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-5 lg:sticky lg:top-0 lg:self-start">
       <h2 className="text-lg font-semibold text-[var(--admin-texto-primario)]">
@@ -99,23 +117,56 @@ export default function ResumenReserva({
         </div>
       </div>
 
+      {!esAdmin && clienteUsuario && (
+        <div className="flex items-start gap-3">
+          <div className={CLASE_ICONO}>
+            <UserRound className="h-4 w-4" />
+          </div>
+          <div className="flex flex-col">
+            <span className={CLASE_LABEL_FILA}>Cliente</span>
+            <span className={CLASE_VALOR_FILA}>{clienteUsuario.nombre || "Usuario"}</span>
+            <span className="text-xs text-[var(--admin-texto-muted)]">
+              {clienteUsuario.telefono || "Sin teléfono"}
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="border-t border-[var(--admin-border)]" />
 
       <div className="flex items-end justify-between">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--admin-texto-muted)]">
-          Total
-        </span>
+        <span className={CLASE_LABEL_MONTO}>Total</span>
         <span className="text-2xl font-bold text-[var(--page-primary-tinta)]">
           {servicio ? `$${formatearMoneda(servicio.precio)}` : "—"}
         </span>
       </div>
 
+      <div className="flex items-end justify-between">
+        <span className={CLASE_LABEL_MONTO}>Seña</span>
+        <span className="text-sm font-semibold text-[var(--admin-texto-primario)]">
+          {servicio ? `$${formatearMoneda(montoSeña)}` : "—"}
+        </span>
+      </div>
+
+      <div className="flex items-end justify-between">
+        <span className={CLASE_LABEL_MONTO}>Saldo restante</span>
+        <span className="text-sm font-semibold text-[var(--admin-texto-primario)]">
+          {servicio ? `$${formatearMoneda(montoSaldo)}` : "—"}
+        </span>
+      </div>
+
       {esAdmin && (
-        <SelectorClienteReserva
-          usuarios={usuarios}
-          selectedUserId={selectedUserId}
-          onCambiar={onCambiarCliente}
-        />
+        <>
+          <SelectorClienteReserva
+            usuarios={usuarios}
+            selectedUserId={selectedUserId}
+            onCambiar={onCambiarCliente}
+          />
+          <SelectorEstadoPago
+            valor={estadoPago}
+            onChange={onCambiarEstadoPago}
+          />
+        </>
       )}
 
       <BotonSubmitFormStatus

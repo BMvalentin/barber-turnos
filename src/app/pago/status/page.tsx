@@ -3,7 +3,10 @@ import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { redirect } from "next/navigation";
 import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import { confirmarPagoTurno } from "@/actions/mercadopago/confirmar-pago.actions";
+import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
+import RedireccionWhatsApp from "@/components/pago/RedireccionWhatsApp";
 import AvisoErrorSinTurno from "@/components/pago/AvisoErrorSinTurno";
+import type { TurnoPagoConfirmado } from "@/types/turno";
 import { CheckCircle2, Clock, XCircle, Calendar, ArrowRight, RefreshCw, AlertTriangle } from "lucide-react";
 
 interface StatusPageProps {
@@ -22,6 +25,9 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
   const { status, turnoId, payment_id, collection_id } = await searchParams;
   
   const paymentId = payment_id || collection_id;
+
+  const config = await obtenerConfigCacheada();
+  const whatsappPhone = config?.whatsapp ?? "";
 
   // Validación temprana: Si no hay turnoId, mostramos error genérico
   if (!turnoId) {
@@ -51,10 +57,12 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
   // solo se muestra éxito si el pago fue verificado correctamente
   const esPagoAprobado = status === "approved";
   let verificadoCorrectamente = false;
+  let datosTurnoConfirmado: TurnoPagoConfirmado | null = null;
 
   if (esPagoAprobado && paymentId) {
     const result = await confirmarPagoTurno(turnoId, paymentId);
     verificadoCorrectamente = result.success === true;
+    if (result.success && result.data) datosTurnoConfirmado = result.data;
   }
 
   // Mapeo preciso de estados:
@@ -64,6 +72,7 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
   const mostrarExito = esPagoAprobado && verificadoCorrectamente;
   const mostrarFallo = status === "rejected" || status === "null" || (esPagoAprobado && !verificadoCorrectamente);
   const mostrarPendiente = status === "pending" || status === "in_process";
+  const esPagoTotal = datosTurnoConfirmado?.tipoPago === "TOTAL";
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4 py-8">
@@ -82,7 +91,7 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
             </div>
             <div>
               <h1 className="text-3xl font-black text-white uppercase tracking-tight mb-2">
-                ¡Seña Pagada!
+                {esPagoTotal ? "¡Pago Total!" : "¡Seña Pagada!"}
               </h1>
               <p className="text-zinc-400">
                 Tu turno quedó confirmado. Te esperamos.
@@ -173,6 +182,21 @@ export default async function PagoStatusPage({ searchParams }: StatusPageProps) 
             </p>
             <p className="font-mono text-yellow-400 text-sm">{paymentId}</p>
           </div>
+        )}
+
+        {mostrarExito && datosTurnoConfirmado && whatsappPhone && (
+          <RedireccionWhatsApp
+            numeroWhatsApp={whatsappPhone}
+            clienteNombre={datosTurnoConfirmado.user.name}
+            servicioNombre={datosTurnoConfirmado.servicio.nombre}
+            barberoNombre={datosTurnoConfirmado.barbero.nombre}
+            horarioReservado={datosTurnoConfirmado.horarioReservado}
+            precioTotal={datosTurnoConfirmado.precioCongelado}
+            señaPagada={datosTurnoConfirmado.seniaCongelada}
+            saldoPendiente={datosTurnoConfirmado.precioCongelado - datosTurnoConfirmado.seniaCongelada}
+            tipoPago={datosTurnoConfirmado.tipoPago}
+            estadoPago={datosTurnoConfirmado.estadoPago}
+          />
         )}
 
         {/* ==========================================

@@ -2,6 +2,7 @@
 
 import { Clock } from "lucide-react";
 import BadgeEstadoTurno from "./BadgeEstadoTurno";
+import BadgeEstadoPago from "./BadgeEstadoPago";
 import MenuAccionesTurno from "./MenuAccionesTurno";
 import { esAdmin } from "@/lib/seguridad/es-admin";
 import { formatearHora } from "@/lib/utils/formatear-hora";
@@ -89,7 +90,10 @@ export default function TurnoRow({
           </div>
           <div className="mt-0.5">{telefonoCliente}</div>
         </div>
-        <BadgeEstadoTurno estado={turno.estado} />
+        <div className="flex flex-wrap items-center gap-1.5">
+          <BadgeEstadoTurno estado={turno.estado} />
+          <BadgeEstadoPago estado={turno.estadoPago} />
+        </div>
       </div>
 
       <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[var(--admin-texto-secundario)]">

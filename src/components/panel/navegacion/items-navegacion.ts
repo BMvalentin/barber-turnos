@@ -42,7 +42,7 @@ export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
       { titulo: "Días Laborales", href: "/admin/diaLaboral", icono: Clock },
       { titulo: "Excepciones", href: "/admin/excepcionesLaborales", icono: ClipboardList },
       { titulo: "Mercado Pago", href: "/admin/mercadopago", icono: CreditCard },
-      { titulo: "Turnos", href: "/turno", icono: Calendar },
+      { titulo: "Turnos", href: "/admin/turno", icono: Calendar },
     ],
   },
   {

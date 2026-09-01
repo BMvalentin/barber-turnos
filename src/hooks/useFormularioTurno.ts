@@ -12,10 +12,13 @@ import { useDatosFormularioTurno } from "./useDatosFormularioTurno";
 import type { ParametrosDatosTurno } from "./useDatosFormularioTurno";
 import { usePagoTurno } from "./usePagoTurno";
 import { esAdmin } from "@/lib/seguridad/es-admin";
+import { ESTADOS_PAGO } from "@/lib/constants";
 
 export type ParametrosFormularioTurno = ParametrosDatosTurno & {
   whatsappPhone: string;
   turnoInicial?: TurnoListado | null;
+  /** Callback opcional que se invoca al crear un turno con éxito, para refrescar el listado. */
+  onTurnoCreado?: () => void;
 };
 
 const estadoInicial = ActionStateInicial;
@@ -32,6 +35,7 @@ export function useFormularioTurno({
   initialRelaciones = [],
   whatsappPhone,
   turnoInicial,
+  onTurnoCreado,
 }: ParametrosFormularioTurno) {
   const esEdicion = Boolean(turnoInicial);
 
@@ -80,6 +84,9 @@ export function useFormularioTurno({
     datos.setSelectedServicioId("");
     datos.setSelectedBarberoId("");
     datos.setSelectedUserId(session?.user?.role === "USER" ? session?.user?.id ?? "" : "");
+    datos.setEstadoPago(ESTADOS_PAGO[0]);
+
+    onTurnoCreado?.();
 
     if (esAdmin(session)) {
       // El admin carga el turno directamente: sin modal de seña ni WhatsApp
@@ -99,6 +106,7 @@ export function useFormularioTurno({
     datos.selectedBarberoId,
     datos.selectedUserId,
     datos.setIsOpen,
+    datos.setEstadoPago,
     pago.setTurnoCreado,
     pago.setShowPagoModal,
     session,

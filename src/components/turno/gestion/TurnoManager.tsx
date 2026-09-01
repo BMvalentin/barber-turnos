@@ -145,11 +145,16 @@ export default function TurnoManager({
             initialUsuarios={initialUsuarios}
             initialRelaciones={initialRelaciones}
             whatsappPhone={whatsappPhone}
+            onTurnoCreado={() => void reiniciarBusqueda(filtroEstado, fecha)}
           />
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <TurnosFiltros estado={filtroEstado} onChange={cambiarEstado} />
-          <NavegacionFecha fecha={fecha} onCambiarFecha={cambiarFecha} />
+          <NavegacionFecha
+            fecha={fecha}
+            onCambiarFecha={cambiarFecha}
+            estado={filtroEstado}
+          />
         </div>
       </div>
       <TurnoList

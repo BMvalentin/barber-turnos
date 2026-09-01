@@ -1,8 +1,6 @@
 // app/turno/layout.tsx
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { redirect } from "next/navigation";
-import AdminShell from "@/components/panel/navegacion/AdminShell";
-import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 
 export default async function TurnoLayout({
   children,
@@ -15,11 +13,9 @@ export default async function TurnoLayout({
     redirect("/login");
   }
 
-  if (session.user.role !== "ADMIN") {
-    return <>{children}</>;
+  if (session.user.role === "ADMIN") {
+    redirect("/admin/turno");
   }
 
-  const config = await obtenerConfigCacheada();
-
-  return <AdminShell config={config}>{children}</AdminShell>;
+  return <>{children}</>;
 }
