@@ -21,7 +21,7 @@ export default function ServicioRow({
 
   return (
     <>
-      <div className="flex flex-col md:grid md:grid-cols-12 gap-4 p-4 md:items-center hover:bg-white/5 transition-colors duration-150 group">
+      <div className="flex flex-col md:grid md:grid-cols-12 gap-4 p-4 md:items-center hover:bg-[var(--admin-item-hover)] transition-colors duration-150 group">
         <div className="md:col-span-6 flex items-start md:items-center gap-4">
           <div
             className="w-10 h-10 rounded-lg bg-[var(--admin-surface-elevated)] border border-[var(--admin-border)] flex items-center justify-center flex-shrink-0"
@@ -68,7 +68,7 @@ export default function ServicioRow({
           <button
             onClick={() => setShowEditModal(true)}
             title="Editar servicio"
-            className="text-[var(--admin-texto-muted)] transition-colors duration-150 p-1 hover:bg-white/5 rounded"
+            className="text-[var(--admin-texto-muted)] transition-colors duration-150 p-1 hover:bg-[var(--admin-item-hover)] rounded"
             style={{ color: "var(--page-primary-tinta)" }}
           >
             <SquarePen className="w-5 h-5" />
@@ -76,7 +76,7 @@ export default function ServicioRow({
           <button
             onClick={() => onEliminar(servicio.id)}
             title="Eliminar servicio"
-            className="text-[var(--admin-texto-muted)] hover:text-red-500 transition-colors duration-150 p-1 hover:bg-white/5 rounded"
+            className="text-[var(--admin-texto-muted)] hover:text-red-500 transition-colors duration-150 p-1 hover:bg-[var(--admin-item-hover)] rounded"
           >
             <Trash2 className="w-5 h-5" />
           </button>

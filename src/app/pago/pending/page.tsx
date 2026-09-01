@@ -19,7 +19,7 @@ export default async function PagoPendingPage({
   const paymentId = payment_id;
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[var(--page-bg)] text-[var(--page-bg-foreground)] flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center space-y-6">
 
         <div className="flex justify-center">
@@ -29,18 +29,18 @@ export default async function PagoPendingPage({
         </div>
 
         <div>
-          <h1 className="text-3xl font-black text-white uppercase tracking-tight mb-2">
+          <h1 className="text-3xl font-black text-[var(--page-bg-foreground)] uppercase tracking-tight mb-2">
             Pago Pendiente
           </h1>
-          <p className="text-zinc-400">
+          <p className="text-[var(--admin-texto-secundario)]">
             Tu pago está siendo procesado. Te notificaremos cuando se acredite.
             El turno quedará confirmado automáticamente.
           </p>
         </div>
 
         {paymentId && (
-          <div className="bg-zinc-900/60 border border-white/10 rounded-2xl p-4 text-left">
-            <p className="text-xs text-zinc-500 uppercase tracking-widest font-bold mb-1">
+          <div className="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-2xl p-4 text-left">
+            <p className="text-xs text-[var(--admin-texto-muted)] uppercase tracking-widest font-bold mb-1">
               Referencia
             </p>
             <p className="font-mono text-yellow-400 text-sm">{paymentId}</p>

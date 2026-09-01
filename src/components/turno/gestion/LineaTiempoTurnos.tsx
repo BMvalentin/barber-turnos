@@ -38,7 +38,7 @@ function obtenerMedidas(): Medidas {
   const esEscritorio = typeof window === "undefined" || window.innerWidth >= 768;
   return esEscritorio
     ? { pixelesPorHora: 76, ejeX: 48, anchoGutter: 78 }
-    : { pixelesPorHora: 48, ejeX: 40, anchoGutter: 64 };
+    : { pixelesPorHora: 48, ejeX: 32, anchoGutter: 52 };
 }
 
 function usarMedidasLineaTiempo(): Medidas {

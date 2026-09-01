@@ -37,7 +37,7 @@ export default function CreateBarberoModal({ servicios, diasLaborales }: Props) 
         <div
           className="bg-[var(--admin-surface)] backdrop-blur-lg rounded-xl p-6 space-y-6 shadow-2xl border relative"
           style={{
-            borderColor: "var(--page-primary-40)",
+            borderColor: "var(--admin-border-fuerte)",
             boxShadow: "0 25px 50px -12px var(--page-primary-15)"
           }}
         >

@@ -35,27 +35,27 @@ export default function ModalPagoTurno({
     <ModalBase
       maxWidth="max-w-md"
       overlayClase="bg-black/80 backdrop-blur-md p-4"
-      contenedorClase="bg-zinc-900 border border-zinc-700 rounded-2xl overflow-hidden"
+      contenedorClase="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-2xl overflow-hidden"
       header={
         <div
-          className="border-b border-zinc-800 p-6 flex items-center gap-3"
+          className="border-b border-[var(--admin-border)] p-6 flex items-center gap-3"
           style={{ backgroundColor: "color-mix(in srgb, var(--primary) 12%, transparent)" }}
         >
           <div
-            className="w-10 h-10 rounded-full border border-zinc-700 flex items-center justify-center flex-shrink-0"
+            className="w-10 h-10 rounded-full border border-[var(--admin-border)] flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: "color-mix(in srgb, var(--primary) 20%, transparent)" }}
           >
             <CheckCircle2 className="w-5 h-5" style={{ color: "var(--primary-tinta)" }} />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white">¡Turno Reservado!</h2>
-            <p className="text-xs text-zinc-300">Aboná para confirmar tu lugar.</p>
+            <h2 className="text-lg font-bold text-[var(--admin-texto-primario)]">¡Turno Reservado!</h2>
+            <p className="text-xs text-[var(--admin-texto-secundario)]">Aboná para confirmar tu lugar.</p>
           </div>
         </div>
       }
     >
       <div className="p-6 space-y-4">
-          <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 space-y-3">
+          <div className="bg-[var(--admin-surface-elevated)] border border-[var(--admin-border)] rounded-xl p-4 space-y-3">
             <div className="flex items-center gap-2 mb-1">
               <Scissors className="w-4 h-4" style={{ color: "var(--primary-tinta)" }} />
               <span
@@ -67,18 +67,18 @@ export default function ModalPagoTurno({
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm text-zinc-400">Precio del servicio</span>
-              <span className="text-sm text-white font-medium">${formatearMoneda(total)}</span>
+              <span className="text-sm text-[var(--admin-texto-secundario)]">Precio del servicio</span>
+              <span className="text-sm text-[var(--admin-texto-primario)] font-medium">${formatearMoneda(total)}</span>
             </div>
 
-            <div className="flex items-center justify-between border-t border-zinc-800 pt-3">
-              <span className="text-sm text-zinc-400">Seña (a abonar ya)</span>
-              <span className="text-sm text-zinc-200 font-medium">${formatearMoneda(senia)}</span>
+            <div className="flex items-center justify-between border-t border-[var(--admin-border)] pt-3">
+              <span className="text-sm text-[var(--admin-texto-secundario)]">Seña (a abonar ya)</span>
+              <span className="text-sm text-[var(--admin-texto-primario)] font-medium">${formatearMoneda(senia)}</span>
             </div>
 
-            <div className="flex items-center justify-between border-t border-zinc-800 pt-3">
-              <span className="text-sm text-zinc-400">Saldo en el local</span>
-              <span className="text-sm text-zinc-200 font-medium">${formatearMoneda(saldo)}</span>
+            <div className="flex items-center justify-between border-t border-[var(--admin-border)] pt-3">
+              <span className="text-sm text-[var(--admin-texto-secundario)]">Saldo en el local</span>
+              <span className="text-sm text-[var(--admin-texto-primario)] font-medium">${formatearMoneda(saldo)}</span>
             </div>
           </div>
 
@@ -106,7 +106,7 @@ export default function ModalPagoTurno({
             id="btn-pagar-total"
             onClick={() => onPagar("TOTAL")}
             disabled={cargandoPago}
-            className="w-full flex items-center justify-center gap-3 disabled:opacity-50 text-white font-black py-3.5 rounded-xl transition-all text-sm uppercase tracking-wider bg-zinc-800 hover:bg-zinc-700"
+            className="w-full flex items-center justify-center gap-3 disabled:opacity-50 text-[var(--admin-texto-primario)] font-black py-3.5 rounded-xl transition-all text-sm uppercase tracking-wider bg-[var(--admin-item)] hover:bg-[var(--admin-item-hover)]"
           >
             <Wallet className="w-5 h-5" />
             Pagar Total · ${formatearMoneda(total)}

@@ -41,7 +41,7 @@ export default function SeccionImagenServicio({
             src={previewUrl || srcImage}
             alt="Vista previa"
             className="h-32 w-32 object-cover rounded-lg border"
-            style={{ borderColor: esBarbero ? "var(--page-primary-80)" : "var(--page-secondary)" }}
+            style={{ borderColor: esBarbero ? "var(--admin-border-fuerte)" : "var(--admin-border)" }}
           />
 
           <button
@@ -57,7 +57,7 @@ export default function SeccionImagenServicio({
           className={`relative flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg cursor-pointer transition ${
             isPending ? "opacity-50 pointer-events-none" : ""
           }`}
-          style={{ borderColor: esBarbero ? "var(--page-primary-50)" : "var(--page-secondary)" }}
+          style={{ borderColor: esBarbero ? "var(--admin-border-fuerte)" : "var(--admin-border)" }}
         >
           {isPending ? (
             <span className="text-sm" style={{ color: "var(--page-primary-tinta)" }}>

@@ -1,13 +1,11 @@
 "use server";
 
 import { obtenerConfiguracionMP } from "@/lib/mercadopago/obtener-config";
+import { obtenerNombreCuentaMP } from "@/lib/mercadopago/obtener-nombre-cuenta";
 
 export type EstadoConexionMP = {
   conectada: boolean;
-  bloqueada: boolean;
-  clavePublica: string | null;
-  idUsuarioMP: string | null;
-  modoProduccion: boolean | null;
+  nombreCuenta: string | null;
   actualizadaEn: string | null;
 };
 
@@ -18,20 +16,16 @@ export async function obtenerEstadoConexionMP(): Promise<EstadoConexionMP> {
   if (!configuracion) {
     return {
       conectada: false,
-      bloqueada: false,
-      clavePublica: null,
-      idUsuarioMP: null,
-      modoProduccion: null,
+      nombreCuenta: null,
       actualizadaEn: null,
     };
   }
 
+  const nombreCuenta = await obtenerNombreCuentaMP();
+
   return {
     conectada: configuracion.conectado,
-    bloqueada: configuracion.bloqueado,
-    clavePublica: configuracion.publicKey,
-    idUsuarioMP: configuracion.mpUserId,
-    modoProduccion: configuracion.liveMode,
+    nombreCuenta,
     actualizadaEn: configuracion.updatedAt.toISOString(),
   };
 }

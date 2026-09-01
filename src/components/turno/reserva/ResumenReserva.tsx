@@ -23,7 +23,7 @@ const CLASE_LABEL_MONTO =
   "text-[11px] font-semibold uppercase tracking-wider text-[var(--admin-texto-muted)]";
 const CLASE_VALOR_FILA = "text-sm text-[var(--admin-texto-primario)]";
 const CLASE_ICONO =
-  "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--page-primary-15)] text-[var(--page-primary-tinta)]";
+  "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--page-primary-15)] text-[var(--admin-texto-primario)]";
 
 export default function ResumenReserva({
   servicio,
@@ -188,7 +188,7 @@ export default function ResumenReserva({
       <button
         type="button"
         onClick={onCancelar}
-        className="w-full rounded-lg border border-[var(--admin-border)] py-3 text-sm font-medium text-[var(--admin-texto-secundario)] transition hover:bg-white/5"
+        className="w-full rounded-lg border border-[var(--admin-border)] py-3 text-sm font-medium text-[var(--admin-texto-secundario)] transition hover:bg-[var(--admin-item-hover)]"
       >
         Cancelar
       </button>

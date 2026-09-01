@@ -54,7 +54,7 @@ export default function CalendarioReserva({
             type="button"
             onClick={onMesAnterior}
             aria-label="Mes anterior"
-            className="p-1.5 rounded-lg text-[var(--admin-texto-secundario)] hover:bg-white/5 hover:text-[var(--page-primary-tinta)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
+            className="p-1.5 rounded-lg text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -62,7 +62,7 @@ export default function CalendarioReserva({
             type="button"
             onClick={onMesSiguiente}
             aria-label="Mes siguiente"
-            className="p-1.5 rounded-lg text-[var(--admin-texto-secundario)] hover:bg-white/5 hover:text-[var(--page-primary-tinta)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
+            className="p-1.5 rounded-lg text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
           >
             <ChevronRight className="h-4 w-4" />
           </button>

@@ -14,7 +14,7 @@ export default function DiaCalendarioReserva({
 }: PropsDiaCalendarioReserva) {
   const clases =
     seleccionado
-      ? "bg-[var(--page-primary)] text-[var(--page-primary-foreground)] font-bold shadow-[0_0_10px_color-mix(in_srgb,var(--page-primary)_40%,transparent)]"
+      ? "bg-[var(--page-primary)] text-[var(--page-primary-foreground)] font-bold shadow-[0_0_10px_color-mix(in_srgb,var(--page-primary)_40%,transparent)] ring-1 ring-[var(--admin-border-fuerte)]"
       : !estaEnElMes || pasado
         ? "text-[var(--admin-texto-muted)] opacity-40 cursor-not-allowed"
         : !disponible
@@ -28,7 +28,7 @@ export default function DiaCalendarioReserva({
       onClick={() => onSeleccionar(dia)}
       disabled={!estaEnElMes || pasado || !disponible}
       className={`h-10 w-full rounded-lg text-sm transition flex flex-col items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] ${
-        esHoy && !seleccionado ? "ring-1 ring-[var(--page-primary-50)] ring-inset" : ""
+        esHoy && !seleccionado ? "ring-1 ring-[var(--admin-border-fuerte)] ring-inset" : ""
       } ${clases}`}
     >
       {/* Días de otro mes: el número queda invisible para mantener la grilla prolija */}

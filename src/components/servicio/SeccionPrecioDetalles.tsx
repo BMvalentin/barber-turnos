@@ -13,7 +13,7 @@ export default function SeccionPrecioDetalles({
   return (
     <div 
       className="bg-[var(--admin-surface-elevated)] border rounded-xl p-6"
-      style={{ borderColor: "var(--page-secondary)" }}
+      style={{ borderColor: "var(--admin-border)" }}
     >
       <h3 
         className="text-xs font-bold uppercase tracking-wider mb-6"

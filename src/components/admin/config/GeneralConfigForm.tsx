@@ -19,6 +19,7 @@ import type {
   DatosConfiguracionInicial,
   PageConfigData,
 } from "@/types/page-config";
+import { COLORES_TEMA_POR_DEFECTO } from "@/lib/contraste/colores-tema-por-defecto";
 
 interface GeneralConfigFormProps {
   initialData: DatosConfiguracionInicial | null;
@@ -36,17 +37,17 @@ export default function GeneralConfigForm({ initialData, seccionInicial }: Gener
     logo: initialData?.logo || "",
     favicon: initialData?.favicon || "",
     backgroundImage: initialData?.backgroundImage || "",
-    primaryColor: initialData?.primaryColor || "#3b82f6",
-    secondaryColor: initialData?.secondaryColor || "#1e3a8a",
-    bgColor: initialData?.bgColor || "#09090b",
+    primaryColor: initialData?.primaryColor || COLORES_TEMA_POR_DEFECTO.primario,
+    secondaryColor: initialData?.secondaryColor || COLORES_TEMA_POR_DEFECTO.secundario,
+    bgColor: initialData?.bgColor || COLORES_TEMA_POR_DEFECTO.fondo,
     whatsapp: initialData?.whatsapp || "",
     mapsUrl: initialData?.mapsUrl || "",
     address: initialData?.address || "",
   });
 
-  const primaryColor = formData.primaryColor || "#3b82f6";
-  const secondaryColor = formData.secondaryColor || "#1e3a8a";
-  const colorFondo = formData.bgColor || "#09090b";
+  const primaryColor = formData.primaryColor || COLORES_TEMA_POR_DEFECTO.primario;
+  const secondaryColor = formData.secondaryColor || COLORES_TEMA_POR_DEFECTO.secundario;
+  const colorFondo = formData.bgColor || COLORES_TEMA_POR_DEFECTO.fondo;
 
   const manejarCambio = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

@@ -7,41 +7,68 @@
 ========================= */
 
 :root {
-  /* Colores parametrizables desde PageConfig (inyectados en layout.tsx),
-     incluido el fondo --page-bg. Defaults centralizados acá:
-     NUNCA hardcodear hex de acento en componentes. */
-  --page-primary: #d97706;
-  --page-secondary: #78350f;
-  --page-bg: #09090b;
+  /* Tema semántico. Solo los tres colores de entrada son configurables; el resto
+     se calcula en `crearVariablesTema` y se inyecta desde el layout. */
+  --tema-fondo: #09090b;
+  --tema-superficie-1: #18181a;
+  --tema-superficie-2: #272729;
+  --tema-superficie-3: #353537;
+  --tema-texto-principal: #ffffff;
+  --tema-texto-secundario: #c8c8c9;
+  --tema-texto-tenue: #a0a0a1;
+  --tema-borde-suave: #636364;
+  --tema-borde-fuerte: #888889;
+  --tema-foco: #d97706;
+  --tema-primario: #d97706;
+  --tema-primario-hover: #bf6905;
+  --tema-primario-activo: #ad5f05;
+  --tema-primario-sobre: #09090b;
+  --tema-primario-texto: #d97706;
+  --tema-primario-sobre-oscuro: #d97706;
+  --tema-primario-suave: #372811;
+  --tema-primario-suave-texto: #e09020;
+  --tema-secundario: #78350f;
+  --tema-secundario-hover: #692e0d;
+  --tema-secundario-sobre: #ffffff;
+  --tema-secundario-texto: #c08c70;
+  --tema-secundario-suave: #261c18;
+  --tema-secundario-suave-texto: #bd8a6e;
+
+  /* Aliases compatibles para colores parametrizables desde PageConfig.
+     Los defaults compartidos viven en colores-tema-por-defecto.ts. */
+  --page-primary: var(--tema-primario);
+  --page-secondary: var(--tema-secundario);
+  --page-bg: var(--tema-fondo);
 
   /* Texto/íconos sobre fondo sólido de marca o de página (decidido por src/lib/contraste/) */
-  --page-primary-foreground: #09090b;
-  --page-secondary-foreground: #ffffff;
-  --page-bg-foreground: #f5f5f5;
+  --page-primary-foreground: var(--tema-primario-sobre);
+  --page-secondary-foreground: var(--tema-secundario-sobre);
+  --page-bg-foreground: var(--tema-texto-principal);
   /* Marca legible como texto sobre fondos oscuros */
-  --page-primary-tinta: var(--page-primary);
-  --page-secondary-tinta: var(--page-secondary);
-  --page-bg-tinta: var(--page-bg);
+  --page-primary-tinta: var(--tema-primario-texto);
+  --page-primary-sobre-oscuro: var(--tema-primario-sobre-oscuro);
+  --page-secondary-tinta: var(--tema-secundario-texto);
+  --page-bg-tinta: var(--tema-texto-principal);
 
   /* Tokens de superficie del admin (derivados de --page-bg) */
-  --admin-background: var(--page-bg);
-  --admin-surface: color-mix(in srgb, var(--page-bg) 94%, #ffffff);
-  --admin-surface-elevated: color-mix(in srgb, var(--page-bg) 88%, #ffffff);
+  --admin-background: var(--tema-fondo);
+  --admin-surface: var(--tema-superficie-1);
+  --admin-surface-elevated: var(--tema-superficie-2);
   /* Superficie de filas/items: se aclara si el fondo es oscuro y se oscurece si es claro
      (mueve la luminosidad del fondo un 15% hacia el punto medio) */
-  --admin-item: oklch(from var(--page-bg) calc(l * 0.85 + 0.075) c h);
-  --admin-item-hover: oklch(from var(--page-bg) calc(l * 0.7 + 0.15) c h);
-  --admin-border: color-mix(in srgb, var(--page-bg-foreground) 10%, transparent);
-  --admin-border-fuerte: color-mix(in srgb, var(--page-bg-foreground) 16%, transparent);
-  --admin-texto-primario: var(--page-bg-foreground);
-  --admin-texto-secundario: color-mix(in srgb, var(--page-bg-foreground) 68%, var(--page-bg));
-  --admin-texto-muted: color-mix(in srgb, var(--page-bg-foreground) 44%, var(--page-bg));
+  --admin-item: var(--tema-superficie-2);
+  --admin-item-hover: var(--tema-superficie-3);
+  --admin-border: var(--tema-borde-suave);
+  --admin-border-fuerte: var(--tema-borde-fuerte);
+  --admin-texto-primario: var(--tema-texto-principal);
+  --admin-texto-secundario: var(--tema-texto-secundario);
+  --admin-texto-muted: var(--tema-texto-tenue);
 
   /* Tokens derivados de marca (auto-derivados, NUNCA expuestos al usuario) */
-  --page-primary-hover: color-mix(in srgb, var(--page-primary) 85%, #000000);
-  --page-primary-soft: color-mix(in srgb, var(--page-primary) 12%, transparent);
-  --page-primary-muted: color-mix(in srgb, var(--page-primary) 15%, var(--admin-surface-elevated));
-  --page-focus-ring: color-mix(in srgb, var(--page-primary) 55%, transparent);
+  --page-primary-hover: var(--tema-primario-hover);
+  --page-primary-soft: var(--tema-primario-suave);
+  --page-primary-muted: var(--tema-primario-suave);
+  --page-focus-ring: var(--tema-foco);
 
   /* Variantes alfa derivadas (color-mix) usadas como ${primaryColor}XX antes */
   --page-primary-15: color-mix(in srgb, var(--page-primary) 15%, transparent);
@@ -66,16 +93,15 @@
   --page-secondary-70: color-mix(in srgb, var(--page-secondary) 70%, transparent);
   --page-secondary-80: color-mix(in srgb, var(--page-secondary) 80%, transparent);
 
-  --background:  43, 100%, 97%;
-  --foreground: 210 25% 25%;
-
-  --primary: 195 45% 65%;
-  --primary-foreground: 210 30% 20%;
-
-  --secondary: 43 60% 90%;
-  --secondary-foreground: 210 25% 25%;
-
-  --border: 195 30% 80%;
+  /* Compatibilidad shadcn/Tailwind. Estos aliases ahora contienen colores CSS
+     completos; los consumidores no deben envolverlos en hsl(). */
+  --background: var(--tema-fondo);
+  --foreground: var(--tema-texto-principal);
+  --primary: var(--tema-primario);
+  --primary-foreground: var(--tema-primario-sobre);
+  --secondary: var(--tema-secundario);
+  --secondary-foreground: var(--tema-secundario-sobre);
+  --border: var(--tema-borde-suave);
 
   /* Custom tokens */
   --shadow-elevated: 0 20px 60px -20px hsl(210 25% 10% / 0.25);
@@ -86,7 +112,7 @@
 ========================= */
 
 * {
-  border-color: hsl(var(--border));
+  border-color: var(--border);
 }
 
 html {

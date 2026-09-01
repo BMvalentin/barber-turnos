@@ -62,7 +62,7 @@ export default function SelectorEmpleado({ barberos, valor, alCambiar }: Props) 
         onClick={() => setAbierto((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={abierto}
-        className="flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left transition-colors hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
+        className="flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left transition-colors hover:bg-[var(--admin-item-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
         style={{
           backgroundColor: "var(--admin-surface-elevated)",
           borderColor: "var(--admin-border)",

@@ -66,7 +66,7 @@ export function TablaDiasBarbero({
                       onChange={(e) => alAlternarTrabajo(dia.diaId, e.target.checked)}
                       className="peer sr-only"
                     />
-                    <span className="h-6 w-11 rounded-full bg-[var(--admin-border)] transition-colors peer-checked:bg-[var(--page-primary)] after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-5" />
+                    <span className="h-6 w-11 rounded-full bg-[var(--admin-border-fuerte)] transition-colors peer-checked:bg-[var(--page-primary)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--page-focus-ring)] peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-[var(--admin-surface)] after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-[var(--admin-texto-primario)] peer-checked:after:bg-[var(--page-primary-foreground)] after:transition-transform peer-checked:after:translate-x-5" />
                   </label>
                 </td>
                 <td className="px-4 py-3 align-middle">

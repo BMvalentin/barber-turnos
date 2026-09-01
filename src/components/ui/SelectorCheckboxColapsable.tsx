@@ -38,8 +38,8 @@ export default function SelectorCheckboxColapsable({
   maxAltura = "max-h-60",
 }: Props) {
   const claseEtiqueta = grupos
-    ? "flex items-center gap-2 text-[var(--admin-texto-primario)] text-xs p-2 bg-black/40 rounded hover:bg-white/5 transition cursor-pointer"
-    : "flex items-center gap-2 p-2 rounded cursor-pointer transition hover:bg-white/5";
+    ? "flex items-center gap-2 text-[var(--admin-texto-primario)] text-xs p-2 bg-[var(--admin-item)] rounded hover:bg-[var(--admin-item-hover)] transition cursor-pointer"
+    : "flex items-center gap-2 p-2 rounded cursor-pointer transition hover:bg-[var(--admin-item-hover)]";
 
   const renderOpcion = (opcion: OpcionCheckbox) => (
     <label key={opcion.valor} className={claseEtiqueta}>
@@ -59,7 +59,7 @@ export default function SelectorCheckboxColapsable({
       <button
         type="button"
         onClick={onAlternarAbierto}
-        className="w-full flex items-center justify-between p-3 bg-black/60 rounded-lg transition border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
+        className="w-full flex items-center justify-between p-3 bg-[var(--admin-surface-elevated)] rounded-lg transition border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
         style={{ borderColor: "var(--admin-border)" }}
       >
         <div className="flex flex-col items-start">
@@ -80,7 +80,7 @@ export default function SelectorCheckboxColapsable({
 
       {abierto && (
         <div
-          className={`p-4 bg-black/60 rounded-lg ${
+          className={`p-4 bg-[var(--admin-surface-elevated)] rounded-lg ${
             grupos ? "space-y-4" : "space-y-2"
           } ${maxAltura} overflow-y-auto border`}
           style={{ borderColor: "var(--admin-border)" }}

@@ -1,48 +1,62 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import ItemNavegacionEnlace from "@/components/panel/navegacion/ItemNavegacionEnlace";
 import type { GrupoDesplegable } from "@/components/panel/navegacion/items-navegacion";
+import useSugerenciaLateral from "@/components/panel/navegacion/useSugerenciaLateral";
 
 interface DesplegableNavegacionProps {
   grupo: GrupoDesplegable;
   colapsado: boolean;
   alCerrar: () => void;
+  alExpandirSidebar: () => void;
+}
+
+function suscribirseConsultaEscritorio(alCambiar: () => void) {
+  const consulta = window.matchMedia("(min-width: 768px)");
+  consulta.addEventListener("change", alCambiar);
+  return () => consulta.removeEventListener("change", alCambiar);
+}
+
+function obtenerConsultaEscritorio() {
+  return window.matchMedia("(min-width: 768px)").matches;
 }
 
 export default function DesplegableNavegacion({
   grupo,
   colapsado,
   alCerrar,
+  alExpandirSidebar,
 }: DesplegableNavegacionProps) {
   const pathname = usePathname();
   const Icono = grupo.icono;
   const [estadoLocal, setEstadoLocal] = useState<boolean | null>(null);
+  const estaEnEscritorio = useSyncExternalStore(
+    suscribirseConsultaEscritorio,
+    obtenerConsultaEscritorio,
+    () => true,
+  );
   const contieneHijoActivo = grupo.items.some((item) => pathname === item.href);
   const expandido = estadoLocal ?? contieneHijoActivo;
+  const muestraContenido = expandido && !(colapsado && estaEnEscritorio);
+  const identificadorContenido = `grupo-navegacion-${grupo.titulo.toLowerCase().replaceAll(" ", "-")}`;
   const refBoton = useRef<HTMLButtonElement>(null);
-  const [posicionSugerencia, setPosicionSugerencia] = useState<{
-    arriba: number;
-    izquierda: number;
-  } | null>(null);
+  const { mostrar, ocultar, sugerencia } = useSugerenciaLateral(
+    refBoton,
+    grupo.titulo,
+    colapsado,
+  );
 
-  const alAlternar = () =>
-    setEstadoLocal((v) => !(v ?? contieneHijoActivo));
-
-  const alEntrar = () => {
-    const boton = refBoton.current;
-    if (!boton) return;
-    const rect = boton.getBoundingClientRect();
-    setPosicionSugerencia({
-      arriba: rect.top + rect.height / 2,
-      izquierda: rect.right + 10,
-    });
+  const alAlternar = () => {
+    if (colapsado && estaEnEscritorio) {
+      alExpandirSidebar();
+      setEstadoLocal(true);
+      return;
+    }
+    setEstadoLocal((valor) => !(valor ?? contieneHijoActivo));
   };
-
-  const alSalir = () => setPosicionSugerencia(null);
 
   return (
     <>
@@ -50,57 +64,48 @@ export default function DesplegableNavegacion({
         ref={refBoton}
         type="button"
         onClick={alAlternar}
-        aria-expanded={expandido}
-        onMouseEnter={colapsado ? alEntrar : undefined}
-        onMouseLeave={colapsado ? alSalir : undefined}
-        onFocus={colapsado ? alEntrar : undefined}
-        onBlur={colapsado ? alSalir : undefined}
+        aria-expanded={muestraContenido}
+        aria-controls={identificadorContenido}
+        aria-label={colapsado ? grupo.titulo : undefined}
+        onMouseEnter={mostrar}
+        onMouseLeave={ocultar}
+        onFocus={mostrar}
+        onBlur={ocultar}
         className={`
-          flex items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150
+          flex items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-[background-color,color,transform] duration-200 ease-out motion-reduce:transition-none
           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]
-          ${colapsado ? "justify-center px-0" : ""}
-          text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-border)] hover:text-[var(--admin-texto-primario)]
+          ${colapsado ? "md:w-full md:justify-center md:px-0 md:hover:scale-105" : "hover:-translate-y-px"}
+          ${contieneHijoActivo
+            ? "bg-[var(--page-primary-15)] text-[var(--admin-texto-primario)]"
+            : "text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-border)] hover:text-[var(--admin-texto-primario)]"}
         `}
       >
         <Icono className="h-4 w-4 shrink-0" />
-        <span className={colapsado ? "hidden" : ""}>{grupo.titulo}</span>
-        {!colapsado &&
-          (expandido ? (
-            <ChevronDown className="h-4 w-4 shrink-0 text-[var(--admin-texto-muted)]" />
-          ) : (
-            <ChevronRight className="h-4 w-4 shrink-0 text-[var(--admin-texto-muted)]" />
-          ))}
+        <span className={colapsado ? "md:hidden" : ""}>{grupo.titulo}</span>
+        <span className={colapsado ? "md:hidden" : "ml-auto"}>
+          <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--admin-texto-muted)] transition-transform duration-200 ease-out motion-reduce:transition-none ${expandido ? "rotate-180" : ""}`} />
+        </span>
       </button>
-      {colapsado &&
-        posicionSugerencia &&
-        createPortal(
-          <span
-            className="pointer-events-none fixed z-[60] -translate-y-1/2 whitespace-nowrap rounded-md border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-2.5 py-1.5 text-xs font-medium text-[var(--admin-texto-primario)] shadow-lg"
-            style={{
-              top: posicionSugerencia.arriba,
-              left: posicionSugerencia.izquierda,
-            }}
-          >
-            {grupo.titulo}
-          </span>,
-          document.body,
-        )}
-      {expandido && (
-        <div
-          className={`mt-1 space-y-0.5 ${
-            colapsado ? "" : "ml-3 border-l border-[var(--admin-border)] pl-2"
-          }`}
-        >
-          {grupo.items.map((item) => (
-            <ItemNavegacionEnlace
-              key={item.href}
-              item={item}
-              colapsado={colapsado}
-              alCerrar={alCerrar}
-            />
-          ))}
+      {sugerencia}
+      <div
+        id={identificadorContenido}
+        aria-hidden={!muestraContenido}
+        inert={!muestraContenido}
+        className={`grid transition-[grid-template-rows,opacity,margin] duration-[240ms] ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none ${muestraContenido ? "mt-1 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] pointer-events-none opacity-0"}`}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="space-y-0.5 pl-3">
+            {grupo.items.map((item) => (
+              <ItemNavegacionEnlace
+                key={item.href}
+                item={item}
+                colapsado={colapsado}
+                alCerrar={alCerrar}
+              />
+            ))}
+          </div>
         </div>
-      )}
+      </div>
     </>
   );
 }

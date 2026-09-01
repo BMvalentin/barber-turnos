@@ -103,7 +103,7 @@ export default function ExcepcionForm({ barberos }: ExcepcionFormProps) {
       <BotonSubmitFormStatus
         texto="Crear Excepción"
         claseAdicional="w-full shadow-md hover:opacity-95"
-        estiloAdicional={{ border: "1px solid var(--page-secondary)" }}
+        estiloAdicional={{ border: "1px solid var(--admin-border)" }}
       />
     </form>
   );

@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomUUID, randomBytes, createHmac } from "crypto";
 import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { construirUrlAutorizacionMP } from "@/lib/mercadopago/url-autorizacion";
-import { estaBloqueadaMP } from "@/lib/mercadopago/esta-bloqueada";
 
 type CodigoErrorInicio =
-  | "bloqueado"
   | "no_autorizado"
   | "sin_client_id"
   | "sin_app_url"
@@ -77,12 +75,6 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const bloqueada = await estaBloqueadaMP();
-    if (bloqueada) {
-      console.warn("⚠️ Intento de conexión MP bloqueado por seguridad");
-      return redirigirConError(urlAdmin, "bloqueado");
-    }
-
     const uuidEstado = randomUUID();
     const estado = `${uuidEstado}.${firmarState(uuidEstado, sesion.user.id)}`;
     const codeVerifier = generarCodeVerifier();

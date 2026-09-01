@@ -27,7 +27,7 @@ export default function BarberoList({
         icono={<User />}
         mensaje="No hay barberos disponibles"
         claseContenedor="bg-[var(--admin-surface)] p-8 rounded-lg border"
-        estiloContenedor={{ borderColor: "var(--page-primary-30)" }}
+        estiloContenedor={{ borderColor: "var(--admin-border)" }}
         claseIcono="h-16 w-16"
         estiloIcono={{ color: "var(--page-primary-tinta)" }}
         estiloMensaje={{ color: "var(--page-primary-tinta)" }}
@@ -82,10 +82,10 @@ function BarberoCard({
     <>
       <div 
         className="bg-[var(--admin-surface)] rounded-xl overflow-hidden border transition-colors duration-150 flex flex-col h-full"
-        style={{ borderColor: `var(--page-primary-40)` }}
+        style={{ borderColor: "var(--admin-border)" }}
       >
         {/* IMAGEN */}
-        <div className="h-48 border-b" style={{ borderColor: `var(--page-primary-20)` }}>
+        <div className="h-48 border-b" style={{ borderColor: "var(--admin-border)" }}>
           {barbero.srcImage ? (
             <img
               src={barbero.srcImage}
@@ -157,7 +157,7 @@ function BarberoCard({
           </div>
 
           {/* BOTONES */}
-          <div className="flex gap-2 pt-3 border-t mt-auto" style={{ borderColor: `var(--page-primary-20)` }}>
+          <div className="flex gap-2 pt-3 border-t mt-auto" style={{ borderColor: "var(--admin-border)" }}>
             <Button
               className="flex-1 text-[var(--page-primary-foreground)] transition-all hover:opacity-90"
               style={ESTILO_FONDO_MARCA}

@@ -223,8 +223,8 @@ model PageConfig {
   slogan             String?
   logo               String?  @db.Text
   favicon            String?  @db.Text
-  primaryColor       String?  @default("#000000")
-  secondaryColor     String?  @default("#FFFFFF")
+  primaryColor       String?  @default("#d97706")
+  secondaryColor     String?  @default("#78350f")
   bgColor            String?  @default("#09090b")
   address            String?
   city               String?

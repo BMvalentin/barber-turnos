@@ -43,7 +43,7 @@ function LoginPageContenido() {
   return (
     <AuthLayout>
       {/* CONTENEDOR PRINCIPAL - Ocupa toda la pantalla */}
-      <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-zinc-950">
+      <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-[var(--page-bg)] text-[var(--page-bg-foreground)]">
         
         {/* ===================*/}
         {/*   IMAGEN DE FONDO  */}
@@ -65,7 +65,7 @@ function LoginPageContenido() {
         </div>
 
         {/* TARJETA DE LOGIN (SPLIT DESIGN) */}
-        <div className="relative z-10 w-full max-w-5xl flex rounded- overflow-hidden shadow- border border-white/5 bg-zinc-950/60 backdrop-blur-xl">
+        <div className="relative z-10 w-full max-w-5xl flex rounded- overflow-hidden shadow- border border-[var(--admin-border)] bg-[var(--admin-surface)]/60 backdrop-blur-xl">
           {/* LADO IZQUIERDO - IMAGEN (Solo Desktop) */}
           <div className="hidden lg:block lg:w-1/2 relative">
             {/* =======*/}
@@ -80,10 +80,10 @@ function LoginPageContenido() {
             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-80" />
             
             <div className="absolute bottom-12 left-12 right-12 text-left">
-              <h2 className="text-4xl font-black text-white uppercase tracking-tighter mb-2">
+              <h2 className="text-4xl font-black text-[var(--page-bg-foreground)] uppercase tracking-tighter mb-2">
                 Domina tu <span className="text-[var(--page-primary-tinta)]">Estilo</span>
               </h2>
-              <p className="text-zinc-400 font-medium">El corte perfecto es solo el principio. Bienvenido al club.</p>
+              <p className="text-[var(--admin-texto-secundario)] font-medium">El corte perfecto es solo el principio. Bienvenido al club.</p>
             </div>
           </div>
 
@@ -93,13 +93,13 @@ function LoginPageContenido() {
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[var(--page-primary)]/50 to-transparent" />
 
             <div className="text-center lg:text-left mb-10">
-              <div className="inline-flex lg:hidden items-center justify-center w-16 h-16 rounded-full bg-zinc-900 mb-6 border border-[var(--page-primary)]/30 shadow-">
+              <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] lg:hidden">
                 <Scissors className="w-8 h-8 text-[var(--page-primary-tinta)]" />
               </div>
-              <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tighter uppercase">
+              <h1 className="text-3xl sm:text-4xl font-black text-[var(--page-bg-foreground)] tracking-tighter uppercase">
                 MAYORAZ <span className="text-[var(--page-primary-tinta)]">Barber</span>
               </h1>
-              <p className="text-zinc-400 text-sm mt-2 font-medium tracking-wide">INGRESA A TU CUENTA</p>
+              <p className="mt-2 text-sm font-medium tracking-wide text-[var(--admin-texto-secundario)]">INGRESA A TU CUENTA</p>
             </div>
 
             <div className="space-y-4 mb-8">
@@ -107,9 +107,9 @@ function LoginPageContenido() {
             </div>
 
             <div className="relative mb-8">
-              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/5" /></div>
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-[var(--admin-border)]" /></div>
               <div className="relative flex justify-center lg:justify-start text-xs uppercase tracking-widest font-bold">
-                <span className="bg-zinc-950 px-4 text-zinc-500">O ingresa con Email</span>
+                <span className="bg-[var(--admin-surface)] px-4 text-[var(--admin-texto-muted)]">O ingresa con Email</span>
               </div>
             </div>
 
@@ -117,13 +117,13 @@ function LoginPageContenido() {
               <div className="space-y-2">
                 <label className="text- font-black text-[var(--page-primary-tinta)] uppercase tracking- ml-1">Email</label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary-tinta)] transition-colors" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--admin-texto-muted)] group-focus-within:text-[var(--page-primary-tinta)] transition-colors" />
                   <input 
                     name="email" 
                     type="email" 
                     placeholder="cliente@correo.com"
                     required 
-                    className="w-full bg-zinc-900/50 border border-white/5 rounded-xl py-4 pl-12 pr-4 text-white outline-none focus:border-[var(--page-primary)]/50 focus:bg-zinc-900 focus:ring-1 focus:ring-[var(--page-primary)]/50 transition-all placeholder:text-zinc-600 font-medium"
+                    className="w-full bg-[var(--admin-surface-elevated)] border border-[var(--admin-border)] rounded-xl py-4 pl-12 pr-4 text-[var(--admin-texto-primario)] outline-none focus:border-[var(--admin-border-fuerte)] focus:bg-[var(--admin-item)] focus:ring-1 focus:ring-[var(--page-focus-ring)] transition-all placeholder:text-[var(--admin-texto-muted)] font-medium"
                   />
                 </div>
               </div>
@@ -131,13 +131,13 @@ function LoginPageContenido() {
               <div className="space-y-2">
                 <label className="text- font-black text-[var(--page-primary-tinta)] uppercase tracking- ml-1">Contraseña</label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary-tinta)] transition-colors" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--admin-texto-muted)] group-focus-within:text-[var(--page-primary-tinta)] transition-colors" />
                   <input 
                     name="password" 
                     type="password" 
                     placeholder="••••••••"
                     required 
-                    className="w-full bg-zinc-900/50 border border-white/5 rounded-xl py-4 pl-12 pr-4 text-white outline-none focus:border-[var(--page-primary)]/50 focus:bg-zinc-900 focus:ring-1 focus:ring-[var(--page-primary)]/50 transition-all placeholder:text-zinc-600 font-medium"
+                    className="w-full bg-[var(--admin-surface-elevated)] border border-[var(--admin-border)] rounded-xl py-4 pl-12 pr-4 text-[var(--admin-texto-primario)] outline-none focus:border-[var(--admin-border-fuerte)] focus:bg-[var(--admin-item)] focus:ring-1 focus:ring-[var(--page-focus-ring)] transition-all placeholder:text-[var(--admin-texto-muted)] font-medium"
                   />
                 </div>
               </div>
@@ -156,7 +156,7 @@ function LoginPageContenido() {
               </button>
             </form>
 
-            <p className="text-center lg:text-left text-sm text-zinc-500 mt-8 font-medium">
+            <p className="mt-8 text-center text-sm font-medium text-[var(--admin-texto-muted)] lg:text-left">
               ¿No eres miembro aún?{" "}
               <Link href="/register" className="text-[var(--page-primary-tinta)] hover:text-[var(--page-primary-tinta)] font-bold underline-offset-4 hover:underline transition-colors">
                 Regístrate aquí

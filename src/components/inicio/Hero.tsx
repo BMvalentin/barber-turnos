@@ -80,7 +80,7 @@ style={ESTILO_FONDO_MARCA}
         >
           <div 
             className="absolute -inset-1 rounded-3xl blur-xl opacity-30 group-hover:opacity-70 transition duration-700" 
-            style={{ background: `linear-gradient(to right, var(--page-primary), #52525b)` }}
+            style={{ background: "linear-gradient(to right, var(--page-primary), var(--page-primary-15))" }}
           />
           
           <div className="relative bg-[var(--page-bg)]/60 backdrop-blur-xl border border-[var(--page-bg-foreground)]/10 rounded-3xl p-6 md:p-8 shadow-2xl">

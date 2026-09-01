@@ -62,8 +62,8 @@ export default function CreateServicioForm({
       subtitulo="Completa los datos para agregar un servicio al catálogo."
       maxWidth="max-w-4xl"
       overlayClase="bg-black/90 p-4 sm:p-6 overflow-y-auto"
-      contenedorClase="bg-[var(--admin-surface)] border border-[var(--page-secondary)] rounded-xl relative flex flex-col max-h-[90vh]"
-      headerClase="flex justify-between items-center gap-4 p-6 border-b border-[var(--page-secondary)]"
+      contenedorClase="bg-[var(--admin-surface)] border border-[var(--admin-border-fuerte)] rounded-xl relative flex flex-col max-h-[90vh]"
+      headerClase="flex justify-between items-center gap-4 p-6 border-b border-[var(--admin-border)]"
       tituloClase="text-xl font-bold text-[var(--admin-texto-primario)]"
       subtituloClase="text-[var(--admin-texto-muted)] text-xs mt-1"
     >
@@ -92,7 +92,7 @@ export default function CreateServicioForm({
             {/* Información General */}
             <div 
               className="bg-[var(--admin-surface-elevated)] border rounded-xl p-6"
-              style={{ borderColor: "var(--page-secondary)" }}
+              style={{ borderColor: "var(--admin-border)" }}
             >
               <div className="flex justify-between items-center mb-6">
                 <h3 
@@ -108,7 +108,7 @@ export default function CreateServicioForm({
                   <select
                     name="estado"
                     className="bg-[var(--admin-surface-elevated)] border text-[var(--admin-texto-primario)] text-xs rounded px-2 py-1 transition-colors duration-150 focus:outline-none focus:border-[var(--page-primary)]/60 focus:ring-2 focus:ring-[var(--page-focus-ring)]"
-                    style={{ borderColor: "var(--page-secondary)" }}
+                    style={{ borderColor: "var(--admin-border)" }}
                   >
                     <option value="true">Activo</option>
                     <option value="false">Inactivo</option>
@@ -147,12 +147,12 @@ export default function CreateServicioForm({
 
             <div 
               className="flex justify-end gap-4 pt-4 border-t"
-              style={{ borderColor: "var(--page-secondary)" }}
+              style={{ borderColor: "var(--admin-border)" }}
             >
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-3 hover:cursor-pointer rounded-lg font-bold text-xs uppercase tracking-wider text-[var(--admin-texto-primario)] hover:bg-white/5 transition-colors duration-150"
+                className="px-6 py-3 hover:cursor-pointer rounded-lg font-bold text-xs uppercase tracking-wider text-[var(--admin-texto-primario)] hover:bg-[var(--admin-item-hover)] transition-colors duration-150"
                 style={{ backgroundColor: 'transparent' }}
               >
                 Cancelar
