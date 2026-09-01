@@ -11,6 +11,7 @@ import CopiarHorario from "@/components/horarios/CopiarHorario";
 import EncabezadoHorarios from "@/components/horarios/EncabezadoHorarios";
 import { TablaDiasBarbero, type EstadoDiaEditor } from "@/components/horarios/TablaDiasBarbero";
 import { construirEstado, ESTADO_INICIAL_DIA } from "@/components/horarios/construir-estado-dias";
+import { estadoDesdeDiasGuardados } from "@/components/horarios/estado-desde-dias-guardados";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { guardarHorariosBarbero } from "@/actions/horarios/guardar-horarios-barbero.actions";
 import { removerHorarioDeBarbero } from "@/actions/barberos/remover-horario.actions";
@@ -30,7 +31,7 @@ export function HorariosLaboralesClient({ diasLaborales, barberos }: Props) {
   const [valores, setValores] = useState<Record<string, EstadoDiaEditor>>(() =>
     construirEstado(barberos, diasLaborales, barberos[0]?.id ?? ""),
   );
-  const [eliminarDia, setEliminarDia] = useState<{ diaId: string; asignacionId: string } | null>(null);
+  const [eliminarDia, setEliminarDia] = useState<{ diaId: string; asignacionIds: string[] } | null>(null);
 
   const tarjetaRef = useRef<HTMLElement | null>(null);
   const diaAEliminarRef = useRef<string | null>(null);
@@ -67,15 +68,33 @@ export function HorariosLaboralesClient({ diasLaborales, barberos }: Props) {
     setValores(construirEstado(barberos, diasLaborales, id));
   };
 
-  const alCambiar = (
-    diaId: string,
-    campo: "trabaja" | "desde" | "hasta",
-    valor: string | boolean,
-  ) => {
+  const alAlternarTrabajo = (diaId: string, trabaja: boolean) => {
+    setValores((prev) => ({ ...prev, [diaId]: { ...(prev[diaId] ?? ESTADO_INICIAL_DIA), trabaja } }));
+  };
+
+  const alCambiar = (diaId: string, indiceRango: number, campo: "desde" | "hasta", valor: string) => {
     setValores((prev) => {
       const actualizado = { ...(prev[diaId] ?? ESTADO_INICIAL_DIA) };
-      if (campo === "trabaja") actualizado.trabaja = Boolean(valor);
-      else actualizado[campo] = String(valor);
+      actualizado.rangos = actualizado.rangos.map((r, i) =>
+        i === indiceRango ? { ...r, [campo]: valor } : r,
+      );
+      return { ...prev, [diaId]: actualizado };
+    });
+  };
+
+  const alAgregarRango = (diaId: string) => {
+    setValores((prev) => {
+      const actualizado = { ...(prev[diaId] ?? ESTADO_INICIAL_DIA) };
+      actualizado.rangos = [...actualizado.rangos, { desde: "", hasta: "" }];
+      return { ...prev, [diaId]: actualizado };
+    });
+  };
+
+  const alQuitarRango = (diaId: string, indiceRango: number) => {
+    setValores((prev) => {
+      const actualizado = { ...(prev[diaId] ?? ESTADO_INICIAL_DIA) };
+      const rangos = actualizado.rangos.filter((_, i) => i !== indiceRango);
+      actualizado.rangos = rangos.length > 0 ? rangos : [{ desde: "", hasta: "" }];
       return { ...prev, [diaId]: actualizado };
     });
   };
@@ -86,34 +105,9 @@ export function HorariosLaboralesClient({ diasLaborales, barberos }: Props) {
       return {
         diaId: dia.id,
         trabaja: estado?.trabaja ?? false,
-        desde: estado?.trabaja ? estado.desde : "",
-        hasta: estado?.trabaja ? estado.hasta : "",
+        rangos: estado?.trabaja ? estado.rangos : [],
       };
     });
-
-  const estadoDesdeDiasGuardados = (
-    dias: HorarioDiaBarbero[],
-    estadoAnterior: Record<string, EstadoDiaEditor>,
-  ): Record<string, EstadoDiaEditor> => {
-    const resultado: Record<string, EstadoDiaEditor> = {};
-    for (const dia of dias) {
-      const previo = estadoAnterior[dia.diaId];
-      const mismoRango =
-        previo?.trabaja &&
-        previo.desde === dia.desde &&
-        previo.hasta === dia.hasta;
-      resultado[dia.diaId] = dia.trabaja
-        ? {
-            trabaja: true,
-            desde: dia.desde,
-            hasta: dia.hasta,
-            asignacionId: mismoRango ? previo?.asignacionId : undefined,
-            rangosExtra: 0,
-          }
-        : { ...ESTADO_INICIAL_DIA };
-    }
-    return resultado;
-  };
 
   const alGuardar = () => {
     if (!barberoId) return;
@@ -128,17 +122,17 @@ export function HorariosLaboralesClient({ diasLaborales, barberos }: Props) {
     });
   };
 
-  const alEliminarDia = (diaId: string, asignacionId: string) =>
-    setEliminarDia({ diaId, asignacionId });
+  const alEliminarDia = (diaId: string, asignacionIds: string[]) =>
+    setEliminarDia({ diaId, asignacionIds });
 
   const confirmarEliminacion = () => {
     if (!eliminarDia) return;
-    const { diaId, asignacionId } = eliminarDia;
+    const { diaId, asignacionIds } = eliminarDia;
     setEliminarDia(null);
     diaAEliminarRef.current = diaId;
     startTransition(async () => {
       const formData = new FormData();
-      formData.set("id", asignacionId);
+      formData.set("ids", JSON.stringify(asignacionIds));
       const resultado = await removerHorarioDeBarbero(ActionStateInicialSimple, formData);
       await retroalimentarEliminado(resultado);
     });
@@ -200,6 +194,9 @@ export function HorariosLaboralesClient({ diasLaborales, barberos }: Props) {
               dias={diasTabla}
               valores={valores}
               alCambiar={alCambiar}
+              alAlternarTrabajo={alAlternarTrabajo}
+              alAgregarRango={alAgregarRango}
+              alQuitarRango={alQuitarRango}
               alEliminarDia={alEliminarDia}
             />
           </div>

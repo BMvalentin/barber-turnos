@@ -1,7 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { compararHoras } from "@/lib/horarios/comparar-horas";
+import { validarRangosHorarios } from "@/lib/horarios/validar-rangos";
+import { sincronizarDiaBarbero } from "@/lib/horarios/sincronizar-dia-barbero";
 import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
 import { revalidarDiasLaborales } from "@/lib/revalidar/revalidar-dias-laborales";
 import { revalidarBarberos } from "@/lib/revalidar/revalidar-barberos";
@@ -35,11 +36,9 @@ async function guardarHorariosBarberoBase(
 
     for (const d of diasFiltrados) {
       if (!d.trabaja) continue;
-      if (!d.desde || !d.hasta) {
-        return { success: false, error: "Completá las horas de inicio y fin." };
-      }
-      if (compararHoras(d.hasta, d.desde) <= 0) {
-        return { success: false, error: "La hora de fin debe ser posterior a la de inicio." };
+      const mensajeError = validarRangosHorarios(d.rangos);
+      if (mensajeError) {
+        return { success: false, error: mensajeError };
       }
     }
 
@@ -49,41 +48,7 @@ async function guardarHorariosBarberoBase(
           where: { barberoId, diaId: d.diaId },
           select: { id: true, margenLaboralId: true },
         });
-        if (!d.trabaja) {
-          await tx.margen_laboral_barbero.deleteMany({
-            where: { barberoId, diaId: d.diaId },
-          });
-          continue;
-        }
-        const margen = await tx.margen_laboral.findFirst({
-          where: { diaId: d.diaId, desde: d.desde, hasta: d.hasta },
-          select: { id: true },
-        });
-        let margenIdElegido = margen?.id;
-        if (!margenIdElegido) {
-          margenIdElegido = (await tx.margen_laboral.create({
-            data: { diaId: d.diaId, desde: d.desde, hasta: d.hasta, estado: true },
-            select: { id: true },
-          })).id;
-        } else {
-          await tx.margen_laboral.update({ where: { id: margenIdElegido }, data: { estado: true } });
-        }
-        await tx.margen_laboral_barbero.deleteMany({
-          where: { barberoId, diaId: d.diaId, margenLaboralId: { not: margenIdElegido } },
-        });
-        const asignacionExistente = asignacionesExistentes.find(
-          (a) => a.margenLaboralId === margenIdElegido
-        );
-        if (asignacionExistente) {
-          await tx.margen_laboral_barbero.update({
-            where: { id: asignacionExistente.id },
-            data: { estado: true },
-          });
-        } else {
-          await tx.margen_laboral_barbero.create({
-            data: { barberoId, margenLaboralId: margenIdElegido, diaId: d.diaId, estado: true },
-          });
-        }
+        await sincronizarDiaBarbero(tx, barberoId, d, asignacionesExistentes);
       }
     });
 

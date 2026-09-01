@@ -3,9 +3,8 @@ import type { EstadoDiaEditor } from "@/components/horarios/TablaDiasBarbero";
 
 export const ESTADO_INICIAL_DIA: EstadoDiaEditor = {
   trabaja: false,
-  desde: "09:00",
-  hasta: "18:00",
-  rangosExtra: 0,
+  rangos: [{ desde: "09:00", hasta: "18:00" }],
+  asignacionIds: [],
 };
 
 export function construirEstado(
@@ -20,31 +19,16 @@ export function construirEstado(
       (h) => h.dia.id === dia.id && h.estado === true && h.margenLaboral,
     );
 
-    if (asignacionesActivas.length === 1) {
-      const unica = asignacionesActivas[0];
-      estado[dia.id] = {
-        trabaja: true,
-        desde: unica.margenLaboral.desde,
-        hasta: unica.margenLaboral.hasta,
-        asignacionId: unica.id,
-        rangosExtra: 0,
-      };
-    } else if (asignacionesActivas.length > 1) {
-      estado[dia.id] = {
-        trabaja: true,
-        desde: asignacionesActivas.reduce(
-          (minimo, h) => (h.margenLaboral.desde < minimo ? h.margenLaboral.desde : minimo),
-          "23:59",
-        ),
-        hasta: asignacionesActivas.reduce(
-          (maximo, h) => (h.margenLaboral.hasta > maximo ? h.margenLaboral.hasta : maximo),
-          "00:00",
-        ),
-        rangosExtra: asignacionesActivas.length - 1,
-      };
-    } else {
-      estado[dia.id] = { ...ESTADO_INICIAL_DIA };
-    }
+    estado[dia.id] =
+      asignacionesActivas.length > 0
+        ? {
+            trabaja: true,
+            rangos: asignacionesActivas
+              .map((h) => ({ desde: h.margenLaboral.desde, hasta: h.margenLaboral.hasta }))
+              .sort((a, b) => a.desde.localeCompare(b.desde)),
+            asignacionIds: asignacionesActivas.map((h) => h.id),
+          }
+        : { ...ESTADO_INICIAL_DIA };
 
     return estado;
   }, {});

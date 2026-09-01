@@ -20,12 +20,14 @@ export type DiaLaboral = Omit<
   margenes?: MargenLaboralCreado[];
 };
 
+/* Rango de horario (bloque de trabajo) de un día. */
+export type RangoHorario = { desde: string; hasta: string };
+
 /* Fila de horario por día que se envía al guardar (guardarHorariosBarbero). */
 export type HorarioDiaBarbero = {
   diaId: string;
   trabaja: boolean;
-  desde: string;
-  hasta: string;
+  rangos: RangoHorario[];
 };
 
 /* Asignación de un margen a un barbero (editor de horarios por empleado). */
