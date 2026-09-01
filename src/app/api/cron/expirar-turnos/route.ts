@@ -3,7 +3,7 @@
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ESTADOS_TURNO } from "@/lib/constants";
+import { ESTADOS_TURNO, ESTADOS_PAGO_EXPIRABLES, EXPIRACION_TURNO_PENDIENTE_MS } from "@/lib/constants";
 
 export const runtime = "nodejs";
 
@@ -46,18 +46,18 @@ export async function GET(req: NextRequest) {
       where: { expiresAt: { lt: new Date() } },
     });
 
-    // Límite: turnos creados hace más de 5 minutos
-    const limite = new Date(Date.now() - 5 * 60 * 1000);
+    // Límite: reservas temporales sin pago creadas hace más de la ventana de expiración.
+    // (Se alinea con la vigencia de la preferencia de Mercado Pago.)
+    const limite = new Date(Date.now() - EXPIRACION_TURNO_PENDIENTE_MS);
 
-    // Buscar turnos pendientes sin pago
+    // Buscar reservas temporales sin pago acreditado. Se excluye EN_ACREDITACION:
+    // un pago en proceso no debe cancelarse, puede confirmarse cuando se acredite.
     const turnosPendientes = await prisma.turno.findMany({
       where: {
         estado: ESTADOS_TURNO[0],
+        estadoPago: { in: [...ESTADOS_PAGO_EXPIRABLES] },
         createdAt: {
           lte: limite,
-        },
-        seniaCongelada: {
-          gt: 0,
         },
       },
       select: {

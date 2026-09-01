@@ -191,7 +191,7 @@ export async function POST(req: NextRequest) {
         // Pago rechazado → turno vuelve a PENDIENTE con estado de pago RECHAZADO
         await prisma.turno.update({
           where: { id: turnoId },
-          data: { estado: ESTADOS_TURNO[0], estadoPago: ESTADOS_PAGO[4] },
+          data: { estado: ESTADOS_TURNO[3], estadoPago: ESTADOS_PAGO[4] },
         });
         console.log(`❌ Pago rechazado para turno ${turnoId}`);
         break;
@@ -201,7 +201,7 @@ export async function POST(req: NextRequest) {
         // Pago cancelado → turno vuelve a PENDIENTE con estado de pago CANCELADO
         await prisma.turno.update({
           where: { id: turnoId },
-          data: { estado: ESTADOS_TURNO[0], estadoPago: ESTADOS_PAGO[5] },
+          data: { estado: ESTADOS_TURNO[3], estadoPago: ESTADOS_PAGO[5] },
         });
         console.log(`❌ Pago cancelado para turno ${turnoId}`);
         break;

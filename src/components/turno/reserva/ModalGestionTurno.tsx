@@ -56,7 +56,6 @@ export default function ModalGestionTurno({
     cargandoPago,
     errorPago,
     handlePagar,
-    handlePagarDespues,
   } = useFormularioTurno({
     session,
     initialServicios,
@@ -146,16 +145,19 @@ export default function ModalGestionTurno({
                 setEstadoPago={setEstadoPago}
               />
             </ModalBase>
+          </div>,
+          document.body,
+        )}
 
-            {!esEdicion && showPagoModal && turnoCreado && (
-              <ModalPagoTurno
-                turnoCreado={turnoCreado}
-                cargandoPago={cargandoPago}
-                errorPago={errorPago}
-                onPagar={handlePagar}
-                onPagarDespues={handlePagarDespues}
-              />
-            )}
+      {!esEdicion && showPagoModal && turnoCreado &&
+        createPortal(
+          <div style={ESTILO_TEMAS}>
+            <ModalPagoTurno
+              turnoCreado={turnoCreado}
+              cargandoPago={cargandoPago}
+              errorPago={errorPago}
+              onPagar={handlePagar}
+            />
           </div>,
           document.body,
         )}

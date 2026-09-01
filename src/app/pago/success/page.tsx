@@ -1,10 +1,11 @@
 // app/pago/success/page.tsx
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import { confirmarPagoTurno } from "@/actions/mercadopago/confirmar-pago.actions";
 import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 import RedireccionWhatsApp from "@/components/pago/RedireccionWhatsApp";
-import { CLASES_BOTON_MARCA } from "@/lib/constants";
+import { CLASES_BOTON_MARCA, ESTADOS_PAGO_ACREDITADOS } from "@/lib/constants";
 import Link from "next/link";
 import { CheckCircle2, Calendar, ArrowRight } from "lucide-react";
 
@@ -17,6 +18,62 @@ interface SearchParams {
 
 interface SuccessPageProps {
   searchParams: Promise<SearchParams>;
+}
+
+type Pagable = {
+  user: { name: string | null };
+  servicio: { nombre: string };
+  barbero: { nombre: string };
+  horarioReservado: Date;
+  precioCongelado: number;
+  seniaCongelada: number;
+  tipoPago: string | null;
+  estadoPago: string;
+};
+
+/**
+ * Si confirmarPagoTurno no devuelve datos (por ejemplo, porque Mercado Pago no
+ * incluyó el payment_id en la redirección pero el pago ya fue acreditado por el
+ * webhook), leemos el turno para igualmente poder ofrecer el comprobante por
+ * WhatsApp con los datos del turno. Solo se considera confirmado si el pago está
+ * acreditado (estado CONFIRMADO o estadoPago en ESTADOS_PAGO_ACREDITADOS).
+ */
+async function obtenerDatosTurnoParaConfirmacion(
+  turnoId: string,
+): Promise<Pagable | null> {
+  const turno = await prisma.turno.findUnique({
+    where: { id: turnoId },
+    select: {
+      estado: true,
+      estadoPago: true,
+      tipoPago: true,
+      precioCongelado: true,
+      seniaCongelada: true,
+      horarioReservado: true,
+      user: { select: { name: true } },
+      servicio: { select: { nombre: true } },
+      barbero: { select: { nombre: true } },
+    },
+  });
+
+  if (!turno) return null;
+
+  const acreditado =
+    turno.estado === "CONFIRMADO" ||
+    (ESTADOS_PAGO_ACREDITADOS as readonly string[]).includes(turno.estadoPago);
+
+  if (!acreditado) return null;
+
+  return {
+    user: { name: turno.user?.name ?? null },
+    servicio: { nombre: turno.servicio?.nombre ?? "Servicio" },
+    barbero: { nombre: turno.barbero?.nombre ?? "Barbero" },
+    horarioReservado: turno.horarioReservado,
+    precioCongelado: Number(turno.precioCongelado),
+    seniaCongelada: Number(turno.seniaCongelada),
+    tipoPago: turno.tipoPago,
+    estadoPago: turno.estadoPago,
+  };
 }
 
 export default async function PagoSuccessPage({
@@ -34,8 +91,20 @@ export default async function PagoSuccessPage({
     ? await confirmarPagoTurno(turnoId, paymentId)
     : { success: false, error: "Sin turno", data: undefined };
 
-  const turnoConfirmado = result.success === true;
-  const datosTurno = result.success ? result.data : null;
+  const datosTurno = (result.success ? result.data : null) as Pagable | null;
+
+  // Respaldo: si no pudimos confirmar pero el pago ya está acreditado (webhook),
+  // igual mostramos el comprobante por WhatsApp con los datos del turno.
+  const datosRespaldo =
+    !datosTurno && turnoId ? await obtenerDatosTurnoParaConfirmacion(turnoId) : null;
+
+  const datosFinales = datosTurno ?? datosRespaldo;
+  const turnoConfirmado = Boolean(datosFinales);
+
+  const config = await obtenerConfigCacheada();
+  const whatsappPhone = config?.whatsapp ?? "";
+
+  const esPagoTotal = datosFinales?.tipoPago === "TOTAL";
 
   const config = await obtenerConfigCacheada();
   const whatsappPhone = config?.whatsapp ?? "";
@@ -83,18 +152,18 @@ export default async function PagoSuccessPage({
         )}
 
         {/* Acciones */}
-        {turnoConfirmado && datosTurno && whatsappPhone ? (
+        {turnoConfirmado && datosFinales && whatsappPhone ? (
           <RedireccionWhatsApp
             numeroWhatsApp={whatsappPhone}
-            clienteNombre={datosTurno.user.name}
-            servicioNombre={datosTurno.servicio.nombre}
-            barberoNombre={datosTurno.barbero.nombre}
-            horarioReservado={datosTurno.horarioReservado}
-            precioTotal={datosTurno.precioCongelado}
-            señaPagada={datosTurno.seniaCongelada}
-            saldoPendiente={datosTurno.precioCongelado - datosTurno.seniaCongelada}
-            tipoPago={datosTurno.tipoPago}
-            estadoPago={datosTurno.estadoPago}
+            clienteNombre={datosFinales.user.name}
+            servicioNombre={datosFinales.servicio.nombre}
+            barberoNombre={datosFinales.barbero.nombre}
+            horarioReservado={datosFinales.horarioReservado}
+            precioTotal={datosFinales.precioCongelado}
+            señaPagada={datosFinales.seniaCongelada}
+            saldoPendiente={datosFinales.precioCongelado - datosFinales.seniaCongelada}
+            tipoPago={datosFinales.tipoPago}
+            estadoPago={datosFinales.estadoPago}
           />
         ) : (
           <div className="flex flex-col gap-3">

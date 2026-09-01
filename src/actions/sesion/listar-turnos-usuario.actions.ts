@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { requerirPropietarioOAdmin } from "@/lib/seguridad/requerir-propietario";
 import { INCLUDE_TURNO_CON_DETALLE } from "@/lib/turno-con-detalle";
+import { ESTADOS_PAGO_ACREDITADOS } from "@/lib/constants";
 
 export async function getUserTurnos(userId: string) {
   try {
@@ -11,7 +12,13 @@ export async function getUserTurnos(userId: string) {
     if (!sesionAutorizada) return [];
 
     const turnosRaw = await prisma.turno.findMany({
-      where: { userId },
+      where: {
+        userId,
+        // Solo se muestran los turnos con pago acreditado (reserva definitiva).
+        // Una reserva temporal sin pago (estadoPago PENDIENTE) NO debe aparecer
+        // en "Mis turnos" hasta que el pago se apruebe.
+        estadoPago: { in: [...ESTADOS_PAGO_ACREDITADOS] },
+      },
       orderBy: { horarioReservado: "desc" },
       include: INCLUDE_TURNO_CON_DETALLE,
     });
