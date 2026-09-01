@@ -115,7 +115,9 @@ export function TablaDiasBarbero({
                       )}
                     </div>
                   ) : (
-                    <span className="text-[var(--admin-texto-muted)]">—</span>
+                    <span className="inline-flex rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-2.5 py-1 text-xs text-[var(--admin-texto-muted)]">
+                      No trabaja este día
+                    </span>
                   )}
                 </td>
                 <td className="px-4 py-3 align-middle">
@@ -129,7 +131,9 @@ export function TablaDiasBarbero({
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   ) : (
-                    <span className="text-[var(--admin-texto-muted)]">—</span>
+                    <span className="text-xs text-[var(--admin-texto-muted)]">
+                      Sin horario guardado
+                    </span>
                   )}
                 </td>
               </tr>

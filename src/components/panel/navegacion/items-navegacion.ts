@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   Users,
   Scissors,
-  ClipboardList,
   CreditCard,
   Calendar,
   Settings,
@@ -50,7 +49,6 @@ export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
   {
     titulo: "Operación",
     items: [
-      { titulo: "Excepciones", href: "/admin/excepcionesLaborales", icono: ClipboardList },
       { titulo: "Mercado Pago", href: "/admin/mercadopago", icono: CreditCard },
       { titulo: "Turnos", href: "/admin/turno", icono: Calendar },
     ],
@@ -75,6 +73,11 @@ export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
             titulo: "Horarios",
             href: "/admin/config/empleados/horarios-laborales",
             icono: Clock,
+          },
+          {
+            titulo: "Feriados y excepciones",
+            href: "/admin/config/empleados/horarios-laborales/excepciones",
+            icono: Calendar,
           },
         ],
       },

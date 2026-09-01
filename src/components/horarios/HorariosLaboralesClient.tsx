@@ -2,14 +2,12 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Clock, Save } from "lucide-react";
-import { Button } from "@/components/ui/button/Button";
+import { Clock } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
-import SelectorEmpleado from "@/components/horarios/SelectorEmpleado";
-import CopiarHorario from "@/components/horarios/CopiarHorario";
+import { EditorHorarios } from "@/components/horarios/EditorHorarios";
 import EncabezadoHorarios from "@/components/horarios/EncabezadoHorarios";
-import { TablaDiasBarbero, type EstadoDiaEditor } from "@/components/horarios/TablaDiasBarbero";
+import type { EstadoDiaEditor } from "@/components/horarios/TablaDiasBarbero";
 import { construirEstado, ESTADO_INICIAL_DIA } from "@/components/horarios/construir-estado-dias";
 import { estadoDesdeDiasGuardados } from "@/components/horarios/estado-desde-dias-guardados";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
@@ -28,18 +26,14 @@ export function HorariosLaboralesClient({ diasLaborales, barberos }: Props) {
   const router = useRouter();
   const [pendiente, startTransition] = useTransition();
   const [barberoId, setBarberoId] = useState(() => barberos[0]?.id ?? "");
-  const [valores, setValores] = useState<Record<string, EstadoDiaEditor>>(() =>
-    construirEstado(barberos, diasLaborales, barberos[0]?.id ?? ""),
-  );
+  const [valores, setValores] = useState<Record<string, EstadoDiaEditor>>(() => construirEstado(barberos, diasLaborales, barberos[0]?.id ?? ""));
   const [eliminarDia, setEliminarDia] = useState<{ diaId: string; asignacionIds: string[] } | null>(null);
 
   const tarjetaRef = useRef<HTMLElement | null>(null);
   const diaAEliminarRef = useRef<string | null>(null);
   const diasGuardadosRef = useRef<HorarioDiaBarbero[]>([]);
 
-  const diasTabla = diasLaborales.map((dia) => ({
-    diaId: dia.id, dia: dia.dia, nombre: DIAS_SEMANA[dia.dia] ?? "",
-  }));
+  const diasTabla = diasLaborales.map((dia) => ({ diaId: dia.id, dia: dia.dia, nombre: DIAS_SEMANA[dia.dia] ?? "" }));
   const destinos = barberos.filter((b) => b.id !== barberoId);
 
   const { retroalimentar: retroalimentarGuardado } = useRetroalimentacionAccion({
@@ -173,61 +167,24 @@ export function HorariosLaboralesClient({ diasLaborales, barberos }: Props) {
           mensaje="Creá un barbero en el panel para poder asignarle horarios."
         />
       ) : (
-        <section
-          ref={tarjetaRef}
-          className="rounded-xl bg-[var(--admin-surface)] p-6"
-          style={{ border: "1px solid var(--admin-border)" }}
-        >
-          <h2 className="text-lg font-semibold text-[var(--admin-texto-primario)]">
-            Registrar / Editar horario
-          </h2>
-          <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-            Seleccioná el empleado y configurá sus días de trabajo.
-          </p>
-
-          <div className="mt-5">
-            <SelectorEmpleado barberos={barberos} valor={barberoId} alCambiar={alCambiarBarbero} />
-          </div>
-
-          <div className="mt-5">
-            <TablaDiasBarbero
-              dias={diasTabla}
-              valores={valores}
-              alCambiar={alCambiar}
-              alAlternarTrabajo={alAlternarTrabajo}
-              alAgregarRango={alAgregarRango}
-              alQuitarRango={alQuitarRango}
-              alEliminarDia={alEliminarDia}
-            />
-          </div>
-
-          <div
-            className="flex flex-col gap-4 border-t pt-5 sm:flex-row sm:items-center sm:justify-between"
-            style={{ borderColor: "var(--admin-border)" }}
-          >
-            <CopiarHorario destinos={destinos} pendiente={pendiente} alCopiar={alCopiar} />
-
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={cancelarCambios}
-                className="text-[var(--admin-texto-muted)] hover:text-[var(--admin-texto-primario)]"
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="button"
-                disabled={pendiente || !barberoId}
-                onClick={alGuardar}
-                className="bg-[var(--page-primary)] text-[var(--page-primary-foreground)] hover:bg-[var(--page-primary-hover)]"
-              >
-                <Save className="h-4 w-4" />
-                Guardar horario
-              </Button>
-            </div>
-          </div>
-        </section>
+        <EditorHorarios
+          tarjetaRef={tarjetaRef}
+          barberos={barberos}
+          barberoId={barberoId}
+          dias={diasTabla}
+          valores={valores}
+          destinos={destinos}
+          pendiente={pendiente}
+          alCambiarBarbero={alCambiarBarbero}
+          alCambiar={alCambiar}
+          alAlternarTrabajo={alAlternarTrabajo}
+          alAgregarRango={alAgregarRango}
+          alQuitarRango={alQuitarRango}
+          alEliminarDia={alEliminarDia}
+          alCopiar={alCopiar}
+          alCancelar={cancelarCambios}
+          alGuardar={alGuardar}
+        />
       )}
 
       {eliminarDia && (

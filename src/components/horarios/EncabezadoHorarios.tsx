@@ -23,7 +23,7 @@ export default function EncabezadoHorarios({ hayEmpleados, alNuevoHorario }: Pro
         <Button
           type="button"
           onClick={alNuevoHorario}
-          className="bg-[var(--page-primary)] text-[var(--page-primary-foreground)] hover:bg-[var(--page-primary-hover)]"
+          className="bg-[var(--page-primary)] font-semibold text-[var(--page-primary-foreground)] shadow-sm hover:-translate-y-0.5 hover:bg-[var(--page-primary-hover)] hover:shadow-md active:translate-y-0"
         >
           <Plus className="h-4 w-4" />
           Nuevo horario

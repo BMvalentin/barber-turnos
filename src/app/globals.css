@@ -159,3 +159,41 @@ button:not(:disabled),
   background: var(--page-primary);
   border-radius: 10px;
 }
+
+@keyframes deslizar-barberia {
+  to {
+    background-position: 0 5rem;
+  }
+}
+
+.barra-barberia {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--page-primary) 0 1rem,
+    var(--page-bg-foreground) 1rem 2rem
+  );
+  background-size: 100% 5rem;
+  animation: deslizar-barberia 4s linear infinite;
+}
+
+.numero-error {
+  text-shadow: 0 0 42px var(--page-primary-30);
+}
+
+body:has([data-pagina-no-encontrada]) footer {
+  display: none;
+}
+
+body:has([data-pagina-no-encontrada]) {
+  scrollbar-width: none;
+}
+
+body:has([data-pagina-no-encontrada])::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barra-barberia {
+    animation: none;
+  }
+}

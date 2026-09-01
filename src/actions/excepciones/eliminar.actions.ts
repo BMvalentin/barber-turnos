@@ -22,7 +22,7 @@ async function softDeleteExcepcionBase(
       },
     });
 
-    revalidatePath("/excepcionesLaborales");
+    revalidatePath("/admin/config/empleados/horarios-laborales/excepciones");
 
   } catch (error) {
     console.error("Error al desactivar excepción:", error);

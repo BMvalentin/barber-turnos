@@ -45,20 +45,25 @@ export default function CopiarHorario({ destinos, pendiente, alCopiar }: Props) 
 
   return (
     <div className="relative" ref={contenedorRef}>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={() => setAbierto((v) => !v)}
-        className="text-[var(--admin-texto-secundario)]"
-      >
-        <Copy className="h-4 w-4" />
-        Copiar horario a otro
-      </Button>
+      <div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setAbierto((v) => !v)}
+          className="border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] font-medium text-[var(--admin-texto-primario)] shadow-sm hover:border-[var(--page-primary-40)] hover:bg-[var(--page-primary-15)]"
+        >
+          <Copy className="h-4 w-4 text-[var(--page-primary-tinta)]" />
+          Copiar horario a otro
+        </Button>
+        <p className="mt-1 max-w-xs text-xs leading-5 text-[var(--admin-texto-muted)]">
+          Duplicá esta configuración en otro empleado para ahorrar tiempo.
+        </p>
+      </div>
 
       {abierto && (
         <div
-          className="absolute bottom-full left-0 z-50 mb-2 w-full rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-3 shadow-xl sm:w-80"
+          className="absolute bottom-full left-0 z-50 mb-2 w-full rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-3 shadow-xl sm:w-80"
         >
           <div className="flex items-center gap-2">
             <select
@@ -82,7 +87,7 @@ export default function CopiarHorario({ destinos, pendiente, alCopiar }: Props) 
               size="sm"
               disabled={!barberoId || pendiente}
               onClick={ejecutarCopia}
-              className="bg-[var(--page-primary)] text-[var(--page-primary-foreground)] hover:bg-[var(--page-primary-hover)]"
+              className="bg-[var(--page-primary)] font-semibold text-[var(--page-primary-foreground)] shadow-sm hover:bg-[var(--page-primary-hover)]"
             >
               Copiar
             </Button>

@@ -53,7 +53,7 @@ async function createExcepcionBase(
       },
     });
 
-    revalidatePath("/excepcionesLaborales");
+    revalidatePath("/admin/config/empleados/horarios-laborales/excepciones");
 
     return { success: true };
 
