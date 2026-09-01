@@ -4,36 +4,19 @@ import { crearPreferenciaPago } from "@/actions/mercadopago/crear-preferencia.ac
 import { useState } from "react";
 import type { TurnoCreado } from "@/types/turno";
 import type { TipoPago } from "@/types/mercadopago";
-import { formatearFechaHora } from "@/lib/utils/formatear-fecha-hora";
 
 export type ParametrosPagoTurno = {
   whatsappPhone: string;
 };
 
 export function usePagoTurno({ whatsappPhone }: ParametrosPagoTurno) {
+  // El envío de WhatsApp al barbero ocurre en /pago/success (RedireccionWhatsApp).
+  // Se conserva el parámetro por compatibilidad con la cadena de Props existente.
+  void whatsappPhone;
   const [turnoCreado, setTurnoCreado] = useState<TurnoCreado | null>(null);
   const [showPagoModal, setShowPagoModal] = useState(false);
   const [cargandoPago, setCargandoPago] = useState(false);
   const [errorPago, setErrorPago] = useState<string | null>(null);
-
-  const enviarMensajeWhatsApp = (
-    turno: TurnoCreado,
-    servicioNombre: string,
-    barberoNombre: string,
-    fecha: Date | string,
-    estado: "Pagado" | "Pendiente de pago",
-  ) => {
-    const fechaFormateada = formatearFechaHora(fecha);
-
-    const mensaje = `Hola! Confirmé mi turno:
-    📅 Fecha: ${fechaFormateada}
-    ✂️ Servicio: ${servicioNombre}
-    💈 Barbero: ${barberoNombre}
-    Estado: ${estado}`;
-
-    const url = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(mensaje)}`;
-    window.open(url, "_blank");
-  };
 
   const handlePagar = async (tipoPago: TipoPago) => {
     if (!turnoCreado) return;
@@ -58,19 +41,6 @@ export function usePagoTurno({ whatsappPhone }: ParametrosPagoTurno) {
     }
   };
 
-  const handlePagarDespues = () => {
-    enviarMensajeWhatsApp(
-      turnoCreado!,
-      turnoCreado?.servicioNombre || "N/A",
-      turnoCreado?.barberoNombre || "N/A",
-      turnoCreado?.horarioReservado || new Date(),
-      "Pendiente de pago",
-    );
-    setShowPagoModal(false);
-    setTurnoCreado(null);
-    setErrorPago(null);
-  };
-
   return {
     turnoCreado,
     setTurnoCreado,
@@ -79,6 +49,5 @@ export function usePagoTurno({ whatsappPhone }: ParametrosPagoTurno) {
     cargandoPago,
     errorPago,
     handlePagar,
-    handlePagarDespues,
   };
 }

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, Clock, CreditCard, Loader2, Scissors, Wallet } from "lucide-react";
+import { CheckCircle2, CreditCard, Loader2, Scissors, Wallet } from "lucide-react";
 import type { TurnoCreado } from "@/types/turno";
 import type { TipoPago } from "@/types/mercadopago";
 import { formatearMoneda } from "@/lib/utils/formatear-moneda";
@@ -13,7 +13,6 @@ type Props = {
   cargandoPago: boolean;
   errorPago: string | null;
   onPagar: (tipoPago: TipoPago) => void;
-  onPagarDespues: () => void;
 };
 
 export default function ModalPagoTurno({
@@ -21,7 +20,6 @@ export default function ModalPagoTurno({
   cargandoPago,
   errorPago,
   onPagar,
-  onPagarDespues,
 }: Props) {
   useEffect(() => {
     if (errorPago) {
@@ -112,16 +110,6 @@ export default function ModalPagoTurno({
           >
             <Wallet className="w-5 h-5" />
             Pagar Total · ${formatearMoneda(total)}
-          </button>
-
-          <button
-            id="btn-pagar-despues"
-            onClick={onPagarDespues}
-            disabled={cargandoPago}
-            className="w-full flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-300 font-medium py-3 rounded-xl transition-all text-sm"
-          >
-            <Clock className="w-4 h-4" />
-            Pagar después (dejar pendiente)
           </button>
         </div>
     </ModalBase>

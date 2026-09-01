@@ -25,6 +25,27 @@ export const ESTADOS_PAGO = [
    el selector del admin y la acción de creación usan SOLO estos. */
 export const ESTADOS_PAGO_MANUALES = ["PENDIENTE", "SEÑADO", "PAGADO"] as const;
 
+/* Estados de pago ACREDITADOS (pago confirmado): marcan que el turno es una reserva
+   definitiva. Un turno solo debe mostrarse en "Mis turnos" si su estadoPago está acá. */
+export const ESTADOS_PAGO_ACREDITADOS = ["SEÑADO", "PAGADO", "APROBADO"] as const;
+
+/* Estados de pago NO acreditados que representan una reserva temporal sin pago
+   (o un pago fallido): candidatos a expirar/cancelar y que NO cuentan como reserva. */
+export const ESTADOS_PAGO_EXPIRABLES = ["PENDIENTE", "RECHAZADO", "CANCELADO"] as const;
+
+/* Ventana de vigencia de una reserva temporal sin pago. Alineada con la expiración
+   de la preferencia de Mercado Pago (30 min): antes de ese límite el pago aún puede
+   confirmar el turno; pasado el límite la reserva se libera y deja de bloquear el slot. */
+export const EXPIRACION_TURNO_PENDIENTE_MS = 30 * 60 * 1000;
+
+/* --- Semántica de estados de turno (NO confundir reserva temporal con confirmada) ---
+   - Reserva temporal (impaga / en tránsito): estado = PENDIENTE, estadoPago en
+     [PENDIENTE, RECHAZADO, CANCELADO, EN_ACREDITACION]. NO se muestra en "Mis turnos",
+     NO es reserva definitiva y expira a los EXPIRACION_TURNO_PENDIENTE_MS.
+   - Reserva confirmada: estado = CONFIRMADO (o COMPLETADO), estadoPago en
+     [SEÑADO, PAGADO, APROBADO]. Solo un pago acreditado la produce.
+*/
+
 /* Tipos de pago de Mercado Pago (seña o valor total del servicio). */
 export const TIPOS_PAGO = ["SEÑA", "TOTAL"] as const;
 
