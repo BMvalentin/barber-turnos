@@ -106,6 +106,11 @@ export default async function PagoSuccessPage({
 
   const esPagoTotal = datosFinales?.tipoPago === "TOTAL";
 
+  const config = await obtenerConfigCacheada();
+  const whatsappPhone = config?.whatsapp ?? "";
+
+  const esPagoTotal = datosTurno?.tipoPago === "TOTAL";
+
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center space-y-6">
