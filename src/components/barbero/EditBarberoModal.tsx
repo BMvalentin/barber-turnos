@@ -120,9 +120,11 @@ export default function EditBarberoModal({
       titulo="Editar Barbero"
       maxWidth="max-w-2xl"
       overlayClase="bg-black/80 backdrop-blur-md p-4"
-      contenedorClase="max-h-[90vh] overflow-y-auto bg-[var(--admin-surface)] rounded-xl p-6 space-y-6 border border-[var(--page-primary)]"
-      headerClase="flex justify-between items-center border-b pb-4 border-[var(--page-primary-40)]"
-      tituloClase="text-2xl font-bold text-[var(--admin-texto-primario)]"
+      contenedorClase="max-h-[90vh] overflow-y-auto bg-[var(--admin-surface)] rounded-xl p-6 space-y-6 border"
+      headerClase="flex justify-between items-center border-b pb-4"
+      tituloClase="text-2xl font-semibold text-[var(--admin-texto-primario)]"
+      estiloHeader={{ borderColor: "var(--admin-border)" }}
+      animado
     >
       <div className="space-y-4">
           <CampoNombreBarbero
@@ -166,23 +168,27 @@ export default function EditBarberoModal({
               )
             }
           />
-          <label className="flex items-center gap-2 text-sm font-medium text-[var(--admin-texto-primario)]">
+          <label className="flex cursor-pointer items-center justify-between gap-4 border-t rounded-lg pt-4 text-sm font-medium text-[var(--admin-texto-primario)] transition-colors hover:bg-[var(--admin-item-hover)] focus-within:ring-2 focus-within:ring-[var(--page-focus-ring)]" style={{ borderColor: "var(--admin-border)" }}>
+            <span><span className="block">Barbero activo</span><span className="mt-1 block text-xs font-normal text-[var(--admin-texto-muted)]">Los clientes podrán reservar turnos con este barbero.</span></span>
             <input
               type="checkbox"
               checked={estado}
               onChange={(e) => setEstado(e.target.checked)}
+              aria-label="Barbero activo"
+              role="switch"
+              className="peer sr-only"
             />
-            Barbero Activo
+            <span aria-hidden="true" className="relative h-6 w-11 shrink-0 rounded-full border bg-[var(--admin-item)] transition-colors duration-200 peer-checked:border-[var(--page-primary)] peer-checked:bg-[var(--page-primary)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--page-focus-ring)]" style={{ borderColor: "var(--admin-border-fuerte)" }}><span className="absolute left-1 top-1 h-4 w-4 rounded-full bg-[var(--admin-texto-primario)] transition-transform duration-200 peer-checked:translate-x-5 peer-checked:bg-[var(--page-primary-foreground)]" /></span>
           </label>
         </div>
-        <div className="flex gap-3 pt-4 border-t" style={{ borderColor: `var(--page-primary-40)` }}>
+        <div className="flex justify-end gap-3 pt-4 border-t" style={{ borderColor: "var(--admin-border)" }}>
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
-            className="flex-1 bg-transparent text-[var(--admin-texto-primario)] hover:bg-white/5"
+            className="bg-transparent text-[var(--admin-texto-primario)] hover:bg-[var(--admin-item)]"
             style={{
-              borderColor: `var(--page-primary-60)`,
+              borderColor: "var(--admin-border-fuerte)",
               borderWidth: "1px",
               borderStyle: "solid",
             }}
@@ -194,7 +200,7 @@ export default function EditBarberoModal({
             tipo="button"
             texto="Guardar Cambios"
             onClic={handleSubmit}
-            claseAdicional="flex-1 hover:opacity-90"
+            claseAdicional="hover:opacity-90"
           />
         </div>
     </ModalBase>

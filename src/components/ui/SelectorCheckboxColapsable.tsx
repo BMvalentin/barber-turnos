@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 type OpcionCheckbox = {
   valor: string;
@@ -59,7 +60,8 @@ export default function SelectorCheckboxColapsable({
       <button
         type="button"
         onClick={onAlternarAbierto}
-        className="w-full flex items-center justify-between p-3 bg-[var(--admin-surface-elevated)] rounded-lg transition border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
+        aria-expanded={abierto}
+        className="w-full cursor-pointer flex items-center justify-between p-3 bg-[var(--admin-surface-elevated)] rounded-lg transition border hover:bg-[var(--admin-item)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
         style={{ borderColor: "var(--admin-border)" }}
       >
         <div className="flex flex-col items-start">
@@ -71,19 +73,22 @@ export default function SelectorCheckboxColapsable({
           </span>
         </div>
 
-        {abierto ? (
-          <ChevronUp className="h-4 w-4" style={{ color: "var(--page-primary-tinta)" }} />
-        ) : (
+        <motion.span animate={{ rotate: abierto ? 180 : 0 }} transition={{ duration: 0.18 }}>
           <ChevronDown className="h-4 w-4" style={{ color: "var(--page-primary-tinta)" }} />
-        )}
+        </motion.span>
       </button>
 
+      <AnimatePresence initial={false}>
       {abierto && (
-        <div
+        <motion.div
           className={`p-4 bg-[var(--admin-surface-elevated)] rounded-lg ${
             grupos ? "space-y-4" : "space-y-2"
           } ${maxAltura} overflow-y-auto border`}
           style={{ borderColor: "var(--admin-border)" }}
+          initial={{ opacity: 0, height: 0, y: -6 }}
+          animate={{ opacity: 1, height: "auto", y: 0 }}
+          exit={{ opacity: 0, height: 0, y: -6 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
         >
           {seleccionados.length === 0 && (
             <p className="text-xs italic" style={{ color: "var(--page-primary-tinta)" }}>
@@ -107,8 +112,9 @@ export default function SelectorCheckboxColapsable({
           {!grupos && mensajeSinOpciones && opciones.length === 0 && (
             <p className="text-xs text-red-400">{mensajeSinOpciones}</p>
           )}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }

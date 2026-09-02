@@ -1,6 +1,7 @@
 import { Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button/Button";
-import { MAX_RANGOS_POR_DIA, type EstadoDiaEditor } from "@/components/horarios/TablaDiasBarbero";
+import { MAX_RANGOS_POR_DIA } from "@/components/horarios/constantes-horarios";
+import type { EstadoDiaEditor } from "@/components/horarios/TablaDiasBarbero";
 
 type Dia = {
   diaId: string;
@@ -72,7 +73,7 @@ export function TarjetasDiasBarbero({
                           type="time"
                           value={rango.desde}
                           onChange={(evento) => alCambiar(dia.diaId, indice, "desde", evento.target.value)}
-                          className="min-w-0 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-3 py-2.5 text-sm text-[var(--admin-texto-primario)] focus:border-[var(--page-primary-50)] focus:outline-none focus:ring-2 focus:ring-[var(--page-focus-ring)]"
+                          className="w-full min-w-0 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-3 py-2.5 text-sm text-[var(--admin-texto-primario)] focus:border-[var(--page-primary-50)] focus:outline-none focus:ring-2 focus:ring-[var(--page-focus-ring)]"
                         />
                       </label>
                       <label className="grid gap-1.5 text-xs text-[var(--admin-texto-muted)]">
@@ -81,7 +82,7 @@ export function TarjetasDiasBarbero({
                           type="time"
                           value={rango.hasta}
                           onChange={(evento) => alCambiar(dia.diaId, indice, "hasta", evento.target.value)}
-                          className="min-w-0 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-3 py-2.5 text-sm text-[var(--admin-texto-primario)] focus:border-[var(--page-primary-50)] focus:outline-none focus:ring-2 focus:ring-[var(--page-focus-ring)]"
+                          className="w-full min-w-0 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-3 py-2.5 text-sm text-[var(--admin-texto-primario)] focus:border-[var(--page-primary-50)] focus:outline-none focus:ring-2 focus:ring-[var(--page-focus-ring)]"
                         />
                       </label>
                     </div>

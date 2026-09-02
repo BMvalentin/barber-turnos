@@ -2,6 +2,8 @@
 
 import { Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button/Button";
+import { MAX_RANGOS_POR_DIA } from "@/components/horarios/constantes-horarios";
+import { TarjetasDiasBarbero } from "@/components/horarios/TarjetasDiasBarbero";
 import type { RangoHorario } from "@/types/horarios";
 
 export type EstadoDiaEditor = {
@@ -9,8 +11,6 @@ export type EstadoDiaEditor = {
   rangos: RangoHorario[];
   asignacionIds: string[];
 };
-
-export const MAX_RANGOS_POR_DIA = 4;
 
 type Props = {
   dias: { diaId: string; dia: number; nombre: string }[];
@@ -38,17 +38,27 @@ export function TablaDiasBarbero({
   alEliminarDia,
 }: Props) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[640px] text-left text-sm">
-        <thead>
-          <tr className="bg-[var(--admin-surface-elevated)]">
-            <th className={CLASE_ENCABEZADO}>Día</th>
-            <th className={CLASE_ENCABEZADO}>¿Trabaja?</th>
-            <th className={CLASE_ENCABEZADO}>Rangos de horario</th>
-            <th className={CLASE_ENCABEZADO}>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
+    <>
+      <TarjetasDiasBarbero
+        dias={dias}
+        valores={valores}
+        alCambiar={alCambiar}
+        alAlternarTrabajo={alAlternarTrabajo}
+        alAgregarRango={alAgregarRango}
+        alQuitarRango={alQuitarRango}
+        alEliminarDia={alEliminarDia}
+      />
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full min-w-[640px] text-left text-sm">
+          <thead>
+            <tr className="bg-[var(--admin-surface-elevated)]">
+              <th className={CLASE_ENCABEZADO}>Día</th>
+              <th className={CLASE_ENCABEZADO}>¿Trabaja?</th>
+              <th className={CLASE_ENCABEZADO}>Rangos de horario</th>
+              <th className={CLASE_ENCABEZADO}>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
           {dias.map((dia) => {
             const estado = valores[dia.diaId];
             const trabaja = estado?.trabaja ?? false;
@@ -139,8 +149,9 @@ export function TablaDiasBarbero({
               </tr>
             );
           })}
-        </tbody>
-      </table>
-    </div>
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
