@@ -42,7 +42,7 @@ export async function crearLockSlot(
     revalidateTag(`locks-${barberoId}-${obtenerFechaSola(horarioReservado)}`);
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false, error: "Error interno" };
   }
 }

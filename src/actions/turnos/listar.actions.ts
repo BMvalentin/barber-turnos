@@ -61,7 +61,7 @@ export async function getTurnos(page: number = 1, estadoFiltro?: string, fechaFi
       currentPage: page
     };
 
-  } catch (error) {
+  } catch {
     return { success: false, error: "Error al obtener turnos" };
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
+import Image from "next/image";
 import type { PropsTarjetaBarberoReserva } from "@/components/turno/reserva/tipos";
 import { cn } from "@/lib/utils/cn";
 
@@ -31,7 +32,7 @@ export default function TarjetaBarberoReserva({
         )}
       >
         {barbero.srcImage ? (
-          <img src={barbero.srcImage} alt={barbero.nombre} className="h-full w-full object-cover" />
+          <Image src={barbero.srcImage} alt={barbero.nombre} width={56} height={56} className="h-full w-full object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-[var(--page-primary-30)] text-xl font-bold text-[var(--admin-texto-primario)]">
             {inicial}

@@ -30,7 +30,7 @@ export function LocationSection({ config }: LocationSectionProps) {
           setHorarios(["Cerrado"]);
         }
       });
-    } catch (error) {
+    } catch {
       setHorarios(["Error al cargar horarios"]);
     } finally {
       setCargando(false);

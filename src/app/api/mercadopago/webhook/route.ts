@@ -231,6 +231,6 @@ export async function POST(req: NextRequest) {
 }
 
 // MP también puede enviar GET para validar la URL
-export async function GET(req: NextRequest) {
+export async function GET() {
   return NextResponse.json({ status: "MP Webhook activo" }, { status: 200 });
 }

@@ -45,7 +45,7 @@ export async function obtenerDiasConTurnos(
 
     const dias = Array.from(new Set(turnos.map((t) => obtenerFechaSola(t.horarioReservado))));
     return { success: true, data: dias };
-  } catch (error) {
+  } catch {
     return { success: false, error: "Error al obtener los días con turnos" };
   }
 }

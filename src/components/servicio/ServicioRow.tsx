@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Clock, Scissors, SquarePen, Trash2 } from "lucide-react";
+import Image from "next/image";
 import EditServicioModal from "./EditServicioModal";
 import type { Servicio } from "@/types/servicio";
 
@@ -25,9 +26,11 @@ export default function ServicioRow({
             style={{ color: "var(--page-primary-tinta)" }}
           >
             {servicio.srcImage ? (
-              <img
+              <Image
                 src={servicio.srcImage}
                 alt={servicio.nombre}
+                width={40}
+                height={40}
                 className="w-full h-full object-cover rounded-lg"
                 onError={(e) => {
                   e.currentTarget.style.display = "none";

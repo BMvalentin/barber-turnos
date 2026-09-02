@@ -23,7 +23,7 @@ export type Servicio = {
 
 /* Servicio creado o actualizado (createServicio, actualizarServicio), con montos en Number. */
 export type ServicioCreado = Omit<
-  Prisma.servicioGetPayload<{}>,
+  Prisma.servicioGetPayload<Prisma.servicioDefaultArgs>,
   "precio" | "descuento" | "senia"
 > & { precio: number; descuento: number; senia: number };
 
