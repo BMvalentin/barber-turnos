@@ -56,7 +56,10 @@ export type TurnoConDetalle = Omit<
   seniaCongelada: number;
   /* El servicio se serializa con montos numéricos: los Decimal de Prisma
      no pueden viajar de Server a Client Components. */
-  servicio: Omit<Prisma.servicioGetPayload<{}>, "precio" | "senia" | "descuento"> & {
+  servicio: Omit<
+    Prisma.servicioGetPayload<Prisma.servicioDefaultArgs>,
+    "precio" | "senia" | "descuento"
+  > & {
     precio: number;
     senia: number;
     descuento: number;
@@ -77,7 +80,7 @@ export type TurnoPagoConfirmado = Omit<
 
 /* Turno sin relaciones (completedTurno). */
 export type TurnoResumen = Omit<
-  Prisma.turnoGetPayload<{}>,
+  Prisma.turnoGetPayload<Prisma.turnoDefaultArgs>,
   "precioCongelado" | "seniaCongelada"
 > & { precioCongelado: number; seniaCongelada: number };
 

@@ -22,7 +22,7 @@ export async function renovarLockSlot(
     });
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false, error: "Error interno" };
   }
 }

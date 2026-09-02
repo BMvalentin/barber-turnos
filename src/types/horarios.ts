@@ -3,11 +3,12 @@
 import type { Prisma } from "../../generated/prisma/client";
 
 /* Margen laboral creado o actualizado (createMargenLaboral, updateMargenLaboral). */
-export type MargenLaboralCreado = Prisma.margen_laboralGetPayload<{}>;
+export type MargenLaboralCreado =
+  Prisma.margen_laboralGetPayload<Prisma.margen_laboralDefaultArgs>;
 
 /* Día laboral creado o actualizado, con el día normalizado a número. */
 export type DiaLaboralCreado = Omit<
-  Prisma.dia_laboralGetPayload<{}>,
+  Prisma.dia_laboralGetPayload<Prisma.dia_laboralDefaultArgs>,
   "dia"
 > & { dia: number };
 

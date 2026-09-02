@@ -10,7 +10,7 @@ export async function requerirSesion(): Promise<Session | null> {
     const session = await auth();
     if (!session?.user?.id) return null;
     return session;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

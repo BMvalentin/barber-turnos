@@ -59,7 +59,7 @@ export type BarberoEdicion = {
 
 /* Servicio anidado en getBarberos, con montos convertidos a Number. */
 type ServicioBarbero = Omit<
-  Prisma.servicioGetPayload<{}>,
+  Prisma.servicioGetPayload<Prisma.servicioDefaultArgs>,
   "precio" | "senia" | "descuento"
 > & {
   precio: number | null;

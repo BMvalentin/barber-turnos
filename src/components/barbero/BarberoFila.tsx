@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { MoreHorizontal, Pencil, UserRound } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { deleteBarbero } from "@/actions/barberos/eliminar.actions";
 import EditBarberoModal from "@/components/barbero/EditBarberoModal";
@@ -54,7 +55,7 @@ export default function BarberoFila({ barbero, servicios, diasLaborales, menuAbi
   return <>
     <article className="relative border-b px-4 py-4 transition-colors hover:bg-[var(--admin-item-hover)] last:border-b-0 lg:grid lg:min-h-[104px] lg:grid-cols-[minmax(220px,1.5fr)_minmax(170px,1fr)_minmax(150px,0.8fr)_110px_120px] lg:items-center lg:gap-5 lg:px-6" style={{ borderColor: "var(--admin-border)" }}>
       <div className="flex min-w-0 items-center gap-3">
-        {barbero.srcImage ? <img src={barbero.srcImage} alt="" className="h-14 w-14 shrink-0 rounded-full object-cover" /> : <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[var(--admin-item)] text-[var(--admin-texto-muted)]"><UserRound className="h-6 w-6" /></span>}
+        {barbero.srcImage ? <Image src={barbero.srcImage} alt="" width={56} height={56} className="h-14 w-14 shrink-0 rounded-full object-cover" /> : <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[var(--admin-item)] text-[var(--admin-texto-muted)]"><UserRound className="h-6 w-6" /></span>}
         <div className="min-w-0"><p className="truncate font-semibold text-[var(--admin-texto-primario)]">{barbero.nombre}</p><p className="mt-0.5 truncate text-sm text-[var(--admin-texto-muted)]">{barbero.email || "Sin email"}</p></div>
         <EstadoBarbero estado={barbero.estado} clase="ml-auto lg:hidden" />
       </div>

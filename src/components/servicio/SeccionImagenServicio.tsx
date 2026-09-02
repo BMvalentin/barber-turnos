@@ -1,6 +1,7 @@
 "use client";
 
 import { Upload, X } from "lucide-react";
+import Image from "next/image";
 import SelectorImagenConRecorte from "@/components/ui/imagenes/SelectorImagenConRecorte";
 
 type SeccionImagenServicioProps = {
@@ -38,9 +39,11 @@ export default function SeccionImagenServicio({
 
       {previewUrl || srcImage ? (
         <div className={esBarbero ? "flex items-center gap-4" : "relative w-fit"}>
-          <img
+          <Image
             src={previewUrl || srcImage}
             alt="Vista previa"
+            width={esBarbero ? 80 : 128}
+            height={esBarbero ? 80 : 128}
             className={esBarbero ? "h-20 w-20 rounded-full border object-cover" : "h-32 w-32 object-cover rounded-lg border"}
             style={{ borderColor: esBarbero ? "var(--admin-border-fuerte)" : "var(--admin-border)" }}
           />
