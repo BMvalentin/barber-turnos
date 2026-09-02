@@ -26,7 +26,6 @@ export function useSlotLocks({
   barberoId,
   fecha,
   sessionId,
-  userId: _userId,
   activo = true,
 }: UseSlotLocksOptions) {
   const [slotsBlockeados, setSlotsBlockeados] = useState<SlotLockEntry[]>([]);

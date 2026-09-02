@@ -61,7 +61,7 @@ export default function MenuAccionesTurno({
         aria-label="Más acciones"
         aria-expanded={abierto}
         onClick={() => setAbierto((prev) => !prev)}
-        className={`h-8 w-8 rounded-lg flex items-center justify-center text-[var(--admin-texto-muted)] hover:bg-white/5 hover:text-[var(--admin-texto-primario)] transition-colors ${
+        className={`h-8 w-8 rounded-lg flex items-center justify-center text-[var(--admin-texto-muted)] hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)] transition-colors ${
           abierto ? "bg-white/5 text-[var(--admin-texto-primario)]" : ""
         }`}
       >
@@ -77,7 +77,7 @@ export default function MenuAccionesTurno({
           session={session}
           turnoInicial={turno}
           whatsappPhone=""
-          claseTrigger="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[var(--admin-texto-primario)] hover:bg-white/5 transition-colors"
+          claseTrigger="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[var(--admin-texto-primario)] hover:bg-[var(--admin-item-hover)] transition-colors"
           contenidoTrigger={
             <>
               <Pencil className="h-4 w-4" />

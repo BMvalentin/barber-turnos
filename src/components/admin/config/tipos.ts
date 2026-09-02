@@ -9,7 +9,7 @@ export type ManejarCambio = (
 ) => void;
 
 export type ManejarArchivo = (
-    e: React.ChangeEvent<HTMLInputElement>,
+    archivo: File,
     campo: NombreCampoImagen
 ) => void;
 

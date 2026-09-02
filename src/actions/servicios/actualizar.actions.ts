@@ -78,7 +78,7 @@ const actualizarServicioBase = async (
       },
     });
 
-    revalidarServicios();
+    revalidarServicios(servicioActualizado.id);
 
     return {
       success: true,

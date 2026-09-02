@@ -53,7 +53,7 @@ async function createBarberoBase(data: unknown): Promise<ActionState> {
     revalidarBarberos();
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false, error: "Error al crear barbero" };
   }
 }

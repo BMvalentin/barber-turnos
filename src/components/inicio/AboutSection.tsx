@@ -33,7 +33,7 @@ export function AboutSection() {
             className="bg-[var(--admin-surface)] rounded-[2rem] border border-[var(--page-bg-foreground)]/10 px-6 py-10 md:p-10 shadow-2xl relative overflow-hidden group"
           >
             {/* Brillo sutil de fondo */}
-            <div className="absolute -inset-2 bg-gradient-to-r from-[var(--page-primary)]/10 to-zinc-600/10 rounded-full blur-2xl opacity-50 group-hover:opacity-100 transition duration-700" />
+            <div className="absolute -inset-2 bg-gradient-to-r from-[var(--page-primary)]/10 to-[var(--page-secondary)]/10 rounded-full blur-2xl opacity-50 group-hover:opacity-100 transition duration-700" />
             
             <div className="relative z-10">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--page-bg)]/80 border border-[var(--page-bg-foreground)]/5 mb-6">
@@ -70,9 +70,9 @@ export function AboutSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
-                className="flex gap-4 p-5 md:p-6 rounded-2xl bg-[var(--admin-surface)] border border-[var(--page-bg-foreground)]/5 hover:border-[var(--page-primary)]/30 hover:bg-[var(--admin-surface-elevated)] transition-all shadow-xl group"
+                className="flex gap-4 p-5 md:p-6 rounded-2xl bg-[var(--admin-surface)] border border-[var(--admin-border)] hover:border-[var(--admin-border-fuerte)] hover:bg-[var(--admin-surface-elevated)] transition-all shadow-xl group"
               >
-                <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-[var(--page-bg)] border border-[var(--page-bg-foreground)]/10 flex items-center justify-center group-hover:border-[var(--page-primary)]/30 transition-colors">
+                <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-[var(--page-bg)] border border-[var(--admin-border)] flex items-center justify-center group-hover:border-[var(--admin-border-fuerte)] transition-colors">
                   <feature.icon className="w-6 h-6 text-[var(--page-primary-tinta)]" />
                 </div>
                 <div>

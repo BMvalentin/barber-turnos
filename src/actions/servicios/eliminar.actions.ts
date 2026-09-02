@@ -44,7 +44,7 @@ const deleteservicioBase = async (
       },
     });
 
-    revalidarServicios();
+    revalidarServicios(id);
 
     return { success: true, data: { id } };
   } catch (error) {

@@ -1,13 +1,9 @@
 import { Suspense } from "react";
 import { obtenerEstadoConexionMP } from "@/actions/mercadopago/estado-conexion.actions";
-import { obtenerEstadoConfiguracionOAuth } from "@/actions/mercadopago/estado-oauth.actions";
 import MercadoPagoConnectionPanel from "@/components/admin/MercadoPagoConnectionPanel";
 
 export default async function PaginaConfiguracionMercadoPago() {
-  const [estadoConexion, configuracionOAuth] = await Promise.all([
-    obtenerEstadoConexionMP(),
-    obtenerEstadoConfiguracionOAuth(),
-  ]);
+  const estadoConexion = await obtenerEstadoConexionMP();
 
   return (
     <div className="space-y-8">
@@ -30,7 +26,6 @@ export default async function PaginaConfiguracionMercadoPago() {
       >
         <MercadoPagoConnectionPanel
           estadoInicial={estadoConexion}
-          configuracionOAuth={configuracionOAuth}
         />
       </Suspense>
     </div>

@@ -1,189 +1,37 @@
 "use client";
 
-import { useState } from "react";
-import EditBarberoModal from "./EditBarberoModal";
-import { deleteBarbero } from "@/actions/barberos/eliminar.actions";
-import { User } from "lucide-react";
-import { Button } from "@/components/ui/button/Button";
+import { useMemo, useState } from "react";
+import { Search, UserRound } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
-import { ESTILO_FONDO_MARCA, DIAS_SEMANA_DB } from "@/lib/constants";
-import type { BarberoListado, ServicioOpcion, DiaLaboral } from "@/types/barbero";
+import BarberoFila from "@/components/barbero/BarberoFila";
+import type { BarberoListado, DiaLaboral, ServicioOpcion } from "@/types/barbero";
 
-type HorarioBarbero = NonNullable<BarberoListado["horarios"]>[number];
+type FiltroEstado = "todos" | "activos" | "inactivos";
+type PropiedadesListaBarberos = { barberos?: BarberoListado[]; servicios?: ServicioOpcion[]; diasLaborales?: DiaLaboral[] };
 
-export default function BarberoList({
-  barberos = [],
-  servicios = [],
-  diasLaborales = [],
-}: {
-  barberos?: BarberoListado[];
-  servicios?: ServicioOpcion[];
-  diasLaborales?: DiaLaboral[];
-}) {
+export default function BarberoList({ barberos = [], servicios = [], diasLaborales = [] }: PropiedadesListaBarberos) {
+  const [busqueda, establecerBusqueda] = useState("");
+  const [filtroEstado, establecerFiltroEstado] = useState<FiltroEstado>("todos");
+  const [idMenuAbierto, establecerIdMenuAbierto] = useState<string | null>(null);
+  const barberosFiltrados = useMemo(() => {
+    const termino = busqueda.trim().toLocaleLowerCase();
+    return barberos.filter((barbero) => {
+      const coincideEstado = filtroEstado === "todos" || (filtroEstado === "activos" ? barbero.estado : !barbero.estado);
+      const coincideBusqueda = !termino || barbero.nombre?.toLocaleLowerCase().includes(termino) || barbero.email?.toLocaleLowerCase().includes(termino);
+      return coincideEstado && coincideBusqueda;
+    });
+  }, [barberos, busqueda, filtroEstado]);
 
-  if (!barberos.length) {
-    return (
-      <EmptyState
-        icono={<User />}
-        mensaje="No hay barberos disponibles"
-        claseContenedor="bg-[var(--admin-surface)] p-8 rounded-lg border"
-        estiloContenedor={{ borderColor: "var(--page-primary-30)" }}
-        claseIcono="h-16 w-16"
-        estiloIcono={{ color: "var(--page-primary-tinta)" }}
-        estiloMensaje={{ color: "var(--page-primary-tinta)" }}
-      />
-    );
-  }
+  if (!barberos.length) return <EmptyState icono={<UserRound />} mensaje="Todavía no hay barberos" claseContenedor="rounded-xl border bg-[var(--admin-surface)] p-10" estiloContenedor={{ borderColor: "var(--admin-border)" }} claseIcono="h-12 w-12" estiloIcono={{ color: "var(--page-primary-tinta)" }} estiloMensaje={{ color: "var(--admin-texto-primario)" }} />;
 
-  return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {barberos.map((b) => (
-        <BarberoCard
-          key={b.id}
-          barbero={b}
-          servicios={servicios}
-          diasLaborales={diasLaborales}
-        />
-      ))}
+  return <section className="space-y-5">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <label className="relative block w-full sm:max-w-sm"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--admin-texto-muted)]" /><input value={busqueda} onChange={(evento) => establecerBusqueda(evento.target.value)} placeholder="Buscar barbero..." aria-label="Buscar por nombre o email" className="h-10 w-full rounded-lg border bg-[var(--admin-surface)] pl-9 pr-3 text-sm text-[var(--admin-texto-primario)] placeholder:text-[var(--admin-texto-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--page-focus-ring)]" style={{ borderColor: "var(--admin-border)" }} /></label>
+      <div className="flex w-full rounded-lg border p-1 sm:w-auto" style={{ borderColor: "var(--admin-border)" }}>{(["todos", "activos", "inactivos"] as const).map((filtro) => <button key={filtro} type="button" onClick={() => establecerFiltroEstado(filtro)} className="min-h-8 flex-1 rounded-md px-3 text-xs font-medium capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] sm:flex-none" style={filtroEstado === filtro ? { backgroundColor: "var(--page-primary-20)", color: "var(--admin-texto-primario)" } : { color: "var(--admin-texto-muted)" }}>{filtro}</button>)}</div>
     </div>
-  );
-}
-
-function agruparHorariosPorDia(
-  horarios: HorarioBarbero[] = []
-): Record<string, HorarioBarbero[]> {
-  const acc: Record<string, HorarioBarbero[]> = {};
-  for (const h of horarios) {
-    const nombreDia = h.dia.dia;
-    if (!acc[nombreDia]) acc[nombreDia] = [];
-    acc[nombreDia].push(h);
-  }
-  return acc;
-}
-
-function BarberoCard({
-  barbero,
-  servicios,
-  diasLaborales,
-}: {
-  barbero: BarberoListado;
-  servicios: ServicioOpcion[];
-  diasLaborales: DiaLaboral[];
-}) {
-  const [open, setOpen] = useState(false);
-
-  const horariosPorDia = agruparHorariosPorDia(barbero.horarios);
-
-  const diasConHorario = Object.keys(horariosPorDia).sort(
-    (a, b) => DIAS_SEMANA_DB.indexOf(a as (typeof DIAS_SEMANA_DB)[number]) - DIAS_SEMANA_DB.indexOf(b as (typeof DIAS_SEMANA_DB)[number])
-  );
-
-  return (
-    <>
-      <div 
-        className="bg-[var(--admin-surface)] rounded-xl overflow-hidden border transition-colors duration-150 flex flex-col h-full"
-        style={{ borderColor: `var(--page-primary-40)` }}
-      >
-        {/* IMAGEN */}
-        <div className="h-48 border-b" style={{ borderColor: `var(--page-primary-20)` }}>
-          {barbero.srcImage ? (
-            <img
-              src={barbero.srcImage}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <User className="h-12 w-12" style={{ color: `var(--page-primary-tinta)` }} />
-            </div>
-          )}
-        </div>
-
-        <div className="p-4 space-y-3 flex-1 flex flex-col">
-          <h3 className="text-[var(--admin-texto-primario)] font-bold text-lg">{barbero.nombre}</h3>
-
-          {/* SERVICIOS */}
-          <div>
-            <p className="text-xs mb-1 font-semibold" style={{ color: "var(--page-primary-tinta)" }}>Servicios:</p>
-            <div className="flex flex-wrap gap-1">
-              {barbero.servicios?.length ? (
-                barbero.servicios.map((s) => (
-                  <span
-                    key={s.servicio.id}
-                    className="text-xs px-2 py-1 rounded"
-                    style={{ backgroundColor: `var(--page-primary-20)`, color: "var(--admin-texto-primario)" }}
-                  >
-                    {s.servicio.nombre}
-                  </span>
-                ))
-              ) : (
-                <span className="text-xs text-[var(--admin-texto-muted)]">Sin servicios</span>
-              )}
-            </div>
-          </div>
-
-          {/* HORARIOS AGRUPADOS POR DÍA */}
-          <div>
-            <p className="text-xs mb-1 font-semibold" style={{ color: "var(--page-primary-tinta)" }}>Horarios:</p>
-            {diasConHorario.length ? (
-              <div className="space-y-1.5">
-                {diasConHorario.map((dia) => (
-                  <div key={dia} className="flex items-start gap-2">
-                    <span className="text-[11px] font-semibold text-[var(--admin-texto-primario)] w-16 flex-shrink-0 pt-0.5">
-                      {dia}
-                    </span>
-                    <div className="flex flex-wrap gap-1">
-                      {[...horariosPorDia[dia]]
-                        .sort((a, b) => {
-                          const [ah, am] = a.margenLaboral.desde.split(":").map(Number);
-                          const [bh, bm] = b.margenLaboral.desde.split(":").map(Number);
-                          return ah * 60 + am - (bh * 60 + bm);
-                        })
-                        .map((h) => (
-                          <span
-                            key={h.margenLaboralId}
-                            className="text-xs px-2 py-1 rounded"
-                            style={{ backgroundColor: `var(--page-primary-20)`, color: "var(--admin-texto-primario)" }}
-                          >
-                            {h.margenLaboral.desde} - {h.margenLaboral.hasta}
-                          </span>
-                        ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <span className="text-xs text-[var(--admin-texto-muted)]">Sin horarios</span>
-            )}
-          </div>
-
-          {/* BOTONES */}
-          <div className="flex gap-2 pt-3 border-t mt-auto" style={{ borderColor: `var(--page-primary-20)` }}>
-            <Button
-              className="flex-1 text-[var(--page-primary-foreground)] transition-all hover:opacity-90"
-              style={ESTILO_FONDO_MARCA}
-              onClick={() => setOpen(true)}
-            >
-              Editar
-            </Button>
-
-            <form action={deleteBarbero}>
-              <input type="hidden" name="id" value={barbero.id} />
-              <Button className="px-3 py-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded">
-                Baja
-              </Button>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      {open && (
-        <EditBarberoModal
-          barbero={barbero}
-          servicios={servicios}
-          diasLaborales={diasLaborales}
-          onClose={() => setOpen(false)}
-        />
-      )}
-    </>
-  );
+    {barberosFiltrados.length ? <div className="rounded-xl border bg-[var(--admin-surface)]" style={{ borderColor: "var(--admin-border)" }}>
+      <div className="hidden grid-cols-[minmax(220px,1.5fr)_minmax(170px,1fr)_minmax(150px,0.8fr)_110px_120px] gap-5 border-b px-6 py-3 text-xs font-medium uppercase tracking-wide text-[var(--admin-texto-muted)] lg:grid" style={{ borderColor: "var(--admin-border)" }}><span>Barbero</span><span>Servicios</span><span>Disponibilidad</span><span>Estado</span><span>Acciones</span></div>
+      {barberosFiltrados.map((barbero) => <BarberoFila key={barbero.id} barbero={barbero} servicios={servicios} diasLaborales={diasLaborales} menuAbierto={idMenuAbierto === barbero.id} onAlternarMenu={() => establecerIdMenuAbierto((idActual) => idActual === barbero.id ? null : barbero.id)} onCerrarMenu={() => establecerIdMenuAbierto(null)} />)}
+    </div> : <div className="rounded-xl border bg-[var(--admin-surface)] px-6 py-12 text-center" style={{ borderColor: "var(--admin-border)" }}><p className="font-medium text-[var(--admin-texto-primario)]">No encontramos barberos</p><p className="mt-1 text-sm text-[var(--admin-texto-muted)]">No hay resultados para esta búsqueda.</p><button type="button" onClick={() => { establecerBusqueda(""); establecerFiltroEstado("todos"); }} className="mt-4 text-sm font-medium text-[var(--page-primary-tinta)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]">Limpiar filtros</button></div>}
+  </section>;
 }

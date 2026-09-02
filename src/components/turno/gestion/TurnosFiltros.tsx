@@ -25,8 +25,8 @@ export default function TurnosFiltros({ estado, onChange }: Props) {
             onClick={() => onChange(opcion.valor)}
             className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors duration-150 ${
               activo
-                ? "bg-[var(--page-primary-15)] text-[var(--page-primary-tinta)] border border-[var(--page-primary-30)]"
-                : "border border-transparent text-[var(--admin-texto-muted)] hover:text-[var(--admin-texto-primario)] hover:bg-white/5"
+                ? "bg-[var(--page-primary-15)] text-[var(--admin-texto-primario)] border border-[var(--admin-border-fuerte)]"
+                : "border border-transparent text-[var(--admin-texto-muted)] hover:text-[var(--admin-texto-primario)] hover:bg-[var(--admin-item-hover)]"
             }`}
           >
             {opcion.etiqueta}

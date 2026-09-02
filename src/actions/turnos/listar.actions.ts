@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
-import { esAdmin } from "@/lib/seguridad/es-admin";
+import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { SELECCION_USUARIO_BASICA } from "@/lib/constants";
 import type { Prisma, turno_estado } from "../../../generated/prisma/client";
 
@@ -11,7 +11,7 @@ export async function getTurnos(page: number = 1, estadoFiltro?: string, fechaFi
     const session = await requerirSesion();
     if (!session?.user) return { success: false, error: "No autorizado" };
 
-    const usuarioEsAdmin = esAdmin(session);
+    const usuarioEsAdmin = Boolean(await requerirAdmin());
     /* Páginas de 10 turnos: alimenta el scroll infinito de la vista de turnos. */
     const pageSize = 10;
     const skip = (page - 1) * pageSize;
@@ -61,7 +61,7 @@ export async function getTurnos(page: number = 1, estadoFiltro?: string, fechaFi
       currentPage: page
     };
 
-  } catch (error) {
+  } catch {
     return { success: false, error: "Error al obtener turnos" };
   }
 }

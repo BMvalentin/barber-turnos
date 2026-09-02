@@ -6,6 +6,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
 import { esColorHexValido } from "@/lib/contraste/es-color-hex-valido";
 import type { PageConfigData } from "@/types/page-config";
+import { COLORES_TEMA_POR_DEFECTO } from "@/lib/contraste/colores-tema-por-defecto";
 
 const esquemaColor = z
   .string()
@@ -47,9 +48,9 @@ async function updatePageConfigBase(
         logo: data.logo || "",
         favicon: data.favicon || "",
         backgroundImage: data.backgroundImage || "",
-        primaryColor: data.primaryColor || "#000000",
-        secondaryColor: data.secondaryColor || "#ffffff",
-        bgColor: data.bgColor || "#09090b",
+        primaryColor: data.primaryColor || COLORES_TEMA_POR_DEFECTO.primario,
+        secondaryColor: data.secondaryColor || COLORES_TEMA_POR_DEFECTO.secundario,
+        bgColor: data.bgColor || COLORES_TEMA_POR_DEFECTO.fondo,
         whatsapp: cleanWhatsapp || "",
         mapsUrl: data.mapsUrl || "",
         address: data.address || "",

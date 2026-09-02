@@ -12,7 +12,7 @@ export async function obtenerHorariosDisponibles(
 ): Promise<ActionState<string[]>> {
 
   const cacheKey = ["horarios-finales", fecha, servicioId, barberoId, turnoIdAExcluir || "none"];
-  const cacheTags = [`turnos-${barberoId}-${fecha}`, `servicio-${servicioId}`, "turnos-global"];
+  const cacheTags = [`turnos-${barberoId}-${fecha}`, `servicio-${servicioId}`, `margenes-${barberoId}`, `excepciones-${barberoId}`, "excepciones-globales", "turnos-global"];
 
   const calcularSlotsFinales = async () => {
     const disponibilidad = await obtenerDisponibilidad(servicioId, barberoId, fecha, fecha, turnoIdAExcluir);
@@ -22,7 +22,7 @@ export async function obtenerHorariosDisponibles(
   try {
     const data = await getCachedData(cacheKey, cacheTags, calcularSlotsFinales, 120);
     return { success: true, data };
-  } catch (error) {
+  } catch {
     return { success: false, error: "Error al obtener horarios" };
   }
 }

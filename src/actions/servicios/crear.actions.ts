@@ -57,7 +57,7 @@ const createServicioBase = async (
       },
     });
 
-    revalidarServicios();
+    revalidarServicios(nuevoServicio.id);
 
     // 💡 SOLUCIÓN: Convertimos a Number antes de retornar
     return {

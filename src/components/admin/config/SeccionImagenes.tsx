@@ -43,6 +43,7 @@ export default function SeccionImagenes({
           valor={logo}
           pista="Se muestra en el encabezado y el pie de página."
           claseVistaPrevia="h-10 object-contain"
+          proporcionRecorte={1}
           subiendo={campoSubiendo === "logo"}
           manejarArchivo={manejarArchivo}
           manejarTexto={manejarTexto}
@@ -55,6 +56,7 @@ export default function SeccionImagenes({
           valor={favicon}
           pista="Icono de la pestaña del navegador. Cuadrado, ideal 512×512."
           claseVistaPrevia="h-6 w-6 object-contain"
+          proporcionRecorte={1}
           subiendo={campoSubiendo === "favicon"}
           manejarArchivo={manejarArchivo}
           manejarTexto={manejarTexto}
@@ -67,6 +69,7 @@ export default function SeccionImagenes({
           valor={fondo}
           pista="Se muestra atenuada detrás de la portada. Recomendado 1920×1080."
           claseVistaPrevia="h-24 w-full object-cover"
+          proporcionRecorte={16 / 9}
           subiendo={campoSubiendo === "backgroundImage"}
           manejarArchivo={manejarArchivo}
           manejarTexto={manejarTexto}

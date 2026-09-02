@@ -23,10 +23,14 @@ export function interpretarErrorTurno(error: unknown): string | null {
     return MENSAJE_OCUPADO;
   }
   if (error instanceof Error) {
+    if (error.message === "AGENDA_OCUPADA") return "La agenda está ocupada. Intentá nuevamente.";
     if (error.message === "TURNO_OCUPADO") return MENSAJE_OCUPADO;
     if (error.message === "TURNO_LOCKED") return MENSAJE_LOCKED;
     if (error.message === "CERRADO") return MENSAJE_CERRADO;
     if (error.message === "FUERA_DE_RANGO") return MENSAJE_FUERA_DE_RANGO;
+    if (error.message === "SERVICIO_NO_DISPONIBLE") return "El servicio no está disponible";
+    if (error.message === "BARBERO_NO_DISPONIBLE") return "El barbero no está disponible";
+    if (error.message === "SERVICIO_NO_ASIGNADO") return "El barbero no realiza ese servicio";
     if (error.message.startsWith("EXCEPCION:")) return error.message.slice("EXCEPCION:".length);
   }
   return null;

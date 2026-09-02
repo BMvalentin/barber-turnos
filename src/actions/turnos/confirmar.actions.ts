@@ -35,7 +35,7 @@ export const confirmarTurno = exigirAdmin(async (turnoId: string) => {
 
     revalidatePath("/turno"); // Refresca la página para ver el cambio
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false, error: "No se pudo confirmar el turno" };
   }
 });

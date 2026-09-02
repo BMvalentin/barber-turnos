@@ -57,8 +57,8 @@ export default function ListaHorariosReserva({
       {slotsVisibles.map((slot) => {
         const seleccionado = slot === slotSeleccionado;
         const clases = seleccionado
-          ? "border-[var(--page-primary)] bg-[var(--page-primary)] text-[var(--page-primary-foreground)] shadow-[0_0_10px_color-mix(in_srgb,var(--page-primary)_35%,transparent)] cursor-pointer"
-          : "border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] text-[var(--admin-texto-primario)] hover:border-[var(--page-primary-50)] hover:text-[var(--page-primary-tinta)] cursor-pointer";
+          ? "border-[var(--admin-border-fuerte)] bg-[var(--page-primary)] text-[var(--page-primary-foreground)] shadow-[0_0_10px_color-mix(in_srgb,var(--page-primary)_35%,transparent)] ring-1 ring-[var(--admin-border-fuerte)] cursor-pointer"
+          : "border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] text-[var(--admin-texto-primario)] hover:border-[var(--admin-border-fuerte)] hover:bg-[var(--admin-item-hover)] cursor-pointer";
 
         return (
           <button

@@ -31,7 +31,7 @@ export async function eliminarLockSlot(
     }
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false, error: "Error interno" };
   }
 }

@@ -78,7 +78,7 @@ export default function NavegacionFecha({ fecha, onCambiarFecha, estado }: Props
         type="button"
         onClick={() => onCambiarFecha(desplazarDia(fecha, -1))}
         aria-label="Día anterior"
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--admin-texto-secundario)] transition-colors hover:bg-white/5 hover:text-[var(--admin-texto-primario)]"
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--admin-texto-secundario)] transition-colors hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)]"
       >
         <ChevronLeft className="h-4 w-4" />
       </button>
@@ -89,7 +89,7 @@ export default function NavegacionFecha({ fecha, onCambiarFecha, estado }: Props
           aria-label="Elegir fecha"
           aria-expanded={abierto}
           onClick={() => setAbierto((prev) => !prev)}
-          className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-[var(--admin-texto-primario)] transition-colors hover:bg-white/5"
+          className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-[var(--admin-texto-primario)] transition-colors hover:bg-[var(--admin-item-hover)]"
         >
           <Calendar className="h-4 w-4 text-[var(--page-primary-tinta)]" />
           <span>{textoVisible}</span>
@@ -115,7 +115,7 @@ export default function NavegacionFecha({ fecha, onCambiarFecha, estado }: Props
         type="button"
         onClick={() => onCambiarFecha(desplazarDia(fecha, 1))}
         aria-label="Día siguiente"
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--admin-texto-secundario)] transition-colors hover:bg-white/5 hover:text-[var(--admin-texto-primario)]"
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--admin-texto-secundario)] transition-colors hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)]"
       >
         <ChevronRight className="h-4 w-4" />
       </button>
@@ -129,7 +129,7 @@ export default function NavegacionFecha({ fecha, onCambiarFecha, estado }: Props
         className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
           fecha === ""
             ? "cursor-default text-[var(--admin-texto-muted)] disabled:opacity-60"
-            : "cursor-pointer bg-[var(--page-primary-15)] text-[var(--page-primary-tinta)] hover:bg-[var(--page-primary-30)]"
+            : "cursor-pointer bg-[var(--page-primary-15)] text-[var(--admin-texto-primario)] hover:bg-[var(--page-primary-30)]"
         }`}
       >
         Hoy

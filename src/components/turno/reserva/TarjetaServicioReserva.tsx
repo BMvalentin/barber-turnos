@@ -22,21 +22,21 @@ export default function TarjetaServicioReserva({
         "relative flex flex-col gap-1 rounded-xl border p-4 text-left transition",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]",
         seleccionado
-          ? "border-[var(--page-primary)] bg-[var(--page-primary-15)]"
-          : "border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] hover:border-[var(--page-primary-40)] hover:bg-white/[0.03]"
+          ? "border-[var(--admin-border-fuerte)] bg-[var(--admin-item)]"
+          : "border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] hover:border-[var(--admin-border-fuerte)] hover:bg-[var(--admin-item-hover)]"
       )}
     >
       <span
         className={cn(
           "break-words text-sm font-semibold text-[var(--admin-texto-primario)]",
-          seleccionado && "text-[var(--page-primary-tinta)]"
+          seleccionado && "text-[var(--admin-texto-primario)]"
         )}
       >
         {servicio.nombre}
       </span>
       <span className="text-xs text-[var(--admin-texto-muted)]">
         {servicio.duracion} min ·{" "}
-        <span className="font-semibold text-[var(--page-primary-tinta)]">
+        <span className="font-semibold text-[var(--admin-texto-primario)]">
           ${formatearMoneda(servicio.precio)}
         </span>
       </span>

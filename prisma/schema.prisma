@@ -86,6 +86,8 @@ model turno {
      evitan el escaneo completo de turnos del barbero/usuario filtrando por fecha. */
   @@index([barberoId, horarioReservado])
   @@index([estado, horarioReservado])
+  @@index([estado, estadoPago, createdAt])
+  @@index([horarioReservado])
   @@index([userId, horarioReservado])
 }
 
@@ -213,6 +215,7 @@ model SlotLock {
 
   @@index([barberoId, horarioReservado])
   @@index([expiresAt])
+  @@index([userId])
 }
 
 model PageConfig {
@@ -223,8 +226,8 @@ model PageConfig {
   slogan             String?
   logo               String?  @db.Text
   favicon            String?  @db.Text
-  primaryColor       String?  @default("#000000")
-  secondaryColor     String?  @default("#FFFFFF")
+  primaryColor       String?  @default("#d97706")
+  secondaryColor     String?  @default("#78350f")
   bgColor            String?  @default("#09090b")
   address            String?
   city               String?

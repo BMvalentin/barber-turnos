@@ -10,14 +10,29 @@ async function removerHorarioDeBarberoBase(
   formData: FormData
 ): Promise<ActionState> {
   try {
-    const id = formData.get("id");
+    const idsRaw = formData.get("ids");
 
-    if (!id) {
+    if (!idsRaw) {
       return { success: false, error: "ID requerido" };
     }
 
-    await prisma.margen_laboral_barbero.delete({
-      where: { id: String(id) },
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(String(idsRaw));
+    } catch {
+      return { success: false, error: "ID requerido" };
+    }
+
+    const ids = parsed as unknown as string[];
+    if (!Array.isArray(ids) || !ids.every((id) => typeof id === "string")) {
+      return { success: false, error: "ID requerido" };
+    }
+    if (ids.length === 0) {
+      return { success: false, error: "ID requerido" };
+    }
+
+    await prisma.margen_laboral_barbero.deleteMany({
+      where: { id: { in: ids } },
     });
 
     revalidarBarberos();

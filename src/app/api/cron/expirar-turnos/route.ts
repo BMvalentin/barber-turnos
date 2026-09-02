@@ -7,37 +7,29 @@ import { ESTADOS_TURNO, ESTADOS_PAGO_EXPIRABLES, EXPIRACION_TURNO_PENDIENTE_MS }
 
 export const runtime = "nodejs";
 
+function obtenerSecretoRecibido(req: NextRequest): string {
+  const autorizacion = req.headers.get("authorization") ?? "";
+  if (autorizacion.startsWith("Bearer ")) {
+    return autorizacion.slice("Bearer ".length);
+  }
+  return req.headers.get("x-cron-secret") ?? "";
+}
+
+function esSecretoCronValido(req: NextRequest): boolean {
+  const secretoConfigurado = process.env.CRON_SECRET;
+  if (!secretoConfigurado) return false;
+
+  const esperado = Buffer.from(secretoConfigurado);
+  const recibido = Buffer.from(obtenerSecretoRecibido(req));
+  return esperado.length === recibido.length && crypto.timingSafeEqual(esperado, recibido);
+}
+
 export async function GET(req: NextRequest) {
-  // Permitir únicamente requests del Cron de Vercel en producción,
-  // o llamadas autenticadas con el header x-cron-secret
-  if (process.env.NODE_ENV === "production") {
-    const esCronVercel = req.headers.get("x-vercel-cron") === "1";
-
-    // CRON_SECRET debe setearse como environment variable en Vercel.
-    // La comparación usa timingSafeEqual para evitar ataques de timing;
-    // solo es seguro cuando ambas longitudes coinciden (si difieren → false).
-    let secretoValido = false;
-    if (process.env.CRON_SECRET) {
-      const bufferConfigurado = Buffer.from(process.env.CRON_SECRET);
-      const bufferRecibido = Buffer.from(req.headers.get("x-cron-secret") ?? "");
-      try {
-        if (bufferConfigurado.length === bufferRecibido.length) {
-          secretoValido = crypto.timingSafeEqual(
-            bufferConfigurado,
-            bufferRecibido
-          );
-        }
-      } catch {
-        secretoValido = false;
-      }
-    }
-
-    if (!esCronVercel && !secretoValido) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      );
-    }
+  if (!esSecretoCronValido(req)) {
+    return NextResponse.json(
+      { error: "No autorizado" },
+      { status: 401 },
+    );
   }
 
   try {
@@ -50,37 +42,14 @@ export async function GET(req: NextRequest) {
     // (Se alinea con la vigencia de la preferencia de Mercado Pago.)
     const limite = new Date(Date.now() - EXPIRACION_TURNO_PENDIENTE_MS);
 
-    // Buscar reservas temporales sin pago acreditado. Se excluye EN_ACREDITACION:
-    // un pago en proceso no debe cancelarse, puede confirmarse cuando se acredite.
-    const turnosPendientes = await prisma.turno.findMany({
+    // Se excluye EN_ACREDITACION: un pago en proceso no debe cancelarse.
+    // updateMany evita materializar IDs vencidos y mantiene la operación acotada.
+    const resultado = await prisma.turno.updateMany({
       where: {
         estado: ESTADOS_TURNO[0],
         estadoPago: { in: [...ESTADOS_PAGO_EXPIRABLES] },
         createdAt: {
           lte: limite,
-        },
-      },
-      select: {
-        id: true,
-        createdAt: true,
-      },
-    });
-
-    // Si no hay turnos para cancelar
-    if (turnosPendientes.length === 0) {
-      return NextResponse.json({
-        ok: true,
-        mensaje: "No hay turnos para expirar",
-        expirados: 0,
-        ejecutadoEn: new Date().toISOString(),
-      });
-    }
-
-    // Cancelar todos los pendientes vencidos
-    const resultado = await prisma.turno.updateMany({
-      where: {
-        id: {
-          in: turnosPendientes.map((t) => t.id),
         },
       },
       data: {
@@ -96,10 +65,6 @@ export async function GET(req: NextRequest) {
       ok: true,
       mensaje: `Se cancelaron ${resultado.count} turno(s) pendientes`,
       expirados: resultado.count,
-      turnos: turnosPendientes.map((t) => ({
-        id: t.id,
-        creadoEn: t.createdAt,
-      })),
       ejecutadoEn: new Date().toISOString(),
     });
   } catch (error) {

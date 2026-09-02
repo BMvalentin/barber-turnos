@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
+import Image from "next/image";
 import type { PropsTarjetaBarberoReserva } from "@/components/turno/reserva/tipos";
 import { cn } from "@/lib/utils/cn";
 
@@ -20,20 +21,20 @@ export default function TarjetaBarberoReserva({
         "relative flex h-[116px] flex-col items-center gap-2 rounded-xl border p-4 transition",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]",
         seleccionado
-          ? "border-[var(--page-primary)] bg-[var(--page-primary-15)]"
-          : "border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] hover:border-[var(--page-primary-40)] hover:bg-white/[0.03]"
+          ? "border-[var(--admin-border-fuerte)] bg-[var(--admin-item)]"
+          : "border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] hover:border-[var(--admin-border-fuerte)] hover:bg-[var(--admin-item-hover)]"
       )}
     >
       <div
         className={cn(
           "h-14 w-14 overflow-hidden rounded-full",
-          seleccionado && "ring-2 ring-[var(--page-primary)] ring-offset-2 ring-offset-transparent"
+          seleccionado && "ring-2 ring-[var(--page-primary)] ring-offset-2 ring-offset-[var(--admin-surface)]"
         )}
       >
         {barbero.srcImage ? (
-          <img src={barbero.srcImage} alt={barbero.nombre} className="h-full w-full object-cover" />
+          <Image src={barbero.srcImage} alt={barbero.nombre} width={56} height={56} className="h-full w-full object-cover" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-[var(--page-primary-30)] text-xl font-bold text-[var(--page-primary-tinta)]">
+          <div className="flex h-full w-full items-center justify-center bg-[var(--page-primary-30)] text-xl font-bold text-[var(--admin-texto-primario)]">
             {inicial}
           </div>
         )}
@@ -41,7 +42,7 @@ export default function TarjetaBarberoReserva({
       <span
         className={cn(
           "max-w-full truncate text-sm font-medium text-[var(--admin-texto-primario)]",
-          seleccionado && "font-semibold text-[var(--page-primary-tinta)]"
+          seleccionado && "font-semibold text-[var(--admin-texto-primario)]"
         )}
       >
         {barbero.nombre}

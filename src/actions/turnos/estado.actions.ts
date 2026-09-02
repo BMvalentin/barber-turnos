@@ -1,137 +1,121 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
-import { revalidatePath, revalidateTag } from "next/cache";
-import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
-import { enviarEmailTurnoSeguro } from "@/lib/email/enviar-email-turno-seguro";
 import { enviarEmailTurnoBarberoSeguro } from "@/lib/email/enviar-email-turno-barbero-seguro";
-import { existeLockAjeno } from "@/lib/locks";
+import { enviarEmailTurnoSeguro } from "@/lib/email/enviar-email-turno-seguro";
 import { revalidarCacheTurno } from "@/lib/revalidar/revalidar-cache-turno";
-import { actualizarTurnoConDetalle } from "@/lib/turno-con-detalle";
-import { obtenerHorariosDisponibles } from "@/actions/turnos/horarios-disponibles.actions";
-import { obtenerServicioPorId } from "@/lib/consultas/obtener-servicio-por-id";
-import { MINIMO_ANTICIPACION_MS, ESTADOS_TURNO, ESTADOS_PAGO_MANUALES } from "@/lib/constants";
+import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
+import { actualizarTurnoEnTransaccion } from "@/lib/turnos/actualizar-turno-en-transaccion";
+import { INCLUDE_TURNO_CON_DETALLE } from "@/lib/turno-con-detalle";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
+import { ESTADOS_PAGO_MANUALES, ESTADOS_TURNO, MINIMO_ANTICIPACION_MS } from "@/lib/constants";
 import type { ActionState } from "@/types/action-state";
 import type { TurnoConDetalle } from "@/types/turno";
-import type { Prisma, turno_estado } from "../../../generated/prisma/client";
+import type { Prisma, estado_pago, turno_estado } from "../../../generated/prisma/client";
+import { prisma } from "@/lib/prisma";
 
-const esEstadoActivo = (estado: turno_estado): boolean =>
-  estado === ESTADOS_TURNO[0] || estado === ESTADOS_TURNO[1];
+type TurnoConDetalleCrudo = Prisma.turnoGetPayload<{
+  include: typeof INCLUDE_TURNO_CON_DETALLE;
+}>;
 
-const crearClaveSlot = (barberoId: string, horario: Date): string =>
-  `${barberoId}|${horario.toISOString()}`;
+function serializarTurnoActualizado(turno: TurnoConDetalleCrudo): TurnoConDetalle {
+  return {
+    ...turno,
+    precioCongelado: Number(turno.precioCongelado),
+    seniaCongelada: Number(turno.seniaCongelada),
+    servicio: {
+      ...turno.servicio,
+      precio: Number(turno.servicio.precio),
+      senia: Number(turno.servicio.senia),
+      descuento: Number(turno.servicio.descuento),
+    },
+  };
+}
 
 export async function actualizarTurno(
   prevState: ActionState<TurnoConDetalle>,
   formData: FormData,
 ): Promise<ActionState<TurnoConDetalle>> {
   try {
-    const id = formData.get("id") as string;
-    if (!id) return { success: false, error: "ID de turno no proporcionado" };
-    const sesion = await requerirAdmin();
-    if (!sesion) return { success: false, error: "No autorizado" };
+    const id = formData.get("id");
+    if (typeof id !== "string" || !id) {
+      return { success: false, error: "ID de turno no proporcionado" };
+    }
 
-    const rawEstado = formData.get("estado") as string;
-    const rawEstadoPago = formData.get("estadoPago") as string;
-    const rawServicioId = formData.get("servicioId") as string;
-    const rawBarberoId = formData.get("barberoId") as string;
-    const rawHorarioStr = formData.get("horarioReservado") as string;
-    const turnoActual = await prisma.turno.findUnique({ where: { id } });
+    const sesion = await requerirAdmin();
+    if (!sesion?.user?.id) return { success: false, error: "No autorizado" };
+
+    const turnoActual = await prisma.turno.findUnique({
+      where: { id },
+      select: {
+        servicioId: true,
+        barberoId: true,
+        horarioReservado: true,
+        estado: true,
+        estadoPago: true,
+      },
+    });
     if (!turnoActual) return { success: false, error: "Turno no encontrado" };
 
-    const servicioId = rawServicioId || turnoActual.servicioId;
-    const barberoId = rawBarberoId || turnoActual.barberoId;
-    const horarioStr = rawHorarioStr || turnoActual.horarioReservado.toISOString();
-    const estado = (rawEstado as turno_estado) || turnoActual.estado;
-    const estadoPago = rawEstadoPago && (ESTADOS_PAGO_MANUALES as readonly string[]).includes(rawEstadoPago) ? (rawEstadoPago as (typeof ESTADOS_PAGO_MANUALES)[number]) : turnoActual.estadoPago;
-    const horario = new Date(horarioStr);
-    const cambioFecha = horario.getTime() !== turnoActual.horarioReservado.getTime();
-    const cambioBarbero = barberoId !== turnoActual.barberoId;
-    const cambioServicio = servicioId !== turnoActual.servicioId;
-
-    if (cambioFecha || cambioBarbero || cambioServicio) {
-      if (cambioFecha && horario.getTime() <= new Date().getTime() + MINIMO_ANTICIPACION_MS) {
-        return { success: false, error: "El nuevo horario debe ser con al menos 10 minutos de anticipación" };
-      }
-
-      const servicio = await obtenerServicioPorId(servicioId);
-      if (!servicio) return { success: false, error: "Servicio no encontrado" };
-      const fecha = obtenerFechaSola(horario);
-      const horariosDisponibles = await obtenerHorariosDisponibles(fecha, servicioId, barberoId, id);
-      if (!horariosDisponibles.success || !horariosDisponibles.data?.includes(horario.toISOString())) {
-        return { success: false, error: "El horario seleccionado no está disponible para este barbero/servicio" };
-      }
-
-      if (await existeLockAjeno(barberoId, horario, sesion.user.id)) {
-        return { success: false, error: "Este horario está siendo seleccionado por otro usuario. Intentá con otro horario." };
-      }
-      const dataUpdate: Prisma.turnoUncheckedUpdateInput = {
-        servicioId,
-        barberoId,
-        horarioReservado: horario,
-        estado,
-        ...(cambioServicio ? { precioCongelado: servicio.precio, seniaCongelada: servicio.senia } : {}),
-        ...(estadoPago !== turnoActual.estadoPago ? { estadoPago } : {}),
-        claveSlot: esEstadoActivo(estado) ? crearClaveSlot(barberoId, horario) : null,
-      };
-
-      const turnoActualizado = await actualizarTurnoConDetalle(id, dataUpdate);
-      const fechaAnterior = obtenerFechaSola(turnoActual.horarioReservado);
-      revalidarCacheTurno(turnoActual.barberoId, fechaAnterior, turnoActual.userId);
-      revalidarCacheTurno(barberoId, fecha, turnoActual.userId);
-      enviarEmailTurnoSeguro(turnoActualizado, turnoActualizado.estado === ESTADOS_TURNO[3] ? ESTADOS_TURNO[3] : "ACTUALIZADO");
-      if (turnoActualizado.estado === ESTADOS_TURNO[1] && turnoActual.estado !== ESTADOS_TURNO[1]) {
-        enviarEmailTurnoBarberoSeguro(turnoActualizado, "CONFIRMADO");
-      }
-
-      return {
-        success: true,
-        data: {
-          ...turnoActualizado,
-          precioCongelado: Number(turnoActualizado.precioCongelado),
-          seniaCongelada: Number(turnoActualizado.seniaCongelada),
-          servicio: {
-            ...turnoActualizado.servicio,
-            precio: Number(turnoActualizado.servicio.precio),
-            senia: Number(turnoActualizado.servicio.senia),
-            descuento: Number(turnoActualizado.servicio.descuento),
-          },
-        },
-      };
-    } else {
-      const turnoActualizado = await actualizarTurnoConDetalle(id, {
-        estado,
-        ...(estadoPago !== turnoActual.estadoPago ? { estadoPago } : {}),
-        claveSlot: esEstadoActivo(estado)
-          ? crearClaveSlot(turnoActual.barberoId, turnoActual.horarioReservado)
-          : null,
-      });
-
-      revalidateTag("turnos-global");
-      revalidateTag(`turnos-user-${turnoActual.userId}`);
-      revalidatePath("/turno");
-      revalidatePath("/admin");
-      enviarEmailTurnoSeguro(turnoActualizado, turnoActualizado.estado === ESTADOS_TURNO[3] ? ESTADOS_TURNO[3] : "ACTUALIZADO");
-      if (turnoActualizado.estado === ESTADOS_TURNO[1] && turnoActual.estado !== ESTADOS_TURNO[1]) {
-        enviarEmailTurnoBarberoSeguro(turnoActualizado, "CONFIRMADO");
-      }
-
-      return {
-        success: true,
-        data: {
-          ...turnoActualizado,
-          precioCongelado: Number(turnoActualizado.precioCongelado),
-          seniaCongelada: Number(turnoActualizado.seniaCongelada),
-          servicio: {
-            ...turnoActualizado.servicio,
-            precio: Number(turnoActualizado.servicio.precio),
-            senia: Number(turnoActualizado.servicio.senia),
-            descuento: Number(turnoActualizado.servicio.descuento),
-          },
-        },
-      };
+    const servicioId = formData.get("servicioId") || turnoActual.servicioId;
+    const barberoId = formData.get("barberoId") || turnoActual.barberoId;
+    const horarioRecibido = formData.get("horarioReservado") || turnoActual.horarioReservado.toISOString();
+    if (typeof servicioId !== "string" || typeof barberoId !== "string" || typeof horarioRecibido !== "string") {
+      return { success: false, error: "Datos inválidos" };
     }
+
+    const horario = new Date(horarioRecibido);
+    if (Number.isNaN(horario.getTime())) return { success: false, error: "Fecha inválida" };
+
+    const estadoRecibido = formData.get("estado");
+    const estado = (typeof estadoRecibido === "string" && estadoRecibido
+      ? estadoRecibido
+      : turnoActual.estado) as turno_estado;
+    const estadoPagoRecibido = formData.get("estadoPago");
+    const estadoPago = (
+      typeof estadoPagoRecibido === "string" &&
+      (ESTADOS_PAGO_MANUALES as readonly string[]).includes(estadoPagoRecibido)
+        ? estadoPagoRecibido
+        : turnoActual.estadoPago
+    ) as estado_pago;
+
+    const cambiaReserva =
+      servicioId !== turnoActual.servicioId ||
+      barberoId !== turnoActual.barberoId ||
+      horario.getTime() !== turnoActual.horarioReservado.getTime();
+    if (cambiaReserva && horario.getTime() <= Date.now() + MINIMO_ANTICIPACION_MS) {
+      return { success: false, error: "El nuevo horario debe ser con al menos 10 minutos de anticipación" };
+    }
+
+    const resultado = await actualizarTurnoEnTransaccion({
+      id,
+      servicioId,
+      barberoId,
+      horario,
+      estado,
+      estadoPago,
+      idUsuarioActual: sesion.user.id,
+    });
+    if (!resultado.ok) return { success: false, error: resultado.error };
+
+    revalidarCacheTurno(
+      resultado.turnoAnterior.barberoId,
+      obtenerFechaSola(resultado.turnoAnterior.horarioReservado),
+      resultado.turnoAnterior.userId,
+    );
+    revalidarCacheTurno(
+      resultado.turno.barberoId,
+      obtenerFechaSola(resultado.turno.horarioReservado),
+      resultado.turno.userId,
+    );
+    enviarEmailTurnoSeguro(
+      resultado.turno,
+      resultado.turno.estado === ESTADOS_TURNO[3] ? ESTADOS_TURNO[3] : "ACTUALIZADO",
+    );
+    if (resultado.turno.estado === ESTADOS_TURNO[1] && resultado.turnoAnterior.estado !== ESTADOS_TURNO[1]) {
+      enviarEmailTurnoBarberoSeguro(resultado.turno, "CONFIRMADO");
+    }
+
+    return { success: true, data: serializarTurnoActualizado(resultado.turno) };
   } catch (error) {
     console.error("Error al actualizar turno:", error);
     return { success: false, error: "Error al actualizar el turno" };

@@ -47,7 +47,7 @@ export function ImageCarousel({ servicios }: ImageCarouselProps) {
 
                   <div className="group relative overflow-hidden rounded-2xl aspect-square bg-[var(--admin-surface)] shadow-lg border border-[var(--page-bg-foreground)]/5">
                     <Image
-                      src={servicio.srcImage || "/placeholder.jpg"}
+                      src={servicio.srcImage || "/images/avatar-default.svg"}
                       alt={servicio.nombre}
                       fill
                       sizes="(max-width: 768px) 50vw, 25vw"
@@ -66,7 +66,7 @@ export function ImageCarousel({ servicios }: ImageCarouselProps) {
                               ${servicio.precio}
                             </span>
 
-                            <h2 className="text-xl font-bold leading-none" style={{ color: "var(--page-primary-tinta)" }}>
+                            <h2 className="text-xl font-bold leading-none" style={{ color: "var(--page-primary-sobre-oscuro)" }}>
                               $
                               {Math.round(
                                 servicio.precio - (servicio.precio * servicio.descuento) / 100
@@ -81,7 +81,7 @@ export function ImageCarousel({ servicios }: ImageCarouselProps) {
                             </span>
                           </>
                         ) : (
-                          <h2 className="text-lg font-bold" style={{ color: "var(--page-primary-tinta)" }}>
+                          <h2 className="text-lg font-bold" style={{ color: "var(--page-primary-sobre-oscuro)" }}>
                             ${servicio.precio}
                           </h2>
                         )}

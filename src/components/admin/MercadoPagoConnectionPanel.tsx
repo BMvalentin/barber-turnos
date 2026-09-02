@@ -8,149 +8,32 @@ import {
   Link2,
   Unlink,
   Loader2,
-  Lock,
-  AlertTriangle,
-  Copy,
-  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { desconectarMP } from "@/actions/mercadopago/desconectar.actions";
 import type { EstadoConexionMP } from "@/actions/mercadopago/estado-conexion.actions";
-import type { ConfiguracionOAuthMP } from "@/actions/mercadopago/estado-oauth.actions";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
 import { ZONA_HORARIA } from "@/lib/constants";
 interface Props {
   estadoInicial: EstadoConexionMP;
-  configuracionOAuth: ConfiguracionOAuthMP;
 }
 
 const MENSAJES_ERROR: Record<string, string> = {
-  bloqueado:
-    "La conexión está bloqueada. Pedile al equipo de desarrollo que desbloquee la configuración.",
-  sin_client_id:
-    "Falta configurar MP_CLIENT_ID en el archivo .env del servidor.",
-  sin_app_url:
-    "Falta configurar NEXT_PUBLIC_APP_URL en el archivo .env del servidor.",
-  configuracion_incompleta:
-    "Falta configurar MP_CLIENT_SECRET en el archivo .env del servidor.",
+  sin_client_id: "La conexión no está disponible en este momento.",
+  sin_app_url: "La conexión no está disponible en este momento.",
+  configuracion_incompleta: "La conexión no está disponible en este momento.",
   estado_invalido:
     "La sesión de conexión expiró o fue manipulada. Intentá de nuevo.",
   sin_codigo:
     "Mercado Pago no devolvió el código de autorización. Intentá de nuevo.",
   acceso_denegado:
     "Cancelaste la autorización en Mercado Pago. Intentá de nuevo cuando estés listo.",
-  conexion_fallida:
-    "No se pudo completar la conexión. Revisá los logs del servidor para más detalles.",
-  inicio_fallido:
-    "No se pudo iniciar el flujo de conexión. Revisá la configuración del .env.",
+  conexion_fallida: "No se pudo completar la conexión. Intentá de nuevo más tarde.",
+  inicio_fallido: "No se pudo iniciar la conexión. Intentá de nuevo más tarde.",
 };
-
-function PanelConfiguracion({
-  configuracion,
-}: {
-  configuracion: ConfiguracionOAuthMP;
-}) {
-  const [copiado, setCopiado] = useState(false);
-  const todaConfigurada =
-    configuracion.clientIdConfigurado &&
-    configuracion.clientSecretConfigurado &&
-    configuracion.urlAppConfigurada;
-
-  if (todaConfigurada) return null;
-
-  const copiarUri = () => {
-    if (configuracion.uriRedireccion) {
-      navigator.clipboard.writeText(configuracion.uriRedireccion);
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2000);
-    }
-  };
-
-  return (
-    <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-lg space-y-3">
-      <div className="flex items-center gap-2">
-        <AlertTriangle className="h-4 w-4 text-red-400 flex-shrink-0" />
-        <p className="text-sm font-semibold text-red-400">
-          Faltan variables de entorno
-        </p>
-      </div>
-
-      <div className="space-y-2">
-        <ItemConfiguracion
-          label="MP_CLIENT_ID"
-          configurado={configuracion.clientIdConfigurado}
-        />
-        <ItemConfiguracion
-          label="MP_CLIENT_SECRET"
-          configurado={configuracion.clientSecretConfigurado}
-        />
-        <ItemConfiguracion
-          label="NEXT_PUBLIC_APP_URL"
-          configurado={configuracion.urlAppConfigurada}
-        />
-      </div>
-
-      <p className="text-xs text-[var(--admin-texto-muted)] pt-1">
-        Agregá estas variables al <code className="text-[var(--page-primary-80)]">.env</code> y
-        reiniciá el servidor.
-      </p>
-
-      {configuracion.uriRedireccion && (
-        <div className="pt-2 border-t border-red-500/10">
-          <p className="text-xs text-[var(--admin-texto-muted)] mb-2">
-            URI de redirección (registrala en tu app de MP):
-          </p>
-          <div className="flex items-center gap-2 bg-[var(--admin-surface-elevated)] border border-[var(--admin-border)] rounded-lg px-3 py-2">
-            <code className="text-xs text-[var(--page-primary-80)] flex-1 truncate">
-              {configuracion.uriRedireccion}
-            </code>
-            <button
-              onClick={copiarUri}
-              className="text-[var(--admin-texto-muted)] hover:text-[var(--page-primary-80)] transition-colors duration-150 flex-shrink-0"
-              title="Copiar URI"
-            >
-              {copiado ? (
-                <Check className="h-3.5 w-3.5 text-green-400" />
-              ) : (
-                <Copy className="h-3.5 w-3.5" />
-              )}
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ItemConfiguracion({
-  label,
-  configurado,
-}: {
-  label: string;
-  configurado: boolean;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      {configurado ? (
-        <CheckCircle2 className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
-      ) : (
-        <XCircle className="h-3.5 w-3.5 text-red-400 flex-shrink-0" />
-      )}
-      <code
-        className={`text-xs ${configurado ? "text-green-400" : "text-red-400"}`}
-      >
-        {label}
-      </code>
-      <span className="text-xs text-[var(--admin-texto-muted)]">
-        {configurado ? "✓ configurado" : "✗ falta configurar"}
-      </span>
-    </div>
-  );
-}
 
 export default function MercadoPagoConnectionPanel({
   estadoInicial,
-  configuracionOAuth,
 }: Props) {
   const [estado, setEstado] = useState(estadoInicial);
   const [pendiente, startTransicion] = useTransition();
@@ -159,14 +42,17 @@ export default function MercadoPagoConnectionPanel({
   const parametrosBusqueda = useSearchParams();
 
   useEffect(() => {
+    setEstado(estadoInicial);
+  }, [estadoInicial]);
+
+  useEffect(() => {
     if (parametrosBusqueda.get("mp_success")) {
       toast.success("Cuenta conectada correctamente", {
         description:
           "Ahora podés cobrar señas online con Mercado Pago. ¡Éxitos!",
         duration: 4000,
       });
-      // Actualizamos el estado local para reflejar la conexión (opcional, luego la página se recarga)
-      setEstado((prev) => ({ ...prev, conectada: true, bloqueada: true }));
+      router.refresh();
       router.replace("/admin/mercadopago");
     }
 
@@ -198,10 +84,7 @@ export default function MercadoPagoConnectionPanel({
         });
         setEstado({
           conectada: false,
-          bloqueada: false,
-          clavePublica: null,
-          idUsuarioMP: null,
-          modoProduccion: null,
+          nombreCuenta: null,
           actualizadaEn: null,
         });
       } else {
@@ -213,15 +96,8 @@ export default function MercadoPagoConnectionPanel({
     });
   };
 
-  const configuracionCompleta =
-    configuracionOAuth.clientIdConfigurado &&
-    configuracionOAuth.clientSecretConfigurado &&
-    configuracionOAuth.urlAppConfigurada;
-
   return (
     <div className="space-y-6">
-      <PanelConfiguracion configuracion={configuracionOAuth} />
-
       <div className="bg-[var(--admin-surface)] rounded-xl border border-[var(--admin-border)] p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -241,29 +117,17 @@ export default function MercadoPagoConnectionPanel({
               </p>
             </div>
           </div>
-
-          <div className="flex items-center gap-2 flex-wrap justify-end">
-            {estado.bloqueada && (
-              <span className="flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full bg-[var(--page-primary)]/20 text-[var(--page-primary-80)] border border-[var(--page-primary)]/30">
-                <Lock className="h-3 w-3" />
-                BLOQUEADA
-              </span>
-            )}
-            {estado.conectada && (
-              <span className="text-xs font-bold px-3 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
-                {estado.modoProduccion ? "PRODUCCIÓN" : "PRUEBA"}
-              </span>
-            )}
-          </div>
         </div>
 
         {estado.conectada && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm border-t border-[var(--admin-border)] pt-4">
             <div>
               <p className="text-[var(--admin-texto-muted)] text-xs uppercase tracking-wider mb-1">
-                ID de usuario en Mercado Pago
+                Cuenta que recibe los cobros
               </p>
-              <p className="text-[var(--admin-texto-primario)] font-mono">{estado.idUsuarioMP}</p>
+              <p className="text-[var(--admin-texto-primario)]">
+                {estado.nombreCuenta ?? "Cuenta de Mercado Pago conectada"}
+              </p>
             </div>
             <div>
               <p className="text-[var(--admin-texto-muted)] text-xs uppercase tracking-wider mb-1">
@@ -287,20 +151,7 @@ export default function MercadoPagoConnectionPanel({
         )}
 
         <div className="pt-4 border-t border-[var(--admin-border)]">
-          {estado.bloqueada ? (
-            <div className="flex items-start gap-3 p-4 bg-[var(--page-primary)]/5 border border-[var(--page-primary)]/20 rounded-lg">
-              <Lock className="h-4 w-4 text-[var(--page-primary-80)] mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-[var(--admin-texto-secundario)] leading-relaxed">
-                Esta conexión está{" "}
-                <strong className="text-[var(--page-primary-80)]">
-                  bloqueada por seguridad
-                </strong>{" "}
-                para evitar que se cambien los tokens sin autorización. Si
-                necesitás conectar otra cuenta, pedile al equipo de desarrollo
-                que desbloquee la configuración.
-              </p>
-            </div>
-          ) : estado.conectada ? (
+          {estado.conectada ? (
             <button
               onClick={manejarDesconexion}
               disabled={pendiente}
@@ -314,39 +165,14 @@ export default function MercadoPagoConnectionPanel({
               Desconectar cuenta
             </button>
           ) : (
-            <div className="space-y-3">
+            <div>
               <a
-                href={
-                  configuracionCompleta
-                    ? "/api/mercadopago/oauth/start"
-                    : undefined
-                }
-                onClick={
-                  !configuracionCompleta
-                    ? (e) => {
-                      e.preventDefault();
-                      toast.error("Configuración incompleta", {
-                        description:
-                          "Completá la configuración del .env antes de conectar",
-                        duration: 4000,
-                      });
-                    }
-                    : undefined
-                }
-                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-white text-sm font-bold transition-colors duration-150 ${configuracionCompleta
-                    ? "bg-[#009EE3] hover:bg-[#0088CC] cursor-pointer"
-                    : "bg-zinc-700 cursor-not-allowed opacity-60"
-                  }`}
+                href="/api/mercadopago/oauth/start"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-white text-sm font-bold transition-colors duration-150 bg-[#009EE3] hover:bg-[#0088CC] cursor-pointer"
               >
                 <Link2 className="h-4 w-4" />
                 Conectar con Mercado Pago
               </a>
-              {!configuracionCompleta && (
-                <p className="text-xs text-[var(--admin-texto-muted)]">
-                  Completá las variables de entorno de arriba para habilitar el
-                  botón.
-                </p>
-              )}
             </div>
           )}
         </div>

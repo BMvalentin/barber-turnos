@@ -48,6 +48,18 @@ export function useFormularioTurno({
     turnoInicial,
   });
   const pago = usePagoTurno({ whatsappPhone });
+  const {
+    servicios,
+    barberos,
+    selectedServicioId,
+    selectedBarberoId,
+    setIsOpen,
+    setSelectedServicioId,
+    setSelectedBarberoId,
+    setSelectedUserId,
+    setEstadoPago,
+  } = datos;
+  const { setTurnoCreado, setShowPagoModal } = pago;
 
   const accion = esEdicion ? actualizarTurno : createTurno;
   const [state, formAction] = useActionState(accion, estadoInicial);
@@ -60,7 +72,7 @@ export function useFormularioTurno({
     if (!state.success || !state.data) return;
 
     if (esEdicion) {
-      datos.setIsOpen(false);
+      setIsOpen(false);
       toast.success("Turno actualizado correctamente");
       window.location.reload();
       return;
@@ -69,9 +81,9 @@ export function useFormularioTurno({
     if (turnoProcesadoRef.current === state.data.id) return;
     turnoProcesadoRef.current = state.data.id;
     const nombreServicio =
-      datos.servicios.find((s) => s.id === datos.selectedServicioId)?.nombre || "N/A";
+      servicios.find((s) => s.id === selectedServicioId)?.nombre || "N/A";
     const nombreBarbero =
-      datos.barberos.find((b) => b.id === datos.selectedBarberoId)?.nombre || "N/A";
+      barberos.find((b) => b.id === selectedBarberoId)?.nombre || "N/A";
 
     const nuevoTurno: TurnoCreado = {
       ...state.data,
@@ -79,12 +91,12 @@ export function useFormularioTurno({
       barberoNombre: nombreBarbero,
     };
 
-    datos.setIsOpen(false);
+    setIsOpen(false);
     formRef.current?.reset();
-    datos.setSelectedServicioId("");
-    datos.setSelectedBarberoId("");
-    datos.setSelectedUserId(session?.user?.role === "USER" ? session?.user?.id ?? "" : "");
-    datos.setEstadoPago(ESTADOS_PAGO[0]);
+    setSelectedServicioId("");
+    setSelectedBarberoId("");
+    setSelectedUserId(session?.user?.role === "USER" ? session?.user?.id ?? "" : "");
+    setEstadoPago(ESTADOS_PAGO[0]);
 
     onTurnoCreado?.();
 
@@ -93,23 +105,27 @@ export function useFormularioTurno({
       toast.success("Turno creado correctamente");
       router.refresh();
     } else {
-      pago.setTurnoCreado(nuevoTurno);
-      pago.setShowPagoModal(true);
+      setTurnoCreado(nuevoTurno);
+      setShowPagoModal(true);
     }
   }, [
     state.success,
     state.data,
     esEdicion,
-    datos.servicios,
-    datos.barberos,
-    datos.selectedServicioId,
-    datos.selectedBarberoId,
-    datos.selectedUserId,
-    datos.setIsOpen,
-    datos.setEstadoPago,
-    pago.setTurnoCreado,
-    pago.setShowPagoModal,
+    servicios,
+    barberos,
+    selectedServicioId,
+    selectedBarberoId,
+    setIsOpen,
+    setSelectedServicioId,
+    setSelectedBarberoId,
+    setSelectedUserId,
+    setEstadoPago,
+    setTurnoCreado,
+    setShowPagoModal,
     session,
+    onTurnoCreado,
+    router,
   ]);
 
   return {

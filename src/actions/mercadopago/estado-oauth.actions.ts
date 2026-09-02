@@ -1,5 +1,7 @@
 "use server";
 
+import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
+
 export type ConfiguracionOAuthMP = {
   clientIdConfigurado: boolean;
   clientSecretConfigurado: boolean;
@@ -12,6 +14,16 @@ export type ConfiguracionOAuthMP = {
  * No expone los valores reales, solo si están configuradas o no.
  */
 export async function obtenerEstadoConfiguracionOAuth(): Promise<ConfiguracionOAuthMP> {
+  const sesion = await requerirAdmin();
+  if (!sesion) {
+    return {
+      clientIdConfigurado: false,
+      clientSecretConfigurado: false,
+      urlAppConfigurada: false,
+      uriRedireccion: null,
+    };
+  }
+
   const urlApp = process.env.NEXT_PUBLIC_APP_URL;
 
   return {

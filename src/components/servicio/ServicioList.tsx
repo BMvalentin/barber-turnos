@@ -14,14 +14,11 @@ import FilterTag from "./FilterTag";
 import ServicioTabla from "./ServicioTabla";
 import CreateServicioForm from "./CreateServicioForm";
 import type { Servicio } from "@/types/servicio";
-import type { Barbero } from "@/types/barbero";
 
 export default function ServicioList({
   servicios,
-  barberos,
 }: {
   servicios: Servicio[];
-  barberos: Barbero[];
 }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
@@ -142,7 +139,6 @@ export default function ServicioList({
 
         <ServicioTabla
           servicios={paginatedServicios}
-          barberos={barberos}
           onEliminar={handleEliminar}
           estaVacio={serviciosFiltrados.length === 0}
           sinServicios={servicios.length === 0}
@@ -168,7 +164,6 @@ export default function ServicioList({
 
       {showCreateModal && (
         <CreateServicioForm
-          barberos={barberos}
           onClose={() => setShowCreateModal(false)}
         />
       )}

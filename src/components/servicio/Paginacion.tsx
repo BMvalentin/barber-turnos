@@ -26,7 +26,7 @@ export default function Paginacion({
         <button
           onClick={() => onCambiarPagina(Math.max(1, paginaActual - 1))}
           disabled={paginaActual === 1}
-          className="px-3 py-1 border border-[var(--admin-border)] rounded hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-colors duration-150"
+          className="px-3 py-1 border border-[var(--admin-border)] rounded hover:bg-[var(--admin-item-hover)] disabled:opacity-30 disabled:hover:bg-transparent transition-colors duration-150"
         >
           &lt;
         </button>
@@ -43,7 +43,7 @@ export default function Paginacion({
         <button
           onClick={() => onCambiarPagina(Math.min(totalPaginas, paginaActual + 1))}
           disabled={paginaActual === totalPaginas}
-          className="px-3 py-1 border border-[var(--admin-border)] rounded hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-colors duration-150"
+          className="px-3 py-1 border border-[var(--admin-border)] rounded hover:bg-[var(--admin-item-hover)] disabled:opacity-30 disabled:hover:bg-transparent transition-colors duration-150"
         >
           &gt;
         </button>

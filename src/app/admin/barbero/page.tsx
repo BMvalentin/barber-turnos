@@ -44,7 +44,7 @@ export default async function BarberosPage() {
             Gestión de Barberos
           </h1>
           <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-            Administrá el equipo de barberos y sus horarios.
+            Administrá tu equipo de barberos y sus horarios.
           </p>
         </div>
 

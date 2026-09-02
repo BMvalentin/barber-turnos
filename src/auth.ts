@@ -9,7 +9,7 @@ import bcrypt from "bcryptjs";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: PrismaAdapter(prisma) as any, // as any: workaround necesario para Prisma 7 con PrismaAdapter de next-auth v5 (único as any documentado del proyecto — ver PENDIENTES.md §4 FASE 8)
+  adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" }, // OAuth funciona mejor con JWT en NextAuth v5 si no quieres sesiones en DB
   providers: [
     Google({
@@ -23,6 +23,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const user = await prisma.user.findUnique({ where: { email } });
         // Verificamos si tiene password (si entró con Google antes, no tendrá password)
         if (!user || !user.password) return null;
+
+        // Esta comprobación debe vivir en el provider: la ruta estándar de
+        // Auth.js no pasa por la Server Action del formulario de inicio.
+        // Devolver null conserva el mismo error genérico de credenciales.
+        if (!user.emailVerified) return null;
 
         const isValid = await bcrypt.compare(password, user.password);
         if (!isValid) return null;

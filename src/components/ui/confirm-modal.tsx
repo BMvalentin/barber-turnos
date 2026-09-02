@@ -30,7 +30,7 @@ export function ConfirmDialog({ title, message, onConfirm, onCancel }: ConfirmDi
       >
         <button
           onClick={onCancel}
-          className="absolute right-4 top-4 rounded-md p-1.5 text-[var(--admin-texto-muted)] transition-colors hover:bg-white/5 hover:text-[var(--admin-texto-primario)]"
+          className="absolute right-4 top-4 rounded-md p-1.5 text-[var(--admin-texto-muted)] transition-colors hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)]"
         >
           <X className="h-4 w-4" />
         </button>
@@ -41,7 +41,7 @@ export function ConfirmDialog({ title, message, onConfirm, onCancel }: ConfirmDi
         <div className="flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="rounded-lg px-3.5 py-2 text-sm font-medium text-[var(--admin-texto-secundario)] transition-colors hover:bg-white/5 hover:text-[var(--admin-texto-primario)]"
+            className="rounded-lg px-3.5 py-2 text-sm font-medium text-[var(--admin-texto-secundario)] transition-colors hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)]"
           >
             Cancelar
           </button>

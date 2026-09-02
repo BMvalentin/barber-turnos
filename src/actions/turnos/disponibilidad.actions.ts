@@ -11,7 +11,7 @@ export async function obtenerDiasDisponibles(
 ): Promise<{ success: boolean; data?: string[]; error?: string }> {
 
   const cacheKey = ["dias-disponibles", mes, servicioId, barberoId, turnoIdAExcluir || "none"];
-  const cacheTags = [`turnos-mes-${barberoId}-${mes}`, `servicio-${servicioId}`, `margenes-${barberoId}`, `excepciones-${barberoId}`, "turnos-global"];
+  const cacheTags = [`turnos-mes-${barberoId}-${mes}`, `servicio-${servicioId}`, `margenes-${barberoId}`, `excepciones-${barberoId}`, "excepciones-globales", "turnos-global"];
 
   const calcularDiasDisponibles = async () => {
     const [anio, numMes] = mes.split("-").map(Number);
@@ -31,7 +31,7 @@ export async function obtenerDiasDisponibles(
   try {
     const data = await getCachedData(cacheKey, cacheTags, calcularDiasDisponibles, 120);
     return { success: true, data };
-  } catch (error) {
+  } catch {
     return { success: false, error: "Error al calcular disponibilidad" };
   }
 }

@@ -6,11 +6,11 @@ import { toast } from "sonner";
 import { updatePageConfig } from "@/actions/configuracion/config-general.actions";
 import { uploadConfigImage } from "@/actions/mercadopago/subir-config.actions";
 import { esColorHexValido } from "@/lib/contraste/es-color-hex-valido";
+import { comprimirImagenConfiguracion } from "@/lib/imagenes/comprimir-imagen-configuracion";
 import SeccionIdentidad from "@/components/admin/config/SeccionIdentidad";
 import SeccionContacto from "@/components/admin/config/SeccionContacto";
 import SeccionApariencia from "@/components/admin/config/SeccionApariencia";
 import SeccionImagenes from "@/components/admin/config/SeccionImagenes";
-import NavegacionConfig from "@/components/admin/config/NavegacionConfig";
 import BotonSubmitPending from "@/components/ui/boton-submit-pending";
 import { CAMPOS_POR_MODULO, type IdModuloConfig } from "@/components/admin/config/modulos-config";
 import type { NombreCampoImagen } from "@/components/admin/config/tipos";
@@ -20,15 +20,16 @@ import type {
   DatosConfiguracionInicial,
   PageConfigData,
 } from "@/types/page-config";
+import { COLORES_TEMA_POR_DEFECTO } from "@/lib/contraste/colores-tema-por-defecto";
 
 interface GeneralConfigFormProps {
   initialData: DatosConfiguracionInicial | null;
+  seccionInicial: IdModuloConfig;
 }
 
-export default function GeneralConfigForm({ initialData }: GeneralConfigFormProps) {
+export default function GeneralConfigForm({ initialData, seccionInicial }: GeneralConfigFormProps) {
   const [isPending, startTransition] = useTransition();
   const [uploadingField, setUploadingField] = useState<NombreCampoImagen | null>(null);
-  const [seccionActiva, setSeccionActiva] = useState<IdModuloConfig>("informacion-general");
 
   const [formData, setFormData] = useState<DatosConfiguracion>({
     name: initialData?.name || "",
@@ -37,17 +38,17 @@ export default function GeneralConfigForm({ initialData }: GeneralConfigFormProp
     logo: initialData?.logo || "",
     favicon: initialData?.favicon || "",
     backgroundImage: initialData?.backgroundImage || "",
-    primaryColor: initialData?.primaryColor || "#3b82f6",
-    secondaryColor: initialData?.secondaryColor || "#1e3a8a",
-    bgColor: initialData?.bgColor || "#09090b",
+    primaryColor: initialData?.primaryColor || COLORES_TEMA_POR_DEFECTO.primario,
+    secondaryColor: initialData?.secondaryColor || COLORES_TEMA_POR_DEFECTO.secundario,
+    bgColor: initialData?.bgColor || COLORES_TEMA_POR_DEFECTO.fondo,
     whatsapp: initialData?.whatsapp || "",
     mapsUrl: initialData?.mapsUrl || "",
     address: initialData?.address || "",
   });
 
-  const primaryColor = formData.primaryColor || "#3b82f6";
-  const secondaryColor = formData.secondaryColor || "#1e3a8a";
-  const colorFondo = formData.bgColor || "#09090b";
+  const primaryColor = formData.primaryColor || COLORES_TEMA_POR_DEFECTO.primario;
+  const secondaryColor = formData.secondaryColor || COLORES_TEMA_POR_DEFECTO.secundario;
+  const colorFondo = formData.bgColor || COLORES_TEMA_POR_DEFECTO.fondo;
 
   const manejarCambio = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -63,14 +64,12 @@ export default function GeneralConfigForm({ initialData }: GeneralConfigFormProp
     }));
   };
 
-  const manejarArchivo = async (e: React.ChangeEvent<HTMLInputElement>, campo: NombreCampoImagen) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const manejarArchivo = async (file: File, campo: NombreCampoImagen) => {
     setUploadingField(campo);
 
     try {
-      const res = await uploadConfigImage(file);
+      const archivoOptimizado = await comprimirImagenConfiguracion(file);
+      const res = await uploadConfigImage(archivoOptimizado);
       const url = res.url;
 
       if (res.success && url) {
@@ -83,7 +82,6 @@ export default function GeneralConfigForm({ initialData }: GeneralConfigFormProp
       toast.error("Error al subir la imagen", { description: "Ocurrió un error al subir la imagen. Intentá de nuevo." });
     } finally {
       setUploadingField(null);
-      e.target.value = "";
     }
   };
 
@@ -91,12 +89,8 @@ export default function GeneralConfigForm({ initialData }: GeneralConfigFormProp
     setFormData((prev) => ({ ...prev, [campo]: "" }));
   };
 
-  const alCambiarSeccion = (id: IdModuloConfig) => {
-    setSeccionActiva(id);
-  };
-
   const guardarModuloActivo = () => {
-    if (seccionActiva === "apariencia") {
+    if (seccionInicial === "apariencia") {
       if (
         !esColorHexValido(primaryColor) ||
         !esColorHexValido(secondaryColor) ||
@@ -108,7 +102,7 @@ export default function GeneralConfigForm({ initialData }: GeneralConfigFormProp
     }
 
     const payload: PageConfigData = {};
-    for (const campo of CAMPOS_POR_MODULO[seccionActiva]) {
+    for (const campo of CAMPOS_POR_MODULO[seccionInicial]) {
       payload[campo] = formData[campo];
     }
 
@@ -129,12 +123,10 @@ export default function GeneralConfigForm({ initialData }: GeneralConfigFormProp
         e.preventDefault();
         guardarModuloActivo();
       }}
-      className="flex flex-col gap-8 lg:flex-row lg:gap-10"
+      className="mt-8 space-y-10"
     >
-      <NavegacionConfig seccionActiva={seccionActiva} alCambiarSeccion={alCambiarSeccion} />
-
-      <div className="min-w-0 flex-1 space-y-10">
-        {seccionActiva === "informacion-general" && (
+      <div className="space-y-10">
+        {seccionInicial === "informacion-general" && (
           <SeccionIdentidad
             nombre={formData.name}
             slogan={formData.slogan}
@@ -143,7 +135,7 @@ export default function GeneralConfigForm({ initialData }: GeneralConfigFormProp
           />
         )}
 
-        {seccionActiva === "ubicacion-contacto" && (
+        {seccionInicial === "ubicacion-contacto" && (
           <SeccionContacto
             whatsapp={formData.whatsapp}
             mapsUrl={formData.mapsUrl}
@@ -152,7 +144,7 @@ export default function GeneralConfigForm({ initialData }: GeneralConfigFormProp
           />
         )}
 
-        {seccionActiva === "apariencia" && (
+        {seccionInicial === "apariencia" && (
           <SeccionApariencia
             colorPrimario={primaryColor}
             colorSecundario={secondaryColor}
@@ -163,7 +155,7 @@ export default function GeneralConfigForm({ initialData }: GeneralConfigFormProp
           />
         )}
 
-        {seccionActiva === "imagenes" && (
+        {seccionInicial === "imagenes" && (
           <SeccionImagenes
             logo={formData.logo}
             favicon={formData.favicon}

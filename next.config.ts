@@ -1,18 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true, 
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   serverExternalPackages: ['@prisma/client', 'prisma'],
   experimental: {
     serverActions: {
-      // El default es 1 MB y corta la subida de imágenes de configuración
-      // antes de que la action pueda validar el tamaño.
-      bodySizeLimit: '6mb',
+      // Permite recibir imágenes de configuración de hasta 20 MB antes de
+      // validarlas y optimizarlas para su almacenamiento en Cloudinary.
+      bodySizeLimit: '20mb',
     },
   },
   images: {

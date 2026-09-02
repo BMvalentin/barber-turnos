@@ -46,7 +46,7 @@ export async function listarLocksDelDia(
       .map((l) => l.slot);
 
     return { success: true, data };
-  } catch (error) {
+  } catch {
     return { success: false, error: "Error interno" };
   }
 }

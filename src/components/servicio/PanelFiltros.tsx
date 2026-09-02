@@ -53,16 +53,13 @@ export default function PanelFiltros({
             mostrarPanel || filtrosActivos > 0
               ? "var(--page-primary)"
               : "var(--admin-border)",
-          color:
-            mostrarPanel || filtrosActivos > 0
-              ? "var(--page-primary)"
-              : "var(--admin-texto-primario)",
+          color: "var(--admin-texto-primario)",
           backgroundColor:
             mostrarPanel || filtrosActivos > 0
               ? "var(--page-primary-15)"
               : "var(--admin-surface-elevated)",
         }}
-        className="flex items-center gap-2 px-4 py-2 border text-[10px] font-bold uppercase tracking-wider rounded transition-colors duration-150 hover:bg-white/5"
+        className="flex items-center gap-2 px-4 py-2 border text-[10px] font-bold uppercase tracking-wider rounded transition-colors duration-150 hover:bg-[var(--admin-item-hover)]"
       >
         <SlidersHorizontal className="w-4 h-4" />
         Filtrar
