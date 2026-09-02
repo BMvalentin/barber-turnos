@@ -1,16 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Calendar } from "lucide-react";
-import { cancelTurno } from "@/actions/sesion/cancelar-turno.actions";
-import { completedTurno } from "@/actions/turnos/completar.actions";
-import { confirmarTurno } from "@/actions/turnos/confirmar.actions";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
 import EmptyState from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ESTADOS_TURNO } from "@/lib/constants";
 import LineaTiempoTurnos from "./LineaTiempoTurnos";
+import { useConfirmacionTurno } from "./use-confirmacion-turno";
 import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
 
@@ -24,8 +21,6 @@ interface Props {
   onCargarMas?: () => void;
   onEstadoActualizado?: (id: string, nuevoEstado: string) => void;
 }
-
-type AccionConfirmacion = "cancelar" | "completar" | "confirmar";
 
 export default function TurnoList({
   turnos,
@@ -45,11 +40,6 @@ export default function TurnoList({
       ),
     [turnos],
   );
-
-  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
-  const [accionConfirmacion, setAccionConfirmacion] = useState<AccionConfirmacion | null>(null);
-  const [turnoIdConfirmacion, setTurnoIdConfirmacion] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const onCargarMasRef = useRef(onCargarMas);
@@ -72,91 +62,18 @@ export default function TurnoList({
   const { retroalimentar } = useRetroalimentacionAccion({
     descripcionError: "Hubo un error al intentar procesar la acción.",
   });
-
-  const solicitarCancelar = (id: string) => {
-    setAccionConfirmacion("cancelar");
-    setTurnoIdConfirmacion(id);
-    setMostrarConfirmacion(true);
-  };
-
-  const solicitarCompletar = (id: string) => {
-    setAccionConfirmacion("completar");
-    setTurnoIdConfirmacion(id);
-    setMostrarConfirmacion(true);
-  };
-
-  const solicitarConfirmar = (id: string) => {
-    setAccionConfirmacion("confirmar");
-    setTurnoIdConfirmacion(id);
-    setMostrarConfirmacion(true);
-  };
-
-  const cancelarConfirmacion = () => {
-    setMostrarConfirmacion(false);
-    setAccionConfirmacion(null);
-    setTurnoIdConfirmacion(null);
-    setIsLoading(false);
-  };
-
-  const confirmarAccion = async () => {
-    if (!turnoIdConfirmacion || !accionConfirmacion) return;
-    setIsLoading(true);
-
-    try {
-      if (accionConfirmacion === "cancelar") {
-        await cancelTurno(turnoIdConfirmacion);
-        await retroalimentar(
-          { success: true },
-          "Turno cancelado",
-          "El turno se ha cancelado correctamente.",
-        );
-        onEstadoActualizado(turnoIdConfirmacion, ESTADOS_TURNO[3]);
-      } else if (accionConfirmacion === "completar") {
-        const formData = new FormData();
-        formData.append("id", turnoIdConfirmacion);
-        await completedTurno({ success: false }, formData);
-        await retroalimentar(
-          { success: true },
-          "Turno completado",
-          "El turno se ha marcado como completado.",
-        );
-        onEstadoActualizado(turnoIdConfirmacion, ESTADOS_TURNO[2]);
-      } else if (accionConfirmacion === "confirmar") {
-        await confirmarTurno(turnoIdConfirmacion);
-        await retroalimentar(
-          { success: true },
-          "Turno confirmado",
-          "El turno se ha confirmado correctamente.",
-        );
-        onEstadoActualizado(turnoIdConfirmacion, ESTADOS_TURNO[1]);
-      }
-    } catch {
-      await retroalimentar({ success: false });
-    } finally {
-      setIsLoading(false);
-      cancelarConfirmacion();
-    }
-  };
-
-  const getModalMessage = () => {
-    if (accionConfirmacion === "cancelar") {
-      return "¿Estás seguro de que querés cancelar este turno? Esta acción no se puede deshacer.";
-    }
-    if (accionConfirmacion === "completar") {
-      return "¿Marcar este turno como completado? El cliente recibirá una notificación.";
-    }
-    if (accionConfirmacion === "confirmar") {
-      return "¿Estás seguro de que querés confirmar este turno?";
-    }
-    return "";
-  };
-
-  const getModalTitle = () => {
-    if (accionConfirmacion === "cancelar") return "Cancelar Turno";
-    if (accionConfirmacion === "completar") return "Completar Turno";
-    if (accionConfirmacion === "confirmar") return "Confirmar Turno";
-    return "";
-  };
+  const {
+    mostrarConfirmacion,
+    accionConfirmacion,
+    solicitarCancelar,
+    solicitarCompletar,
+    solicitarConfirmar,
+    cancelarConfirmacion,
+    confirmarAccion,
+  } = useConfirmacionTurno({
+    alRetroalimentar: retroalimentar,
+    alActualizarEstado: onEstadoActualizado,
+  });
 
   if (cargandoInicial) {
     return (
@@ -221,8 +138,8 @@ export default function TurnoList({
 
       {mostrarConfirmacion && (
         <ConfirmDialog
-          title={getModalTitle()}
-          message={getModalMessage()}
+          title={accionConfirmacion === "cancelar" ? "Cancelar Turno" : accionConfirmacion === "completar" ? "Completar Turno" : "Confirmar Turno"}
+          message={accionConfirmacion === "cancelar" ? "¿Estás seguro de que querés cancelar este turno? Esta acción no se puede deshacer." : accionConfirmacion === "completar" ? "¿Marcar este turno como completado? El cliente recibirá una notificación." : "¿Estás seguro de que querés confirmar este turno?"}
           onConfirm={confirmarAccion}
           onCancel={cancelarConfirmacion}
         />

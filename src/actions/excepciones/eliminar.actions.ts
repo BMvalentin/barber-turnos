@@ -1,8 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
 import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
+import { revalidarExcepciones } from "@/lib/revalidar/revalidar-excepciones";
 
 async function softDeleteExcepcionBase(
   formData: FormData
@@ -14,7 +14,7 @@ async function softDeleteExcepcionBase(
       throw new Error("ID requerido");
     }
 
-    await prisma.excepcion_laboral.update({
+    const excepcion = await prisma.excepcion_laboral.update({
       where: { id },
       data: {
         estado: false,
@@ -22,7 +22,7 @@ async function softDeleteExcepcionBase(
       },
     });
 
-    revalidatePath("/admin/config/empleados/horarios-laborales/excepciones");
+    revalidarExcepciones(excepcion.barberoId);
 
   } catch (error) {
     console.error("Error al desactivar excepción:", error);

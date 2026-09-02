@@ -11,7 +11,13 @@ import ModalTelefonoObligatorio from "@/components/dashboard/ModalTelefonoObliga
 import PanelTurnosUsuario from "@/components/dashboard/PanelTurnosUsuario";
 import type { PestanaPanel, PropiedadesPanelUsuario } from "@/components/dashboard/tipos-panel-usuario";
 
-export default function DashboardPanel({ user, turnos, session }: PropiedadesPanelUsuario) {
+export default function DashboardPanel({
+  user,
+  turnos,
+  paginaTurnosInicial,
+  totalPaginasTurnos,
+  session,
+}: PropiedadesPanelUsuario) {
   const { update } = useSession();
   const [guardando, iniciarTransicion] = useTransition();
   const [pestana, setPestana] = useState<PestanaPanel>("perfil");
@@ -54,7 +60,12 @@ export default function DashboardPanel({ user, turnos, session }: PropiedadesPan
             {pestana === "perfil" ? (
               <FormularioPerfilUsuario usuario={user} prefijoInicial={prefijoInicial} telefonoInicial={telefonoInicial} guardando={guardando} alGuardar={guardarPerfil} />
             ) : (
-              <PanelTurnosUsuario turnos={turnos} session={session} />
+              <PanelTurnosUsuario
+                turnosIniciales={turnos}
+                paginaInicial={paginaTurnosInicial}
+                totalPaginasInicial={totalPaginasTurnos}
+                session={session}
+              />
             )}
           </motion.div>
         </AnimatePresence>

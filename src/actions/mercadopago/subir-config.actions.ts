@@ -1,10 +1,9 @@
 "use server";
 
 import { uploadToCloudinary } from "@/lib/cloudinary-uploader/subir-uno";
+import { LIMITE_IMAGEN_CONFIGURACION_BYTES } from "@/lib/imagenes/limites-imagen-configuracion";
 import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
 import { validarArchivoImagen } from "@/lib/validar-imagen";
-
-const MAX_CONFIG_IMAGE_BYTES = 2 * 1024 * 1024; // 2 MB
 
 // Sube una imagen de branding (logo, favicon, fondo del home) a Cloudinary
 async function uploadConfigImageBase(
@@ -14,14 +13,12 @@ async function uploadConfigImageBase(
     return { success: false, error: "No se recibió ningún archivo." };
   }
 
-  const validacion = await validarArchivoImagen(file);
+  const validacion = await validarArchivoImagen(file, {
+    tamanoMaximoBytes: LIMITE_IMAGEN_CONFIGURACION_BYTES,
+  });
 
   if (!validacion.ok) {
     return { success: false, error: validacion.error };
-  }
-
-  if (file.size > MAX_CONFIG_IMAGE_BYTES) {
-    return { success: false, error: "La imagen no puede superar los 2 MB." };
   }
 
   const result = await uploadToCloudinary({

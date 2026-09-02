@@ -5,4 +5,10 @@ import type { TurnoListado } from "@/types/turno";
 export type DatosUsuarioPanel = { id: string; name?: string | null; email?: string | null; telefono?: string | null };
 export type PestanaPanel = "perfil" | "turnos";
 export type ManejadorFormularioPerfil = (evento: FormEvent<HTMLFormElement>) => void;
-export type PropiedadesPanelUsuario = { user: DatosUsuarioPanel; turnos: TurnoListado[]; session: Session | null };
+export type PropiedadesPanelUsuario = {
+  user: DatosUsuarioPanel;
+  turnos: TurnoListado[];
+  paginaTurnosInicial: number;
+  totalPaginasTurnos: number;
+  session: Session | null;
+};

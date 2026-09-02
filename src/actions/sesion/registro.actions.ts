@@ -26,7 +26,8 @@ export const registerAction = async (prevState: ActionState, formData: FormData)
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       for (const k of [clave, ip]) limitadorDeIntentos.registrarIntento(k, MAX_REGISTROS_POR_IP);
-      return { error: "El usuario ya existe" };
+      // No revelar si una dirección ya tiene una cuenta.
+      return { success: true, email };
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     await prisma.user.create({

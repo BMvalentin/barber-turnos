@@ -5,11 +5,9 @@ import Paginacion from "./Paginacion";
 import ServicioRow from "./ServicioRow";
 import EmptyState from "@/components/ui/EmptyState";
 import type { Servicio } from "@/types/servicio";
-import type { Barbero } from "@/types/barbero";
 
 type ServicioTablaProps = {
   servicios: Servicio[];
-  barberos: Barbero[];
   onEliminar: (id: string) => void;
   estaVacio: boolean;
   sinServicios: boolean;
@@ -25,7 +23,6 @@ type ServicioTablaProps = {
 
 export default function ServicioTabla({
   servicios,
-  barberos,
   onEliminar,
   estaVacio,
   sinServicios,
@@ -79,7 +76,6 @@ export default function ServicioTabla({
           <ServicioRow
             key={servicio.id}
             servicio={servicio}
-            barberos={barberos}
             onEliminar={onEliminar}
           />
         ))}

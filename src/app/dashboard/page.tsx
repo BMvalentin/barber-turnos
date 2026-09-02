@@ -8,15 +8,21 @@ export default async function DashboardPage() {
 
   if (!session) return null; // El middleware ya protege, pero TypeScript lo agradece
 
-  const dbUser = await prisma.user.findUnique({
-    where: { id: session.user.id },
-  });
-
-  const turnos = await getUserTurnos(session.user.id as string);
+  const [dbUser, resultadoTurnos] = await Promise.all([
+    prisma.user.findUnique({ where: { id: session.user.id } }),
+    getUserTurnos(session.user.id),
+  ]);
+  const paginaTurnos = resultadoTurnos.data;
 
   return (
     <>
-      <DashboardPanel user={dbUser || session.user} turnos={turnos} session={session} />
+      <DashboardPanel
+        user={dbUser || session.user}
+        turnos={paginaTurnos?.turnos ?? []}
+        paginaTurnosInicial={paginaTurnos?.paginaActual ?? 1}
+        totalPaginasTurnos={paginaTurnos?.totalPaginas ?? 1}
+        session={session}
+      />
     </>
   );
 }

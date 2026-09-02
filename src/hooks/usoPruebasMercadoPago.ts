@@ -16,7 +16,7 @@ function ahoraTs() {
   });
 }
 
-export function usoPruebasMercadoPago(initialTurnos: Turno[]) {
+export function usePruebasMercadoPago(initialTurnos: Turno[]) {
   const [turnos, setTurnos] = useState<Turno[]>(initialTurnos);
   const [selectedId, setSelectedId] = useState<string | null>(initialTurnos[0]?.id ?? null);
   // Vacío en SSR para evitar hydration mismatch con timestamps dinámicos

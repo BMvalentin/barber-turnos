@@ -1,5 +1,6 @@
 // app/admin/layout.tsx
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
+import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { redirect } from "next/navigation";
 import AdminShell from "@/components/panel/navegacion/AdminShell";
 import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
@@ -15,7 +16,7 @@ export default async function AdminLayout({
     redirect("/login");
   }
 
-  if (session.user.role !== "ADMIN") {
+  if (!await requerirAdmin()) {
     redirect("/dashboard");
   }
 

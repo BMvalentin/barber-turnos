@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { updatePageConfig } from "@/actions/configuracion/config-general.actions";
 import { uploadConfigImage } from "@/actions/mercadopago/subir-config.actions";
 import { esColorHexValido } from "@/lib/contraste/es-color-hex-valido";
+import { comprimirImagenConfiguracion } from "@/lib/imagenes/comprimir-imagen-configuracion";
 import SeccionIdentidad from "@/components/admin/config/SeccionIdentidad";
 import SeccionContacto from "@/components/admin/config/SeccionContacto";
 import SeccionApariencia from "@/components/admin/config/SeccionApariencia";
@@ -63,14 +64,12 @@ export default function GeneralConfigForm({ initialData, seccionInicial }: Gener
     }));
   };
 
-  const manejarArchivo = async (e: React.ChangeEvent<HTMLInputElement>, campo: NombreCampoImagen) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const manejarArchivo = async (file: File, campo: NombreCampoImagen) => {
     setUploadingField(campo);
 
     try {
-      const res = await uploadConfigImage(file);
+      const archivoOptimizado = await comprimirImagenConfiguracion(file);
+      const res = await uploadConfigImage(archivoOptimizado);
       const url = res.url;
 
       if (res.success && url) {
@@ -83,7 +82,6 @@ export default function GeneralConfigForm({ initialData, seccionInicial }: Gener
       toast.error("Error al subir la imagen", { description: "Ocurrió un error al subir la imagen. Intentá de nuevo." });
     } finally {
       setUploadingField(null);
-      e.target.value = "";
     }
   };
 

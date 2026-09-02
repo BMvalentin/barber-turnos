@@ -47,7 +47,7 @@ export function ImageCarousel({ servicios }: ImageCarouselProps) {
 
                   <div className="group relative overflow-hidden rounded-2xl aspect-square bg-[var(--admin-surface)] shadow-lg border border-[var(--page-bg-foreground)]/5">
                     <Image
-                      src={servicio.srcImage || "/placeholder.jpg"}
+                      src={servicio.srcImage || "/images/avatar-default.svg"}
                       alt={servicio.nombre}
                       fill
                       sizes="(max-width: 768px) 50vw, 25vw"

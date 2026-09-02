@@ -86,6 +86,8 @@ model turno {
      evitan el escaneo completo de turnos del barbero/usuario filtrando por fecha. */
   @@index([barberoId, horarioReservado])
   @@index([estado, horarioReservado])
+  @@index([estado, estadoPago, createdAt])
+  @@index([horarioReservado])
   @@index([userId, horarioReservado])
 }
 
@@ -213,6 +215,7 @@ model SlotLock {
 
   @@index([barberoId, horarioReservado])
   @@index([expiresAt])
+  @@index([userId])
 }
 
 model PageConfig {

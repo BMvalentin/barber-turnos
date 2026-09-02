@@ -2,6 +2,8 @@
 // Vive en su propio archivo: si estuviera dentro del form, React lo
 // remontaría en cada render y el input de URL perdería el foco al tipear.
 import type { NombreCampoImagen, ManejarCambio, ManejarArchivo } from "@/components/admin/config/tipos";
+import SelectorImagenConRecorte from "@/components/ui/imagenes/SelectorImagenConRecorte";
+import { LIMITE_IMAGEN_CONFIGURACION_BYTES } from "@/lib/imagenes/limites-imagen-configuracion";
 
 const CLASES_ARCHIVO =
   "w-full cursor-pointer rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-3 py-2 text-sm text-[var(--admin-texto-secundario)] transition-colors duration-150 hover:border-[var(--admin-border-fuerte)] disabled:opacity-50 file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-white/10 file:px-2.5 file:py-1 file:text-xs file:font-medium file:text-[var(--admin-texto-primario)]";
@@ -15,6 +17,7 @@ interface CampoImagenProps {
   valor: string;
   pista?: string;
   claseVistaPrevia: string;
+  proporcionRecorte?: number | "libre";
   subiendo: boolean;
   manejarArchivo: ManejarArchivo;
   manejarTexto: ManejarCambio;
@@ -27,6 +30,7 @@ export default function CampoImagen({
   valor,
   pista,
   claseVistaPrevia,
+  proporcionRecorte = "libre",
   subiendo,
   manejarArchivo,
   manejarTexto,
@@ -38,13 +42,15 @@ export default function CampoImagen({
         {etiqueta}
       </label>
 
-      <input
-        type="file"
-        accept="image/*"
-        disabled={subiendo}
-        onChange={(e) => manejarArchivo(e, campo)}
+      <SelectorImagenConRecorte
+        alConfirmar={(archivo) => manejarArchivo(archivo, campo)}
+        proporcion={proporcionRecorte}
+        deshabilitado={subiendo}
+        tamanoMaximoBytes={LIMITE_IMAGEN_CONFIGURACION_BYTES}
         className={CLASES_ARCHIVO}
-      />
+      >
+        Seleccionar imagen
+      </SelectorImagenConRecorte>
 
       <input
         type="text"

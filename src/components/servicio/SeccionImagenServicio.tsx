@@ -1,6 +1,7 @@
 "use client";
 
 import { Upload, X } from "lucide-react";
+import SelectorImagenConRecorte from "@/components/ui/imagenes/SelectorImagenConRecorte";
 
 type SeccionImagenServicioProps = {
   previewUrl: string | null;
@@ -47,11 +48,13 @@ export default function SeccionImagenServicio({
           {esBarbero ? <button type="button" onClick={onRemove} className="text-sm text-red-400 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]">Eliminar foto</button> : <button type="button" onClick={onRemove} className="absolute -top-2 -right-2 p-1 bg-red-600 rounded-full text-white hover:bg-red-700"><X className="h-4 w-4" /></button>}
         </div>
       ) : (
-        <label
+        <SelectorImagenConRecorte
+          alConfirmar={onFileChange}
+          proporcion={1}
+          deshabilitado={isPending}
           className={`relative flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg cursor-pointer transition ${
             isPending ? "opacity-50 pointer-events-none" : ""
           }`}
-          style={{ borderColor: esBarbero ? "var(--admin-border-fuerte)" : "var(--admin-border)" }}
         >
           {isPending ? (
             <span className="text-sm" style={{ color: "var(--page-primary-tinta)" }}>
@@ -66,17 +69,7 @@ export default function SeccionImagenServicio({
             </>
           )}
 
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const archivo = e.target.files?.[0];
-              if (archivo) onFileChange(archivo);
-            }}
-            className="absolute inset-0 opacity-0 cursor-pointer"
-            disabled={isPending}
-          />
-        </label>
+        </SelectorImagenConRecorte>
       )}
 
       {uploadError && (

@@ -4,17 +4,14 @@ import { useState } from "react";
 import { Clock, Scissors, SquarePen, Trash2 } from "lucide-react";
 import EditServicioModal from "./EditServicioModal";
 import type { Servicio } from "@/types/servicio";
-import type { Barbero } from "@/types/barbero";
 
 type ServicioRowProps = {
   servicio: Servicio;
-  barberos: Barbero[];
   onEliminar: (id: string) => void;
 };
 
 export default function ServicioRow({
   servicio,
-  barberos,
   onEliminar,
 }: ServicioRowProps) {
   const [showEditModal, setShowEditModal] = useState(false);

@@ -41,7 +41,7 @@ function obtenerMedidas(): Medidas {
     : { pixelesPorHora: 48, ejeX: 32, anchoGutter: 52 };
 }
 
-function usarMedidasLineaTiempo(): Medidas {
+function useMedidasLineaTiempo(): Medidas {
   const [medidas, setMedidas] = useState(obtenerMedidas);
   useEffect(() => {
     const actualizar = () => setMedidas(obtenerMedidas());
@@ -131,7 +131,7 @@ export default function LineaTiempoTurnos({
   onCompletar,
   onConfirmar,
 }: Props) {
-  const medidas = usarMedidasLineaTiempo();
+  const medidas = useMedidasLineaTiempo();
   const { pixelesPorHora, ejeX, anchoGutter } = medidas;
   const pxPorMinuto = pixelesPorHora / 60;
 

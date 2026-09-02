@@ -2,7 +2,7 @@
 // src/components/test-mp/MPTestClient.tsx
 
 import type { Turno } from "./tipos";
-import { usoPruebasMercadoPago } from "@/hooks/usoPruebasMercadoPago";
+import { usePruebasMercadoPago } from "@/hooks/usoPruebasMercadoPago";
 import { ListaTurnos } from "./ListaTurnos";
 import { InfoTurno } from "./InfoTurno";
 import { FlujoPago } from "./FlujoPago";
@@ -30,7 +30,7 @@ export function MPTestClient({ turnos: initialTurnos }: { turnos: Turno[] }) {
     confirmarManual,
     verificarEstado,
     simularWebhook,
-  } = usoPruebasMercadoPago(initialTurnos);
+  } = usePruebasMercadoPago(initialTurnos);
 
   return (
     <div

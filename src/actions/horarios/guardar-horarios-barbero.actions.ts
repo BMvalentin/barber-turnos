@@ -52,7 +52,7 @@ async function guardarHorariosBarberoBase(
       }
     });
 
-    revalidarDiasLaborales();
+    revalidarDiasLaborales(barberoId);
     revalidarBarberos();
 
     return { success: true, data: { message: "Horarios guardados correctamente" } };

@@ -12,7 +12,7 @@ export async function obtenerHorariosDisponibles(
 ): Promise<ActionState<string[]>> {
 
   const cacheKey = ["horarios-finales", fecha, servicioId, barberoId, turnoIdAExcluir || "none"];
-  const cacheTags = [`turnos-${barberoId}-${fecha}`, `servicio-${servicioId}`, "turnos-global"];
+  const cacheTags = [`turnos-${barberoId}-${fecha}`, `servicio-${servicioId}`, `margenes-${barberoId}`, `excepciones-${barberoId}`, "excepciones-globales", "turnos-global"];
 
   const calcularSlotsFinales = async () => {
     const disponibilidad = await obtenerDisponibilidad(servicioId, barberoId, fecha, fecha, turnoIdAExcluir);

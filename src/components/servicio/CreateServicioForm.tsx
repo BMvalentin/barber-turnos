@@ -4,7 +4,6 @@ import { createServicio } from "@/actions/servicios/crear.actions";
 import { ActionStateInicial } from "@/types/action-state";
 import type { ActionState } from "@/types/action-state";
 import type { ServicioCreado } from "@/types/servicio";
-import type { Barbero } from "@/types/barbero";
 import { useEffect, useRef, useState } from "react";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { useImagenServicio } from "@/hooks/useImagenServicio";
@@ -18,12 +17,10 @@ import SeccionPrecioDetalles from "./SeccionPrecioDetalles";
 const initialState: ActionState<ServicioCreado> = ActionStateInicial;
 
 type CreateServicioFormProps = {
-  barberos: Barbero[];
   onClose: () => void;
 };
 
 export default function CreateServicioForm({
-  barberos,
   onClose,
 }: CreateServicioFormProps) {
   const [isPending, setIsPending] = useState(false);
