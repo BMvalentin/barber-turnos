@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { validarTokenVerificacion } from "@/lib/validar-token-verificacion";
 
 export async function GET(request: NextRequest) {
@@ -12,20 +11,13 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const registro = await validarTokenVerificacion(token);
+  const verificado = await validarTokenVerificacion(token);
 
-  if (!registro) {
+  if (!verificado) {
     return NextResponse.redirect(
       new URL("/verificar-email?error=token-invalido", baseUrl),
     );
   }
-
-  await prisma.user.update({
-    where: { id: registro.userId },
-    data: { emailVerified: new Date() },
-  });
-
-  await prisma.verificacion_usuario.delete({ where: { token } });
 
   return NextResponse.redirect(
     new URL("/login?verificado=true", baseUrl),

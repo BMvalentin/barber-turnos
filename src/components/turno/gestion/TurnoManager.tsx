@@ -49,7 +49,7 @@ export default function TurnoManager({
   initialRelaciones = [],
   whatsappPhone,
 }: Props) {
-  const [filtroEstado, setFiltroEstado] = useState("PENDIENTE");
+  const [filtroEstado, setFiltroEstado] = useState("CONFIRMADO");
   const [fecha, setFecha] = useState("");
   const [turnos, setTurnos] = useState(turnosIniciales);
   const [paginaActual, setPaginaActual] = useState(1);

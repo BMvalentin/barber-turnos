@@ -107,7 +107,7 @@ export default async function PagoSuccessPage({
   const esPagoTotal = datosTurno?.tipoPago === "TOTAL";
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[var(--page-bg)] text-[var(--page-bg-foreground)] flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center space-y-6">
 
         {/* Ícono de éxito */}
@@ -119,28 +119,28 @@ export default async function PagoSuccessPage({
 
         {/* Título */}
         <div>
-          <h1 className="text-3xl font-black text-white uppercase tracking-tight mb-2">
+          <h1 className="text-3xl font-black text-[var(--page-bg-foreground)] uppercase tracking-tight mb-2">
             {esPagoTotal ? "¡Pago Total!" : "¡Seña Pagada!"}
           </h1>
-          <p className="text-zinc-400">
+          <p className="text-[var(--admin-texto-secundario)]">
             Tu turno quedó confirmado. Te esperamos.
           </p>
         </div>
 
         {/* Info del pago */}
         {paymentId && (
-          <div className="bg-zinc-900/60 border border-white/10 rounded-2xl p-4 text-left space-y-2">
-            <p className="text-xs text-zinc-500 uppercase tracking-widest font-bold">
+          <div className="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-2xl p-4 text-left space-y-2">
+            <p className="text-xs text-[var(--admin-texto-muted)] uppercase tracking-widest font-bold">
               Comprobante
             </p>
-            <p className="text-sm text-zinc-300">
-              <span className="text-zinc-500">ID de pago:</span>{" "}
-              <span className="font-mono text-[var(--page-primary-80)]">{paymentId}</span>
+            <p className="text-sm text-[var(--admin-texto-secundario)]">
+              <span className="text-[var(--admin-texto-muted)]">ID de pago:</span>{" "}
+              <span className="font-mono text-[var(--page-primary-tinta)]">{paymentId}</span>
             </p>
             {turnoId && (
-              <p className="text-sm text-zinc-300">
-                <span className="text-zinc-500">Turno:</span>{" "}
-                <span className="font-mono text-zinc-300">{turnoId.slice(0, 8)}...</span>
+              <p className="text-sm text-[var(--admin-texto-secundario)]">
+                <span className="text-[var(--admin-texto-muted)]">Turno:</span>{" "}
+                <span className="font-mono text-[var(--admin-texto-secundario)]">{turnoId.slice(0, 8)}...</span>
               </p>
             )}
           </div>
@@ -171,7 +171,7 @@ export default async function PagoSuccessPage({
             </Link>
             <Link
               href="/"
-              className="flex items-center justify-center gap-2 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium py-3 rounded-2xl transition-all text-sm"
+            className="flex items-center justify-center gap-2 w-full bg-[var(--admin-item)] hover:bg-[var(--admin-item-hover)] text-[var(--admin-texto-primario)] font-medium py-3 rounded-2xl transition-all text-sm"
             >
               Volver al inicio
               <ArrowRight className="w-4 h-4" />

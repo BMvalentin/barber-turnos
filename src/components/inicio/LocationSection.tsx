@@ -38,7 +38,7 @@ export function LocationSection({ config }: LocationSectionProps) {
   }, []);
 
   return (
-    <section id="ubicacion" className="py-20 md:py-32 bg-linear-to-b from-[var(--page-bg)]/90 to-[var(--page-bg)] justify-center items-center mx-auto border-y border-amber-900/20">
+    <section id="ubicacion" className="py-20 md:py-32 bg-linear-to-b from-[var(--page-bg)]/90 to-[var(--page-bg)] justify-center items-center mx-auto border-y border-[var(--admin-border)]">
       <div className="container justify-around items-center mx-auto px-4">
 
         {/* HEADER DE LA SECCIÓN */}
@@ -74,7 +74,7 @@ export function LocationSection({ config }: LocationSectionProps) {
             className="space-y-6 items-center justify-center w-full md:max-w-[35vw] mx-auto"
           >
             {/* DIRECCIÓN */}
-            <div className="flex gap-4 p-6 rounded-xl bg-[var(--admin-surface)] border border-amber-900/30 shadow-2xl hover:border-[var(--page-primary)]/50 transition-colors group">
+            <div className="flex gap-4 p-6 rounded-xl bg-[var(--admin-surface)] border border-[var(--admin-border)] shadow-2xl hover:border-[var(--admin-border-fuerte)] transition-colors group">
               <div 
                 className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
                 style={{ backgroundColor: "var(--page-primary-15)" }}
@@ -88,7 +88,7 @@ export function LocationSection({ config }: LocationSectionProps) {
             </div>
 
             {/* TELÉFONO */}
-            <div className="flex gap-4 p-6 rounded-xl bg-[var(--admin-surface)] border border-amber-900/30 shadow-2xl hover:border-[var(--page-primary)]/50 transition-colors group">
+            <div className="flex gap-4 p-6 rounded-xl bg-[var(--admin-surface)] border border-[var(--admin-border)] shadow-2xl hover:border-[var(--admin-border-fuerte)] transition-colors group">
               <div 
                 className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
                 style={{ backgroundColor: "var(--page-primary-15)" }}
@@ -102,7 +102,7 @@ export function LocationSection({ config }: LocationSectionProps) {
             </div>
 
             {/* HORARIOS */}
-            <div className="flex gap-4 p-6 rounded-xl bg-[var(--admin-surface)] border border-amber-900/30 shadow-2xl hover:border-[var(--page-primary)]/50 transition-colors group">
+            <div className="flex gap-4 p-6 rounded-xl bg-[var(--admin-surface)] border border-[var(--admin-border)] shadow-2xl hover:border-[var(--admin-border-fuerte)] transition-colors group">
               <div 
                 className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
                 style={{ backgroundColor: "var(--page-primary-15)" }}
@@ -130,10 +130,10 @@ export function LocationSection({ config }: LocationSectionProps) {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="relative rounded-xl overflow-hidden border border-amber-900/30 h-[450px] bg-[var(--admin-surface)] shadow-2xl group"
+            className="relative rounded-xl overflow-hidden border border-[var(--admin-border)] h-[450px] bg-[var(--admin-surface)] shadow-2xl group"
           >
             {/* Overlay estético para el mapa */}
-            <div className="absolute inset-0 bg-amber-950/5 pointer-events-none group-hover:bg-transparent transition-colors z-10" />
+            <div className="absolute inset-0 bg-[var(--page-secondary-08)] pointer-events-none group-hover:bg-transparent transition-colors z-10" />
 
             <iframe
               src={mapsUrl}

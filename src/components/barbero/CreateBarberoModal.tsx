@@ -29,16 +29,16 @@ export default function CreateBarberoModal({ servicios, diasLaborales }: Props) 
           className="text-[var(--page-primary-foreground)] shadow-lg transition-all hover:opacity-90"
           style={ESTILO_FONDO_MARCA}
         >
-          + Ingresar Barbero
+          + Nuevo barbero
         </Button>
       </DialogTrigger>
 
       <DialogContent className="max-w-2xl p-0 bg-transparent border-none animate-in fade-in zoom-in-95 duration-200 [&>button]:hidden">
         <div
-          className="bg-[var(--admin-surface)] backdrop-blur-lg rounded-xl p-6 space-y-6 shadow-2xl border relative"
+          className="bg-[var(--admin-surface)] rounded-xl p-6 space-y-6 shadow-2xl border relative"
           style={{
-            borderColor: "var(--page-primary-40)",
-            boxShadow: "0 25px 50px -12px var(--page-primary-15)"
+            borderColor: "var(--admin-border-fuerte)",
+            boxShadow: "0 25px 50px -12px rgb(0 0 0 / 0.35)"
           }}
         >
 
@@ -53,7 +53,7 @@ export default function CreateBarberoModal({ servicios, diasLaborales }: Props) 
 
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-[var(--admin-texto-primario)]">
-              Nuevo Barbero
+              Nuevo barbero
             </DialogTitle>
           </DialogHeader>
 
@@ -61,6 +61,7 @@ export default function CreateBarberoModal({ servicios, diasLaborales }: Props) 
             servicios={servicios}
             diasLaborales={diasLaborales}
             onSuccess={() => setOpen(false)}
+            onCancel={() => setOpen(false)}
           />
 
         </div>

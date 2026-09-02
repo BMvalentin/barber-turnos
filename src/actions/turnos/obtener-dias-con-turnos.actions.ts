@@ -3,7 +3,7 @@
 import { fromZonedTime } from "date-fns-tz";
 import { prisma } from "@/lib/prisma";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
-import { esAdmin } from "@/lib/seguridad/es-admin";
+import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { ZONA_HORARIA } from "@/lib/constants";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import type { ActionState } from "@/types/action-state";
@@ -32,7 +32,7 @@ export async function obtenerDiasConTurnos(
     const inicio = fromZonedTime(`${mes}-01T00:00:00`, ZONA_HORARIA);
     const fin = fromZonedTime(`${formatearMesSiguiente(anio, mesNumero)}-01T00:00:00`, ZONA_HORARIA);
 
-    const usuarioEsAdmin = esAdmin(session);
+    const usuarioEsAdmin = Boolean(await requerirAdmin());
     const where: Prisma.turnoWhereInput = { horarioReservado: { gte: inicio, lt: fin } };
 
     if (!usuarioEsAdmin) where.userId = session.user.id;

@@ -4,8 +4,7 @@ import LayoutComponent from "@/components/comunes/LayoutComponent";
 import AppGate from "@/components/comunes/AppGate";
 import { Toaster } from "sonner";
 import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
-import { elegirColorTexto } from "@/lib/contraste/elegir-color-texto";
-import { obtenerTintaLejible } from "@/lib/contraste/obtener-tinta-lejible";
+import { crearVariablesTema } from "@/lib/contraste/crear-variables-tema";
 import { auth } from "@/auth";
 
 const outfit = Outfit({
@@ -24,34 +23,18 @@ export default async function RootLayout({
   const config = await obtenerConfigCacheada();
   const session = await auth();
 
-  // Defaults de color: la fuente única es :root en globals.css
-  const PRIMARIO_POR_DEFECTO = "#d97706";
-  const SECUNDARIO_POR_DEFECTO = "#78350f";
-  const FONDO_POR_DEFECTO = "#09090b";
-  const colorPrimario = config?.primaryColor ?? PRIMARIO_POR_DEFECTO;
-  const colorSecundario = config?.secondaryColor ?? SECUNDARIO_POR_DEFECTO;
-  const colorFondo = config?.bgColor ?? FONDO_POR_DEFECTO;
-  const colorTextoPrimario = elegirColorTexto(colorPrimario);
-  const colorTextoSecundario = elegirColorTexto(colorSecundario);
-  const colorTextoFondo = elegirColorTexto(colorFondo);
-  const tintaPrimaria = obtenerTintaLejible(colorPrimario);
-  const tintaSecundaria = obtenerTintaLejible(colorSecundario);
-  const tintaFondo = obtenerTintaLejible(colorFondo);
+  const variablesTema = crearVariablesTema({
+    primario: config?.primaryColor,
+    secundario: config?.secondaryColor,
+    fondo: config?.bgColor,
+  });
 
   return (
     <html
       lang="es"
       style={
         {
-          "--page-primary": config?.primaryColor,
-          "--page-secondary": config?.secondaryColor,
-          "--page-bg": config?.bgColor,
-          "--page-primary-foreground": colorTextoPrimario,
-          "--page-secondary-foreground": colorTextoSecundario,
-          "--page-bg-foreground": colorTextoFondo,
-          "--page-primary-tinta": tintaPrimaria,
-          "--page-secondary-tinta": tintaSecundaria,
-          "--page-bg-tinta": tintaFondo,
+          ...variablesTema,
         } as React.CSSProperties
       }
     >

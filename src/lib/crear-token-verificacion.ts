@@ -1,8 +1,8 @@
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
+import { hashearTokenVerificacion } from "@/lib/seguridad/hashear-token-verificacion";
 
-/** Fecha lejana: el link de verificación no vence. */
-const EXPIRACION_LEJANA = new Date("9999-12-31T23:59:59Z");
+const DURACION_TOKEN_MS = 30 * 60 * 1000;
 
 /**
  * Genera y guarda un token de verificación de email para el usuario.
@@ -12,16 +12,20 @@ export async function crearTokenVerificacion(email: string): Promise<string | nu
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) return null;
 
-  const token = randomBytes(32).toString("hex");
+  const tokenPlano = randomBytes(32).toString("hex");
+  const token = hashearTokenVerificacion(tokenPlano);
 
-  await prisma.verificacion_usuario.create({
-    data: {
-      identifier: email,
-      token,
-      expires: EXPIRACION_LEJANA,
-      userId: user.id,
-    },
-  });
+  await prisma.$transaction([
+    prisma.verificacion_usuario.deleteMany({ where: { userId: user.id } }),
+    prisma.verificacion_usuario.create({
+      data: {
+        identifier: email,
+        token,
+        expires: new Date(Date.now() + DURACION_TOKEN_MS),
+        userId: user.id,
+      },
+    }),
+  ]);
 
-  return token;
+  return tokenPlano;
 }

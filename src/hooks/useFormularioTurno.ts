@@ -110,6 +110,8 @@ export function useFormularioTurno({
     pago.setTurnoCreado,
     pago.setShowPagoModal,
     session,
+    onTurnoCreado,
+    router,
   ]);
 
   return {

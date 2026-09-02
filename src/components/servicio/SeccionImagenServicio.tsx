@@ -1,6 +1,7 @@
 "use client";
 
 import { Upload, X } from "lucide-react";
+import SelectorImagenConRecorte from "@/components/ui/imagenes/SelectorImagenConRecorte";
 
 type SeccionImagenServicioProps = {
   previewUrl: string | null;
@@ -26,8 +27,8 @@ export default function SeccionImagenServicio({
   return (
     <div className="space-y-2">
       {esBarbero ? (
-        <label className="text-sm font-semibold" style={{ color: "var(--page-primary-tinta)" }}>
-          Foto del barbero <span className="text-zinc-500 text-xs">(Opcional)</span>
+        <label className="text-sm font-medium text-[var(--admin-texto-primario)]">
+          Foto del barbero <span className="text-[var(--admin-texto-muted)] text-xs">(Opcional)</span>
         </label>
       ) : (
         <label className="block text-xs font-medium text-[var(--admin-texto-secundario)]">
@@ -36,28 +37,24 @@ export default function SeccionImagenServicio({
       )}
 
       {previewUrl || srcImage ? (
-        <div className="relative w-fit">
+        <div className={esBarbero ? "flex items-center gap-4" : "relative w-fit"}>
           <img
             src={previewUrl || srcImage}
             alt="Vista previa"
-            className="h-32 w-32 object-cover rounded-lg border"
-            style={{ borderColor: esBarbero ? "var(--page-primary-80)" : "var(--page-secondary)" }}
+            className={esBarbero ? "h-20 w-20 rounded-full border object-cover" : "h-32 w-32 object-cover rounded-lg border"}
+            style={{ borderColor: esBarbero ? "var(--admin-border-fuerte)" : "var(--admin-border)" }}
           />
 
-          <button
-            type="button"
-            onClick={onRemove}
-            className="absolute -top-2 -right-2 p-1 bg-red-600 rounded-full text-white hover:bg-red-700"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          {esBarbero ? <button type="button" onClick={onRemove} className="text-sm text-red-400 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]">Eliminar foto</button> : <button type="button" onClick={onRemove} className="absolute -top-2 -right-2 p-1 bg-red-600 rounded-full text-white hover:bg-red-700"><X className="h-4 w-4" /></button>}
         </div>
       ) : (
-        <label
+        <SelectorImagenConRecorte
+          alConfirmar={onFileChange}
+          proporcion={1}
+          deshabilitado={isPending}
           className={`relative flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg cursor-pointer transition ${
             isPending ? "opacity-50 pointer-events-none" : ""
           }`}
-          style={{ borderColor: esBarbero ? "var(--page-primary-50)" : "var(--page-secondary)" }}
         >
           {isPending ? (
             <span className="text-sm" style={{ color: "var(--page-primary-tinta)" }}>
@@ -66,23 +63,13 @@ export default function SeccionImagenServicio({
           ) : (
             <>
               <Upload className="h-6 w-6" style={{ color: "var(--page-primary-tinta)" }} />
-              <span className={`text-sm ${esBarbero ? "text-zinc-300" : "text-[var(--admin-texto-muted)]"}`}>
-                Hacé clic para subir una imagen
+              <span className="text-sm text-[var(--admin-texto-muted)]">
+                Hacé clic para cambiar la foto
               </span>
             </>
           )}
 
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const archivo = e.target.files?.[0];
-              if (archivo) onFileChange(archivo);
-            }}
-            className="absolute inset-0 opacity-0 cursor-pointer"
-            disabled={isPending}
-          />
-        </label>
+        </SelectorImagenConRecorte>
       )}
 
       {uploadError && (

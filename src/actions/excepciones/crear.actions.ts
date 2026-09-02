@@ -1,10 +1,10 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
 import { excepcionSchema } from "@/lib/excepcion-zod";
 import { fromZonedTime } from "date-fns-tz";
 import { ZONA_HORARIA } from "@/lib/constants";
+import { revalidarExcepciones } from "@/lib/revalidar/revalidar-excepciones";
 
 import type { ActionState } from "@/types/action-state";
 import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
@@ -53,7 +53,7 @@ async function createExcepcionBase(
       },
     });
 
-    revalidatePath("/excepcionesLaborales");
+    revalidarExcepciones(barberoId);
 
     return { success: true };
 

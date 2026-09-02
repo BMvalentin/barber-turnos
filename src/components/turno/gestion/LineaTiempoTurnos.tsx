@@ -38,10 +38,10 @@ function obtenerMedidas(): Medidas {
   const esEscritorio = typeof window === "undefined" || window.innerWidth >= 768;
   return esEscritorio
     ? { pixelesPorHora: 76, ejeX: 48, anchoGutter: 78 }
-    : { pixelesPorHora: 48, ejeX: 40, anchoGutter: 64 };
+    : { pixelesPorHora: 48, ejeX: 32, anchoGutter: 52 };
 }
 
-function usarMedidasLineaTiempo(): Medidas {
+function useMedidasLineaTiempo(): Medidas {
   const [medidas, setMedidas] = useState(obtenerMedidas);
   useEffect(() => {
     const actualizar = () => setMedidas(obtenerMedidas());
@@ -131,7 +131,7 @@ export default function LineaTiempoTurnos({
   onCompletar,
   onConfirmar,
 }: Props) {
-  const medidas = usarMedidasLineaTiempo();
+  const medidas = useMedidasLineaTiempo();
   const { pixelesPorHora, ejeX, anchoGutter } = medidas;
   const pxPorMinuto = pixelesPorHora / 60;
 

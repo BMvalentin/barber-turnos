@@ -20,7 +20,7 @@ export default async function PagoFailurePage({
   const { turnoId } = await searchParams;
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[var(--page-bg)] text-[var(--page-bg-foreground)] flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center space-y-6">
 
         <div className="flex justify-center">
@@ -30,10 +30,10 @@ export default async function PagoFailurePage({
         </div>
 
         <div>
-          <h1 className="text-3xl font-black text-white uppercase tracking-tight mb-2">
+          <h1 className="text-3xl font-black text-[var(--page-bg-foreground)] uppercase tracking-tight mb-2">
             Pago Fallido
           </h1>
-          <p className="text-zinc-400">
+          <p className="text-[var(--admin-texto-secundario)]">
             No se pudo procesar el pago. Tu turno sigue reservado, podés intentarlo de nuevo.
           </p>
         </div>
@@ -50,7 +50,7 @@ className={`flex items-center justify-center gap-2 w-full ${CLASES_BOTON_MARCA} 
           )}
           <Link
             href="/dashboard"
-            className="flex items-center justify-center gap-2 w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium py-3 rounded-2xl transition-all text-sm"
+            className="flex items-center justify-center gap-2 w-full bg-[var(--admin-item)] hover:bg-[var(--admin-item-hover)] text-[var(--admin-texto-primario)] font-medium py-3 rounded-2xl transition-all text-sm"
           >
             Ver mis turnos
             <ArrowRight className="w-4 h-4" />

@@ -80,10 +80,7 @@ export async function GET(req: NextRequest) {
     return respuesta;
   } catch (error) {
     console.error("Error en callback de Mercado Pago:", error instanceof Error ? error.message : String(error));
-    const codigoError = error instanceof Error && error.message.includes("bloqueada")
-      ? "bloqueado"
-      : "conexion_fallida";
-    url.searchParams.set("mp_error", codigoError);
+    url.searchParams.set("mp_error", "conexion_fallida");
     return NextResponse.redirect(url);
   }
 }

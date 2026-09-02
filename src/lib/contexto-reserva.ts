@@ -16,6 +16,7 @@ export async function obtenerContextoDeReserva(
   inicio: Date,
   fin: Date,
   client: Prisma.TransactionClient = prisma,
+  turnoIdAExcluir?: string,
 ) {
   const fechaSolo = obtenerFechaSola(inicio);
   const { inicio: inicioDia, fin: finDia } = obtenerRangoDelDia(fechaSolo);
@@ -25,13 +26,19 @@ export async function obtenerContextoDeReserva(
     include: { margenes: { where: { estado: true } } },
   });
   const excepciones = await client.excepcion_laboral.findMany({
-    where: { estado: true, desde: { lte: fin }, hasta: { gte: inicio } },
+    where: {
+      estado: true,
+      desde: { lte: fin },
+      hasta: { gte: inicio },
+      OR: [{ barberoId }, { barberoId: null }],
+    },
   });
   const turnosDelDia = await client.turno.findMany({
     where: {
       barberoId,
       estado: { in: [...ESTADOS_TURNO_ACTIVOS] },
       horarioReservado: { gte: inicioDia, lte: finDia },
+      ...(turnoIdAExcluir ? { id: { not: turnoIdAExcluir } } : {}),
     },
     include: { servicio: { select: { duracion: true } } },
   });

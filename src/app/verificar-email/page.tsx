@@ -52,7 +52,7 @@ function VerificarEmailContenido() {
 
   return (
     <AuthLayout>
-      <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-zinc-950">
+      <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-[var(--page-bg)] text-[var(--page-bg-foreground)]">
         <div
           className="absolute inset-0 z-0 opacity-30 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: "url('https://images.unsplash.com/photo-1599351431202-1e0f0137899a?q=80&w=2072&auto=format&fit=crop')" }}
@@ -63,26 +63,26 @@ function VerificarEmailContenido() {
           <div className="absolute top-1/2 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[var(--page-primary)] to-transparent" />
         </div>
 
-        <div className="relative z-10 w-full max-w-md rounded-2xl overflow-hidden shadow-2xl border border-white/5 bg-zinc-950/60 backdrop-blur-xl">
+        <div className="relative z-10 w-full max-w-md rounded-2xl overflow-hidden shadow-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)]/60 backdrop-blur-xl">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[var(--page-primary)]/50 to-transparent" />
 
           <div className="p-8 sm:p-10">
             <div className="flex flex-col items-center text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-zinc-900 mb-5 border border-[var(--page-primary)]/30">
+              <div className="mb-5 inline-flex h-16 w-16 items-center justify-center rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)]">
                 <Mail className="w-8 h-8 text-[var(--page-primary-tinta)]" />
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tighter uppercase mb-2">
+              <h1 className="text-2xl sm:text-3xl font-black text-[var(--page-bg-foreground)] tracking-tighter uppercase mb-2">
                 Revisá tu <span className="text-[var(--page-primary-tinta)]">Correo</span>
               </h1>
-              <p className="text-zinc-400 text-sm font-medium">
+              <p className="text-sm font-medium text-[var(--admin-texto-secundario)]">
                 Te enviamos un link para activar tu cuenta. Tocá el botón{" "}
-                <span className="text-zinc-200">&ldquo;Activar mi cuenta&rdquo;</span> y listo.
+                <span className="text-[var(--admin-texto-primario)]">&ldquo;Activar mi cuenta&rdquo;</span> y listo.
               </p>
             </div>
 
             {email && !state.success && (
-              <div className="mb-6 p-3 bg-zinc-900/50 border border-white/5 rounded-xl text-center">
-                <p className="text-xs uppercase tracking-widest text-zinc-500 font-bold mb-1">Enviado a</p>
+              <div className="mb-6 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-item)] p-3 text-center">
+                <p className="mb-1 text-xs font-bold uppercase tracking-widest text-[var(--admin-texto-muted)]">Enviado a</p>
                 <p className="text-sm font-bold text-[var(--page-primary-tinta)] break-all">{email}</p>
               </div>
             )}
@@ -92,20 +92,20 @@ function VerificarEmailContenido() {
                 <input type="hidden" name="email" value={email} />
               ) : (
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-[var(--page-primary-tinta)] transition-colors" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--admin-texto-muted)] group-focus-within:text-[var(--page-primary-tinta)] transition-colors" />
                   <input
                     name="email"
                     type="email"
                     required
                     placeholder="tu@correo.com"
-                    className="w-full bg-zinc-900/50 border border-white/5 rounded-xl py-3.5 pl-12 pr-4 text-white outline-none focus:border-[var(--page-primary)]/50 focus:ring-1 focus:ring-[var(--page-primary)]/50 transition-all placeholder:text-zinc-600 font-medium"
+                    className="w-full bg-[var(--admin-surface-elevated)] border border-[var(--admin-border)] rounded-xl py-3.5 pl-12 pr-4 text-[var(--admin-texto-primario)] outline-none focus:border-[var(--admin-border-fuerte)] focus:ring-1 focus:ring-[var(--page-focus-ring)] transition-all placeholder:text-[var(--admin-texto-muted)] font-medium"
                   />
                 </div>
               )}
               <button
                 type="submit"
                 disabled={isPending || state.success}
-                className="w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)] text-[var(--page-primary-foreground)] font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-sm disabled:opacity-50"
+                className="w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-hover)] text-[var(--page-primary-foreground)] font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-sm disabled:opacity-50"
               >
                 {isPending ? "REENVIANDO..." : (
                   <>
@@ -119,7 +119,7 @@ function VerificarEmailContenido() {
             <div className="mt-6 text-center">
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-[var(--page-primary-tinta)] font-bold transition-colors"
+                className="inline-flex items-center gap-2 text-sm text-[var(--admin-texto-secundario)] hover:text-[var(--page-primary-tinta)] font-bold transition-colors"
               >
                 <Scissors className="w-4 h-4" />
                 Volver a iniciar sesión

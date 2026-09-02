@@ -1,9 +1,13 @@
 // Validación real de imágenes para uploads: magic bytes + límite de tamaño + rechazo de SVG/HTML.
 // La fuente de verdad son los magic bytes; el MIME (file.type) es solo un primer filtro informativo.
 
-const TAMANO_MAXIMO_BYTES = 5 * 1024 * 1024; // 5 MB (margen bajo el bodySizeLimit de 6 MB de server actions)
+const TAMANO_MAXIMO_BYTES = 5 * 1024 * 1024;
 
 type ResultadoValidacion = { ok: true } | { ok: false; error: string };
+
+type OpcionesValidacionImagen = {
+  tamanoMaximoBytes?: number;
+};
 
 function leerPrimerosBytes(archivo: File, cantidad: number): Promise<Uint8Array> {
   return archivo.slice(0, cantidad).arrayBuffer().then((buffer) => new Uint8Array(buffer));
@@ -29,9 +33,15 @@ function tieneTextoRechazado(bytes: Uint8Array): boolean {
   return texto.includes("<svg") || texto.includes("<?xml") || texto.includes("<!doctype") || texto.includes("<html");
 }
 
-export async function validarArchivoImagen(archivo: File): Promise<ResultadoValidacion> {
-  if (archivo.size > TAMANO_MAXIMO_BYTES) {
-    return { ok: false, error: "La imagen no puede superar los 5 MB." };
+export async function validarArchivoImagen(
+  archivo: File,
+  opciones: OpcionesValidacionImagen = {},
+): Promise<ResultadoValidacion> {
+  const tamanoMaximoBytes = opciones.tamanoMaximoBytes ?? TAMANO_MAXIMO_BYTES;
+
+  if (archivo.size > tamanoMaximoBytes) {
+    const tamanoMaximoMegabytes = Math.round(tamanoMaximoBytes / 1024 / 1024);
+    return { ok: false, error: `La imagen no puede superar los ${tamanoMaximoMegabytes} MB.` };
   }
 
   if (!archivo.type.startsWith("image/") || archivo.type === "image/svg+xml" || archivo.type === "text/html") {

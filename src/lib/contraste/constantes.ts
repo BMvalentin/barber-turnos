@@ -5,8 +5,8 @@
  * `GeneralConfigForm.tsx`. La fuente real de defaults CSS es `:root` en globals.css.
  */
 
-/** Texto oscuro para fondos claros: `#09090b` (zinc-950). */
-export const COLOR_TEXTO_OSCURO = "#09090b";
+/** Texto oscuro para fondos claros. Negro puro cubre también grises limítrofes. */
+export const COLOR_TEXTO_OSCURO = "#000000";
 
 /** Texto claro para fondos oscuros: `#ffffff`. */
 export const COLOR_TEXTO_CLARO = "#ffffff";

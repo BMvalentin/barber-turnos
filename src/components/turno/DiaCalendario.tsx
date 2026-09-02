@@ -39,15 +39,15 @@ export default function DiaCalendario({
               "opacity-0 pointer-events-none"
             : seleccionado
             ? // Seleccionado: cuadrado con color de marca
-              "bg-[var(--page-primary)] text-[var(--page-primary-foreground)] font-black shadow-[0_0_10px_color-mix(in_srgb,var(--page-primary)_40%,transparent)]"
+              "bg-[var(--page-primary)] text-[var(--page-primary-foreground)] font-black shadow-[0_0_10px_color-mix(in_srgb,var(--page-primary)_40%,transparent)] ring-1 ring-[var(--admin-border-fuerte)]"
             : disponible && !pasado
             ? // Disponible: texto de marca, hover suave
-              "text-[var(--page-primary-tinta)] font-semibold hover:bg-[var(--page-primary-15)] cursor-pointer"
+              "text-[var(--admin-texto-primario)] font-semibold hover:bg-[var(--page-primary-15)] cursor-pointer"
             : pasado
             ? // Pasado: muy atenuado
-              "text-zinc-700 cursor-not-allowed"
+              "text-[var(--admin-texto-muted)] opacity-50 cursor-not-allowed"
             : // Sin disponibilidad
-              "text-zinc-600 cursor-not-allowed"
+              "text-[var(--admin-texto-muted)] opacity-70 cursor-not-allowed"
         }
       `}
     >
@@ -60,7 +60,7 @@ export default function DiaCalendario({
 
       {/* Anillo para el día de hoy (si no está seleccionado) */}
       {hoy && !seleccionado && estesMes && (
-        <span className="absolute inset-0 rounded-lg ring-1 ring-[var(--page-primary-30)] pointer-events-none" />
+        <span className="absolute inset-0 rounded-lg ring-1 ring-[var(--admin-border-fuerte)] pointer-events-none" />
       )}
     </button>
   );

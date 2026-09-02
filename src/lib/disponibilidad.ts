@@ -24,6 +24,31 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
 
   if (!servicio?.duracion) throw new Error("Servicio no encontrado");
 
+  const horariosPorDia = new Map<string, typeof horariosBarbero>();
+  for (const horario of horariosBarbero) {
+    if (!horario.margenLaboral.estado) continue;
+    const dia = horario.margenLaboral.dia.dia;
+    const horarios = horariosPorDia.get(dia) ?? [];
+    horarios.push(horario);
+    horariosPorDia.set(dia, horarios);
+  }
+  for (const horarios of horariosPorDia.values()) {
+    horarios.sort(
+      (primero, segundo) =>
+        minutosDeHora(primero.margenLaboral.desde) -
+        minutosDeHora(segundo.margenLaboral.desde),
+    );
+  }
+
+  const turnosPorFecha = new Map<string, typeof turnosRango>();
+  for (const turno of turnosRango) {
+    const fechaZonificada = toZonedTime(turno.horarioReservado, ZONA_HORARIA);
+    const fecha = `${fechaZonificada.getFullYear()}-${String(fechaZonificada.getMonth() + 1).padStart(2, "0")}-${String(fechaZonificada.getDate()).padStart(2, "0")}`;
+    const turnos = turnosPorFecha.get(fecha) ?? [];
+    turnos.push(turno);
+    turnosPorFecha.set(fecha, turnos);
+  }
+
   const resultado: Record<string, string[]> = {};
   const ahora = new Date();
   let [anio, mes, dia] = fechaInicio.split("-").map(Number);
@@ -50,14 +75,8 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
     }
 
     const diaEnum = MAPA_DIA_SEMANA_DB[toZonedTime(inicioDia, ZONA_HORARIA).getDay()];
-    const horariosDia = horariosBarbero
-      .filter((h) => h.margenLaboral.dia.dia === diaEnum && h.margenLaboral.estado === true)
-      .sort((a, b) => minutosDeHora(a.margenLaboral.desde) - minutosDeHora(b.margenLaboral.desde));
-
-    const turnosDia = turnosRango.filter((t) => {
-      const tZoned = toZonedTime(t.horarioReservado, ZONA_HORARIA);
-      return `${tZoned.getFullYear()}-${String(tZoned.getMonth() + 1).padStart(2, "0")}-${String(tZoned.getDate()).padStart(2, "0")}` === fechaStr;
-    });
+    const horariosDia = horariosPorDia.get(diaEnum) ?? [];
+    const turnosDia = turnosPorFecha.get(fechaStr) ?? [];
 
     const slots: string[] = [];
     for (const horario of horariosDia) {

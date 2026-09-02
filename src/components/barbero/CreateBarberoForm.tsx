@@ -17,12 +17,14 @@ type Props = {
   servicios: ServicioOpcion[];
   diasLaborales: DiaLaboral[];
   onSuccess?: () => void;
+  onCancel?: () => void;
 };
 
 export default function CreateBarberoForm({
   servicios,
   diasLaborales,
   onSuccess,
+  onCancel,
 }: Props) {
   const [isPending, startTransition] = useTransition();
   const { retroalimentar } = useRetroalimentacionAccion({
@@ -130,10 +132,7 @@ export default function CreateBarberoForm({
   };
 
   return (
-    <div
-      className="bg-[var(--admin-surface-elevated)] backdrop-blur-lg rounded-xl p-6 space-y-6 border"
-      style={{ borderColor: `var(--page-primary-30)` }}
-    >
+    <div className="space-y-6">
       <CampoNombreBarbero
         valor={nombre}
         error={error}
@@ -168,14 +167,10 @@ export default function CreateBarberoForm({
         diasLaborales={diasLaborales}
         onAlternarSeleccion={toggleHorario}
       />
-      <BotonSubmitPending
-        pendiente={isPending || uploading}
-        tipo="button"
-        texto="Crear Barbero"
-        deshabilitado={!!error}
-        onClic={handleSubmit}
-        claseAdicional="w-full shadow-lg"
-      />
+      <div className="flex justify-end gap-3 border-t pt-4" style={{ borderColor: "var(--admin-border)" }}>
+        <button type="button" onClick={onCancel} className="rounded-lg border px-4 py-2 text-sm font-medium text-[var(--admin-texto-primario)] hover:bg-[var(--admin-item)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]" style={{ borderColor: "var(--admin-border-fuerte)" }}>Cancelar</button>
+        <BotonSubmitPending pendiente={isPending || uploading} tipo="button" texto="Crear barbero" deshabilitado={!!error} onClic={handleSubmit} claseAdicional="hover:opacity-90" />
+      </div>
     </div>
   );
 }
