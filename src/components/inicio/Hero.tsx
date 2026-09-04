@@ -14,6 +14,8 @@ interface HeroProps {
     slogan?: string | null;
     description?: string | null;
     backgroundImage?: string | null;
+    address?: string | null;
+    city?: string | null;
   } | null;
 }
 
@@ -23,6 +25,9 @@ export function Hero({ config }: HeroProps) {
   // Usamos el slogan de la config, o un texto por defecto si está vacío
   const slogan = config?.slogan || "Corte Impecable - Actitud y Estilo";
   const description = config?.description || "Más que un corte, brindamos un servicio pensado para que te veas y te sientas bien. Atención profesional, precisión en cada detalle.";
+
+  // Ubicación configurable (sin valores hardcodeados)
+  const labelUbicacion = config?.address || config?.city;
 
   // Opcional: Si querés dividir el slogan en dos partes para mantener el diseño original (ej: primera palabra/s vs resto)
   const sloganWords = slogan.split(" ");
@@ -103,7 +108,7 @@ style={ESTILO_FONDO_MARCA}
               <div className="flex flex-col gap-1 p-3 rounded-2xl bg-[var(--page-bg)]/50 border border-[var(--page-bg-foreground)]/5">
                 <MapPin className="w-5 h-5 text-[var(--page-bg-foreground)]/70 mb-1" />
                 <span className="text-xs font-bold text-[var(--page-bg-foreground)]/50 uppercase tracking-wider">Ubicación</span>
-                <span className="text-sm font-bold text-[var(--page-bg-foreground)]">Santa Clara, Buenos Aires</span>
+                <span className="text-sm font-bold text-[var(--page-bg-foreground)]">{labelUbicacion || "—"}</span>
               </div>
             </div>
 
