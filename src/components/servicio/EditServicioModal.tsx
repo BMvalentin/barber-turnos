@@ -7,11 +7,11 @@ import type { ActionState } from "@/types/action-state";
 import type { Servicio, ServicioCreado } from "@/types/servicio";
 import { DollarSign, Percent, Clock } from "lucide-react";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
-import { useImagenServicio } from "@/hooks/useImagenServicio";
+import { useImagenesServicio } from "@/hooks/useImagenesServicio";
 import ModalBase from "@/components/ui/ModalBase";
 import BotonSubmitPending from "@/components/ui/boton-submit-pending";
 import CampoFormulario from "./CampoFormulario";
-import SeccionImagenServicio from "./SeccionImagenServicio";
+import SeccionImagenesServicio from "./SeccionImagenesServicio";
 
 const initialState: ActionState<ServicioCreado> = ActionStateInicial;
 
@@ -45,16 +45,13 @@ export default function EditServicioModal({
   const [descuento, setDescuento] = useState(servicio.descuento);
   const [senia, setSenia] = useState(servicio.senia);
   const {
-    selectedFile,
-    previewUrl,
-    srcImage,
-    uploadError,
-    manejarArchivo,
-    quitarImagen,
-  } = useImagenServicio({
-    previewInicial: servicio.srcImage || null,
-    srcImageInicial: servicio.srcImage || "",
-  });
+    imagenes,
+    puedeAgregar,
+    error: errorImagenes,
+    agregarArchivo,
+    removerImagen,
+    reemplazarImagen,
+  } = useImagenesServicio({ iniciales: servicio.imagenes });
 
   // Efecto para cerrar el modal si la actualización fue exitosa
   useEffect(() => {
@@ -84,8 +81,14 @@ export default function EditServicioModal({
         action={async (formData) => {
           if (isPending) return;
 
-          if (selectedFile) {
-            formData.set("image", selectedFile);
+          for (const [i, slot] of imagenes.entries()) {
+            if (slot.tipo === "url") {
+              formData.set(`slotTipo${i}`, "url");
+              formData.set(`slot${i}`, slot.url);
+            } else if (slot.tipo === "archivo") {
+              formData.set(`slotTipo${i}`, "archivo");
+              formData.set(`slotArchivo${i}`, slot.archivo);
+            }
           }
 
           formAction(formData);
@@ -94,11 +97,6 @@ export default function EditServicioModal({
       >
         {/* Inputs Ocultos necesarios para la acción */}
         <input type="hidden" name="id" value={servicio.id} />
-        <input
-          type="hidden"
-          name="srcImage"
-          value={srcImage}
-        />
 
         {/* --- CUERPO DEL FORMULARIO (Scrollable) --- */}
           <div className="overflow-y-auto p-8 grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
@@ -142,13 +140,14 @@ export default function EditServicioModal({
                   )}
                 </div>
 
-                <SeccionImagenServicio
-                  previewUrl={previewUrl}
-                  srcImage={srcImage}
-                  uploadError={uploadError}
+                <SeccionImagenesServicio
+                  imagenes={imagenes}
+                  puedeAgregar={puedeAgregar}
+                  error={errorImagenes}
                   isPending={isPending}
-                  onFileChange={manejarArchivo}
-                  onRemove={quitarImagen}
+                  onAgregar={agregarArchivo}
+                  onRemover={removerImagen}
+                  onReemplazar={reemplazarImagen}
                 />
               </div>
             </div>

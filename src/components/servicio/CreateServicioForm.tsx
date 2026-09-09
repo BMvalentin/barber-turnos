@@ -6,12 +6,12 @@ import type { ActionState } from "@/types/action-state";
 import type { ServicioCreado } from "@/types/servicio";
 import { useEffect, useRef, useState } from "react";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
-import { useImagenServicio } from "@/hooks/useImagenServicio";
+import { useImagenesServicio } from "@/hooks/useImagenesServicio";
 import ModalBase from "@/components/ui/ModalBase";
 import BotonSubmitPending from "@/components/ui/boton-submit-pending";
 import CampoDescripcionServicio from "./CampoDescripcionServicio";
 import CampoFormulario from "./CampoFormulario";
-import SeccionImagenServicio from "./SeccionImagenServicio";
+import SeccionImagenesServicio from "./SeccionImagenesServicio";
 import SeccionPrecioDetalles from "./SeccionPrecioDetalles";
 
 const initialState: ActionState<ServicioCreado> = ActionStateInicial;
@@ -28,20 +28,21 @@ export default function CreateServicioForm({
   const formRef = useRef<HTMLFormElement>(null);
   const [descripcion, setDescripcion] = useState("");
   const {
-    selectedFile,
-    previewUrl,
-    srcImage,
-    uploadError,
-    manejarArchivo,
-    quitarImagen,
-  } = useImagenServicio();
+    imagenes,
+    puedeAgregar,
+    error: errorImagenes,
+    agregarArchivo,
+    removerImagen,
+    reemplazarImagen,
+    limpiar,
+  } = useImagenesServicio();
 
   const { retroalimentar } = useRetroalimentacionAccion({
     mensajeExito: "Servicio creado",
     descripcionExito: "El servicio se ha creado correctamente.",
     onExito: () => {
       formRef.current?.reset();
-      quitarImagen();
+      limpiar();
       onClose();
     },
   });
@@ -74,8 +75,14 @@ export default function CreateServicioForm({
               setIsPending(true);
 
               try {
-                if (selectedFile) {
-                  formData.set("image", selectedFile);
+                for (const [i, slot] of imagenes.entries()) {
+                  if (slot.tipo === "url") {
+                    formData.set(`slotTipo${i}`, "url");
+                    formData.set(`slot${i}`, slot.url);
+                  } else if (slot.tipo === "archivo") {
+                    formData.set(`slotTipo${i}`, "archivo");
+                    formData.set(`slotArchivo${i}`, slot.archivo);
+                  }
                 }
 
                 const result = await createServicio(initialState, formData);
@@ -128,13 +135,14 @@ export default function CreateServicioForm({
                   error={state.errors?.descripcion}
                 />
 
-                <SeccionImagenServicio
-                  previewUrl={previewUrl}
-                  srcImage={srcImage}
-                  uploadError={uploadError}
+                <SeccionImagenesServicio
+                  imagenes={imagenes}
+                  puedeAgregar={puedeAgregar}
+                  error={errorImagenes}
                   isPending={isPending}
-                  onFileChange={manejarArchivo}
-                  onRemove={quitarImagen}
+                  onAgregar={agregarArchivo}
+                  onRemover={removerImagen}
+                  onReemplazar={reemplazarImagen}
                 />
               </div>
             </div>

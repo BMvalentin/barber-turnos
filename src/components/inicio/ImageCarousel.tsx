@@ -7,14 +7,17 @@ import { CarouselItem } from "@/components/ui/carousel/CarouselItem";
 import { CarouselNext } from "@/components/ui/carousel/CarouselNext";
 import { CarouselPrevious } from "@/components/ui/carousel/CarouselPrevious";
 import Image from "next/image";
-import type { ServicioCarrusel } from "@/types/servicio";
+import type { ServicioSlide } from "@/lib/servicio-imagenes/construir-slides";
 
 interface ImageCarouselProps {
-  servicios: ServicioCarrusel[];
+  slides: ServicioSlide[];
 }
 
-export function ImageCarousel({ servicios }: ImageCarouselProps) {
-  if (!servicios || servicios.length === 0) return null;
+/* El carrusel recibe slides ya construidos (1 imagen = 1 item).
+   Cada slide muestra UNA imagen + la info del servicio correspondiente.
+   No se agrupan varias imágenes del mismo servicio en una misma tarjeta. */
+export function ImageCarousel({ slides }: ImageCarouselProps) {
+  if (!slides || slides.length === 0) return null;
 
   return (
     <section id="servicios" className="py-12 bg-[var(--page-bg)] border-t border-[var(--page-bg-foreground)]/5">
@@ -42,12 +45,12 @@ export function ImageCarousel({ servicios }: ImageCarouselProps) {
             className="w-full max-w-4xl mx-auto relative"
           >
             <CarouselContent className="-ml-2">
-              {servicios.map((servicio) => (
-                <CarouselItem key={servicio.id} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/3">
+              {slides.map(({ servicio, imagen }, indice) => (
+                <CarouselItem key={`${servicio.id}-${indice}`} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/3">
 
                   <div className="group relative overflow-hidden rounded-2xl aspect-square bg-[var(--admin-surface)] shadow-lg border border-[var(--page-bg-foreground)]/5">
                     <Image
-                      src={servicio.srcImage || "/images/avatar-default.svg"}
+                      src={imagen ?? servicio.srcImage ?? "/images/avatar-default.svg"}
                       alt={servicio.nombre}
                       fill
                       sizes="(max-width: 768px) 50vw, 25vw"
@@ -73,7 +76,7 @@ export function ImageCarousel({ servicios }: ImageCarouselProps) {
                               )}
                             </h2>
 
-                            <span 
+                            <span
                               className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full mb-0.5"
                               style={{ backgroundColor: "var(--page-primary)", color: "var(--page-primary-foreground)" }}
                             >
@@ -93,11 +96,11 @@ export function ImageCarousel({ servicios }: ImageCarouselProps) {
             </CarouselContent>
 
             {/* Flechas con hover dinámico usando el color primario */}
-            <CarouselPrevious 
-              className="absolute left-2 z-50 h-8 w-8 bg-[var(--admin-surface)] text-[var(--page-bg-foreground)] border-[var(--page-bg-foreground)]/10 hover:text-[var(--page-bg-foreground)]" 
+            <CarouselPrevious
+              className="absolute left-2 z-50 h-8 w-8 bg-[var(--admin-surface)] text-[var(--page-bg-foreground)] border-[var(--page-bg-foreground)]/10 hover:text-[var(--page-bg-foreground)]"
             />
-            <CarouselNext 
-              className="absolute right-2 z-50 h-8 w-8 bg-[var(--admin-surface)] text-[var(--page-bg-foreground)] border-[var(--page-bg-foreground)]/10 hover:text-[var(--page-bg-foreground)]" 
+            <CarouselNext
+              className="absolute right-2 z-50 h-8 w-8 bg-[var(--admin-surface)] text-[var(--page-bg-foreground)] border-[var(--page-bg-foreground)]/10 hover:text-[var(--page-bg-foreground)]"
             />
           </Carousel>
         </motion.div>

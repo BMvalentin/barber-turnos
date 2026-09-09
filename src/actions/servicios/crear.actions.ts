@@ -3,8 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { servicioSchema } from "@/lib/servicios-zod";
 import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
-import { limpiarUrlImagen } from "@/lib/limpiar-url-imagen";
 import { subirImagenServicio } from "@/lib/subir-imagen-servicio";
+import { leerSlotsImagenesServicio } from "@/lib/servicio-imagenes/leer-slots";
+import { MAX_IMAGENES_SERVICIO } from "@/lib/servicio-imagenes/constantes";
 import { revalidarServicios } from "@/lib/revalidar/revalidar-servicios";
 import type { ActionState } from "@/types/action-state";
 import type { ServicioCreado } from "@/types/servicio";
@@ -14,12 +15,10 @@ const createServicioBase = async (
   formData: FormData,
 ): Promise<ActionState<ServicioCreado>> => {
   try {
-    const image = formData.get("image") as File | null;
     const rawData = Object.fromEntries(formData.entries());
+    const clavesSlots = Object.keys(rawData).filter((clave) => clave.startsWith("slot"));
+    clavesSlots.forEach((clave) => delete rawData[clave]);
 
-    delete rawData.image;
-
-    // Validar con Zod
     const validated = servicioSchema.safeParse(rawData);
 
     if (!validated.success) {
@@ -30,36 +29,57 @@ const createServicioBase = async (
       };
     }
 
-    const { nombre, descripcion, srcImage: srcImageRaw, estado, duracion, precio, descuento, senia } = validated.data;
+    const { nombre, descripcion, estado, duracion, precio, descuento, senia } = validated.data;
 
-    let srcImage = limpiarUrlImagen(srcImageRaw || null);
+    const entradasImagenes = leerSlotsImagenesServicio(formData);
 
-    if (image && image.size > 0) {
-      const subida = await subirImagenServicio(image, { mensajeError: "No se pudo subir la imagen." });
+    if (entradasImagenes.length > MAX_IMAGENES_SERVICIO) {
+      return {
+        success: false,
+        error: "Un servicio no puede tener más de 3 imágenes.",
+      };
+    }
+
+    const imagenes: string[] = [];
+
+    for (const entrada of entradasImagenes) {
+      if (typeof entrada === "string") {
+        imagenes.push(entrada);
+        continue;
+      }
+
+      const subida = await subirImagenServicio(entrada, {
+        mensajeError: "No se pudo subir una de las imágenes.",
+      });
 
       if (!subida.ok) {
         return { success: false, error: subida.error };
       }
 
-      srcImage = subida.url;
+      imagenes.push(subida.url);
     }
 
     const nuevoServicio = await prisma.servicio.create({
       data: {
         nombre: nombre.trim(),
         descripcion: descripcion || null,
-        srcImage: srcImage,
+        srcImage: imagenes[0] ?? null,
         estado: estado ?? true,
         duracion: duracion,
         precio: precio,
         descuento: descuento,
         senia: senia,
+        imagenes: {
+          create: imagenes.map((url, indice) => ({ url, orden: indice })),
+        },
+      },
+      include: {
+        imagenes: { orderBy: { orden: "asc" }, select: { url: true } },
       },
     });
 
     revalidarServicios(nuevoServicio.id);
 
-    // 💡 SOLUCIÓN: Convertimos a Number antes de retornar
     return {
       success: true,
       data: {
@@ -67,6 +87,7 @@ const createServicioBase = async (
         precio: Number(nuevoServicio.precio),
         descuento: Number(nuevoServicio.descuento),
         senia: Number(nuevoServicio.senia),
+        imagenes: nuevoServicio.imagenes.map((imagen) => imagen.url),
       },
     };
   } catch (error) {
