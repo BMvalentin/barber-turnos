@@ -1,9 +1,11 @@
 "use client";
 
 import { crearPreferenciaPago } from "@/actions/mercadopago/crear-preferencia.actions";
+import { registrarTransferencia } from "@/actions/turnos/registrar-transferencia.actions";
 import { useState } from "react";
 import type { TurnoCreado } from "@/types/turno";
 import type { TipoPago } from "@/types/mercadopago";
+import type { MetodoPago } from "@/types/pago";
 
 export type ParametrosPagoTurno = {
   whatsappPhone: string;
@@ -17,13 +19,26 @@ export function usePagoTurno({ whatsappPhone }: ParametrosPagoTurno) {
   const [showPagoModal, setShowPagoModal] = useState(false);
   const [cargandoPago, setCargandoPago] = useState(false);
   const [errorPago, setErrorPago] = useState<string | null>(null);
+  const [transferenciaLista, setTransferenciaLista] = useState(false);
 
-  const handlePagar = async (tipoPago: TipoPago) => {
+  const handlePagar = async (tipoPago: TipoPago, metodoPago: MetodoPago) => {
     if (!turnoCreado) return;
     setCargandoPago(true);
     setErrorPago(null);
 
     try {
+      if (metodoPago === "TRANSFERENCIA") {
+        const resultado = await registrarTransferencia(turnoCreado.id, tipoPago);
+        if (!resultado.success) {
+          setErrorPago(resultado.error ?? "No se pudo registrar la transferencia");
+          setCargandoPago(false);
+          return;
+        }
+        setTransferenciaLista(true);
+        setCargandoPago(false);
+        return;
+      }
+
       const result = await crearPreferenciaPago(turnoCreado.id, tipoPago);
 
       if (!result.success || !result.data?.checkoutUrl) {
@@ -48,6 +63,8 @@ export function usePagoTurno({ whatsappPhone }: ParametrosPagoTurno) {
     setShowPagoModal,
     cargandoPago,
     errorPago,
+    transferenciaLista,
+    setTransferenciaLista,
     handlePagar,
   };
 }

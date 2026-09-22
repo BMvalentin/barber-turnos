@@ -21,7 +21,7 @@ export function NavegacionEscritorioHeader({ sesion, menuSesionAbierto, setMenuS
           </button>
           {menuSesionAbierto && <div className="absolute right-0 top-full mt-2 w-48 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] py-1 shadow-xl">
             <Link href="/dashboard" onClick={() => setMenuSesionAbierto(false)} className="block w-full rounded-md px-3 py-2 text-sm text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)]">Mi perfil</Link>
-            <form action={handleSignOut}><button type="submit" onClick={() => setMenuSesionAbierto(false)} className="block w-full rounded-md px-3 py-2 text-left text-sm text-red-500 transition-colors hover:bg-red-500/10">Cerrar sesión</button></form>
+            <form action={handleSignOut}><button type="submit" className="block w-full rounded-md px-3 py-2 text-left text-sm text-red-500 transition-colors hover:bg-red-500/10">Cerrar sesión</button></form>
           </div>}
         </div>
       ) : <Link href="/login" className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium text-[var(--admin-texto-secundario)] transition-colors hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)]"><DoorOpen className="h-4 w-4" />Iniciar Sesión</Link>}

@@ -10,6 +10,15 @@ import FormularioReservaTurno from "@/components/turno/reserva/FormularioReserva
 import ModalPagoTurno from "@/components/turno/ModalPagoTurno";
 import BadgeEstadoTurno from "@/components/turno/gestion/BadgeEstadoTurno";
 import { CLASES_BOTON_CERRAR } from "@/lib/constants";
+import type { DatosTransferencia } from "@/types/pago";
+
+const DATOS_TRANSFERENCIA_VACIOS: DatosTransferencia = {
+  transferenciaTitular: "",
+  transferenciaCuit: "",
+  transferenciaAlias: "",
+  transferenciaCbu: "",
+  transferenciaBanco: "",
+};
 
 const ESTILO_TEMAS = {
   "--primary": "var(--page-primary)",
@@ -25,6 +34,7 @@ export default function ModalGestionTurno({
   initialUsuarios = [],
   initialRelaciones = [],
   whatsappPhone,
+  datosTransferencia = DATOS_TRANSFERENCIA_VACIOS,
   turnoInicial,
   claseTrigger,
   contenidoTrigger,
@@ -55,6 +65,8 @@ export default function ModalGestionTurno({
     showPagoModal,
     cargandoPago,
     errorPago,
+    transferenciaLista,
+    setTransferenciaLista,
     handlePagar,
   } = useFormularioTurno({
     session,
@@ -63,6 +75,7 @@ export default function ModalGestionTurno({
     initialUsuarios,
     initialRelaciones,
     whatsappPhone,
+    datosTransferencia,
     turnoInicial,
     onTurnoCreado,
   });
@@ -156,7 +169,11 @@ export default function ModalGestionTurno({
               turnoCreado={turnoCreado}
               cargandoPago={cargandoPago}
               errorPago={errorPago}
+              transferenciaLista={transferenciaLista}
+              datosTransferencia={datosTransferencia}
+              whatsappPhone={whatsappPhone}
               onPagar={handlePagar}
+              onVolverTransferencia={() => setTransferenciaLista(false)}
             />
           </div>,
           document.body,

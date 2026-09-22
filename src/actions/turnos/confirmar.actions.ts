@@ -11,13 +11,16 @@ export const confirmarTurno = exigirAdmin(async (turnoId: string) => {
   try {
     const turnoPrevio = await prisma.turno.findUnique({
       where: { id: turnoId },
-      select: { id: true, estado: true },
+      select: { id: true, estado: true, tipoPago: true },
     });
     if (!turnoPrevio) return { success: false, error: "No se pudo confirmar el turno" };
 
     await prisma.turno.update({
       where: { id: turnoId },
-      data: { estado: ESTADOS_TURNO[1], estadoPago: ESTADOS_PAGO[1] },
+      data: {
+        estado: ESTADOS_TURNO[1],
+        estadoPago: turnoPrevio.tipoPago === "TOTAL" ? ESTADOS_PAGO[2] : ESTADOS_PAGO[1],
+      },
     });
 
     if (turnoPrevio.estado === ESTADOS_TURNO[1]) {

@@ -17,6 +17,11 @@ export type DatosConfiguracion = {
   whatsapp: string;
   mapsUrl: string;
   address: string;
+  transferenciaTitular: string;
+  transferenciaCuit: string;
+  transferenciaAlias: string;
+  transferenciaCbu: string;
+  transferenciaBanco: string;
 };
 
 /* Payload parcial para la server action de actualización (config-general.actions). */

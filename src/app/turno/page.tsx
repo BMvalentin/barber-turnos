@@ -37,6 +37,13 @@ export default async function TurnoPage() {
           initialUsuarios={usuarios}
           initialRelaciones={relaciones}
           whatsappPhone={config?.whatsapp || ""}
+          datosTransferencia={{
+            transferenciaTitular: config?.transferenciaTitular || "",
+            transferenciaCuit: config?.transferenciaCuit || "",
+            transferenciaAlias: config?.transferenciaAlias || "",
+            transferenciaCbu: config?.transferenciaCbu || "",
+            transferenciaBanco: config?.transferenciaBanco || "",
+          }}
         />
       </div>
     </div>

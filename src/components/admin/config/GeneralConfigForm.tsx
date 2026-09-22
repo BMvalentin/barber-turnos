@@ -9,6 +9,7 @@ import { esColorHexValido } from "@/lib/contraste/es-color-hex-valido";
 import { comprimirImagenConfiguracion } from "@/lib/imagenes/comprimir-imagen-configuracion";
 import SeccionIdentidad from "@/components/admin/config/SeccionIdentidad";
 import SeccionContacto from "@/components/admin/config/SeccionContacto";
+import SeccionMediosPago from "@/components/admin/config/SeccionMediosPago";
 import SeccionApariencia from "@/components/admin/config/SeccionApariencia";
 import SeccionImagenes from "@/components/admin/config/SeccionImagenes";
 import BotonSubmitPending from "@/components/ui/boton-submit-pending";
@@ -44,6 +45,11 @@ export default function GeneralConfigForm({ initialData, seccionInicial }: Gener
     whatsapp: initialData?.whatsapp || "",
     mapsUrl: initialData?.mapsUrl || "",
     address: initialData?.address || "",
+    transferenciaTitular: initialData?.transferenciaTitular || "",
+    transferenciaCuit: initialData?.transferenciaCuit || "",
+    transferenciaAlias: initialData?.transferenciaAlias || "",
+    transferenciaCbu: initialData?.transferenciaCbu || "",
+    transferenciaBanco: initialData?.transferenciaBanco || "",
   });
 
   const primaryColor = formData.primaryColor || COLORES_TEMA_POR_DEFECTO.primario;
@@ -140,6 +146,17 @@ export default function GeneralConfigForm({ initialData, seccionInicial }: Gener
             whatsapp={formData.whatsapp}
             mapsUrl={formData.mapsUrl}
             direccion={formData.address}
+            manejarCambio={manejarCambio}
+          />
+        )}
+
+        {seccionInicial === "medios-pago" && (
+          <SeccionMediosPago
+            titular={formData.transferenciaTitular}
+            cuit={formData.transferenciaCuit}
+            alias={formData.transferenciaAlias}
+            cbu={formData.transferenciaCbu}
+            banco={formData.transferenciaBanco}
             manejarCambio={manejarCambio}
           />
         )}

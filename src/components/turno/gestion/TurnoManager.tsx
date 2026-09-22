@@ -15,6 +15,7 @@ import type {
   UsuarioData,
 } from "@/types/turno";
 import type { Session } from "next-auth";
+import type { DatosTransferencia } from "@/types/pago";
 
 interface Props {
   turnosIniciales: TurnoListado[];
@@ -25,6 +26,7 @@ interface Props {
   initialUsuarios?: UsuarioData[];
   initialRelaciones?: RelacionData[];
   whatsappPhone: string;
+  datosTransferencia?: DatosTransferencia;
 }
 
 function deduplicarTurnos(lista: TurnoListado[]): TurnoListado[] {
@@ -48,6 +50,7 @@ export default function TurnoManager({
   initialUsuarios = [],
   initialRelaciones = [],
   whatsappPhone,
+  datosTransferencia,
 }: Props) {
   const [filtroEstado, setFiltroEstado] = useState("CONFIRMADO");
   const [fecha, setFecha] = useState("");
@@ -145,6 +148,7 @@ export default function TurnoManager({
             initialUsuarios={initialUsuarios}
             initialRelaciones={initialRelaciones}
             whatsappPhone={whatsappPhone}
+            datosTransferencia={datosTransferencia}
             onTurnoCreado={() => void reiniciarBusqueda(filtroEstado, fecha)}
           />
         </div>

@@ -32,7 +32,7 @@ export async function crearTurnoEnTransaccion(
   p: ParametrosCrearTurno,
 ): Promise<ResultadoCrearTurno> {
   try {
-    const turno = await prisma.$transaction(
+    const turnoBasico = await prisma.$transaction(
       async (tx) => {
         return ejecutarConBloqueReserva(tx, p.barberoId, async () => {
           const servicio = await validarReservaEnTransaccion(tx, {
@@ -54,12 +54,20 @@ export async function crearTurnoEnTransaccion(
               estadoPago: p.estadoPago,
               claveSlot: `${p.barberoId}|${p.inicio.toISOString()}`,
             },
-            include: INCLUDE_TURNO_CON_DETALLE,
           });
         });
       },
-      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+        maxWait: 10000,
+        timeout: 15000,
+      },
     );
+    const turno = await prisma.turno.findUnique({
+      where: { id: turnoBasico.id },
+      include: INCLUDE_TURNO_CON_DETALLE,
+    });
+    if (!turno) return { ok: false, error: "No se pudo recuperar el turno creado" };
     return { ok: true, turno };
   } catch (error) {
     const mensaje = interpretarErrorTurno(error);

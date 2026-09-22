@@ -17,7 +17,9 @@ export async function crearPreferenciaPago(
   tipoPago: TipoPago,
 ): Promise<ActionState<DatosPreferenciaPago>> {
   try {
-    if (!turnoId || !tipoPago) return { success: false, error: "Datos de pago inválidos" };
+    if (!turnoId || !TIPOS_PAGO.includes(tipoPago)) {
+      return { success: false, error: "Datos de pago inválidos" };
+    }
 
     const turno = await prisma.turno.findUnique({
       where: { id: turnoId },
@@ -33,7 +35,10 @@ export async function crearPreferenciaPago(
     const sesionAutorizada = await requerirPropietarioOAdmin(turno.userId);
     if (!sesionAutorizada) return { success: false, error: "No autorizado" };
 
-    if (turno.estadoPago !== ESTADOS_PAGO[0]) return { success: false, error: "Este turno ya no admite más pagos" };
+    const transferenciaEnRevision = turno.estadoPago === ESTADOS_PAGO[6] && turno.metodoPago === "TRANSFERENCIA";
+    if (turno.estadoPago !== ESTADOS_PAGO[0] && !transferenciaEnRevision) {
+      return { success: false, error: "Este turno ya no admite más pagos" };
+    }
     if (turno.estado === ESTADOS_TURNO[1]) return { success: false, error: "Este turno ya fue pagado" };
     if (turno.estado === ESTADOS_TURNO[3]) return { success: false, error: "Este turno está cancelado" };
 
@@ -58,7 +63,7 @@ export async function crearPreferenciaPago(
     // Guardar el preference ID y el tipo de pago en el turno para tracking
     await prisma.turno.update({
       where: { id: turnoId },
-      data: { mpPreferenceId: response.id, tipoPago },
+      data: { mpPreferenceId: response.id, tipoPago, metodoPago: "MERCADO_PAGO" },
     });
 
     const configuracion = await obtenerConfiguracionMP();

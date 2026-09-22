@@ -36,6 +36,13 @@ export default async function AdminTurnoPage() {
         initialUsuarios={usuarios}
         initialRelaciones={relaciones}
         whatsappPhone={config?.whatsapp || ""}
+        datosTransferencia={{
+          transferenciaTitular: config?.transferenciaTitular || "",
+          transferenciaCuit: config?.transferenciaCuit || "",
+          transferenciaAlias: config?.transferenciaAlias || "",
+          transferenciaCbu: config?.transferenciaCbu || "",
+          transferenciaBanco: config?.transferenciaBanco || "",
+        }}
       />
     </div>
   );

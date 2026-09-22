@@ -15,7 +15,7 @@ export function MenuMovilHeader({ sesion, cerrarMenu }: MenuMovilHeaderProps) {
       <div className="mt-4 border-t border-[var(--admin-border)] pt-6">
         {sesion ? <div className="flex flex-col gap-4">
           <Link href="/dashboard" onClick={cerrarMenu} className="flex items-center gap-3 py-2"><Image src={sesion.user?.image || "/images/avatar-default.svg"} alt="" className="rounded-full" width={40} height={40} /><span className="text-base font-medium text-[var(--admin-texto-primario)]">{sesion.user?.name}</span></Link>
-          <form action={handleSignOut} className="w-full"><button type="submit" onClick={cerrarMenu} className="w-full py-2 text-left text-base text-red-500 transition-colors hover:text-red-600">Cerrar sesión</button></form>
+          <form action={handleSignOut} className="w-full"><button type="submit" className="w-full py-2 text-left text-base text-red-500 transition-colors hover:text-red-600">Cerrar sesión</button></form>
         </div> : <Link href="/login" onClick={cerrarMenu} className={`flex items-center gap-2 ${claseEnlace}`}><DoorOpen className="h-4 w-4" />Iniciar Sesión</Link>}
       </div>
     </div></div>

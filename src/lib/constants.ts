@@ -49,6 +49,9 @@ export const EXPIRACION_TURNO_PENDIENTE_MS = 30 * 60 * 1000;
 /* Tipos de pago de Mercado Pago (seña o valor total del servicio). */
 export const TIPOS_PAGO = ["SEÑA", "TOTAL"] as const;
 
+/* Métodos de pago que puede elegir el cliente durante el checkout. */
+export const METODOS_PAGO = ["MERCADO_PAGO", "TRANSFERENCIA"] as const;
+
 /* Anticipación mínima (ms) para reservar o reprogramar un turno */
 export const MINIMO_ANTICIPACION_MS = 10 * 60 * 1000;
 

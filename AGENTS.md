@@ -1,197 +1,274 @@
 # AGENTS.md
 
-# Reglas globales del proyecto
+## Propósito
 
-### Idioma
+Este archivo define cómo trabajar de forma segura y consistente en este repositorio. Su objetivo es
+proteger el tipado, la arquitectura, la seguridad y los cambios locales sin imponer refactors ajenos
+a la tarea.
 
-- Todo el código, comentarios, mensajes de UI y nombres de archivos/carpetas deben estar en **español**.
-- Excepciones (solo cuando el requisito técnico o el uso universal lo exige):
-  - APIs de librerías y del sistema: `useSession`, `signIn`, `PrismaClient`, `fetch`, `Request`, `onDelete`, `GoogleProvider`, etc.
-  - Modelos de base de datos de next-auth: `user`, `account`, `user_role` (nombres exactos exigidos por el adaptador).
-  - Nombres universales compartidos por ambos idiomas: `footer`, `header`, `hero`, `layout`, `page`, `route`, `hook`, `middleware`, `proxy`, `server.js`, `next.config.ts`, etc.
-  - Paquetes npm y nombres exportados por librerías de terceros (lucide-react, radix-ui, etc.).
-- Regla ESLint activa: `@typescript-eslint/no-explicit-any: error` — prohibido usar `any`.
+Antes de actuar, leer este archivo completo y revisar el estado real del repositorio. Si una
+afirmación documental contradice el código o la configuración vigente, verificarla y comunicar la
+discrepancia; no inventar compatibilidad ni conservar reglas obsoletas.
 
-## Reglas de construcción (PERMANENTES — no eliminar, no saltar)
+## Fuentes de verdad
 
-Estas reglas se agregan a las anteriores y son de cumplimiento obligatorio para TODO código nuevo y
-toda modificación. No pueden borrarse, atenuarse ni saltarse nunca.
+Usar, en este orden, las fuentes relevantes para cada decisión:
 
-1. **Máximo UNA función exportada por archivo de código.** Un archivo (ts/tsx/js/jsx) puede exportar
-   una sola función, componente React o hook. Si se necesitan más, se crean archivos adicionales.
-   - Excluidos: archivos de constantes, tipos e interfaces (no exportan funciones).
-   - Los closures internos de un componente (event handlers, callbacks) no cuentan como funciones del
-     archivo; si un helper deja de ser trivial, se mueve a su propio archivo.
-2. **Tamaño máximo de archivo: 400 líneas (objetivo: 300).** Ningún archivo de código puede superar
-   las 400 líneas. Si lo supera, debe desglosarse en archivos con responsabilidad única.
-3. **Regla del boy scout:** cualquier archivo existente que se modifique y quede fuera de límites
-   (varias funciones exportadas o más de 400 líneas) debe desglosarse en la misma tanda de cambios.
-4. Los documentos `.md` (documentación, planificación) no están sujetos a los límites de líneas.
+1. El pedido actual del usuario y el alcance acordado.
+2. `AGENTS.md` para reglas de trabajo del repositorio.
+3. Configuración ejecutable: `package.json`, `package-lock.json`, `tsconfig.json`,
+   `eslint.config.mjs`, `next.config.ts`, `prisma.config.ts` y `prisma/schema.prisma`.
+4. El código y los patrones existentes del dominio que se modifica.
+5. La documentación de `docs/`.
 
-## Organización por carpetas (PERMANENTE — no eliminar, no saltar)
+`README.md` contiene información histórica y no debe usarse para confirmar versiones o arquitectura
+sin contrastarla con las fuentes anteriores. Consultar `package.json` y `package-lock.json` para las
+versiones exactas; no fijarlas de memoria en documentación nueva.
 
-Esta regla complementa las reglas de construcción y es de cumplimiento obligatorio para TODO
-código nuevo y toda modificación. Su objetivo es mantener una arquitectura ordenada y predecible.
+## Estado actual del proyecto
 
-1. **Todo archivo de código debe vivir dentro de una carpeta que indique su dominio o propósito.**
-   Está PROHIBIDO dejar archivos sueltos en la raíz de `src/` o en carpetas de dominio.
-   - Si el archivo pertenece a un dominio existente, se coloca en su carpeta de dominio.
-   - Si el dominio no existe, se crea una carpeta nueva con nombre descriptivo.
-2. **Esquema de referencia de `src/`:**
-   - `src/app/` — solo archivos de ruta de Next.js (`page`, `layout`, `route`, `loading`, `error`,
-     `not-found`, `manifest`, `robots`, `sitemap`) y archivos propios del framework (`auth.ts`,
-     `proxy.ts`). Los componentes de interfaz NO viven acá.
-   - `src/componentes/<dominio>/` — componentes por dominio: `comunes/`, `ui/`, `inicio/`,
-     `panel/` (con subcarpetas `clientes/`, `presupuestos/`, `mensajes/`, `administradores/`,
-     `estadisticas/`, `navegacion/`), `pdf/`.
-   - `src/acciones/<dominio>/` — server actions por dominio: `clientes/`, `presupuestos/`,
-     `mensajes/`, `administradores/`, `contacto/`, `sesion/`. Cada acción y su archivo de estado
-     (`*-estado.ts`) van en la carpeta de su dominio. Los tipos compartidos por varios dominios
-     van en `compartido/`.
-   - `src/lib/` — lógica compartida e infraestructura (`utilidades/`, `datos-estructurados/`,
-     configuración, validaciones, prisma, etc.).
-   - `src/hooks/`, `src/contextos/`, `src/types/` — hooks, contextos y tipos globales.
-3. **Archivo nuevo:** si no existe la carpeta de su dominio, se crea. Está prohibido crear un
-   archivo de código en un lugar que no sea su carpeta de dominio.
-4. **Regla del boy scout aplicada a la organización:** si durante una modificación se detecta un
-   archivo suelto (fuera de su carpeta de dominio), se lo mueve a su carpeta y se actualizan sus
-   imports en la misma tanda de cambios.
-5. **Los imports usan el alias `@/`** (mapeado a `src/`). Nunca se usan imports relativos para
-   cruzar dominios; los relativos solo se permiten dentro de una misma carpeta si es estrictamente
-   necesario.
+- Aplicación de reservas para barbería con Next.js 15 App Router y React 19.
+- TypeScript estricto, Tailwind CSS 4 y Zod.
+- Prisma 7 con MariaDB/MySQL y `@prisma/adapter-mariadb`.
+- Auth.js v5 beta con Google, credenciales, Prisma Adapter y sesiones JWT.
+- Mercado Pago Checkout Pro con OAuth y webhooks.
+- Envío de correo con Resend y React Email; imágenes en Cloudinary.
+- No hay un runner de pruebas automatizadas configurado actualmente.
 
-## Uso de subagentes (OBLIGATORIO)
+El cliente de Prisma se genera en `generated/prisma`. Es código generado: nunca editarlo a mano.
 
-1. **Desglose obligatorio:** toda tarea o fase que se pueda desglosar en sub-tareas debe
-   ejecutarse mediante subagentes (`task` tool). Nunca ejecutar directamente trabajo que
-   pueda paralelizarse o delegarse.
-2. **Prompts detallados:** cada subagente debe recibir el prompt más detallado y con el mayor
-   contexto posible: objetivo, alcance exacto, archivos involucrados, patrones del proyecto,
-   y TODAS las reglas de comportamiento de este documento (idioma, arquitectura, capas,
-   límites de líneas, una función por archivo, imports con `@/`, etc.).
-3. **Paralelización:** lanzar varios subagentes en paralelo cuando las sub-tareas sean
-   independientes entre sí (un solo mensaje con múltiples llamadas a `task`).
-4. **Agente verificador global:** cuando una fase requiera muchos subagentes (3 o más) o
-   toque código compartido entre ellos, tras completar los subagentes se debe lanzar un
-   agente verificador (`verificador`) que revise TODO el código producido en la fase,
-   detecte fallas, incoherencias, violaciones de las reglas de este documento y archivos
-   fuera de límites, y las repare. El verificador es el último paso de la fase y su
-   aprobación es requisito para dar la fase por terminada.
-5. **Nunca delegar la coordinación:** la orquestación de subagentes, la definición de
-   interfaces entre sub-tareas y la decisión final sobre resultados siempre las hace el
-   agente principal, no los subagentes.
+## Reglas obligatorias
 
-## Proyecto
+### Alcance y preservación del trabajo
 
-App de reserva de turnos para barbería: Next.js 15 (App Router), TypeScript, Tailwind v4, Prisma 7 + MariaDB, Auth.js v5 (beta), Mercado Pago Checkout Pro.
+- Ejecutar `git status --short` antes de editar y revisar el diff al terminar.
+- Tratar los cambios existentes como trabajo del usuario. No revertirlos, sobreescribirlos,
+  formatearlos en masa ni incluirlos en el alcance sin necesidad.
+- Hacer el cambio mínimo completo. Evitar limpiezas, renombrados y migraciones de carpetas no
+  requeridos para resolver la tarea.
+- No usar comandos destructivos (`git reset --hard`, `git clean`, borrados recursivos, restauraciones
+  de archivos) salvo pedido explícito y con el destino exacto verificado.
+- No crear commits, ramas, PR ni instalar o actualizar dependencias salvo que el usuario lo pida o
+  sea imprescindible para el objetivo y se explique antes.
+- No ocultar errores ni atribuirlos a un estado previo sin reproducir un baseline verificable.
 
-## Reglas globales del proyecto
+### Idioma y nomenclatura
 
-### Idioma
+- La interfaz, los mensajes al usuario, la documentación propia y los comentarios deben estar en
+  español claro.
+- Preferir español para nombres nuevos de dominio cuando no rompa una convención existente.
+- Conservar nombres exigidos por Next.js, React, Auth.js, Prisma, APIs externas y librerías:
+  `page`, `layout`, `route`, `middleware`, `GET`, `POST`, `useSession`, `signIn`, `user`, `account`,
+  props de terceros, etc.
+- No renombrar símbolos, archivos o carpetas existentes solo para traducirlos. La consistencia local
+  y la compatibilidad tienen prioridad sobre una traducción incidental.
+- Seguir los patrones actuales: componentes en `PascalCase.tsx`, hooks `useCamelCase.ts`, acciones
+  `*.actions.ts` y utilidades preferentemente en `kebab-case.ts`.
 
-- Todo el código, comentarios, mensajes de UI y nombres de archivos/carpetas deben estar en **español**.
-- Excepciones (solo cuando el requisito técnico o el uso universal lo exige):
-  - APIs de librerías y del sistema: `useSession`, `signIn`, `PrismaClient`, `fetch`, `Request`, `onDelete`, `GoogleProvider`, etc.
-  - Modelos de base de datos de next-auth: `user`, `account`, `user_role` (nombres exactos exigidos por el adaptador).
-  - Nombres universales compartidos por ambos idiomas: `footer`, `header`, `hero`, `layout`, `page`, `route`, `middleware`, `proxy`, `server.js`, `next.config.ts`.
-  - Paquetes npm y nombres exportados por librerías de terceros (lucide-react, radix-ui, etc.).
-- Regla ESLint activa: `@typescript-eslint/no-explicit-any: error` — prohibido usar `any`.
+### TypeScript y calidad
 
-## Reglas de construcción (PERMANENTES — no eliminar, no saltar)
+- Mantener `strict: true`. No relajar `tsconfig.json`, ESLint ni `next.config.ts` para hacer pasar un
+  cambio.
+- Prohibido introducir `any`, `@ts-ignore` o `@ts-nocheck`. Usar tipos concretos; para datos externos,
+  usar `unknown` y estrechamiento seguro.
+- `@ts-expect-error` solo es admisible ante una incompatibilidad externa demostrable, con comentario
+  que explique el motivo y una verificación que garantice que sigue siendo necesario.
+- No usar aserciones de tipo para evitar validar datos. `as` expresa conocimiento del compilador, no
+  valida valores en runtime.
+- Validar toda entrada no confiable en el límite del sistema: formularios, `searchParams`, cuerpos de
+  requests, webhooks, variables de entorno y respuestas externas.
+- Manejar errores con mensajes útiles sin exponer secretos, tokens, datos personales ni detalles
+  internos innecesarios.
+- Mantener módulos cohesivos y con una responsabilidad reconocible. No existe una regla artificial
+  de una sola función exportada: route handlers, configuración, tipos y constantes pueden requerir
+  varios exports relacionados.
+- Usar el tamaño del archivo como señal, no como métrica automática. Considerar dividir un archivo
+  cercano a 300 líneas y justificar o separar responsabilidades si supera 400. No refactorizar un
+  archivo ajeno solo por su longitud.
 
-Estas reglas se agregan a las anteriores y son de cumplimiento obligatorio para TODO código nuevo y
-toda modificación. No pueden borrarse, atenuarse ni saltarse nunca.
+### Seguridad y datos
 
-1. **Máximo UNA función exportada por archivo de código.** Un archivo (ts/tsx/js/jsx) puede exportar
-   una sola función, componente React o hook. Si se necesitan más, se crean archivos adicionales.
-   - Excluidos: archivos de constantes, tipos e interfaces (no exportan funciones).
-   - Los closures internos de un componente (event handlers, callbacks) no cuentan como funciones del
-     archivo; si un helper deja de ser trivial, se mueve a su propio archivo.
-2. **Tamaño máximo de archivo: 400 líneas (objetivo: 300).** Ningún archivo de código puede superar
-   las 400 líneas. Si lo supera, debe desglosarse en archivos con responsabilidad única.
-3. **Regla del boy scout:** cualquier archivo existente que se modifique y quede fuera de límites
-   (varias funciones exportadas o más de 400 líneas) debe desglosarse en la misma tanda de cambios.
-4. Los documentos `.md` (documentación, planificación) no están sujetos a los límites de líneas.
+- La autorización siempre se aplica en el servidor. Ocultar controles en la UI no es una medida de
+  seguridad.
+- Las Server Actions y Route Handlers deben validar entrada, autenticar y autorizar antes de mutar
+  datos.
+- Mantener secretos únicamente en el servidor. No leer ni imprimir `.env`; nunca exponer una variable
+  sensible con prefijo `NEXT_PUBLIC_`.
+- No registrar contraseñas, tokens, firmas, cookies, cuerpos completos de webhooks ni datos personales.
+- En pagos, no confiar en estado, importe, referencia ni identidad enviados por el cliente. Verificar
+  contra Mercado Pago, validar la firma del webhook y mantener las operaciones idempotentes.
+- En reservas, preservar los controles de concurrencia, locks, restricciones únicas y transacciones.
+  No separar lecturas y escrituras que deban ser atómicas.
+- Usar las utilidades de fecha y zona horaria existentes. Evitar conversiones manuales que dependan de
+  la zona horaria del proceso.
 
-## Uso de subagentes (OBLIGATORIO)
+## Arquitectura vigente
 
-1. **Desglose obligatorio:** toda tarea o fase que se pueda desglosar en sub-tareas debe
-   ejecutarse mediante subagentes (`task` tool). Nunca ejecutar directamente trabajo que
-   pueda paralelizarse o delegarse.
-2. **Prompts detallados:** cada subagente debe recibir el prompt más detallado y con el mayor
-   contexto posible: objetivo, alcance exacto, archivos involucrados, patrones del proyecto,
-   y TODAS las reglas de comportamiento de este documento (idioma, arquitectura, capas,
-   límites de líneas, una función por archivo, imports con `@/`, etc.).
-3. **Paralelización:** lanzar varios subagentes en paralelo cuando las sub-tareas sean
-   independientes entre sí (un solo mensaje con múltiples llamadas a `task`).
-4. **Agente verificador global:** cuando una fase requiera muchos subagentes (3 o más) o
-   toque código compartido entre ellos, tras completar los subagentes se debe lanzar un
-   agente verificador (`verificador`) que revise TODO el código producido en la fase,
-   detecte fallas, incoherencias, violaciones de las reglas de este documento y archivos
-   fuera de límites, y las repare. El verificador es el último paso de la fase y su
-   aprobación es requisito para dar la fase por terminada.
-5. **Nunca delegar la coordinación:** la orquestación de subagentes, la definición de
-   interfaces entre sub-tareas y la decisión final sobre resultados siempre las hace el
-   agente principal, no los subagentes.
+No crear una segunda arquitectura ni mover archivos como efecto colateral.
 
-## Comandos
+- `src/app/`: rutas, layouts, loading/error/not-found, metadata y Route Handlers de App Router. Las
+  páginas deben componer la vista; extraer UI o lógica compleja a su dominio.
+- `src/actions/<dominio>/`: Server Actions por dominio (`turnos`, `barberos`, `servicios`, `horarios`,
+  `excepciones`, `configuracion`, `sesion`, `mercadopago`). Deben actuar como frontera: validar,
+  autorizar, orquestar, revalidar y devolver resultados tipados.
+- `src/components/<dominio>/`: ubicación canónica para componentes nuevos. Los Server Components son
+  la opción por defecto; agregar `"use client"` solo cuando hagan falta estado, efectos, eventos o APIs
+  del navegador.
+- `src/componentes/`: subárbol parcial existente. No ampliarlo ni migrarlo incidentalmente. Cualquier
+  unificación entre `components` y `componentes` requiere una tarea explícita con actualización de
+  imports y verificación completa.
+- `src/lib/`: infraestructura y lógica reutilizable. Extraer aquí lógica de negocio o transacciones
+  cuando se reutilice o cuando una action/route deje de ser una frontera fácil de leer.
+- `src/hooks/`: lógica reutilizable del cliente. No acceder desde hooks a secretos ni infraestructura
+  exclusiva del servidor.
+- `src/types/`: tipos compartidos entre dominios. Los tipos locales deben permanecer junto a la
+  funcionalidad que los usa.
+- `src/contextos/`: contextos de React. Evitar contextos globales para estado que puede permanecer
+  local o en el servidor.
+- `src/emails/`: plantillas de React Email; mantener compatibilidad con clientes de correo y estilos
+  soportados.
+- `src/auth.ts`, `src/auth.config.ts` y `src/middleware.ts`: archivos legítimos de infraestructura en
+  la raíz de `src`; no moverlos por una regla genérica de carpetas.
+- `prisma/`: esquema, migraciones y seed. Las migraciones representan historial y deben revisarse; no
+  reescribir migraciones ya aplicadas salvo una tarea explícita.
 
-- `npm run dev` — `next dev --turbopack`
-- `npm run build` — `prisma generate && (prisma db push --accept-data-loss || echo ...) && next build`
-- `npm run lint` — `next lint`
-- `npx tsc --noEmit` — verificación de tipos (el build la omite, correrla siempre antes de terminar)
-- Sin test framework: la validación se hace con build + typecheck manual.
+### Imports y fronteras
 
-## Sistema de color (parametrizado desde PageConfig)
+- Usar el alias `@/` para cruzar carpetas o dominios dentro de `src`.
+- Permitir imports relativos dentro de una misma funcionalidad cuando resulten más claros.
+- La importación relativa hacia `generated/prisma` es una excepción necesaria porque está fuera de
+  `src` y el alias `@/` no la cubre.
+- Evitar dependencias circulares y archivos barril que oculten fronteras o incorporen código de cliente
+  en módulos del servidor.
+- No importar módulos exclusivos del servidor desde Client Components. Mantener Prisma, secretos,
+  filesystem y SDKs privilegiados fuera del bundle del navegador.
 
-Los colores de marca se centralizan en CSS variables globales. NO hardcodear hex de acento en componentes.
+### Prisma y persistencia
 
-- Origen: `PageConfig.primaryColor` / `.secondaryColor` / `.bgColor` (tabla `page_config`).
-- Inyección: `layout.tsx` setea `--page-primary` / `--page-secondary` / `--page-bg` (y sus `-foreground`/`-tinta`) en `<style>` del `<html>` (con `as React.CSSProperties`).
-- Defaults (fuente única): `:root` en `src/app/globals.css` — `#d97706` / `#78350f` / `#09090b`.
-- Variantes alfa derivadas con `color-mix()`: `--page-primary-08/15/18/20/25/30/40/44/50/60/70/80` y equivalentes `--page-secondary-*`. Se usan en lugar de sufijos hex antiguos como `#d97706cc`.
-- Los tokens de superficie del admin (`--admin-*`) ahora se DERIVAN de `--page-bg` con color-mix (ya no son fijos). El fondo de la landing pública usa `--page-bg` con texto `--page-bg-foreground`.
+- Reutilizar el singleton de `src/lib/prisma.ts`; no crear nuevas instancias de `PrismaClient` en la
+  aplicación.
+- Si cambia `prisma/schema.prisma`, validar el esquema y revisar índices, relaciones, nulabilidad,
+  defaults y migración de datos.
+- Con `relationMode = "prisma"`, los índices necesarios no se crean por claves foráneas: revisar los
+  patrones de consulta al modificar relaciones.
+- Preferir migraciones versionadas y revisables para cambios de esquema. No usar `db push` como
+  sustituto automático de una migración.
+- No ejecutar `prisma db push`, `prisma migrate`, `prisma db seed` ni SQL contra una base sin confirmar
+  antes el entorno y el impacto.
 
-Cómo usarlo (NO prop drilling):
-- Inline: `style={{ color: "var(--page-primary)", backgroundColor: "var(--page-primary-30)" }}`.
-- Tailwind: `bg-[var(--page-primary)] hover:bg-[var(--page-primary-80)]`, `text-[var(--page-primary)]`, `border-[var(--page-primary)]/30`, `via-[var(--page-primary)]`.
-- Si un componente tenía `"--primary": "var(--page-primary)"` en un wrapper (alias a las globales), mantener ese alias local para `var(--primary)`.
+### Tema, colores y contraste
 
-FIJOS (no parametrizables, pertenecen al diseño/base de color):
-- El fondo base de la landing y las superficies del admin son parametrizables vía `bgColor`; lo fijo queda en neutros/accesorios que no dependen del bg.
-- Neutros (zinc / black / white), azules (blue), rojo semántico de error (`#ef4444`).
-- Paleta dorada oscura de modales/paneles: `#E8B031`, `#E4E0D9`, `#2C261D`, `#8E8675`, `#1C1812`, `#14110C`, `#251f15`.
-- Acentos oscuros tipo `amber-900/xx`, `amber-100/xx`, `amber-200/xx`, `amber-950/xx` (usados como bordes besurros / text gold).
-- Avisos semánticos de `test-mp` (warning amarillo).
+- Las fuentes canónicas son `src/app/globals.css`, `src/app/layout.tsx` y `src/lib/contraste/`.
+- Reutilizar los tokens CSS existentes; no hardcodear colores de marca ni propagar colores por props
+  fuera de una vista previa/configurador que lo necesite explícitamente.
+- Sobre fondos sólidos de marca usar los tokens `--page-*-foreground`. Para texto de marca sobre
+  superficies sólidas usar las variantes de tinta existentes. Sobre superficies translúcidas de
+  marca usar un token de texto de la superficie, como `--admin-texto-primario`.
+- No duplicar cálculos de luminancia o contraste. Extender las utilidades de `src/lib/contraste/` y
+  mantener la validación `#RRGGBB` en la frontera de configuración.
+- Si se agregan o renombran tokens, buscar todos sus consumidores y verificar visualmente al menos una
+  configuración clara y una oscura.
 
-Lo que ya NO debe existir: props `primaryColor`/`secondaryColor` entre componentes, lecturas de `pageConfig` para colores fuera de `layout.tsx`, import hex de acento durocodeado, strings como `${primaryColor}XX`, clases `amber-300/400/500/600` como acento.
+## Uso de subagentes
 
-## Arquitectura
+Los subagentes son una herramienta de ejecución, no un requisito ceremonial.
 
-- `actions/` → Server Actions: validación + autorización + service + revalidate + respuesta (máx. 100 líneas).
-- `services/` o `lib/` → consultas Prisma reutilizables (máx. 80 líneas). Sin validación ni auth.
-- `components/` → client components con responsabilidad única (máx. 200 líneas).
-- `hooks/` → lógica reutilizable (máx. 150 líneas).
-- `types/` ✓ `constants/` ✓. No crear carpetas nuevas si ya existe una apropiada.
+### Cuándo usarlos
 
-## Gotchas del repo
+- Cuando haya dos o más subtareas sustantivas e independientes.
+- Para auditorías amplias, investigación especializada o validaciones que puedan correr en paralelo.
+- Para separar implementación y revisión en cambios grandes, compartidos o de alto riesgo.
 
-- **Next.js reporta versiones distintas**: package.json dice `next 15.2.8` (real), README está desactualizado (menciona Next 16). No guiarse por el README.
-- `next.config.ts`: `eslint.ignoreDuringBuilds` y `typescript.ignoreBuildErrors` en `true`. Por eso `npx tsc --noEmit` manual es OBLIGATORIO. Hay errores de types preexistentes en `actions/admin.actions.ts`, `actions/calendario.actions.ts`, `prisma/seed.ts`, `EditServicioModal.tsx` (useActionState) que no deben tocarse a menos que se pida.
-- Prisma cliente generado en `generated/prisma` (raíz); singleton en `src/lib/prisma.ts` con `@prisma/adapter-mariadb`.
-- MySQL/MariaDB: usar `127.0.0.1` como host, no `localhost` (evita activar SSL).
-- Cron Vercel: `/api/cron/expirar-turnos`, requiere header `CRON_SECRET`.
-- No hay tests. Evitar instalar dependencias nuevas sin justificación (revisar primero si ya existe solución en el repo / React / Next).
-- `any`, `@ts-ignore`, `@ts-nocheck` PROHIBIDOS por CLAUDE.md; preferir `unknown`, tipos de Prisma/Zod, type guards.
+No desplegarlos para una edición pequeña, una pregunta puntual o trabajos que dependan continuamente
+del mismo archivo o de decisiones secuenciales.
 
-## Contraste de texto según color de marca (REGLAS DE SOLO LECTURA)
+### Cómo coordinarlos
 
-- Texto/íconos sobre fondo SÓLIDO `var(--page-primary)` o `var(--page-secondary)`: PROHIBIDO hardcodear `text-white`, `text-black`, `text-zinc-950`, `#ffffff`, `#fff` o `#000`. Usar `--page-primary-foreground` / `--page-secondary-foreground` (`text-[var(--page-primary-foreground)]` o `color: var(...)`).
-- Si un wrapper ya aliasea `--primary`/`--secondary` a las vars de página, agregar también `--primary-foreground` → `var(--page-primary-foreground)` en el MISMO objeto style y usar `var(--primary-foreground)`.
-- Texto/íconos de marca sobre fondos SÓLIDOS oscuros (negro, zinc-950/900, paleta dorada oscura como `#1C1812`, gradientes oscuros): usar `--page-primary-tinta` / `--page-secondary-tinta` (el script la aclara automáticamente si el color de marca es muy oscuro).
-- Sobre fondos translúcidos de marca (`--page-primary-15/20` y demás variantes alfa, p. ej. chips, badges e íconos sobre `--page-primary-XX`): NUNCA usar texto/íconos `var(--page-primary)` — queda invisible con marcas oscuras (caso plantilla `minimalista`) — ni `-tinta` — falla en superficies claras. Usar `var(--admin-texto-primario)` (= `--page-bg-foreground`), que siempre contrasta con la superficie que domina el chip.
-- Texto/íconos de marca sobre superficies SÓLIDAS no translúcidas (`--page-bg`, `--admin-surface`, negro, zinc-950/900, paleta dorada oscura como `#1C1812`, gradientes oscuros): usar `--page-primary-tinta` / `--page-secondary-tinta` (el script la aclara automáticamente si el color de marca es muy oscuro).
-- Única fuente permitida para tomar decisiones de contraste: `src/lib/contraste.ts` (funciones en español: `esColorHexValido`, `calcularLuminanciaRelativa`, `calcularRazonDeContraste`, `elegirColorTexto`, `obtenerTintaLejible`, `mezclarConBlanco`). No crear utilidades paralelas.
-- Nomenclatura: funciones, variables, constantes y archivos nuevos en español (excepto palabras reservadas del sistema/librerías y convenciones universales del stack como `id`, `className`, props de shadcn/radix, hooks `useXxx`). TypeScript estricto, sin `any`, `@ts-ignore` o `@ts-nocheck`.
-- Verificación obligatoria tras cualquier cambio de color/contraste: `npx tsc --noEmit` (el build NO typechequea) en la raíz del proyecto.
-- Si un color de marca nuevo se agrega al panel admin, debe pasar por la validación `/^#[0-9a-fA-F]{6}$/` (existe en `src/actions/configPage.ts` y en `GeneralConfigForm.tsx`).
+- El agente principal conserva la coordinación, define interfaces, integra resultados y decide el
+  cierre.
+- Cada prompt debe incluir objetivo, alcance, archivos permitidos, restricciones, criterios de
+  aceptación y validaciones esperadas. El subagente debe leer este `AGENTS.md`; no hace falta copiarlo
+  entero en el prompt.
+- Asignar propiedad exclusiva de archivos cuando haya escrituras. Dos agentes no deben editar el
+  mismo archivo ni conjuntos que se importan mutuamente sin una secuencia explícita.
+- Las investigaciones de solo lectura sí pueden ejecutarse en paralelo.
+- Un agente verificador revisa primero sin editar. Solo puede reparar problemas dentro del alcance
+  autorizado y después de que el agente principal evalúe sus hallazgos.
+- Cada subagente debe informar archivos tocados, decisiones, comandos ejecutados, resultados y riesgos
+  pendientes.
+- Después de integrar, el agente principal revisa el diff completo y ejecuta las verificaciones
+  finales; no delega la responsabilidad del resultado.
+
+## Flujo de trabajo
+
+1. Leer el pedido, este archivo y las configuraciones relevantes.
+2. Revisar `git status --short`, ubicar cambios existentes y delimitar el alcance.
+3. Inspeccionar implementaciones vecinas antes de diseñar una solución nueva.
+4. Si ayuda, obtener un baseline reproducible antes de editar.
+5. Implementar el cambio mínimo completo, respetando fronteras servidor/cliente y contratos existentes.
+6. Revisar el diff, imports, estados vacíos/error/carga, accesibilidad y seguridad del dominio.
+7. Ejecutar validación proporcional al cambio.
+8. Entregar un resumen honesto con archivos cambiados, validaciones y riesgos o pendientes reales.
+
+## Verificación
+
+### Cambios de TypeScript o JavaScript
+
+Ejecutar antes de finalizar:
+
+```bash
+npx --no-install tsc --noEmit --incremental false
+npm run lint
+```
+
+`npm run lint` usa actualmente `next lint`, que está deprecado pero es el comando vigente y funcional
+del proyecto. No ejecutar `npx eslint .` como sustituto hasta que la configuración excluya de forma
+correcta `.next` y `generated`; la migración del script de lint debe hacerse como tarea separada.
+
+### Cambios de Prisma
+
+Ejecutar como mínimo:
+
+```bash
+npx --no-install prisma validate
+npx --no-install prisma generate
+```
+
+`prisma generate` corresponde cuando cambia el esquema. Además, revisar la migración generada o escrita
+y probarla únicamente contra una base identificada como segura.
+
+### Build
+
+`npm run build` no es una comprobación inocua: el script actual ejecuta `prisma generate` y
+`prisma db push` contra `DATABASE_URL`, y continúa incluso si el push falla. No usarlo como validación
+rutinaria ni ejecutarlo sin confirmar el destino de la base de datos.
+
+Cuando se necesite validar solo Next.js y el entorno esté preparado, puede usarse:
+
+```bash
+npx --no-install next build
+```
+
+Este comando escribe `.next` y el render de rutas puede requerir variables de entorno o acceso a
+servicios. Documentar cualquier limitación real; no simular éxito.
+
+### Pruebas funcionales
+
+No hay suite automatizada configurada. Realizar comprobaciones manuales dirigidas al flujo cambiado y
+describirlas. Para cambios críticos de reservas, autenticación, cron o pagos, cubrir como mínimo camino
+feliz, entrada inválida, falta de autorización, reintento/idempotencia y fallo del proveedor cuando
+aplique.
+
+Los cambios exclusivos de documentación no requieren typecheck ni build, pero sí revisión del diff y
+comprobación de que comandos, rutas y afirmaciones coincidan con el repositorio actual.
+
+## Criterios de finalización
+
+Una tarea está terminada cuando:
+
+- el pedido está implementado sin ampliar el alcance de manera innecesaria;
+- no se perdieron ni alteraron cambios ajenos;
+- el código nuevo mantiene tipado estricto, validación, autorización y manejo de errores;
+- las verificaciones proporcionales pasan, o se informa exactamente qué falló y por qué;
+- no quedan logs de depuración, secretos, placeholders accidentales ni código generado editado;
+- la respuesta final resume resultado, archivos modificados, validaciones y cualquier riesgo pendiente.

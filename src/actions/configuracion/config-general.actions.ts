@@ -39,6 +39,21 @@ async function updatePageConfigBase(
         ...(data.mapsUrl !== undefined && { mapsUrl: data.mapsUrl }),
         ...(data.address !== undefined && { address: data.address }),
         ...(cleanWhatsapp !== undefined && { whatsapp: cleanWhatsapp }),
+        ...(data.transferenciaTitular !== undefined && {
+          transferenciaTitular: data.transferenciaTitular,
+        }),
+        ...(data.transferenciaCuit !== undefined && {
+          transferenciaCuit: data.transferenciaCuit,
+        }),
+        ...(data.transferenciaAlias !== undefined && {
+          transferenciaAlias: data.transferenciaAlias,
+        }),
+        ...(data.transferenciaCbu !== undefined && {
+          transferenciaCbu: data.transferenciaCbu,
+        }),
+        ...(data.transferenciaBanco !== undefined && {
+          transferenciaBanco: data.transferenciaBanco,
+        }),
       },
       create: {
         id: 1,
@@ -54,6 +69,11 @@ async function updatePageConfigBase(
         whatsapp: cleanWhatsapp || "",
         mapsUrl: data.mapsUrl || "",
         address: data.address || "",
+        transferenciaTitular: data.transferenciaTitular || "",
+        transferenciaCuit: data.transferenciaCuit || "",
+        transferenciaAlias: data.transferenciaAlias || "",
+        transferenciaCbu: data.transferenciaCbu || "",
+        transferenciaBanco: data.transferenciaBanco || "",
       },
     });
 

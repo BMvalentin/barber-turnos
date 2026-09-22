@@ -13,9 +13,11 @@ import type { ParametrosDatosTurno } from "./useDatosFormularioTurno";
 import { usePagoTurno } from "./usePagoTurno";
 import { esAdmin } from "@/lib/seguridad/es-admin";
 import { ESTADOS_PAGO } from "@/lib/constants";
+import type { DatosTransferencia } from "@/types/pago";
 
 export type ParametrosFormularioTurno = ParametrosDatosTurno & {
   whatsappPhone: string;
+  datosTransferencia?: DatosTransferencia;
   turnoInicial?: TurnoListado | null;
   /** Callback opcional que se invoca al crear un turno con éxito, para refrescar el listado. */
   onTurnoCreado?: () => void;
@@ -59,7 +61,7 @@ export function useFormularioTurno({
     setSelectedUserId,
     setEstadoPago,
   } = datos;
-  const { setTurnoCreado, setShowPagoModal } = pago;
+  const { setTurnoCreado, setShowPagoModal, setTransferenciaLista } = pago;
 
   const accion = esEdicion ? actualizarTurno : createTurno;
   const [state, formAction] = useActionState(accion, estadoInicial);
@@ -106,6 +108,7 @@ export function useFormularioTurno({
       router.refresh();
     } else {
       setTurnoCreado(nuevoTurno);
+      setTransferenciaLista(false);
       setShowPagoModal(true);
     }
   }, [
@@ -122,6 +125,7 @@ export function useFormularioTurno({
     setSelectedUserId,
     setEstadoPago,
     setTurnoCreado,
+    setTransferenciaLista,
     setShowPagoModal,
     session,
     onTurnoCreado,

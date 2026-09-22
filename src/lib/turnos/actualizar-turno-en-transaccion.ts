@@ -108,7 +108,11 @@ export async function actualizarTurnoEnTransaccion(
         bloqueos[0].barberoId,
         ejecutarSegundoBloque,
       );
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
+    }, {
+      isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+      maxWait: 10000,
+      timeout: 15000,
+    });
 
     return { ok: true, ...resultado };
   } catch (error) {
