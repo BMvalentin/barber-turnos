@@ -7,6 +7,7 @@ import type { TurnoCreado } from "@/types/turno";
 import type { TipoPago } from "@/types/mercadopago";
 import type { DatosTransferencia, MetodoPago } from "@/types/pago";
 import { formatearMoneda } from "@/lib/utils/formatear-moneda";
+import { esTransferenciaConfigurada } from "@/lib/pagos/es-transferencia-configurada";
 import ModalBase from "@/components/ui/ModalBase";
 import SelectorMetodoPago from "@/components/turno/SelectorMetodoPago";
 import PanelTransferencia from "@/components/turno/PanelTransferencia";
@@ -20,6 +21,7 @@ type Props = {
   whatsappPhone: string;
   onPagar: (tipoPago: TipoPago, metodoPago: MetodoPago) => void;
   onVolverTransferencia: () => void;
+  onClose?: () => void;
 };
 
 export default function ModalPagoTurno({
@@ -31,6 +33,7 @@ export default function ModalPagoTurno({
   whatsappPhone,
   onPagar,
   onVolverTransferencia,
+  onClose,
 }: Props) {
   const [metodoPago, setMetodoPago] = useState<MetodoPago>("MERCADO_PAGO");
   const [tipoPago, setTipoPago] = useState<TipoPago>("SEÑA");
@@ -42,31 +45,40 @@ export default function ModalPagoTurno({
   const total = turnoCreado.precioCongelado;
   const senia = turnoCreado.seniaCongelada;
   const saldo = Math.max(total - senia, 0);
-  const transferenciaDisponible = Boolean(
-    datosTransferencia.transferenciaTitular &&
-      (datosTransferencia.transferenciaAlias || datosTransferencia.transferenciaCbu),
-  );
+  const transferenciaDisponible = esTransferenciaConfigurada(datosTransferencia);
 
   return (
     <ModalBase
       maxWidth="max-w-md"
       overlayClase="bg-black/80 backdrop-blur-md p-4"
       contenedorClase="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-2xl overflow-hidden"
+      onClose={onClose}
       header={
         <div
-          className="flex items-center gap-3 border-b border-[var(--admin-border)] p-6"
+          className="flex items-center justify-between gap-3 border-b border-[var(--admin-border)] p-6"
           style={{ backgroundColor: "color-mix(in srgb, var(--primary) 12%, transparent)" }}
         >
-          <div
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--admin-border)]"
-            style={{ backgroundColor: "color-mix(in srgb, var(--primary) 20%, transparent)" }}
-          >
-            <CheckCircle2 className="h-5 w-5" style={{ color: "var(--primary-tinta)" }} />
+          <div className="flex items-center gap-3">
+            <div
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--admin-border)]"
+              style={{ backgroundColor: "color-mix(in srgb, var(--primary) 20%, transparent)" }}
+            >
+              <CheckCircle2 className="h-5 w-5" style={{ color: "var(--primary-tinta)" }} />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-[var(--admin-texto-primario)]">¡Turno reservado!</h2>
+              <p className="text-xs text-[var(--admin-texto-secundario)]">Elegí cómo confirmar tu lugar.</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-bold text-[var(--admin-texto-primario)]">¡Turno reservado!</h2>
-            <p className="text-xs text-[var(--admin-texto-secundario)]">Elegí cómo confirmar tu lugar.</p>
-          </div>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg px-2 py-1 text-sm text-[var(--admin-texto-muted)] transition hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)]"
+            >
+              Cerrar
+            </button>
+          )}
         </div>
       }
     >

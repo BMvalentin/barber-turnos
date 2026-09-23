@@ -2,8 +2,15 @@
 
 import { prisma } from "@/lib/prisma";
 import { requerirPropietarioOAdmin } from "@/lib/seguridad/requerir-propietario";
-import { ESTADOS_PAGO, ESTADOS_TURNO, TIPOS_PAGO } from "@/lib/constants";
+import {
+  ESTADOS_PAGO,
+  ESTADOS_PAGO_REINTENTABLES,
+  ESTADOS_TURNO,
+  TIPOS_PAGO,
+} from "@/lib/constants";
 import { revalidatePath } from "next/cache";
+import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
+import { esTransferenciaConfigurada } from "@/lib/pagos/es-transferencia-configurada";
 import type { ActionState } from "@/types/action-state";
 import type { TipoPago } from "@/types/mercadopago";
 
@@ -32,6 +39,16 @@ export async function registrarTransferencia(
 
     const sesionAutorizada = await requerirPropietarioOAdmin(turno.userId);
     if (!sesionAutorizada) return { success: false, error: "No autorizado" };
+    const configuracion = await obtenerConfigCacheada();
+    if (!configuracion || !esTransferenciaConfigurada({
+      transferenciaTitular: configuracion.transferenciaTitular || "",
+      transferenciaCuit: configuracion.transferenciaCuit || "",
+      transferenciaAlias: configuracion.transferenciaAlias || "",
+      transferenciaCbu: configuracion.transferenciaCbu || "",
+      transferenciaBanco: configuracion.transferenciaBanco || "",
+    })) {
+      return { success: false, error: "La transferencia no está configurada" };
+    }
     if (turno.estado === ESTADOS_TURNO[3]) {
       return { success: false, error: "Este turno está cancelado" };
     }
@@ -39,7 +56,8 @@ export async function registrarTransferencia(
       return { success: false, error: "Este turno ya fue confirmado" };
     }
     const transferenciaEnRevision = turno.estadoPago === ESTADOS_PAGO[6] && turno.metodoPago === "TRANSFERENCIA";
-    if (turno.estadoPago !== ESTADOS_PAGO[0] && !transferenciaEnRevision) {
+    const pagoReintentable = (ESTADOS_PAGO_REINTENTABLES as readonly string[]).includes(turno.estadoPago);
+    if (!pagoReintentable && !transferenciaEnRevision) {
       return { success: false, error: "Este turno ya tiene un pago en proceso o registrado" };
     }
     if (turno.estado !== ESTADOS_TURNO[0]) {
@@ -56,7 +74,7 @@ export async function registrarTransferencia(
       where: {
         id: turnoId,
         estado: ESTADOS_TURNO[0],
-        estadoPago: { in: [ESTADOS_PAGO[0], ESTADOS_PAGO[6]] },
+        estadoPago: { in: [...ESTADOS_PAGO_REINTENTABLES, ESTADOS_PAGO[6]] },
       },
       data: {
         tipoPago,

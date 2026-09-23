@@ -17,6 +17,8 @@ export default function DashboardPanel({
   paginaTurnosInicial,
   totalPaginasTurnos,
   session,
+  whatsappPhone,
+  datosTransferencia,
 }: PropiedadesPanelUsuario) {
   const { update } = useSession();
   const [guardando, iniciarTransicion] = useTransition();
@@ -65,6 +67,8 @@ export default function DashboardPanel({
                 paginaInicial={paginaTurnosInicial}
                 totalPaginasInicial={totalPaginasTurnos}
                 session={session}
+                whatsappPhone={whatsappPhone}
+                datosTransferencia={datosTransferencia}
               />
             )}
           </motion.div>

@@ -7,7 +7,7 @@ import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { actualizarTurnoEnTransaccion } from "@/lib/turnos/actualizar-turno-en-transaccion";
 import { INCLUDE_TURNO_CON_DETALLE } from "@/lib/turno-con-detalle";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
-import { ESTADOS_PAGO_MANUALES, ESTADOS_TURNO, MINIMO_ANTICIPACION_MS } from "@/lib/constants";
+import { ESTADOS_PAGO, ESTADOS_PAGO_MANUALES, ESTADOS_TURNO, MINIMO_ANTICIPACION_MS } from "@/lib/constants";
 import type { ActionState } from "@/types/action-state";
 import type { TurnoConDetalle } from "@/types/turno";
 import type { Prisma, estado_pago, turno_estado } from "../../../generated/prisma/client";
@@ -72,10 +72,12 @@ export async function actualizarTurno(
       : turnoActual.estado) as turno_estado;
     const estadoPagoRecibido = formData.get("estadoPago");
     const estadoPago = (
-      typeof estadoPagoRecibido === "string" &&
-      (ESTADOS_PAGO_MANUALES as readonly string[]).includes(estadoPagoRecibido)
-        ? estadoPagoRecibido
-        : turnoActual.estadoPago
+      estado === ESTADOS_TURNO[3]
+        ? ESTADOS_PAGO[4]
+        : typeof estadoPagoRecibido === "string" &&
+            (ESTADOS_PAGO_MANUALES as readonly string[]).includes(estadoPagoRecibido)
+          ? estadoPagoRecibido
+          : turnoActual.estadoPago
     ) as estado_pago;
 
     const cambiaReserva =

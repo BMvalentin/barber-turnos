@@ -33,6 +33,19 @@ export const ESTADOS_PAGO_ACREDITADOS = ["SEÑADO", "PAGADO", "APROBADO"] as con
    (o un pago fallido): candidatos a expirar/cancelar y que NO cuentan como reserva. */
 export const ESTADOS_PAGO_EXPIRABLES = ["PENDIENTE", "RECHAZADO", "CANCELADO"] as const;
 
+/* Estados desde los que el cliente puede volver a elegir un medio de pago. */
+export const ESTADOS_PAGO_REINTENTABLES = ["PENDIENTE", "RECHAZADO", "CANCELADO"] as const;
+
+/* Estados que se muestran en "Mis turnos": incluye reservas temporales activas
+   para que el cliente pueda completar el pago antes de que expiren. */
+export const ESTADOS_PAGO_VISIBLES_USUARIO = [
+  ...ESTADOS_PAGO_ACREDITADOS,
+  "PENDIENTE",
+  "EN_ACREDITACION",
+  "RECHAZADO",
+  "CANCELADO",
+] as const;
+
 /* Ventana de vigencia de una reserva temporal sin pago. Alineada con la expiración
    de la preferencia de Mercado Pago (30 min): antes de ese límite el pago aún puede
    confirmar el turno; pasado el límite la reserva se libera y deja de bloquear el slot. */
@@ -40,8 +53,9 @@ export const EXPIRACION_TURNO_PENDIENTE_MS = 30 * 60 * 1000;
 
 /* --- Semántica de estados de turno (NO confundir reserva temporal con confirmada) ---
    - Reserva temporal (impaga / en tránsito): estado = PENDIENTE, estadoPago en
-     [PENDIENTE, RECHAZADO, CANCELADO, EN_ACREDITACION]. NO se muestra en "Mis turnos",
-     NO es reserva definitiva y expira a los EXPIRACION_TURNO_PENDIENTE_MS.
+   [PENDIENTE, RECHAZADO, CANCELADO, EN_ACREDITACION]. Se muestra en "Mis turnos"
+   mientras sigue activa, pero NO es reserva definitiva y expira a los
+   EXPIRACION_TURNO_PENDIENTE_MS.
    - Reserva confirmada: estado = CONFIRMADO (o COMPLETADO), estadoPago en
      [SEÑADO, PAGADO, APROBADO]. Solo un pago acreditado la produce.
 */

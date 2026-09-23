@@ -188,20 +188,21 @@ export async function POST(req: NextRequest) {
       }
 
       case "rejected": {
-        // Pago rechazado → turno vuelve a PENDIENTE con estado de pago RECHAZADO
-        await prisma.turno.update({
-          where: { id: turnoId },
-          data: { estado: ESTADOS_TURNO[3], estadoPago: ESTADOS_PAGO[4] },
+        // Pago rechazado → la reserva sigue disponible para reintentar el pago.
+        await prisma.turno.updateMany({
+          where: { id: turnoId, estado: ESTADOS_TURNO[0] },
+          data: { estadoPago: ESTADOS_PAGO[4] },
         });
         console.log(`❌ Pago rechazado para turno ${turnoId}`);
         break;
       }
 
       case "cancelled": {
-        // Pago cancelado → turno vuelve a PENDIENTE con estado de pago CANCELADO
-        await prisma.turno.update({
-          where: { id: turnoId },
-          data: { estado: ESTADOS_TURNO[3], estadoPago: ESTADOS_PAGO[5] },
+        // Un pago cancelado antes de confirmar no debe ocultar la reserva ni
+        // impedir que el cliente elija otro medio de pago.
+        await prisma.turno.updateMany({
+          where: { id: turnoId, estado: ESTADOS_TURNO[0] },
+          data: { estadoPago: ESTADOS_PAGO[5] },
         });
         console.log(`❌ Pago cancelado para turno ${turnoId}`);
         break;

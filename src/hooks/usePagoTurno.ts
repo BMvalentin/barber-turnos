@@ -9,13 +9,14 @@ import type { MetodoPago } from "@/types/pago";
 
 export type ParametrosPagoTurno = {
   whatsappPhone: string;
+  turnoInicial?: TurnoCreado | null;
 };
 
-export function usePagoTurno({ whatsappPhone }: ParametrosPagoTurno) {
+export function usePagoTurno({ whatsappPhone, turnoInicial = null }: ParametrosPagoTurno) {
   // El envío de WhatsApp al barbero ocurre en /pago/success (RedireccionWhatsApp).
   // Se conserva el parámetro por compatibilidad con la cadena de Props existente.
   void whatsappPhone;
-  const [turnoCreado, setTurnoCreado] = useState<TurnoCreado | null>(null);
+  const [turnoCreado, setTurnoCreado] = useState<TurnoCreado | null>(turnoInicial);
   const [showPagoModal, setShowPagoModal] = useState(false);
   const [cargandoPago, setCargandoPago] = useState(false);
   const [errorPago, setErrorPago] = useState<string | null>(null);

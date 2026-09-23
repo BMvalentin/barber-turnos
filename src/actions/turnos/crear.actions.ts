@@ -51,6 +51,7 @@ export async function createTurno(
       inicio,
       estadoPago,
       estadoFinal,
+      confirmarSinSeña: !usuarioEsAdmin,
     });
     if (!resultado.ok) return { success: false, error: resultado.error };
     const turno = resultado.turno;
@@ -59,11 +60,10 @@ export async function createTurno(
       const tareas: Promise<unknown>[] = [
         prisma.slotLock.deleteMany({ where: { userId, barberoId, horarioReservado: inicio } }),
       ];
-      if (resultado.creado) {
-        const estadoEmail = estadoFinal === ESTADOS_TURNO[1] ? "CONFIRMADO" : "CREADO";
+      if (resultado.creado && turno.estado === ESTADOS_TURNO[1]) {
         tareas.push(
-          enviarEmailTurnoSeguro(turno, estadoEmail),
-          enviarEmailTurnoBarberoSeguro(turno, estadoEmail),
+          enviarEmailTurnoSeguro(turno, "CONFIRMADO"),
+          enviarEmailTurnoBarberoSeguro(turno, "CONFIRMADO"),
         );
       }
       const resultados = await Promise.allSettled(tareas);

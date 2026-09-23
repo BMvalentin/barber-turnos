@@ -10,6 +10,7 @@ import LineaTiempoTurnos from "./LineaTiempoTurnos";
 import { useConfirmacionTurno } from "./use-confirmacion-turno";
 import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
+import type { DatosTransferencia } from "@/types/pago";
 
 interface Props {
   turnos: TurnoListado[];
@@ -20,6 +21,8 @@ interface Props {
   errorCargaMas?: boolean;
   onCargarMas?: () => void;
   onEstadoActualizado?: (id: string, nuevoEstado: string) => void;
+  whatsappPhone?: string;
+  datosTransferencia?: DatosTransferencia;
 }
 
 export default function TurnoList({
@@ -31,6 +34,8 @@ export default function TurnoList({
   errorCargaMas = false,
   onCargarMas = () => {},
   onEstadoActualizado = () => {},
+  whatsappPhone = "",
+  datosTransferencia,
 }: Props) {
   const turnosOrdenados = useMemo(
     () =>
@@ -107,6 +112,8 @@ export default function TurnoList({
         onCancelar={solicitarCancelar}
         onCompletar={solicitarCompletar}
         onConfirmar={solicitarConfirmar}
+        whatsappPhone={whatsappPhone}
+        datosTransferencia={datosTransferencia}
       />
 
       <div ref={sentinelRef} aria-hidden="true" className="h-1" />

@@ -5,12 +5,15 @@ import type { Session } from "next-auth";
 import { getUserTurnos } from "@/actions/sesion/listar-turnos-usuario.actions";
 import TurnoList from "@/components/turno/gestion/TurnoList";
 import type { TurnoListado } from "@/types/turno";
+import type { DatosTransferencia } from "@/types/pago";
 
 type Propiedades = {
   turnosIniciales: TurnoListado[];
   paginaInicial: number;
   totalPaginasInicial: number;
   session: Session | null;
+  whatsappPhone: string;
+  datosTransferencia: DatosTransferencia;
 };
 
 export default function PanelTurnosUsuario({
@@ -18,6 +21,8 @@ export default function PanelTurnosUsuario({
   paginaInicial,
   totalPaginasInicial,
   session,
+  whatsappPhone,
+  datosTransferencia,
 }: Propiedades) {
   const [turnos, establecerTurnos] = useState(turnosIniciales);
   const [paginaActual, establecerPaginaActual] = useState(paginaInicial);
@@ -59,6 +64,8 @@ export default function PanelTurnosUsuario({
         tieneMas={paginaActual < totalPaginasInicial}
         errorCargaMas={errorCargaMas}
         onCargarMas={cargarMas}
+        whatsappPhone={whatsappPhone}
+        datosTransferencia={datosTransferencia}
       />
     </div>
   );

@@ -69,6 +69,7 @@ export default function ModalGestionTurno({
     errorPago,
     transferenciaLista,
     setTransferenciaLista,
+    setShowPagoModal,
     handlePagar,
   } = useFormularioTurno({
     session,
@@ -183,6 +184,10 @@ export default function ModalGestionTurno({
               whatsappPhone={whatsappPhone}
               onPagar={handlePagar}
               onVolverTransferencia={() => setTransferenciaLista(false)}
+              onClose={() => {
+                setTransferenciaLista(false);
+                setShowPagoModal(false);
+              }}
             />
           </div>,
           document.body,

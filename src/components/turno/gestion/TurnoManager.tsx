@@ -7,6 +7,8 @@ import DatosReservaProveedor from "@/contextos/DatosReservaProveedor";
 import TurnoList from "./TurnoList";
 import TurnosFiltros from "./TurnosFiltros";
 import NavegacionFecha from "./NavegacionFecha";
+import { esAdmin } from "@/lib/seguridad/es-admin";
+import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
 import type {
   BarberoData,
   RelacionData,
@@ -54,7 +56,8 @@ export default function TurnoManager({
   whatsappPhone,
   datosTransferencia,
 }: Props) {
-  const [filtroEstado, setFiltroEstado] = useState("CONFIRMADO");
+  const filtroInicial = esAdmin(session) ? "CONFIRMADO" : "PENDIENTE";
+  const [filtroEstado, setFiltroEstado] = useState(filtroInicial);
   const [fecha, setFecha] = useState("");
   const [turnos, setTurnos] = useState(turnosIniciales);
   const [paginaActual, setPaginaActual] = useState(1);
@@ -74,7 +77,7 @@ export default function TurnoManager({
     setCargandoInicial(true);
     setErrorCargaMas(false);
 
-    void buscarPagina(1, "CONFIRMADO", "")
+    void buscarPagina(1, filtroInicial, "")
       .then((resultado) => {
         if (id !== solicitudRef.current) return;
         if (resultado.success && resultado.data) {
@@ -96,7 +99,7 @@ export default function TurnoManager({
       .finally(() => {
         if (id === solicitudRef.current) setCargandoInicial(false);
       });
-  }, [cargarTurnosAlMontar]);
+  }, [cargarTurnosAlMontar, filtroInicial]);
 
   const reiniciarBusqueda = async (nuevoEstado: string, nuevaFecha: string) => {
     const id = ++solicitudRef.current;
@@ -150,7 +153,13 @@ export default function TurnoManager({
       prev
         .map((turno) =>
           turno.id === idTurno
-            ? { ...turno, estado: nuevoEstado as TurnoListado["estado"] }
+            ? {
+                ...turno,
+                estado: nuevoEstado as TurnoListado["estado"],
+                ...(nuevoEstado === ESTADOS_TURNO[3]
+                  ? { estadoPago: ESTADOS_PAGO[4] }
+                  : {}),
+              }
             : turno,
         )
         .filter((turno) => filtroEstado === "TODOS" || turno.estado === filtroEstado),
@@ -188,7 +197,11 @@ export default function TurnoManager({
           />
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <TurnosFiltros estado={filtroEstado} onChange={cambiarEstado} />
+          <TurnosFiltros
+            estado={filtroEstado}
+            onChange={cambiarEstado}
+            mostrarTodos={esAdmin(session)}
+          />
           <NavegacionFecha
             fecha={fecha}
             onCambiarFecha={cambiarFecha}
@@ -205,6 +218,8 @@ export default function TurnoManager({
         errorCargaMas={errorCargaMas}
         onCargarMas={cargarMas}
         onEstadoActualizado={actualizarEstadoTurno}
+        whatsappPhone={whatsappPhone}
+        datosTransferencia={datosTransferencia}
       />
       </div>
     </DatosReservaProveedor>

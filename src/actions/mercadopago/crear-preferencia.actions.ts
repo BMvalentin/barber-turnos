@@ -7,7 +7,11 @@ import { obtenerConfiguracionMP } from "@/lib/mercadopago/obtener-config";
 import { obtenerUrlCheckout } from "@/lib/mercadopago/url-checkout";
 import { construirPreferenciaPago } from "@/lib/mercadopago/construir-preferencia-pago";
 import { requerirPropietarioOAdmin } from "@/lib/seguridad/requerir-propietario";
-import { ESTADOS_TURNO, ESTADOS_PAGO, TIPOS_PAGO } from "@/lib/constants";
+import {
+  ESTADOS_TURNO,
+  ESTADOS_PAGO_REINTENTABLES,
+  TIPOS_PAGO,
+} from "@/lib/constants";
 import type { ActionState } from "@/types/action-state";
 import type { DatosPreferenciaPago, TipoPago } from "@/types/mercadopago";
 
@@ -35,8 +39,8 @@ export async function crearPreferenciaPago(
     const sesionAutorizada = await requerirPropietarioOAdmin(turno.userId);
     if (!sesionAutorizada) return { success: false, error: "No autorizado" };
 
-    const transferenciaEnRevision = turno.estadoPago === ESTADOS_PAGO[6] && turno.metodoPago === "TRANSFERENCIA";
-    if (turno.estadoPago !== ESTADOS_PAGO[0] && !transferenciaEnRevision) {
+    const pagoReintentable = (ESTADOS_PAGO_REINTENTABLES as readonly string[]).includes(turno.estadoPago);
+    if (!pagoReintentable) {
       return { success: false, error: "Este turno ya no admite más pagos" };
     }
     if (turno.estado === ESTADOS_TURNO[1]) return { success: false, error: "Este turno ya fue pagado" };

@@ -23,6 +23,7 @@ export interface ParametrosCrearTurno {
   inicio: Date;
   estadoPago: (typeof ESTADOS_PAGO)[number];
   estadoFinal: (typeof ESTADOS_TURNO)[number];
+  confirmarSinSeña?: boolean;
 }
 
 /**
@@ -52,8 +53,12 @@ export async function crearTurnoEnTransaccion(
               horarioReservado: p.inicio,
               precioCongelado: reserva.precio,
               seniaCongelada: reserva.senia,
-              estado: p.estadoFinal,
-              estadoPago: p.estadoPago,
+              estado: p.confirmarSinSeña && reserva.senia.toNumber() <= 0
+                ? ESTADOS_TURNO[1]
+                : p.estadoFinal,
+              estadoPago: p.confirmarSinSeña && reserva.senia.toNumber() <= 0
+                ? ESTADOS_PAGO[3]
+                : p.estadoPago,
               claveSlot: `${p.barberoId}|${p.inicio.toISOString()}`,
             },
           });

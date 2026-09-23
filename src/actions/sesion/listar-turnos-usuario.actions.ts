@@ -3,7 +3,10 @@
 import { prisma } from "@/lib/prisma";
 import { requerirPropietarioOAdmin } from "@/lib/seguridad/requerir-propietario";
 import { INCLUDE_TURNO_CON_DETALLE } from "@/lib/turno-con-detalle";
-import { ESTADOS_PAGO_ACREDITADOS } from "@/lib/constants";
+import {
+  ESTADOS_PAGO_VISIBLES_USUARIO,
+  ESTADOS_TURNO,
+} from "@/lib/constants";
 import type { ActionState } from "@/types/action-state";
 import type { TurnoListado } from "@/types/turno";
 
@@ -29,7 +32,10 @@ export async function getUserTurnos(
       : 1;
     const filtro = {
       userId,
-      estadoPago: { in: [...ESTADOS_PAGO_ACREDITADOS] },
+      estado: {
+        in: [ESTADOS_TURNO[0], ESTADOS_TURNO[1], ESTADOS_TURNO[2]],
+      },
+      estadoPago: { in: [...ESTADOS_PAGO_VISIBLES_USUARIO] },
     };
 
     const [turnosRaw, total] = await Promise.all([

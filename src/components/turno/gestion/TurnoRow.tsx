@@ -4,12 +4,14 @@ import { Clock } from "lucide-react";
 import BadgeEstadoTurno from "./BadgeEstadoTurno";
 import BadgeEstadoPago from "./BadgeEstadoPago";
 import MenuAccionesTurno from "./MenuAccionesTurno";
+import PagoPendienteTurno from "@/components/turno/PagoPendienteTurno";
 import { esAdmin } from "@/lib/seguridad/es-admin";
 import { formatearHora } from "@/lib/utils/formatear-hora";
 import { formatearMoneda } from "@/lib/utils/formatear-moneda";
 import { ESTADOS_TURNO } from "@/lib/constants";
 import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
+import type { DatosTransferencia } from "@/types/pago";
 
 interface Props {
   turno: TurnoListado;
@@ -17,6 +19,8 @@ interface Props {
   onCancelar: (id: string) => void;
   onCompletar: (id: string) => void;
   onConfirmar: (id: string) => void;
+  whatsappPhone?: string;
+  datosTransferencia?: DatosTransferencia;
 }
 
 export default function TurnoRow({
@@ -25,6 +29,8 @@ export default function TurnoRow({
   onCancelar,
   onCompletar,
   onConfirmar,
+  whatsappPhone = "",
+  datosTransferencia,
 }: Props) {
   const esAdminUsuario = esAdmin(session);
   const esDueno =
@@ -145,12 +151,21 @@ export default function TurnoRow({
           )}
         </div>
         <div className="flex min-w-0 items-center justify-between gap-2 sm:justify-end">
+          {esDueno && datosTransferencia && (
+            <PagoPendienteTurno
+              turno={turno}
+              whatsappPhone={whatsappPhone}
+              datosTransferencia={datosTransferencia}
+            />
+          )}
           {ctaPrincipal}
-          <MenuAccionesTurno
-            turno={turno}
-            session={session}
-            onCancelar={onCancelar}
-          />
+          {esAdminUsuario && (
+            <MenuAccionesTurno
+              turno={turno}
+              session={session}
+              onCancelar={onCancelar}
+            />
+          )}
         </div>
       </div>
     </div>

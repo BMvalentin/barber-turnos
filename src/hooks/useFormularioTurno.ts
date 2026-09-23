@@ -12,7 +12,7 @@ import { useDatosFormularioTurno } from "./useDatosFormularioTurno";
 import type { ParametrosDatosTurno } from "./useDatosFormularioTurno";
 import { usePagoTurno } from "./usePagoTurno";
 import { esAdmin } from "@/lib/seguridad/es-admin";
-import { ESTADOS_PAGO } from "@/lib/constants";
+import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
 import type { DatosTransferencia } from "@/types/pago";
 
 export type ParametrosFormularioTurno = ParametrosDatosTurno & {
@@ -101,6 +101,14 @@ export function useFormularioTurno({
     setEstadoPago(ESTADOS_PAGO[0]);
 
     onTurnoCreado?.();
+
+    if (nuevoTurno.estado === ESTADOS_TURNO[1]) {
+      toast.success("Turno confirmado", {
+        description: "No necesitás abonar una seña para este servicio.",
+      });
+      if (!onTurnoCreado) router.refresh();
+      return;
+    }
 
     if (esAdmin(session)) {
       // El admin carga el turno directamente: sin modal de seña ni WhatsApp

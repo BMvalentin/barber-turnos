@@ -3,7 +3,12 @@
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ESTADOS_TURNO, ESTADOS_PAGO_EXPIRABLES, EXPIRACION_TURNO_PENDIENTE_MS } from "@/lib/constants";
+import {
+  ESTADOS_PAGO,
+  ESTADOS_PAGO_EXPIRABLES,
+  ESTADOS_TURNO,
+  EXPIRACION_TURNO_PENDIENTE_MS,
+} from "@/lib/constants";
 
 export const runtime = "nodejs";
 
@@ -54,6 +59,7 @@ export async function GET(req: NextRequest) {
       },
       data: {
         estado: ESTADOS_TURNO[3],
+        estadoPago: ESTADOS_PAGO[4],
       },
     });
 
