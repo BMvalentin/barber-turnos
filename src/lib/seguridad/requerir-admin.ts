@@ -39,6 +39,11 @@ export async function requerirAdmin(): Promise<Session | null> {
   const session = await requerirSesion();
   if (!session) return null;
 
+  // Un JWT que ya declara un rol sin privilegios puede rechazarse sin tocar la
+  // base. Si declara ADMIN, la BD sigue siendo la autoridad para cubrir una
+  // revocación de permisos con efecto inmediato.
+  if (session.user.role !== "ADMIN") return null;
+
   const rol = await consultarRolReal(session.user.id);
   if (rol !== "ADMIN") return null;
   return session;

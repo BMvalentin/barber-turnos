@@ -151,4 +151,5 @@ export type PropsModalGestionTurno = ParametrosFormularioTurno & {
   claseTrigger?: string;
   contenidoTrigger?: ReactNode;
   onTriggerClick?: () => void;
+  abrirAlMontar?: boolean;
 };

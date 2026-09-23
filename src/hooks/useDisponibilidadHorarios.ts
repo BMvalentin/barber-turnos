@@ -28,6 +28,8 @@ export function useDisponibilidadHorarios({ servicioId, barberoId, turnoIdAExclu
   const [slots, setSlots] = useState<string[]>([]);
   const [cargando, setCargando] = useState(false);
   const [slotSeleccionado, setSlotSeleccionado] = useState<string>(defaultValue ?? "");
+  const solicitudDiasRef = useRef(0);
+  const solicitudSlotsRef = useRef(0);
 
   // Ref para evitar resetear el slot en la carga inicial
   const esPrimeraCarga = useRef(true);
@@ -68,8 +70,10 @@ export function useDisponibilidadHorarios({ servicioId, barberoId, turnoIdAExclu
   }, [servicioId, barberoId]);
 
   const cargarDiasDelMes = useCallback(async () => {
+    const idSolicitud = ++solicitudDiasRef.current;
     if (!servicioId || !barberoId) {
       setDiasDisponibles([]);
+      setCargandoDias(false);
       return;
     }
     try {
@@ -81,29 +85,40 @@ export function useDisponibilidadHorarios({ servicioId, barberoId, turnoIdAExclu
         barberoId,
         turnoIdAExcluir
       );
-      setDiasDisponibles(
-        resultado.success && Array.isArray(resultado.data)
-          ? resultado.data
-          : []
-      );
+      if (idSolicitud === solicitudDiasRef.current) {
+        setDiasDisponibles(
+          resultado.success && Array.isArray(resultado.data)
+            ? resultado.data
+            : []
+        );
+      }
     } catch (error) {
       console.error("Error cargando días disponibles:", error);
-      setDiasDisponibles([]);
+      if (idSolicitud === solicitudDiasRef.current) setDiasDisponibles([]);
     } finally {
-      setCargandoDias(false);
+      if (idSolicitud === solicitudDiasRef.current) setCargandoDias(false);
     }
   }, [mesVisible, servicioId, barberoId, turnoIdAExcluir]);
 
   useEffect(() => {
-    if (!activo) return;
+    if (!activo) {
+      solicitudDiasRef.current += 1;
+      setCargandoDias(false);
+      return;
+    }
     cargarDiasDelMes();
   }, [cargarDiasDelMes, activo]);
 
   useEffect(() => {
-    if (!activo) return;
+    const idSolicitud = ++solicitudSlotsRef.current;
+    if (!activo) {
+      setCargando(false);
+      return;
+    }
     (async () => {
       if (!fecha || !servicioId || !barberoId) {
         setSlots([]);
+        setCargando(false);
         return;
       }
       const fechaStr = format(fecha, "yyyy-MM-dd");
@@ -115,18 +130,22 @@ export function useDisponibilidadHorarios({ servicioId, barberoId, turnoIdAExclu
           barberoId,
           turnoIdAExcluir
         );
-        setSlots(
-          resultado.success && Array.isArray(resultado.data)
-            ? resultado.data
-            : []
-        );
+        if (idSolicitud === solicitudSlotsRef.current) {
+          setSlots(
+            resultado.success && Array.isArray(resultado.data)
+              ? resultado.data
+              : []
+          );
+        }
       } catch (error) {
         console.error("Error cargando horarios:", error);
-        setSlots([]);
+        if (idSolicitud === solicitudSlotsRef.current) setSlots([]);
       } finally {
-        setCargando(false);
-        // Marcar que la primera carga ya ocurrió
-        esPrimeraCarga.current = false;
+        if (idSolicitud === solicitudSlotsRef.current) {
+          setCargando(false);
+          // Marcar que la primera carga ya ocurrió
+          esPrimeraCarga.current = false;
+        }
       }
     })();
   }, [fecha, servicioId, barberoId, turnoIdAExcluir, activo]);

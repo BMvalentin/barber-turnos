@@ -1,6 +1,7 @@
 "use client";
 
 import { createPortal } from "react-dom";
+import { useEffect, useRef } from "react";
 import { useFormularioTurno } from "@/hooks/useFormularioTurno";
 import type { PropsModalGestionTurno } from "@/components/turno/reserva/tipos";
 import { Pencil, Plus, X } from "lucide-react";
@@ -40,6 +41,7 @@ export default function ModalGestionTurno({
   contenidoTrigger,
   onTriggerClick,
   onTurnoCreado,
+  abrirAlMontar = false,
 }: PropsModalGestionTurno) {
   const {
     esEdicion,
@@ -79,6 +81,13 @@ export default function ModalGestionTurno({
     turnoInicial,
     onTurnoCreado,
   });
+
+  const aperturaInicialProcesadaRef = useRef(false);
+  useEffect(() => {
+    if (!abrirAlMontar || aperturaInicialProcesadaRef.current) return;
+    aperturaInicialProcesadaRef.current = true;
+    setIsOpen(true);
+  }, [abrirAlMontar, setIsOpen]);
 
   const abrir = () => {
     onTriggerClick?.();

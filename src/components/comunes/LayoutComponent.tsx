@@ -25,7 +25,7 @@ export default function LayoutComponent({
     (pathname.startsWith("/turno") && esAdmin(session));
 
   return (
-    <SessionWrapper>
+    <SessionWrapper session={session}>
       {!ocultarHeader && <Header config={config} />}
       {children}
     </SessionWrapper>

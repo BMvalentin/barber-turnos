@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { MoreHorizontal, Ban, Pencil } from "lucide-react";
-import ModalGestionTurno from "../reserva/ModalGestionTurno";
+import CargadorModalGestionTurno from "../reserva/CargadorModalGestionTurno";
 import { esAdmin } from "@/lib/seguridad/es-admin";
 import { ESTADOS_TURNO } from "@/lib/constants";
 import type { TurnoListado } from "@/types/turno";
@@ -73,7 +73,7 @@ export default function MenuAccionesTurno({
           abierto ? "" : "pointer-events-none invisible"
         }`}
       >
-        <ModalGestionTurno
+        <CargadorModalGestionTurno
           session={session}
           turnoInicial={turno}
           whatsappPhone=""

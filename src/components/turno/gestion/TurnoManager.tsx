@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getTurnos } from "@/actions/turnos/listar.actions";
-import ModalGestionTurno from "@/components/turno/reserva/ModalGestionTurno";
+import CargadorModalGestionTurno from "@/components/turno/reserva/CargadorModalGestionTurno";
 import DatosReservaProveedor from "@/contextos/DatosReservaProveedor";
 import TurnoList from "./TurnoList";
 import TurnosFiltros from "./TurnosFiltros";
@@ -20,6 +20,7 @@ import type { DatosTransferencia } from "@/types/pago";
 interface Props {
   turnosIniciales: TurnoListado[];
   totalPaginasInicial: number;
+  cargarTurnosAlMontar?: boolean;
   session: Session | null;
   initialServicios?: ServicioData[];
   initialBarberos?: BarberoData[];
@@ -44,6 +45,7 @@ function buscarPagina(pagina: number, estado: string, fecha: string) {
 export default function TurnoManager({
   turnosIniciales,
   totalPaginasInicial,
+  cargarTurnosAlMontar = false,
   session,
   initialServicios = [],
   initialBarberos = [],
@@ -57,11 +59,44 @@ export default function TurnoManager({
   const [turnos, setTurnos] = useState(turnosIniciales);
   const [paginaActual, setPaginaActual] = useState(1);
   const [totalPaginas, setTotalPaginas] = useState(totalPaginasInicial);
-  const [cargandoInicial, setCargandoInicial] = useState(false);
+  const [cargandoInicial, setCargandoInicial] = useState(cargarTurnosAlMontar);
   const [cargandoMas, setCargandoMas] = useState(false);
   const [errorCargaMas, setErrorCargaMas] = useState(false);
 
   const solicitudRef = useRef(0);
+  const cargaInicialSolicitadaRef = useRef(false);
+
+  useEffect(() => {
+    if (!cargarTurnosAlMontar || cargaInicialSolicitadaRef.current) return;
+    cargaInicialSolicitadaRef.current = true;
+
+    const id = ++solicitudRef.current;
+    setCargandoInicial(true);
+    setErrorCargaMas(false);
+
+    void buscarPagina(1, "CONFIRMADO", "")
+      .then((resultado) => {
+        if (id !== solicitudRef.current) return;
+        if (resultado.success && resultado.data) {
+          setTurnos(resultado.data);
+          setPaginaActual(resultado.currentPage ?? 1);
+          setTotalPaginas(resultado.totalPages ?? 1);
+          return;
+        }
+        setTurnos([]);
+        setPaginaActual(1);
+        setTotalPaginas(1);
+      })
+      .catch(() => {
+        if (id !== solicitudRef.current) return;
+        setTurnos([]);
+        setPaginaActual(1);
+        setTotalPaginas(1);
+      })
+      .finally(() => {
+        if (id === solicitudRef.current) setCargandoInicial(false);
+      });
+  }, [cargarTurnosAlMontar]);
 
   const reiniciarBusqueda = async (nuevoEstado: string, nuevaFecha: string) => {
     const id = ++solicitudRef.current;
@@ -141,7 +176,7 @@ export default function TurnoManager({
               Administrá y organizá todos los turnos de tu barbería.
             </p>
           </div>
-          <ModalGestionTurno
+          <CargadorModalGestionTurno
             session={session}
             initialServicios={initialServicios}
             initialBarberos={initialBarberos}

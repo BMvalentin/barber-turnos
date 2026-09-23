@@ -19,10 +19,10 @@ const nextConfig: NextConfig = {
       // Avatares de sesiones con Google OAuth (Header/Footer)
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
     ],
-    // Decisión Fase 1.5: se mantiene unoptimized: true. Todo el tráfico sale de CDN
-    // (Unsplash/Cloudinary) y activar el optimizer global es un cambio de riesgo sin
-    // ganancia acá. Pendiente opcional: f_auto/q_auto en URLs de Cloudinary.
-    unoptimized: true,
+    // Next genera y cachea variantes responsivas. Sin esta optimización, `sizes`
+    // no reduce el peso y los móviles descargan los originales de Unsplash o
+    // Cloudinary, incluido el fondo de pantalla completa.
+    unoptimized: false,
   },
   // Headers de seguridad (Fase 7.3): el plan eligió next.config.ts en lugar de middleware.
   async headers() {

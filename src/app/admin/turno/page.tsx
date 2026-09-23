@@ -19,8 +19,11 @@ async function getTurnoData() {
 
 export default async function AdminTurnoPage() {
   const session = await requerirSesion();
-  const { servicios, barberos, usuarios, relaciones, config } = await getTurnoData();
-  const result = await getTurnos(1, "CONFIRMADO");
+  const [datosTurno, result] = await Promise.all([
+    getTurnoData(),
+    getTurnos(1, "CONFIRMADO"),
+  ]);
+  const { servicios, barberos, usuarios, relaciones, config } = datosTurno;
 
   const turnosData = (result.success && result.data) ? result.data : [];
   const totalPaginasInicial = result.success && result.totalPages ? result.totalPages : 1;

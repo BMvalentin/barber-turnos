@@ -23,19 +23,29 @@ export function LocationSection({ config }: LocationSectionProps) {
   const whatsapp = config?.whatsapp;
 
   useEffect(() => {
-    try {
-      getHorariosCompactos().then((res) => {
+    let vigente = true;
+
+    const cargarHorarios = async () => {
+      try {
+        const res = await getHorariosCompactos();
+        if (!vigente) return;
         if (res.length > 0) {
           setHorarios(res);
         } else {
           setHorarios(["Cerrado"]);
         }
-      });
-    } catch {
-      setHorarios(["Error al cargar horarios"]);
-    } finally {
-      setCargando(false);
-    }
+      } catch {
+        if (vigente) setHorarios(["Error al cargar horarios"]);
+      } finally {
+        if (vigente) setCargando(false);
+      }
+    };
+
+    void cargarHorarios();
+
+    return () => {
+      vigente = false;
+    };
   }, []);
 
   return (

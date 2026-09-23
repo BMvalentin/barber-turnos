@@ -12,9 +12,7 @@ import { StatCard } from "@/components/panel/StatCard";
 import { DetailCard } from "@/components/panel/DetailCard";
 import { ItemLista } from "@/components/panel/ItemLista";
 import { ESTADOS_TURNO_ACTIVOS, ESTADOS_TURNO } from "@/lib/constants";
-import { obtenerBarberosConConteoDeTurnos } from "@/lib/consultas/obtener-barberos-con-conteo-de-turnos";
 import { obtenerBarberosConTurnosHoy } from "@/lib/consultas/obtener-barberos-con-turnos-hoy";
-import { obtenerBarberosConRendimientoHoy } from "@/lib/consultas/obtener-barberos-con-rendimiento-hoy";
 import { obtenerServiciosPopulares } from "@/lib/consultas/obtener-servicios-populares";
 
 async function getStats() {
@@ -44,32 +42,30 @@ async function getStats() {
     totalServicios,
     totalTurnos,
     turnosPendientes,
-    barberos,
     serviciosPopulares,
-    turnosHoyPorBarbero,
-    rendimientoHoyPorBarbero,
+    barberosConActividadHoy,
   ] = await Promise.all([
     getCachedData(
       ["admin-dashboard-total-barberos"],
-      ["admin-dashboard"],
+      ["admin-dashboard", "barberos"],
       () => prisma.barbero.count({ where: { estado: true } }),
       30,
     ),
     getCachedData(
       ["admin-dashboard-total-servicios"],
-      ["admin-dashboard"],
+      ["admin-dashboard", "servicios"],
       () => prisma.servicio.count({ where: { estado: true } }),
       30,
     ),
     getCachedData(
       ["admin-dashboard-total-turnos"],
-      ["admin-dashboard"],
+      ["admin-dashboard", "turnos-global"],
       () => prisma.turno.count(),
       30,
     ),
     getCachedData(
       ["admin-dashboard-turnos-pendientes"],
-      ["admin-dashboard"],
+      ["admin-dashboard", "turnos-global"],
       () =>
         prisma.turno.count({
           where: { estado: { in: [...ESTADOS_TURNO_ACTIVOS] } },
@@ -77,30 +73,38 @@ async function getStats() {
       30,
     ),
     getCachedData(
-      ["admin-dashboard-barberos"],
-      ["admin-dashboard"],
-      () => obtenerBarberosConConteoDeTurnos(),
-      30,
-    ),
-    getCachedData(
       ["admin-dashboard-servicios-populares"],
-      ["admin-dashboard"],
+      ["admin-dashboard", "servicios", "turnos-global"],
       () => obtenerServiciosPopulares(),
       30,
     ),
     getCachedData(
-      ["admin-dashboard-turnos-hoy-por-barbero", claveDia],
-      ["admin-dashboard"],
+      ["admin-dashboard-actividad-hoy-por-barbero", claveDia],
+      ["admin-dashboard", "barberos", "turnos-global"],
       () => obtenerBarberosConTurnosHoy(inicioDia, finDia),
       30,
     ),
-    getCachedData(
-      ["admin-dashboard-rendimiento-hoy-por-barbero", claveDia],
-      ["admin-dashboard"],
-      () => obtenerBarberosConRendimientoHoy(inicioDia, finDia),
-      30,
-    ),
   ]);
+
+  const barberos = barberosConActividadHoy.slice(0, 5).map((barbero) => ({
+    id: barbero.id,
+    nombre: barbero.nombre,
+    _count: barbero._count,
+  }));
+  const turnosHoyPorBarbero = barberosConActividadHoy.map((barbero) => ({
+    id: barbero.id,
+    nombre: barbero.nombre,
+    turnos: barbero.turnos.filter((turno) =>
+      (ESTADOS_TURNO_ACTIVOS as readonly string[]).includes(turno.estado),
+    ),
+  }));
+  const rendimientoHoyPorBarbero = barberosConActividadHoy.map((barbero) => ({
+    id: barbero.id,
+    nombre: barbero.nombre,
+    turnos: barbero.turnos
+      .filter((turno) => turno.estado === ESTADOS_TURNO[2])
+      .map((turno) => ({ precioCongelado: turno.precioCongelado })),
+  }));
 
   return {
     totalBarberos,

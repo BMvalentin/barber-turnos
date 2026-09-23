@@ -105,7 +105,9 @@ export function useFormularioTurno({
     if (esAdmin(session)) {
       // El admin carga el turno directamente: sin modal de seña ni WhatsApp
       toast.success("Turno creado correctamente");
-      router.refresh();
+      // TurnoManager ya actualiza el listado con el callback. El refresh queda
+      // como respaldo para otros consumidores que no provean uno.
+      if (!onTurnoCreado) router.refresh();
     } else {
       setTurnoCreado(nuevoTurno);
       setTransferenciaLista(false);

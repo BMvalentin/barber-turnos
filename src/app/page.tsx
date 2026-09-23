@@ -1,8 +1,8 @@
-import { getPageConfig } from "@/actions/configuracion/leer-config.actions";
 import HomeClient from "@/components/inicio/HomeClient";
+import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 
 export default async function Page() {
-  const config = await getPageConfig();
+  const config = await obtenerConfigCacheada();
 
   return <HomeClient config={config} />;
 }

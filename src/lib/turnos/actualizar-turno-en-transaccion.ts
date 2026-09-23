@@ -63,6 +63,7 @@ export async function actualizarTurnoEnTransaccion(
           ? await validarReservaEnTransaccion(tx, {
               servicioId: parametros.servicioId,
               barberoId: parametros.barberoId,
+              userId: turnoAnterior.userId,
               inicio: parametros.horario,
               idUsuarioActual: parametros.idUsuarioActual,
               turnoIdAExcluir: parametros.id,

@@ -16,11 +16,14 @@ export default async function AdminLayout({
     redirect("/login");
   }
 
-  if (!await requerirAdmin()) {
+  const [sesionAdmin, config] = await Promise.all([
+    requerirAdmin(),
+    obtenerConfigCacheada(),
+  ]);
+
+  if (!sesionAdmin) {
     redirect("/dashboard");
   }
-
-  const config = await obtenerConfigCacheada();
 
   return <AdminShell config={config}>{children}</AdminShell>;
 }
