@@ -7,10 +7,11 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDown, LogOut, User } from "lucide-react";
 import { handleSignOut } from "@/actions/sesion/logout.actions";
 import useSugerenciaLateral from "@/components/panel/navegacion/useSugerenciaLateral";
+import type { RolPanel } from "@/types/usuario";
 
-interface UsuarioSidebarProps { colapsado: boolean; alCerrar: () => void; }
+interface UsuarioSidebarProps { colapsado: boolean; alCerrar: () => void; rol: RolPanel; }
 
-export default function UsuarioSidebar({ colapsado, alCerrar }: UsuarioSidebarProps) {
+export default function UsuarioSidebar({ colapsado, alCerrar, rol }: UsuarioSidebarProps) {
   const { data: sesion } = useSession();
   const [abierto, setAbierto] = useState(false);
   const contenedorRef = useRef<HTMLDivElement>(null);
@@ -51,7 +52,7 @@ export default function UsuarioSidebar({ colapsado, alCerrar }: UsuarioSidebarPr
         <Image src={sesion?.user?.image || "/images/avatar-default.svg"} alt="Avatar del usuario" width={32} height={32} className="h-8 w-8 shrink-0 rounded-full object-cover" />
         <span className={`min-w-0 flex-1 text-left ${colapsado ? "md:hidden" : ""}`}>
           <span className="block truncate text-sm font-medium text-[var(--admin-texto-primario)]">{nombre}</span>
-          <span className="block text-xs text-[var(--admin-texto-muted)]">Administrador</span>
+          <span className="block text-xs text-[var(--admin-texto-muted)]">{rol === "ADMIN" ? "Administrador" : "Empleado"}</span>
         </span>
         <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--admin-texto-muted)] transition-transform duration-200 ease-out motion-reduce:transition-none ${abierto ? "rotate-180" : ""} ${colapsado ? "md:hidden" : ""}`} />
       </button>

@@ -1,15 +1,19 @@
 "use server";
 
+import { z } from "zod";
+
 import { prisma } from "@/lib/prisma";
 import { revalidarBarberos } from "@/lib/revalidar/revalidar-barberos";
 import type { ActionState } from "@/types/action-state";
-import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
+import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 
 async function removerHorarioDeBarberoBase(
   prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
   try {
+    const contexto = await requerirPanel();
+    if (!contexto) return { success: false, error: "No autorizado" };
     const idsRaw = formData.get("ids");
 
     if (!idsRaw) {
@@ -23,12 +27,23 @@ async function removerHorarioDeBarberoBase(
       return { success: false, error: "ID requerido" };
     }
 
-    const ids = parsed as unknown as string[];
-    if (!Array.isArray(ids) || !ids.every((id) => typeof id === "string")) {
+    const resultadoIds = z.array(z.string().min(1)).safeParse(parsed);
+    if (!resultadoIds.success) {
       return { success: false, error: "ID requerido" };
     }
+    const ids = resultadoIds.data;
     if (ids.length === 0) {
       return { success: false, error: "ID requerido" };
+    }
+
+    if (contexto.rol === "EMPLEADO") {
+      const asignaciones = await prisma.margen_laboral_barbero.findMany({
+        where: { id: { in: ids } },
+        select: { barberoId: true },
+      });
+      if (asignaciones.some((asignacion) => asignacion.barberoId !== contexto.barberoId)) {
+        return { success: false, error: "No autorizado" };
+      }
     }
 
     await prisma.margen_laboral_barbero.deleteMany({
@@ -44,4 +59,4 @@ async function removerHorarioDeBarberoBase(
   }
 }
 
-export const removerHorarioDeBarbero = exigirAdmin(removerHorarioDeBarberoBase);
+export const removerHorarioDeBarbero = removerHorarioDeBarberoBase;

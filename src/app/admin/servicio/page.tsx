@@ -1,7 +1,11 @@
 import { getServicios } from "@/actions/servicios/listar.actions";
 import ServicioList from "@/components/servicio/ServicioList";
+import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
+import { redirect } from "next/navigation";
 
 export default async function ServiciosPage() {
+  if (!(await requerirAdmin())) redirect("/admin");
+
   const resultServicios = await getServicios();
 
   const servicios = resultServicios.success ? resultServicios.data ?? [] : [];

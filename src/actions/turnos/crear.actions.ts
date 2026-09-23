@@ -4,6 +4,7 @@ import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
+import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { enviarEmailTurnoSeguro } from "@/lib/email/enviar-email-turno-seguro";
 import { enviarEmailTurnoBarberoSeguro } from "@/lib/email/enviar-email-turno-barbero-seguro";
 import { serializarTurnoConDetalle } from "@/lib/serializar-turno-con-detalle";
@@ -21,9 +22,11 @@ export async function createTurno(
   try {
     const session = await requerirSesion();
     if (!session?.user) return { success: false, error: "Iniciá sesión para reservar un turno" };
+    const contextoPanel = await requerirPanel();
+    if (contextoPanel?.rol === "EMPLEADO") return { success: false, error: "Los empleados gestionan sus turnos desde el panel" };
     // Para clientes normales el rol firmado del JWT alcanza para descartar
     // privilegios. Un supuesto admin siempre se confirma contra la BD.
-    const usuarioEsAdmin = session.user.role === "ADMIN" && Boolean(await requerirAdmin());
+    const usuarioEsAdmin = contextoPanel?.rol === "ADMIN" && Boolean(await requerirAdmin());
     const estadoPagoRaw = formData.get("estadoPago") as string;
     const servicioId = formData.get("servicioId") as string;
     const userId = usuarioEsAdmin ? (formData.get("userId") as string) : session.user.id;

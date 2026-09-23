@@ -1,6 +1,7 @@
 import TurnoManager from "@/components/turno/gestion/TurnoManager";
 import { obtenerDatosReserva } from "@/lib/consultas/obtener-datos-reserva";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
+import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { redirect } from "next/navigation";
 
 async function getTurnoData() {
@@ -19,7 +20,8 @@ async function getTurnoData() {
 export default async function TurnoPage() {
   const session = await requerirSesion();
   if (!session?.user) redirect("/login");
-  if (session.user.role === "ADMIN") redirect("/admin/turno");
+  const contextoPanel = await requerirPanel();
+  if (contextoPanel) redirect("/admin/turno");
 
   const { servicios, barberos, usuarios, relaciones, config } = await getTurnoData();
 

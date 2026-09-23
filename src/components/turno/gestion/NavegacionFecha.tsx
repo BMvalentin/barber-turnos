@@ -8,6 +8,7 @@ interface Props {
   fecha: string;
   onCambiarFecha: (fecha: string) => void;
   estado?: string;
+  barberoId?: string;
 }
 
 const FORMATO_LARGO = new Intl.DateTimeFormat("es-AR", {
@@ -39,7 +40,7 @@ function desplazarDia(fecha: string, cantidad: number): string {
   return formatearInput(nueva);
 }
 
-export default function NavegacionFecha({ fecha, onCambiarFecha, estado }: Props) {
+export default function NavegacionFecha({ fecha, onCambiarFecha, estado, barberoId }: Props) {
   const [abierto, setAbierto] = useState(false);
   const contenedorRef = useRef<HTMLDivElement>(null);
 
@@ -103,6 +104,7 @@ export default function NavegacionFecha({ fecha, onCambiarFecha, estado }: Props
           <CalendarioNavegacion
             fecha={fecha}
             estado={estado ?? "TODOS"}
+            barberoId={barberoId}
             onSeleccionar={(dia) => {
               onCambiarFecha(dia);
               setAbierto(false);

@@ -22,12 +22,14 @@ type EditBarberoModalProps = {
   servicios: ServicioOpcion[];
   diasLaborales: DiaLaboral[];
   onClose: () => void;
+  soloEdicionPropia?: boolean;
 };
 
 export default function EditBarberoModal({
   barbero,
   servicios,
   diasLaborales,
+  soloEdicionPropia = false,
   onClose,
 }: EditBarberoModalProps) {
   const [isPending, startTransition] = useTransition();
@@ -127,17 +129,17 @@ export default function EditBarberoModal({
       animado
     >
       <div className="space-y-4">
-          <CampoNombreBarbero
+          {!soloEdicionPropia && <CampoNombreBarbero
             valor={nombre}
             error={null}
             onCambio={setNombre}
-          />
-          <CampoEmailBarbero
+          />}
+          {!soloEdicionPropia && <CampoEmailBarbero
             valor={email}
             error={null}
             onCambio={setEmail}
-          />
-          <SeccionImagenServicio
+          />}
+          {!soloEdicionPropia && <SeccionImagenServicio
             previewUrl={previewUrl}
             srcImage={srcImage}
             uploadError={uploadError}
@@ -145,7 +147,7 @@ export default function EditBarberoModal({
             variante="barbero"
             onFileChange={handleFileChange}
             onRemove={quitarImagen}
-          />
+          />}
           <SelectorServicios
             abierto={showServicios}
             onAlternarAbierto={() => setShowServicios(!showServicios)}
@@ -168,7 +170,7 @@ export default function EditBarberoModal({
               )
             }
           />
-          <label className="flex cursor-pointer items-center justify-between gap-4 border-t rounded-lg pt-4 text-sm font-medium text-[var(--admin-texto-primario)] transition-colors hover:bg-[var(--admin-item-hover)] focus-within:ring-2 focus-within:ring-[var(--page-focus-ring)]" style={{ borderColor: "var(--admin-border)" }}>
+          {!soloEdicionPropia && <label className="flex cursor-pointer items-center justify-between gap-4 border-t rounded-lg pt-4 text-sm font-medium text-[var(--admin-texto-primario)] transition-colors hover:bg-[var(--admin-item-hover)] focus-within:ring-2 focus-within:ring-[var(--page-focus-ring)]" style={{ borderColor: "var(--admin-border)" }}>
             <span><span className="block">Barbero activo</span><span className="mt-1 block text-xs font-normal text-[var(--admin-texto-muted)]">Los clientes podrán reservar turnos con este barbero.</span></span>
             <input
               type="checkbox"
@@ -179,7 +181,7 @@ export default function EditBarberoModal({
               className="peer sr-only"
             />
             <span aria-hidden="true" className="relative h-6 w-11 shrink-0 rounded-full border bg-[var(--admin-item)] transition-colors duration-200 peer-checked:border-[var(--page-primary)] peer-checked:bg-[var(--page-primary)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--page-focus-ring)]" style={{ borderColor: "var(--admin-border-fuerte)" }}><span className="absolute left-1 top-1 h-4 w-4 rounded-full bg-[var(--admin-texto-primario)] transition-transform duration-200 peer-checked:translate-x-5 peer-checked:bg-[var(--page-primary-foreground)]" /></span>
-          </label>
+          </label>}
         </div>
         <div className="flex justify-end gap-3 pt-4 border-t" style={{ borderColor: "var(--admin-border)" }}>
           <Button

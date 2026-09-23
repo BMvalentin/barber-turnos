@@ -33,9 +33,11 @@ model barbero {
   srcImage    String?
   nombre      String
   email       String?
+  usuarioId   String?                  @unique
   estado      Boolean                  @default(true)
   createdAt   DateTime                 @default(now())
   updatedAt   DateTime                 @updatedAt
+  usuario     user?                    @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
   turnos      turno[]
   servicios   servicioxbarbero[]
   horarios    margen_laboral_barbero[]
@@ -105,6 +107,7 @@ model user {
   telefono      String?
   account       account[]
   turno         turno[]
+  barbero       barbero?
   verificaciones verificacion_usuario[]
 }
 
@@ -259,6 +262,7 @@ model PageConfig {
 enum user_role {
   USER
   ADMIN
+  EMPLEADO
 }
 
 enum turno_estado {

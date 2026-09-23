@@ -4,6 +4,7 @@ import { useEffect, useSyncExternalStore, useState } from "react";
 import Image from "next/image";
 import { Menu, Scissors } from "lucide-react";
 import AdminSidebar from "@/components/panel/navegacion/AdminSidebar";
+import type { RolPanel } from "@/types/usuario";
 
 const CLAVE_ESTADO = "mayoraz-sidebar-collapsed";
 const CLAVE_ANTERIOR = "admin-sidebar-collapsed";
@@ -21,9 +22,10 @@ function suscribirseColapsado(alEscuchar: () => void) {
 interface AdminShellProps {
   children: React.ReactNode;
   config?: { name?: string | null; logo?: string | null } | null;
+  rol: RolPanel;
 }
 
-export default function AdminShell({ children, config }: AdminShellProps) {
+export default function AdminShell({ children, config, rol }: AdminShellProps) {
   const colapsadoGuardado = useSyncExternalStore(
     suscribirseColapsado,
     obtenerColapsadoGuardado,
@@ -66,6 +68,7 @@ export default function AdminShell({ children, config }: AdminShellProps) {
         abierto={menuAbierto}
         alCerrar={() => setMenuAbierto(false)}
         config={config}
+        rol={rol}
       />
       <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
         <header className="flex h-16 shrink-0 items-center gap-3 border-b border-[var(--admin-border)] bg-[var(--admin-surface)] px-4 md:hidden">

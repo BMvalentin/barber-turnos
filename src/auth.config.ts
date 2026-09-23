@@ -1,4 +1,9 @@
 import type { NextAuthConfig } from "next-auth";
+import { ROLES_USUARIO, type RolUsuario } from "@/types/usuario";
+
+function esRolUsuario(valor: unknown): valor is RolUsuario {
+  return typeof valor === "string" && ROLES_USUARIO.some((rol) => rol === valor);
+}
 
 export const authConfig = {
   session: { strategy: "jwt" },
@@ -39,7 +44,7 @@ export const authConfig = {
     session({ session, token }) {
       if (session.user){
         session.user.id = token.id as string;
-        session.user.role = token.role as string;
+        session.user.role = esRolUsuario(token.role) ? token.role : "USER";
         session.user.telefono = token.telefono as string | null;
         session.user.image = token.image as string | null;
       } 

@@ -4,12 +4,14 @@ import { obtenerBarberosConRelaciones } from "@/lib/consultas/obtener-barberos-c
 
 import BarberoList from "@/components/barbero/BarberoList";
 import CreateBarberoModal from "@/components/barbero/CreateBarberoModal";
+import { requerirPanel } from "@/lib/seguridad/requerir-admin";
+import { redirect } from "next/navigation";
 
-async function getData() {
+async function getData(barberoId?: string) {
   const [servicios, diasLaborales, barberos] = await Promise.all([
     obtenerServiciosActivos(),
     obtenerDiasLaboralesActivos(),
-    obtenerBarberosConRelaciones(),
+    obtenerBarberosConRelaciones(barberoId),
   ]);
 
   const serializedBarberos = barberos.map(barbero => ({
@@ -33,7 +35,10 @@ async function getData() {
 }
 
 export default async function BarberosPage() {
-  const { servicios, diasLaborales, barberos } = await getData();
+  const contexto = await requerirPanel();
+  if (!contexto) redirect("/dashboard");
+  const esEmpleado = contexto.rol === "EMPLEADO";
+  const { servicios, diasLaborales, barberos } = await getData(contexto.barberoId ?? undefined);
 
   return (
     <div className="space-y-8">
@@ -49,18 +54,16 @@ export default async function BarberosPage() {
         </div>
 
         {/* BOTÓN MODAL (PASANDO CONFIG) */}
-        <CreateBarberoModal
-          servicios={servicios}
-          diasLaborales={diasLaborales}
-        />
+        {!esEmpleado && <CreateBarberoModal servicios={servicios} diasLaborales={diasLaborales} />}
       </div>
 
       {/* LISTA */}
       <BarberoList 
         barberos={barberos} 
         servicios={servicios} 
-        diasLaborales={diasLaborales} 
-      />
+      diasLaborales={diasLaborales}
+      soloEdicionPropia={esEmpleado}
+    />
     </div>
   );
 }

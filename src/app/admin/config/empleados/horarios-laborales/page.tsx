@@ -3,8 +3,13 @@ import { getDiasLaborales } from "@/actions/horarios/listar.actions";
 import { obtenerBarberosParaHorarios } from "@/lib/consultas/obtener-barberos-para-horarios";
 import { Breadcrumb } from "@/components/ui/breadcrumb/Breadcrumb";
 import { HorariosLaboralesClient } from "@/components/horarios/HorariosLaboralesClient";
+import { requerirPanel } from "@/lib/seguridad/requerir-admin";
+import { redirect } from "next/navigation";
 
 export default async function HorariosLaboralesPage() {
+  const contexto = await requerirPanel();
+  if (!contexto) redirect("/dashboard");
+
   return (
     <div className="space-y-8">
       <Breadcrumb
@@ -15,16 +20,16 @@ export default async function HorariosLaboralesPage() {
         ]}
       />
       <Suspense fallback={<CargaHorarios />}>
-        <ContenidoHorarios />
+        <ContenidoHorarios barberoId={contexto.rol === "EMPLEADO" ? contexto.barberoId ?? undefined : undefined} />
       </Suspense>
     </div>
   );
 }
 
-async function ContenidoHorarios() {
+async function ContenidoHorarios({ barberoId }: { barberoId?: string }) {
   const [diasLaborales, barberos] = await Promise.all([
     getDiasLaborales(),
-    obtenerBarberosParaHorarios(),
+    obtenerBarberosParaHorarios(barberoId),
   ]);
 
   return (

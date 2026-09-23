@@ -14,8 +14,10 @@ import { ItemLista } from "@/components/panel/ItemLista";
 import { ESTADOS_TURNO_ACTIVOS, ESTADOS_TURNO } from "@/lib/constants";
 import { obtenerBarberosConTurnosHoy } from "@/lib/consultas/obtener-barberos-con-turnos-hoy";
 import { obtenerServiciosPopulares } from "@/lib/consultas/obtener-servicios-populares";
+import { requerirPanel } from "@/lib/seguridad/requerir-admin";
+import { redirect } from "next/navigation";
 
-async function getStats() {
+async function getStats(barberoId?: string) {
   const hoy = new Date();
   const inicioDia = new Date(
     hoy.getFullYear(),
@@ -46,42 +48,42 @@ async function getStats() {
     barberosConActividadHoy,
   ] = await Promise.all([
     getCachedData(
-      ["admin-dashboard-total-barberos"],
+      ["admin-dashboard-total-barberos", barberoId ?? "todos"],
       ["admin-dashboard", "barberos"],
-      () => prisma.barbero.count({ where: { estado: true } }),
+      () => prisma.barbero.count({ where: { estado: true, ...(barberoId ? { id: barberoId } : {}) } }),
       30,
     ),
     getCachedData(
-      ["admin-dashboard-total-servicios"],
+      ["admin-dashboard-total-servicios", barberoId ?? "todos"],
       ["admin-dashboard", "servicios"],
-      () => prisma.servicio.count({ where: { estado: true } }),
+      () => prisma.servicio.count({ where: { estado: true, ...(barberoId ? { servicios: { some: { barberoId } } } : {}) } }),
       30,
     ),
     getCachedData(
-      ["admin-dashboard-total-turnos"],
+      ["admin-dashboard-total-turnos", barberoId ?? "todos"],
       ["admin-dashboard", "turnos-global"],
-      () => prisma.turno.count(),
+      () => prisma.turno.count({ where: barberoId ? { barberoId } : undefined }),
       30,
     ),
     getCachedData(
-      ["admin-dashboard-turnos-pendientes"],
+      ["admin-dashboard-turnos-pendientes", barberoId ?? "todos"],
       ["admin-dashboard", "turnos-global"],
       () =>
         prisma.turno.count({
-          where: { estado: { in: [...ESTADOS_TURNO_ACTIVOS] } },
+          where: { estado: { in: [...ESTADOS_TURNO_ACTIVOS] }, ...(barberoId ? { barberoId } : {}) },
         }),
       30,
     ),
     getCachedData(
-      ["admin-dashboard-servicios-populares"],
+      ["admin-dashboard-servicios-populares", barberoId ?? "todos"],
       ["admin-dashboard", "servicios", "turnos-global"],
-      () => obtenerServiciosPopulares(),
+      () => obtenerServiciosPopulares(barberoId),
       30,
     ),
     getCachedData(
-      ["admin-dashboard-actividad-hoy-por-barbero", claveDia],
+      ["admin-dashboard-actividad-hoy-por-barbero", claveDia, barberoId ?? "todos"],
       ["admin-dashboard", "barberos", "turnos-global"],
-      () => obtenerBarberosConTurnosHoy(inicioDia, finDia),
+      () => obtenerBarberosConTurnosHoy(inicioDia, finDia, barberoId),
       30,
     ),
   ]);
@@ -119,7 +121,10 @@ async function getStats() {
 }
 
 export default async function AdminDashboard() {
-  const stats = await getStats();
+  const contexto = await requerirPanel();
+  if (!contexto) redirect("/dashboard");
+  const esEmpleado = contexto.rol === "EMPLEADO";
+  const stats = await getStats(esEmpleado ? contexto.barberoId ?? undefined : undefined);
 
   return (
     <div className="space-y-8">
@@ -129,7 +134,7 @@ export default async function AdminDashboard() {
           Dashboard
         </h1>
         <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-          Resumen general de tu barbería.
+          {esEmpleado ? "Resumen de tus turnos y servicios." : "Resumen general de tu barbería."}
         </p>
       </div>
 
@@ -145,7 +150,7 @@ export default async function AdminDashboard() {
           title="Servicios"
           value={stats.totalServicios}
           icon={Scissors}
-          href="/admin/servicio"
+          href={esEmpleado ? "/admin/barbero" : "/admin/servicio"}
         />
         <StatCard
           title="Total Turnos"

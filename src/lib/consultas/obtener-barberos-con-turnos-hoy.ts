@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { ESTADOS_TURNO, ESTADOS_TURNO_ACTIVOS } from "@/lib/constants";
 
-export async function obtenerBarberosConTurnosHoy(inicioDia: Date, finDia: Date) {
+export async function obtenerBarberosConTurnosHoy(inicioDia: Date, finDia: Date, barberoId?: string) {
   return prisma.barbero.findMany({
-    where: { estado: true },
+    where: { estado: true, ...(barberoId ? { id: barberoId } : {}) },
     select: {
       id: true,
       nombre: true,

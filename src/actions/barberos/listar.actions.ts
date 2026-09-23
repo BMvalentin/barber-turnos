@@ -3,9 +3,12 @@
 import { obtenerBarberosConRelaciones } from "@/lib/consultas/obtener-barberos-con-relaciones";
 import type { ActionState } from "@/types/action-state";
 import type { BarberoConRelaciones } from "@/types/barbero";
+import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 
 export async function getBarberos(): Promise<ActionState<BarberoConRelaciones[]>> {
   try {
+    const sesionAdmin = await requerirAdmin();
+    if (!sesionAdmin) return { success: false, error: "No autorizado" };
     const barberos = await obtenerBarberosConRelaciones();
 
     const data = barberos.map((b) => ({

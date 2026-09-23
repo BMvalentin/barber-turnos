@@ -7,6 +7,7 @@ import DatosReservaProveedor from "@/contextos/DatosReservaProveedor";
 import TurnoList from "./TurnoList";
 import TurnosFiltros from "./TurnosFiltros";
 import NavegacionFecha from "./NavegacionFecha";
+import SelectorBarberoTurnos from "./SelectorBarberoTurnos";
 import { esAdmin } from "@/lib/seguridad/es-admin";
 import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
 import type {
@@ -26,10 +27,13 @@ interface Props {
   session: Session | null;
   initialServicios?: ServicioData[];
   initialBarberos?: BarberoData[];
+  barberosFiltro?: BarberoData[];
   initialUsuarios?: UsuarioData[];
   initialRelaciones?: RelacionData[];
   whatsappPhone: string;
   datosTransferencia?: DatosTransferencia;
+  mostrarFiltroBarbero?: boolean;
+  barberoIdInicial?: string;
 }
 
 function deduplicarTurnos(lista: TurnoListado[]): TurnoListado[] {
@@ -40,8 +44,8 @@ function deduplicarTurnos(lista: TurnoListado[]): TurnoListado[] {
   return Array.from(porId.values());
 }
 
-function buscarPagina(pagina: number, estado: string, fecha: string) {
-  return getTurnos(pagina, estado === "TODOS" ? undefined : estado, fecha || undefined);
+function buscarPagina(pagina: number, estado: string, fecha: string, barberoId: string) {
+  return getTurnos(pagina, estado === "TODOS" ? undefined : estado, fecha || undefined, barberoId || undefined);
 }
 
 export default function TurnoManager({
@@ -51,14 +55,19 @@ export default function TurnoManager({
   session,
   initialServicios = [],
   initialBarberos = [],
+  barberosFiltro = initialBarberos,
   initialUsuarios = [],
   initialRelaciones = [],
   whatsappPhone,
   datosTransferencia,
+  mostrarFiltroBarbero = false,
+  barberoIdInicial = "",
 }: Props) {
-  const filtroInicial = esAdmin(session) ? "CONFIRMADO" : "PENDIENTE";
+  const esEmpleado = session?.user?.role === "EMPLEADO";
+  const filtroInicial = esAdmin(session) ? "CONFIRMADO" : esEmpleado ? "TODOS" : "PENDIENTE";
   const [filtroEstado, setFiltroEstado] = useState(filtroInicial);
   const [fecha, setFecha] = useState("");
+  const [barberoId, setBarberoId] = useState(barberoIdInicial);
   const [turnos, setTurnos] = useState(turnosIniciales);
   const [paginaActual, setPaginaActual] = useState(1);
   const [totalPaginas, setTotalPaginas] = useState(totalPaginasInicial);
@@ -77,7 +86,7 @@ export default function TurnoManager({
     setCargandoInicial(true);
     setErrorCargaMas(false);
 
-    void buscarPagina(1, filtroInicial, "")
+    void buscarPagina(1, filtroInicial, "", barberoId)
       .then((resultado) => {
         if (id !== solicitudRef.current) return;
         if (resultado.success && resultado.data) {
@@ -99,13 +108,13 @@ export default function TurnoManager({
       .finally(() => {
         if (id === solicitudRef.current) setCargandoInicial(false);
       });
-  }, [cargarTurnosAlMontar, filtroInicial]);
+  }, [barberoId, cargarTurnosAlMontar, filtroInicial]);
 
-  const reiniciarBusqueda = async (nuevoEstado: string, nuevaFecha: string) => {
+  const reiniciarBusqueda = async (nuevoEstado: string, nuevaFecha: string, nuevoBarberoId = barberoId) => {
     const id = ++solicitudRef.current;
     setCargandoInicial(true);
     setErrorCargaMas(false);
-    const resultado = await buscarPagina(1, nuevoEstado, nuevaFecha);
+    const resultado = await buscarPagina(1, nuevoEstado, nuevaFecha, nuevoBarberoId);
     if (id !== solicitudRef.current) return;
     setCargandoInicial(false);
     if (resultado.success && resultado.data) {
@@ -131,12 +140,18 @@ export default function TurnoManager({
     void reiniciarBusqueda(filtroEstado, nuevaFecha);
   };
 
+  const cambiarBarbero = (nuevoBarberoId: string) => {
+    if (nuevoBarberoId === barberoId) return;
+    setBarberoId(nuevoBarberoId);
+    void reiniciarBusqueda(filtroEstado, fecha, nuevoBarberoId);
+  };
+
   const cargarMas = async () => {
     if (cargandoMas || cargandoInicial || paginaActual >= totalPaginas) return;
     const id = ++solicitudRef.current;
     setCargandoMas(true);
     setErrorCargaMas(false);
-    const resultado = await buscarPagina(paginaActual + 1, filtroEstado, fecha);
+    const resultado = await buscarPagina(paginaActual + 1, filtroEstado, fecha, barberoId);
     if (id !== solicitudRef.current) return;
     setCargandoMas(false);
     if (resultado.success && resultado.data) {
@@ -185,7 +200,7 @@ export default function TurnoManager({
               Administrá y organizá todos los turnos de tu barbería.
             </p>
           </div>
-          <CargadorModalGestionTurno
+          {esAdmin(session) && <CargadorModalGestionTurno
             session={session}
             initialServicios={initialServicios}
             initialBarberos={initialBarberos}
@@ -194,18 +209,20 @@ export default function TurnoManager({
             whatsappPhone={whatsappPhone}
             datosTransferencia={datosTransferencia}
             onTurnoCreado={() => void reiniciarBusqueda(filtroEstado, fecha)}
-          />
+          />}
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
+          {mostrarFiltroBarbero && <SelectorBarberoTurnos barberos={barberosFiltro} valor={barberoId} onChange={cambiarBarbero} />}
           <TurnosFiltros
             estado={filtroEstado}
             onChange={cambiarEstado}
-            mostrarTodos={esAdmin(session)}
+            mostrarTodos={esAdmin(session) || session?.user?.role === "EMPLEADO"}
           />
           <NavegacionFecha
             fecha={fecha}
             onCambiarFecha={cambiarFecha}
             estado={filtroEstado}
+            barberoId={barberoId}
           />
         </div>
       </div>

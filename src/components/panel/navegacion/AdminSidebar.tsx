@@ -6,6 +6,7 @@ import { GRUPOS_NAVEGACION } from "@/components/panel/navegacion/items-navegacio
 import DesplegableNavegacion from "@/components/panel/navegacion/DesplegableNavegacion";
 import ItemNavegacionEnlace from "@/components/panel/navegacion/ItemNavegacionEnlace";
 import UsuarioSidebar from "@/components/panel/navegacion/UsuarioSidebar";
+import type { RolPanel } from "@/types/usuario";
 
 interface AdminSidebarProps {
   colapsado: boolean;
@@ -13,9 +14,10 @@ interface AdminSidebarProps {
   abierto: boolean;
   alCerrar: () => void;
   config?: { name?: string | null; logo?: string | null } | null;
+  rol: RolPanel;
 }
 
-export default function AdminSidebar({ colapsado, alAlternar, abierto, alCerrar, config }: AdminSidebarProps) {
+export default function AdminSidebar({ colapsado, alAlternar, abierto, alCerrar, config, rol }: AdminSidebarProps) {
   const marca = config?.name || "Mayoraz";
   const logo = config?.logo ? (
     <Image src={config.logo} alt={`Logo de ${marca}`} width={30} height={30} className="h-[30px] w-[30px] rounded-md object-cover" />
@@ -45,15 +47,15 @@ export default function AdminSidebar({ colapsado, alAlternar, abierto, alCerrar,
           {GRUPOS_NAVEGACION.map((grupo) => (
             <div key={grupo.titulo} className="space-y-0.5">
               <p className={`px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--admin-texto-muted)] ${colapsado ? "md:hidden" : ""}`}>{grupo.titulo}</p>
-              {grupo.items.map((entrada) => "href" in entrada ? (
+              {grupo.items.filter((entrada) => "href" in entrada ? (!entrada.roles || entrada.roles.includes(rol)) : true).map((entrada) => "href" in entrada ? (
                 <ItemNavegacionEnlace key={entrada.href} item={entrada} colapsado={colapsado} alCerrar={alCerrar} />
               ) : (
-                <DesplegableNavegacion key={entrada.titulo} grupo={entrada} colapsado={colapsado} alCerrar={alCerrar} alExpandirSidebar={alAlternar} />
+                <DesplegableNavegacion key={entrada.titulo} grupo={{ ...entrada, items: entrada.items.filter((item) => !item.roles || item.roles.includes(rol)) }} colapsado={colapsado} alCerrar={alCerrar} alExpandirSidebar={alAlternar} />
               ))}
             </div>
           ))}
         </nav>
-        <UsuarioSidebar colapsado={colapsado} alCerrar={alCerrar} />
+        <UsuarioSidebar colapsado={colapsado} alCerrar={alCerrar} rol={rol} />
       </aside>
     </>
   );

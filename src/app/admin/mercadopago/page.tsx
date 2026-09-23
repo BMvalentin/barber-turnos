@@ -1,8 +1,12 @@
 import { Suspense } from "react";
 import { obtenerEstadoConexionMP } from "@/actions/mercadopago/estado-conexion.actions";
 import MercadoPagoConnectionPanel from "@/components/admin/MercadoPagoConnectionPanel";
+import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
+import { redirect } from "next/navigation";
 
 export default async function PaginaConfiguracionMercadoPago() {
+  if (!(await requerirAdmin())) redirect("/admin");
+
   const estadoConexion = await obtenerEstadoConexionMP();
 
   return (
