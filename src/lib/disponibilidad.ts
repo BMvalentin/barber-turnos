@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
 import { MAPA_DIA_SEMANA_DB, ESTADOS_TURNO, MINIMO_ANTICIPACION_MS, ZONA_HORARIA } from "@/lib/constants";
 import { obtenerRangoDelDia } from "@/lib/utils/obtener-rango-del-dia";
+import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 
 const GRANULARIDAD_MINUTOS = 15;
 
@@ -13,6 +14,10 @@ function minutosDeHora(hora: string): number {
 export async function obtenerDisponibilidad(servicioId: string, barberoId: string, fechaInicio: string, fechaFin: string, turnoIdAExcluir?: string): Promise<Record<string, string[]>> {
   const { inicio: inicioRango } = obtenerRangoDelDia(fechaInicio);
   const { fin: finRango } = obtenerRangoDelDia(fechaFin);
+  const ahoraConsulta = new Date();
+  if (finRango < ahoraConsulta) return {};
+  const { inicio: inicioHoy } = obtenerRangoDelDia(obtenerFechaSola(ahoraConsulta));
+  const inicioConsulta = inicioRango < inicioHoy ? inicioHoy : inicioRango;
 
   const [servicio, horariosBarbero, turnosRango, excepciones] = await Promise.all([
     prisma.servicio.findUnique({ where: { id: servicioId }, select: { duracion: true } }),
@@ -32,7 +37,7 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
     prisma.turno.findMany({
       where: {
         barberoId,
-        horarioReservado: { gte: inicioRango, lte: finRango },
+        horarioReservado: { gte: inicioConsulta, lte: finRango },
         estado: { notIn: [ESTADOS_TURNO[3]] },
         ...(turnoIdAExcluir && { id: { not: turnoIdAExcluir } }),
       },
@@ -45,7 +50,7 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
       where: {
         estado: true,
         desde: { lte: finRango },
-        hasta: { gte: inicioRango },
+        hasta: { gte: inicioConsulta },
         OR: [{ barberoId }, { barberoId: null }],
       },
       select: { desde: true, hasta: true },

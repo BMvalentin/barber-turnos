@@ -33,9 +33,10 @@ export default async function AdminTurnoPage() {
   if (!contexto) redirect("/dashboard");
   const session = contexto.session;
   const esEmpleado = contexto.rol === "EMPLEADO";
+  const barberoIdInicial = contexto.barberoId ?? "";
   const [datosTurno, result] = await Promise.all([
     getTurnoData(esEmpleado ? contexto.barberoId : null, true),
-    getTurnos(1, "CONFIRMADO", undefined, esEmpleado ? contexto.barberoId ?? undefined : undefined),
+    getTurnos(1, "CONFIRMADO", undefined, barberoIdInicial || undefined),
   ]);
   const { servicios, barberos, barberosFiltro, usuarios, relaciones, config } = datosTurno;
 
@@ -54,7 +55,7 @@ export default async function AdminTurnoPage() {
         initialUsuarios={usuarios}
         initialRelaciones={relaciones}
         mostrarFiltroBarbero={!esEmpleado}
-        barberoIdInicial={esEmpleado ? contexto.barberoId ?? "" : ""}
+        barberoIdInicial={barberoIdInicial}
         whatsappPhone={config?.whatsapp || ""}
         datosTransferencia={{
           transferenciaTitular: config?.transferenciaTitular || "",

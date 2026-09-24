@@ -45,7 +45,6 @@ export function HorariosLaboralesClient({ diasLaborales, barberos, esEmpleado }:
     descripcionError: "Error al guardar los horarios",
     onExito: () => {
       setValores(estadoDesdeDiasGuardados(diasGuardadosRef.current, valores));
-      router.refresh();
     },
   });
 
@@ -116,6 +115,7 @@ export function HorariosLaboralesClient({ diasLaborales, barberos, esEmpleado }:
         diasGuardadosRef.current,
       );
       await retroalimentarGuardado(resultado);
+      if (resultado.success && resultado.data?.actualizado) router.refresh();
     });
   };
 
@@ -144,6 +144,7 @@ export function HorariosLaboralesClient({ diasLaborales, barberos, esEmpleado }:
         diasGuardadosRef.current,
       );
       await retroalimentarGuardado(resultado);
+      if (resultado.success && resultado.data?.actualizado) router.refresh();
     });
   };
 

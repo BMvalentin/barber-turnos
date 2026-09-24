@@ -2,6 +2,7 @@
 
 import { useEffect, useSyncExternalStore, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Menu, Scissors } from "lucide-react";
 import AdminSidebar from "@/components/panel/navegacion/AdminSidebar";
 import type { RolPanel } from "@/types/usuario";
@@ -81,7 +82,7 @@ export default function AdminShell({ children, config, rol }: AdminShellProps) {
           >
             <Menu className="h-5 w-5" aria-hidden="true" />
           </button>
-          <div className="flex min-w-0 items-center gap-2.5">
+          <Link href="/" aria-label={`Ir al sitio de ${marca}`} className="flex min-w-0 items-center gap-2.5">
             {config?.logo ? (
               <Image
                 src={config.logo}
@@ -99,7 +100,7 @@ export default function AdminShell({ children, config, rol }: AdminShellProps) {
             <span className="truncate text-sm font-semibold text-[var(--admin-texto-primario)]">
               {marca}
             </span>
-          </div>
+          </Link>
         </header>
         <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
           <div className="mx-auto w-full max-w-[1280px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">

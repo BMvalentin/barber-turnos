@@ -53,7 +53,9 @@ async function updateBarberoBase(
         },
       });
 
-      if (puedeEditarServicios) {
+      // No reconstruir relaciones cuando el formulario solo modifica datos
+      // básicos. Así una relación antigua no impide cambiar el nombre.
+      if (puedeEditarServicios && serviciosIds !== undefined) {
         await tx.servicioxbarbero.deleteMany({ where: { barberoId: id } });
         if (serviciosIds?.length) {
           await tx.servicioxbarbero.createMany({
@@ -65,7 +67,7 @@ async function updateBarberoBase(
         }
       }
 
-      if (contexto.rol === "ADMIN") {
+      if (contexto.rol === "ADMIN" && margenesIds !== undefined) {
         await tx.margen_laboral_barbero.deleteMany({ where: { barberoId: id } });
         if (margenesIds?.length) {
           const margenes = await tx.margen_laboral.findMany({

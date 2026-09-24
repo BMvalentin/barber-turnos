@@ -12,7 +12,7 @@ type PropiedadesListaBarberos = { barberos?: BarberoListado[]; servicios?: Servi
 
 export default function BarberoList({ barberos = [], servicios = [], diasLaborales = [], soloEdicionPropia = false }: PropiedadesListaBarberos) {
   const [busqueda, establecerBusqueda] = useState("");
-  const [filtroEstado, establecerFiltroEstado] = useState<FiltroEstado>("todos");
+  const [filtroEstado, establecerFiltroEstado] = useState<FiltroEstado>("activos");
   const [idMenuAbierto, establecerIdMenuAbierto] = useState<string | null>(null);
   const barberosFiltrados = useMemo(() => {
     const termino = busqueda.trim().toLocaleLowerCase();

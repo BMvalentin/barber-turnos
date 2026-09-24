@@ -25,6 +25,14 @@ type EditBarberoModalProps = {
   perfilPropio?: boolean;
 };
 
+function mismosIds(primeros: string[], segundos: string[]): boolean {
+  if (primeros.length !== segundos.length) return false;
+
+  const primerosOrdenados = [...primeros].sort();
+  const segundosOrdenados = [...segundos].sort();
+  return primerosOrdenados.every((id, indice) => id === segundosOrdenados[indice]);
+}
+
 export default function EditBarberoModal({
   barbero,
   servicios,
@@ -45,11 +53,13 @@ export default function EditBarberoModal({
   });
   const [nombre, setNombre] = useState(barbero.nombre || "");
   const [estado, setEstado] = useState(barbero.estado);
+  const serviciosIniciales = barbero.servicios?.map((s) => s.servicio.id) || [];
+  const horariosIniciales = barbero.horarios?.map((h) => h.margenLaboralId) || [];
   const [selectedServicios, setSelectedServicios] = useState<string[]>(
-    barbero.servicios?.map((s) => s.servicio.id) || []
+    serviciosIniciales
   );
   const [selectedHorarios, setSelectedHorarios] = useState<string[]>(
-    barbero.horarios?.map((h) => h.margenLaboralId) || []
+    horariosIniciales
   );
   const [showServicios, setShowServicios] = useState(false);
   const [showHorarios, setShowHorarios] = useState(false);
@@ -102,8 +112,13 @@ export default function EditBarberoModal({
         nombre: nombre.trim(),
         srcImage: srcImage.trim() === "" ? null : srcImage.trim(),
         estado: Boolean(estado),
-        serviciosIds: selectedServicios,
-        margenesIds: soloEdicionPropia ? undefined : selectedHorarios,
+        serviciosIds: mismosIds(serviciosIniciales, selectedServicios)
+          ? undefined
+          : selectedServicios,
+        margenesIds:
+          soloEdicionPropia || mismosIds(horariosIniciales, selectedHorarios)
+            ? undefined
+            : selectedHorarios,
       });
       if (!result.success) {
         toast.error("Error", {

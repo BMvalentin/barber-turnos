@@ -214,7 +214,7 @@ export default function TurnoManager({
           />
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          {mostrarFiltroBarbero && <SelectorBarberoTurnos barberos={barberosFiltro} valor={barberoId} onChange={cambiarBarbero} />}
+          {mostrarFiltroBarbero && <SelectorBarberoTurnos barberos={barberosFiltro} barberoIdPropio={barberoIdInicial} valor={barberoId} onChange={cambiarBarbero} />}
           <TurnosFiltros
             estado={filtroEstado}
             onChange={cambiarEstado}

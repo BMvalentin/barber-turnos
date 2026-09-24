@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import type { Session } from "next-auth";
 import type { RolPanel } from "@/types/usuario";
+import { cache } from "react";
 
 const DURACION_CACHE_ROL_MS = 60_000;
 
@@ -81,8 +82,9 @@ export type ContextoPanel = {
 /**
  * Devuelve el contexto administrativo vigente en BD. El rol del JWT solo se
  * usa para identificar la sesión; nunca se usa como autorización definitiva.
+ * Comparte la consulta entre layout y página durante un mismo render.
  */
-export async function requerirPanel(): Promise<ContextoPanel | null> {
+export const requerirPanel = cache(async (): Promise<ContextoPanel | null> => {
   const session = await requerirSesion();
   if (!session) return null;
 
@@ -113,7 +115,7 @@ export async function requerirPanel(): Promise<ContextoPanel | null> {
     rol: usuario.rol,
     barberoId,
   };
-}
+});
 
 /**
  * Devuelve la sesión solo si el usuario es ADMIN en BD, o null en caso contrario.

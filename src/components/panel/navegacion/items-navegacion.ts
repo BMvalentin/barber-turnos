@@ -6,7 +6,6 @@ import {
   Landmark,
   Calendar,
   Settings,
-  Home,
   Building2,
   MapPin,
   Palette,
@@ -40,10 +39,6 @@ export interface GrupoNavegacion {
 
 export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
   {
-    titulo: "Acceso",
-    items: [{ titulo: "Ver sitio", href: "/", icono: Home, externo: true }],
-  },
-  {
     titulo: "Principal",
     tituloPorRol: { EMPLEADO: "Inicio" },
     items: [
@@ -53,7 +48,6 @@ export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
         href: "/admin",
         icono: LayoutDashboard,
       },
-      { titulo: "Servicios", href: "/admin/servicio", icono: Scissors, roles: ["ADMIN", "EMPLEADO"] },
     ],
   },
   {
@@ -66,11 +60,33 @@ export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
         href: "/admin/turno",
         icono: Calendar,
       },
+      { titulo: "Empleados", href: "/admin/barbero", icono: Users, roles: ["ADMIN"] },
+      { titulo: "Usuarios", href: "/admin/usuarios", icono: Users, roles: ["ADMIN"] },
+    ],
+  },
+  {
+    titulo: "Perfil",
+    tituloPorRol: { EMPLEADO: "Mi espacio" },
+    items: [
+      { titulo: "Servicios", href: "/admin/servicio", icono: Scissors, roles: ["ADMIN", "EMPLEADO"] },
+      {
+        titulo: "Mi perfil",
+        tituloPorRol: { EMPLEADO: "Mis datos" },
+        href: "/admin/barbero/perfil",
+        icono: Users,
+        roles: ["ADMIN", "EMPLEADO"],
+      },
+      {
+        titulo: "Horarios",
+        tituloPorRol: { EMPLEADO: "Mis horarios" },
+        href: "/admin/config/empleados/horarios-laborales",
+        icono: Clock,
+        roles: ["ADMIN", "EMPLEADO"],
+      },
     ],
   },
   {
     titulo: "Configuración",
-    tituloPorRol: { EMPLEADO: "Mi espacio" },
     items: [
       {
         titulo: "Configuración",
@@ -87,27 +103,11 @@ export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
           { titulo: "Apariencia", href: "/admin/config/apariencia", icono: Palette, roles: ["ADMIN"] },
           { titulo: "Imágenes", href: "/admin/config/imagenes", icono: ImageIcon, roles: ["ADMIN"] },
           {
-            titulo: "Mi perfil",
-            tituloPorRol: { EMPLEADO: "Mis datos" },
-            href: "/admin/barbero/perfil",
-            icono: Users,
-            roles: ["ADMIN", "EMPLEADO"],
-          },
-          { titulo: "Empleados", href: "/admin/barbero", icono: Users, roles: ["ADMIN"] },
-          {
-            titulo: "Horarios",
-            tituloPorRol: { EMPLEADO: "Mis horarios" },
-            href: "/admin/config/empleados/horarios-laborales",
-            icono: Clock,
-            roles: ["ADMIN", "EMPLEADO"],
-          },
-          {
             titulo: "Feriados y excepciones",
             href: "/admin/config/empleados/horarios-laborales/excepciones",
             icono: Calendar,
             roles: ["ADMIN"],
           },
-          { titulo: "Usuarios", href: "/admin/usuarios", icono: Users, roles: ["ADMIN"] },
         ],
       },
     ],

@@ -101,15 +101,17 @@ export default function NavegacionFecha({ fecha, onCambiarFecha, estado, barbero
             abierto ? "" : "pointer-events-none invisible"
           }`}
         >
-          <CalendarioNavegacion
-            fecha={fecha}
-            estado={estado ?? "TODOS"}
-            barberoId={barberoId}
-            onSeleccionar={(dia) => {
-              onCambiarFecha(dia);
-              setAbierto(false);
-            }}
-          />
+          {abierto && (
+            <CalendarioNavegacion
+              fecha={fecha}
+              estado={estado ?? "TODOS"}
+              barberoId={barberoId}
+              onSeleccionar={(dia) => {
+                onCambiarFecha(dia);
+                setAbierto(false);
+              }}
+            />
+          )}
         </div>
       </div>
 

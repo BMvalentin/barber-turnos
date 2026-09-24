@@ -12,14 +12,8 @@ export type DiaLaboralCreado = Omit<
   "dia"
 > & { dia: number };
 
-/* Día laboral listado (getDiasLaborales), con márgenes y día en número. */
-export type DiaLaboral = Omit<
-  Prisma.dia_laboralGetPayload<{ include: { margenes: true } }>,
-  "dia" | "margenes"
-> & {
-  dia: number;
-  margenes?: MargenLaboralCreado[];
-};
+/* Día laboral listado para el editor de horarios. */
+export type DiaLaboral = { id: string; dia: number };
 
 /* Rango de horario (bloque de trabajo) de un día. */
 export type RangoHorario = { desde: string; hasta: string };
