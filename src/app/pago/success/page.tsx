@@ -1,5 +1,6 @@
 // app/pago/success/page.tsx
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
+import { requerirPropietarioOAdmin } from "@/lib/seguridad/requerir-propietario";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { confirmarPagoTurno } from "@/actions/mercadopago/confirmar-pago.actions";
@@ -7,17 +8,10 @@ import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 import RedireccionWhatsApp from "@/components/pago/RedireccionWhatsApp";
 import { CLASES_BOTON_MARCA, ESTADOS_PAGO_ACREDITADOS } from "@/lib/constants";
 import Link from "next/link";
-import { CheckCircle2, Calendar, ArrowRight } from "lucide-react";
-
-interface SearchParams {
-  turnoId?: string;
-  payment_id?: string;
-  status?: string;
-  collection_id?: string;
-}
+import { CheckCircle2, Calendar, ArrowRight, Clock3 } from "lucide-react";
 
 interface SuccessPageProps {
-  searchParams: Promise<SearchParams>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 type Pagable = {
@@ -29,6 +23,8 @@ type Pagable = {
   seniaCongelada: number;
   tipoPago: string | null;
   estadoPago: string;
+  mpPaymentId: string | null;
+  metodoPago: string | null;
 };
 
 /**
@@ -36,7 +32,7 @@ type Pagable = {
  * incluyó el payment_id en la redirección pero el pago ya fue acreditado por el
  * webhook), leemos el turno para igualmente poder ofrecer el comprobante por
  * WhatsApp con los datos del turno. Solo se considera confirmado si el pago está
- * acreditado (estado CONFIRMADO o estadoPago en ESTADOS_PAGO_ACREDITADOS).
+ * acreditado y el turno sigue confirmado o completado.
  */
 async function obtenerDatosTurnoParaConfirmacion(
   turnoId: string,
@@ -44,9 +40,12 @@ async function obtenerDatosTurnoParaConfirmacion(
   const turno = await prisma.turno.findUnique({
     where: { id: turnoId },
     select: {
+      userId: true,
       estado: true,
       estadoPago: true,
       tipoPago: true,
+      metodoPago: true,
+      mpPaymentId: true,
       precioCongelado: true,
       seniaCongelada: true,
       horarioReservado: true,
@@ -56,10 +55,12 @@ async function obtenerDatosTurnoParaConfirmacion(
     },
   });
 
-  if (!turno) return null;
+  if (!turno || !(await requerirPropietarioOAdmin(turno.userId))) return null;
 
   const acreditado =
-    turno.estado === "CONFIRMADO" ||
+    (turno.estado === "CONFIRMADO" || turno.estado === "COMPLETADO") &&
+    turno.metodoPago === "MERCADO_PAGO" &&
+    Boolean(turno.mpPaymentId) &&
     (ESTADOS_PAGO_ACREDITADOS as readonly string[]).includes(turno.estadoPago);
 
   if (!acreditado) return null;
@@ -73,6 +74,8 @@ async function obtenerDatosTurnoParaConfirmacion(
     seniaCongelada: Number(turno.seniaCongelada),
     tipoPago: turno.tipoPago,
     estadoPago: turno.estadoPago,
+    mpPaymentId: turno.mpPaymentId,
+    metodoPago: turno.metodoPago,
   };
 }
 
@@ -82,8 +85,14 @@ export default async function PagoSuccessPage({
   const session = await requerirSesion();
   if (!session?.user) redirect("/login");
 
-  const { turnoId, payment_id, collection_id } = await searchParams;
-  const paymentId = payment_id || collection_id;
+  const parametros = await searchParams;
+  const turnoId = typeof parametros.turnoId === "string" && parametros.turnoId.length <= 191
+    ? parametros.turnoId
+    : undefined;
+  const idRecibido = parametros.payment_id ?? parametros.collection_id;
+  const paymentId = typeof idRecibido === "string" && /^\d+$/.test(idRecibido)
+    ? idRecibido
+    : undefined;
 
   // Confirmamos el turno desde la back_url (respaldo al webhook)
   // La confirmación verifica el pago contra la API de Mercado Pago
@@ -91,7 +100,7 @@ export default async function PagoSuccessPage({
     ? await confirmarPagoTurno(turnoId, paymentId)
     : { success: false, error: "Sin turno", data: undefined };
 
-  const datosTurno = (result.success ? result.data : null) as Pagable | null;
+  const datosTurno: Pagable | null = result.success && result.data ? result.data : null;
 
   // Respaldo: si no pudimos confirmar pero el pago ya está acreditado (webhook),
   // igual mostramos el comprobante por WhatsApp con los datos del turno.
@@ -100,11 +109,14 @@ export default async function PagoSuccessPage({
 
   const datosFinales = datosTurno ?? datosRespaldo;
   const turnoConfirmado = Boolean(datosFinales);
+  const idPagoVerificado = paymentId && datosFinales?.mpPaymentId === paymentId
+    ? paymentId
+    : undefined;
 
   const config = await obtenerConfigCacheada();
   const whatsappPhone = config?.whatsapp ?? "";
 
-  const esPagoTotal = datosTurno?.tipoPago === "TOTAL";
+  const esPagoTotal = datosFinales?.tipoPago === "TOTAL";
 
   return (
     <div className="min-h-screen bg-[var(--page-bg)] text-[var(--page-bg-foreground)] flex items-center justify-center px-4">
@@ -112,30 +124,36 @@ export default async function PagoSuccessPage({
 
         {/* Ícono de éxito */}
         <div className="flex justify-center">
-          <div className="w-24 h-24 rounded-full bg-green-500/20 border-2 border-green-500/40 flex items-center justify-center">
-            <CheckCircle2 className="w-12 h-12 text-green-400" />
+          <div className="w-24 h-24 rounded-full bg-[var(--admin-surface)] border-2 border-[var(--admin-border)] flex items-center justify-center">
+            {turnoConfirmado
+              ? <CheckCircle2 className="w-12 h-12 text-green-400" />
+              : <Clock3 className="w-12 h-12 text-[var(--admin-texto-secundario)]" />}
           </div>
         </div>
 
         {/* Título */}
         <div>
           <h1 className="text-3xl font-black text-[var(--page-bg-foreground)] uppercase tracking-tight mb-2">
-            {esPagoTotal ? "¡Pago Total!" : "¡Seña Pagada!"}
+            {turnoConfirmado
+              ? esPagoTotal ? "¡Pago Total!" : "¡Seña Pagada!"
+              : "Pago en revisión"}
           </h1>
           <p className="text-[var(--admin-texto-secundario)]">
-            Tu turno quedó confirmado. Te esperamos.
+            {turnoConfirmado
+              ? "Tu turno quedó confirmado. Te esperamos."
+              : "Todavía no pudimos verificar el pago. Revisá el estado en tus turnos."}
           </p>
         </div>
 
         {/* Info del pago */}
-        {paymentId && (
+        {turnoConfirmado && idPagoVerificado && (
           <div className="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-2xl p-4 text-left space-y-2">
             <p className="text-xs text-[var(--admin-texto-muted)] uppercase tracking-widest font-bold">
               Comprobante
             </p>
             <p className="text-sm text-[var(--admin-texto-secundario)]">
               <span className="text-[var(--admin-texto-muted)]">ID de pago:</span>{" "}
-              <span className="font-mono text-[var(--page-primary-tinta)]">{paymentId}</span>
+              <span className="font-mono text-[var(--page-primary-tinta)]">{idPagoVerificado}</span>
             </p>
             {turnoId && (
               <p className="text-sm text-[var(--admin-texto-secundario)]">

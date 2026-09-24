@@ -9,7 +9,7 @@ import { validarArchivoImagen } from "@/lib/validar-imagen";
 async function uploadConfigImageBase(
   file: File
 ): Promise<{ success: boolean; url?: string; error?: string }> {
-  if (!file || file.size === 0) {
+  if (!(file instanceof File) || file.size === 0) {
     return { success: false, error: "No se recibió ningún archivo." };
   }
 

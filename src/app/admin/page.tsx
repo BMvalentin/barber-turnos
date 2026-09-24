@@ -1,6 +1,4 @@
 // app/admin/page.tsx
-import { prisma } from "@/lib/prisma";
-import { getCachedData } from "@/lib/cache";
 import {
   Users,
   Scissors,
@@ -12,120 +10,16 @@ import { StatCard } from "@/components/panel/StatCard";
 import { DetailCard } from "@/components/panel/DetailCard";
 import { ItemLista } from "@/components/panel/ItemLista";
 import PanelResumenEmpleado from "@/components/panel/PanelResumenEmpleado";
-import { ESTADOS_TURNO_ACTIVOS, ESTADOS_TURNO } from "@/lib/constants";
-import { obtenerBarberosConTurnosHoy } from "@/lib/consultas/obtener-barberos-con-turnos-hoy";
-import { obtenerServiciosPopulares } from "@/lib/consultas/obtener-servicios-populares";
+import { ESTADOS_TURNO } from "@/lib/constants";
+import { obtenerEstadisticasPanel } from "@/lib/consultas/obtener-estadisticas-panel";
 import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { redirect } from "next/navigation";
-
-async function getStats(barberoId?: string) {
-  const hoy = new Date();
-  const inicioDia = new Date(
-    hoy.getFullYear(),
-    hoy.getMonth(),
-    hoy.getDate(),
-    0,
-    0,
-    0,
-  );
-  const finDia = new Date(
-    hoy.getFullYear(),
-    hoy.getMonth(),
-    hoy.getDate(),
-    23,
-    59,
-    59,
-  );
-  const claveDia = `${hoy.getFullYear()}-${String(
-    hoy.getMonth() + 1,
-  ).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`;
-
-  const [
-    totalBarberos,
-    totalServicios,
-    totalTurnos,
-    turnosPendientes,
-    serviciosPopulares,
-    barberosConActividadHoy,
-  ] = await Promise.all([
-    getCachedData(
-      ["admin-dashboard-total-barberos", barberoId ?? "todos"],
-      ["admin-dashboard", "barberos"],
-      () => prisma.barbero.count({ where: { estado: true, ...(barberoId ? { id: barberoId } : {}) } }),
-      30,
-    ),
-    getCachedData(
-      ["admin-dashboard-total-servicios", barberoId ?? "todos"],
-      ["admin-dashboard", "servicios"],
-      () => prisma.servicio.count({ where: { estado: true, ...(barberoId ? { servicios: { some: { barberoId } } } : {}) } }),
-      30,
-    ),
-    getCachedData(
-      ["admin-dashboard-total-turnos", barberoId ?? "todos"],
-      ["admin-dashboard", "turnos-global"],
-      () => prisma.turno.count({ where: barberoId ? { barberoId } : undefined }),
-      30,
-    ),
-    getCachedData(
-      ["admin-dashboard-turnos-pendientes", barberoId ?? "todos"],
-      ["admin-dashboard", "turnos-global"],
-      () =>
-        prisma.turno.count({
-          where: { estado: { in: [...ESTADOS_TURNO_ACTIVOS] }, ...(barberoId ? { barberoId } : {}) },
-        }),
-      30,
-    ),
-    getCachedData(
-      ["admin-dashboard-servicios-populares", barberoId ?? "todos"],
-      ["admin-dashboard", "servicios", "turnos-global"],
-      () => obtenerServiciosPopulares(barberoId),
-      30,
-    ),
-    getCachedData(
-      ["admin-dashboard-actividad-hoy-por-barbero", claveDia, barberoId ?? "todos"],
-      ["admin-dashboard", "barberos", "turnos-global"],
-      () => obtenerBarberosConTurnosHoy(inicioDia, finDia, barberoId),
-      30,
-    ),
-  ]);
-
-  const barberos = barberosConActividadHoy.slice(0, 5).map((barbero) => ({
-    id: barbero.id,
-    nombre: barbero.nombre,
-    _count: barbero._count,
-  }));
-  const turnosHoyPorBarbero = barberosConActividadHoy.map((barbero) => ({
-    id: barbero.id,
-    nombre: barbero.nombre,
-    turnos: barbero.turnos.filter((turno) =>
-      (ESTADOS_TURNO_ACTIVOS as readonly string[]).includes(turno.estado),
-    ),
-  }));
-  const rendimientoHoyPorBarbero = barberosConActividadHoy.map((barbero) => ({
-    id: barbero.id,
-    nombre: barbero.nombre,
-    turnos: barbero.turnos
-      .filter((turno) => turno.estado === ESTADOS_TURNO[2])
-      .map((turno) => ({ precioCongelado: turno.precioCongelado })),
-  }));
-
-  return {
-    totalBarberos,
-    totalServicios,
-    totalTurnos,
-    turnosPendientes,
-    barberos,
-    serviciosPopulares,
-    turnosHoyPorBarbero,
-    rendimientoHoyPorBarbero,
-  };
-}
 
 export default async function AdminDashboard() {
   const contexto = await requerirPanel();
   if (!contexto) redirect("/dashboard");
   const esEmpleado = contexto.rol === "EMPLEADO";
-  const stats = await getStats(esEmpleado ? contexto.barberoId ?? undefined : undefined);
+  const stats = await obtenerEstadisticasPanel(esEmpleado ? contexto.barberoId ?? undefined : undefined);
 
   if (esEmpleado) {
     return <PanelResumenEmpleado stats={stats} />;

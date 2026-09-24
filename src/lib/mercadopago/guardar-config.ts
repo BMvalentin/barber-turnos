@@ -15,17 +15,6 @@ export async function guardarConfiguracionMP(
   const fechaExpiracion = datos.expires_in
     ? new Date(Date.now() + datos.expires_in * 1000)
     : null;
-  console.log("Guardando configuración de MP en DB...");
-  console.log("   Datos a guardar:", {
-    accessToken: datos.access_token ? "presente" : "ausente",
-    refreshToken: datos.refresh_token ? "presente" : "ausente",
-    publicKey: datos.public_key ? "presente" : "ausente",
-    mpUserId: datos.user_id ? String(datos.user_id) : null,
-    liveMode: datos.live_mode,
-    expiraEn: fechaExpiracion,
-    bloqueado: bloquearDespuesDeGuardar,
-  });
-
   await prisma.configuracion_mercadopago.upsert({
     where: { id: ID_CONFIGURACION_MP },
     create: {

@@ -2,19 +2,14 @@ import TurnoManager from "@/components/turno/gestion/TurnoManager";
 import { obtenerDatosReserva } from "@/lib/consultas/obtener-datos-reserva";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { requerirPanel } from "@/lib/seguridad/requerir-admin";
+import { serializarServiciosReserva } from "@/lib/serializar-servicios-reserva";
+import { obtenerDatosTransferencia } from "@/lib/pagos/obtener-datos-transferencia";
 import { redirect } from "next/navigation";
 
 async function getTurnoData() {
   const { servicios, barberos, usuarios, relaciones, config } = await obtenerDatosReserva(false);
 
-  const serializedServicios = servicios.map((s) => ({
-    ...s,
-    precio: s.precio ? Number(s.precio) : 0,
-    descuento: s.descuento ? Number(s.descuento) : 0,
-    senia: s.senia ? Number(s.senia) : 0,
-  }));
-
-  return { servicios: serializedServicios, barberos, usuarios, relaciones, config };
+  return { servicios: serializarServiciosReserva(servicios), barberos, usuarios, relaciones, config };
 }
 
 export default async function TurnoPage() {
@@ -38,14 +33,7 @@ export default async function TurnoPage() {
           initialUsuarios={usuarios}
           initialRelaciones={relaciones}
           whatsappPhone={config?.whatsapp || ""}
-          datosTransferencia={{
-            transferenciaTitular: config?.transferenciaTitular || "",
-            transferenciaCuit: config?.transferenciaCuit || "",
-            transferenciaAlias: config?.transferenciaAlias || "",
-            transferenciaCbu: config?.transferenciaCbu || "",
-            transferenciaBanco: config?.transferenciaBanco || "",
-            transferenciaActiva: config?.transferenciaActiva ?? false,
-          }}
+          datosTransferencia={obtenerDatosTransferencia(config)}
         />
       </div>
     </div>

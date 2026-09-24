@@ -1,7 +1,7 @@
 "use client";
 
-import { FormularioFeriadoYCierre } from "@/componentes/panel/horarios/feriados-y-cierres/formulario-feriado-y-cierre";
-import { ListaFeriadosYCierres } from "@/componentes/panel/horarios/feriados-y-cierres/lista-feriados-y-cierres";
+import { FormularioFeriadoYCierre } from "./FormularioFeriadoYCierre";
+import { ListaFeriadosYCierres } from "./ListaFeriadosYCierres";
 import type { Barbero } from "@/types/barbero";
 import type { ExcepcionLaboral } from "@/types/excepcion";
 

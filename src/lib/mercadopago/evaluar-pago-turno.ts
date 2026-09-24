@@ -22,7 +22,6 @@ export type DatosValidacionPago = {
   referencia: string;
   montoPago: number;
   tipoPago?: string;
-  soloSiPendiente?: boolean;
 };
 
 /** Evalúa la validez del pago y el plan de confirmación, sin escribir en BD. */
@@ -31,11 +30,24 @@ export function evaluarPagoTurno(d: DatosValidacionPago): ResultadoEvaluacionPag
 
   if (d.referencia !== d.turnoId) return { ok: false, error: "El pago no corresponde a este turno" };
 
-  const esTipoTotal = (d.tipoPago ?? d.tipoPagoAlmacenado ?? "") === TIPOS_PAGO[1];
-  const montoRequerido = esTipoTotal ? d.precioCongelado : d.seniaCongelada;
-  if (d.montoPago < montoRequerido) return { ok: false, error: "El monto del pago no es válido" };
+  if (d.tipoPago && d.tipoPagoAlmacenado && d.tipoPago !== d.tipoPagoAlmacenado) {
+    return { ok: false, error: "El tipo de pago no corresponde a este turno" };
+  }
+  if (d.estado === ESTADOS_TURNO[3]) {
+    return { ok: false, error: "Este turno ya no admite pagos" };
+  }
 
-  const yaConfirmado = d.estado === ESTADOS_TURNO[1] || (d.soloSiPendiente && d.estado !== ESTADOS_TURNO[0]);
+  const tipoPago = d.tipoPago ?? d.tipoPagoAlmacenado;
+  if (!tipoPago || !TIPOS_PAGO.some((tipo) => tipo === tipoPago)) {
+    return { ok: false, error: "El tipo de pago no es válido" };
+  }
+  const esTipoTotal = tipoPago === TIPOS_PAGO[1];
+  const montoRequerido = esTipoTotal ? d.precioCongelado : d.seniaCongelada;
+  if (!Number.isFinite(d.montoPago) || montoRequerido <= 0 || d.montoPago < montoRequerido) {
+    return { ok: false, error: "El monto del pago no es válido" };
+  }
+
+  const yaConfirmado = d.estado === ESTADOS_TURNO[1] || d.estado === ESTADOS_TURNO[2];
   if (yaConfirmado) return { ok: true, yaConfirmado: true };
 
   return {

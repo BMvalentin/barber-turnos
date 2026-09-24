@@ -4,7 +4,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { updatePageConfig } from "@/actions/configuracion/config-general.actions";
-import { uploadConfigImage } from "@/actions/mercadopago/subir-config.actions";
+import { uploadConfigImage } from "@/actions/configuracion/subir-imagen.actions";
 import { esColorHexValido } from "@/lib/contraste/es-color-hex-valido";
 import { comprimirImagenConfiguracion } from "@/lib/imagenes/comprimir-imagen-configuracion";
 import SeccionIdentidad from "@/components/admin/config/SeccionIdentidad";

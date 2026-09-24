@@ -77,6 +77,7 @@ export default function CalendarioNavegacion({ fecha, estado = "TODOS", barberoI
       onMesAnterior={irAlMesAnterior}
       onMesSiguiente={irAlMesSiguiente}
       onSeleccionarDia={(dia) => onSeleccionar(dateToString(dia))}
+      permitirFechasPasadas
     />
   );
 }

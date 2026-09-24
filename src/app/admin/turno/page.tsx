@@ -4,6 +4,8 @@ import TurnoManager from "@/components/turno/gestion/TurnoManager";
 import { obtenerDatosReserva } from "@/lib/consultas/obtener-datos-reserva";
 import { prisma } from "@/lib/prisma";
 import { requerirPanel } from "@/lib/seguridad/requerir-admin";
+import { serializarServiciosReserva } from "@/lib/serializar-servicios-reserva";
+import { obtenerDatosTransferencia } from "@/lib/pagos/obtener-datos-transferencia";
 import { redirect } from "next/navigation";
 
 async function getTurnoData(barberoId: string | null, incluirUsuarios: boolean) {
@@ -18,14 +20,7 @@ async function getTurnoData(barberoId: string | null, incluirUsuarios: boolean) 
     ? await prisma.barbero.findMany({ select: { id: true, nombre: true, srcImage: true }, orderBy: { nombre: "asc" } })
     : barberos;
 
-  const serializedServicios = serviciosVisibles.map((s) => ({
-    ...s,
-    precio: s.precio ? Number(s.precio) : 0,
-    descuento: s.descuento ? Number(s.descuento) : 0,
-    senia: s.senia ? Number(s.senia) : 0,
-  }));
-
-  return { servicios: serializedServicios, barberos, barberosFiltro, usuarios, relaciones, config };
+  return { servicios: serializarServiciosReserva(serviciosVisibles), barberos, barberosFiltro, usuarios, relaciones, config };
 }
 
 export default async function AdminTurnoPage() {
@@ -57,14 +52,7 @@ export default async function AdminTurnoPage() {
         mostrarFiltroBarbero={!esEmpleado}
         barberoIdInicial={barberoIdInicial}
         whatsappPhone={config?.whatsapp || ""}
-        datosTransferencia={{
-          transferenciaTitular: config?.transferenciaTitular || "",
-          transferenciaCuit: config?.transferenciaCuit || "",
-          transferenciaAlias: config?.transferenciaAlias || "",
-          transferenciaCbu: config?.transferenciaCbu || "",
-          transferenciaBanco: config?.transferenciaBanco || "",
-          transferenciaActiva: config?.transferenciaActiva ?? false,
-        }}
+        datosTransferencia={obtenerDatosTransferencia(config)}
       />
     </div>
   );

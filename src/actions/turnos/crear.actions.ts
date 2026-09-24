@@ -28,19 +28,30 @@ export async function createTurno(
     const usuarioEsAdmin = contextoPanel?.rol === "ADMIN" && Boolean(await requerirAdmin());
     const usuarioEsEmpleado = contextoPanel?.rol === "EMPLEADO";
     const puedeGestionarTurnos = usuarioEsAdmin || usuarioEsEmpleado;
-    const estadoPagoRaw = formData.get("estadoPago") as string;
-    const servicioId = formData.get("servicioId") as string;
-    const userId = puedeGestionarTurnos ? (formData.get("userId") as string) : session.user.id;
-    const barberoId = formData.get("barberoId") as string;
-    const horarioStr = formData.get("horarioReservado") as string;
-    if (!servicioId || !userId || !barberoId || !horarioStr) {
+    const estadoPagoRaw = formData.get("estadoPago");
+    const servicioId = formData.get("servicioId");
+    const userId = puedeGestionarTurnos ? formData.get("userId") : session.user.id;
+    const barberoId = formData.get("barberoId");
+    const horarioStr = formData.get("horarioReservado");
+    if (
+      typeof servicioId !== "string" || !servicioId ||
+      typeof userId !== "string" || !userId ||
+      typeof barberoId !== "string" || !barberoId ||
+      typeof horarioStr !== "string" || !horarioStr
+    ) {
       return { success: false, error: "Datos incompletos" };
     }
     if (usuarioEsEmpleado && contextoPanel?.barberoId !== barberoId) {
       return { success: false, error: "Solo podés crear turnos para tu propia agenda" };
     }
-    if (!puedeGestionarTurnos && !session.user.telefono) {
-      return { success: false, error: "Completá tu teléfono en tu perfil antes de reservar un turno" };
+    if (!puedeGestionarTurnos) {
+      const usuario = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { telefono: true },
+      });
+      if (!usuario?.telefono?.trim()) {
+        return { success: false, error: "Completá tu teléfono en tu perfil antes de reservar un turno" };
+      }
     }
     const inicio = new Date(horarioStr);
     if (isNaN(inicio.getTime())) return { success: false, error: "Fecha inválida" };
@@ -48,7 +59,11 @@ export async function createTurno(
     if (inicio.getTime() <= ahora.getTime() + MINIMO_ANTICIPACION_MS) {
       return { success: false, error: "Reservá con 10 minutos de anticipación" };
     }
-    const estadoPago = puedeGestionarTurnos && (ESTADOS_PAGO_MANUALES as readonly string[]).includes(estadoPagoRaw) ? (estadoPagoRaw as (typeof ESTADOS_PAGO_MANUALES)[number]) : ESTADOS_PAGO[0];
+    const estadoPago = puedeGestionarTurnos &&
+      typeof estadoPagoRaw === "string" &&
+      (ESTADOS_PAGO_MANUALES as readonly string[]).includes(estadoPagoRaw)
+        ? (estadoPagoRaw as (typeof ESTADOS_PAGO_MANUALES)[number])
+        : ESTADOS_PAGO[0];
     const estadoFinal = estadoPago === ESTADOS_PAGO[1] || estadoPago === ESTADOS_PAGO[2] ? ESTADOS_TURNO[1] : ESTADOS_TURNO[0];
     const resultado = await crearTurnoEnTransaccion({
       servicioId,

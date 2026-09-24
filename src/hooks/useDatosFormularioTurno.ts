@@ -24,24 +24,20 @@ export type ParametrosDatosTurno = {
 
 export function useDatosFormularioTurno({
   session,
-  initialServicios = [],
-  initialBarberos = [],
-  initialUsuarios = [],
-  initialRelaciones = [],
+  initialServicios,
+  initialBarberos,
+  initialUsuarios,
+  initialRelaciones,
   turnoInicial,
 }: ParametrosDatosTurno) {
   const datosContexto = useDatosReserva();
 
   const [isOpen, setIsOpen] = useState(false);
 
-  const servicios =
-    initialServicios.length > 0 ? initialServicios : datosContexto.servicios;
-  const barberos =
-    initialBarberos.length > 0 ? initialBarberos : datosContexto.barberos;
-  const usuarios =
-    initialUsuarios.length > 0 ? initialUsuarios : datosContexto.usuarios;
-  const relaciones =
-    initialRelaciones.length > 0 ? initialRelaciones : datosContexto.relaciones;
+  const servicios = initialServicios ?? datosContexto.servicios;
+  const barberos = initialBarberos ?? datosContexto.barberos;
+  const usuarios = initialUsuarios ?? datosContexto.usuarios;
+  const relaciones = initialRelaciones ?? datosContexto.relaciones;
 
   const [selectedServicioId, setSelectedServicioId] = useState(
     turnoInicial?.servicio?.id || "",

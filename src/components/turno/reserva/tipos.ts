@@ -45,6 +45,7 @@ export type PropsCalendarioReserva = {
   onMesAnterior: () => void;
   onMesSiguiente: () => void;
   onSeleccionarDia: (dia: Date) => void;
+  permitirFechasPasadas?: boolean;
 };
 
 export type PropsDiaCalendarioReserva = {

@@ -26,6 +26,7 @@ export default function CalendarioReserva({
   onMesAnterior,
   onMesSiguiente,
   onSeleccionarDia,
+  permitirFechasPasadas = false,
 }: PropsCalendarioReserva) {
   const construirGrillaDelMes = (): Date[] => {
     const inicioDeMes = startOfMonth(mesVisible);
@@ -93,7 +94,7 @@ export default function CalendarioReserva({
         <div className="grid grid-cols-7 gap-1">
           {construirGrillaDelMes().map((dia, indice) => {
             const estaEnElMes = isSameMonth(dia, mesVisible);
-            const pasado = dia < inicioDeHoy;
+            const pasado = !permitirFechasPasadas && dia < inicioDeHoy;
             const disponible =
               estaEnElMes &&
               !pasado &&

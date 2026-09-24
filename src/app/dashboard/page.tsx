@@ -3,6 +3,7 @@ import DashboardPanel from "@/components/dashboard/DashboardPanel";
 import { getUserTurnos } from "@/actions/sesion/listar-turnos-usuario.actions";
 import { prisma } from "@/lib/prisma";
 import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
+import { obtenerDatosTransferencia } from "@/lib/pagos/obtener-datos-transferencia";
 
 export default async function DashboardPage() {
   const session = await requerirSesion();
@@ -25,14 +26,7 @@ export default async function DashboardPage() {
         totalPaginasTurnos={paginaTurnos?.totalPaginas ?? 1}
         session={session}
         whatsappPhone={config?.whatsapp || ""}
-        datosTransferencia={{
-          transferenciaTitular: config?.transferenciaTitular || "",
-          transferenciaCuit: config?.transferenciaCuit || "",
-          transferenciaAlias: config?.transferenciaAlias || "",
-          transferenciaCbu: config?.transferenciaCbu || "",
-          transferenciaBanco: config?.transferenciaBanco || "",
-          transferenciaActiva: config?.transferenciaActiva ?? false,
-        }}
+        datosTransferencia={obtenerDatosTransferencia(config)}
       />
     </>
   );

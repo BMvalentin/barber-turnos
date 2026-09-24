@@ -11,11 +11,14 @@ export async function uploadBarberImages(
   const contexto = await requerirPanel();
   if (!contexto) return { success: false, images: [], error: "No autorizado" };
 
-  if (contexto.rol === "EMPLEADO" && folder !== "barberia/barberos") {
-    return { success: false, images: [], error: "No autorizado" };
+  if (!Array.isArray(files) || files.length === 0 || !files.every((file) => file instanceof File)) {
+    return { success: false, images: [], error: "No se recibieron imágenes válidas" };
   }
 
-  const finalFolder = folder ?? "barbers";
+  const finalFolder = folder ?? "barberia/barberos";
+  if (contexto.rol === "EMPLEADO" && finalFolder !== "barberia/barberos") {
+    return { success: false, images: [], error: "No autorizado" };
+  }
 
   // Validamos cada archivo antes de subirlo
   for (const archivo of files) {
@@ -33,9 +36,13 @@ export async function uploadBarberImages(
   });
 
   // Extraemos solo las URLs exitosas
-  const images = results
-    .filter((r) => r.success)
-    .map((r) => r.url as string);
+  const images = results.flatMap((resultado) =>
+    resultado.success && typeof resultado.url === "string" ? [resultado.url] : [],
+  );
+
+  if (images.length !== files.length) {
+    return { success: false, images, error: "No se pudieron subir todas las imágenes" };
+  }
 
   return {
     success: true,

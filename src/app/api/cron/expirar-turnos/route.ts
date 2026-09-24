@@ -3,6 +3,7 @@
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { revalidateTag } from "next/cache";
 import {
   ESTADOS_PAGO,
   ESTADOS_PAGO_EXPIRABLES,
@@ -60,8 +61,10 @@ export async function GET(req: NextRequest) {
       data: {
         estado: ESTADOS_TURNO[3],
         estadoPago: ESTADOS_PAGO[4],
+        claveSlot: null,
       },
     });
+    if (resultado.count > 0) revalidateTag("turnos-global");
 
     console.log(
       `[CRON] Turnos cancelados automáticamente: ${resultado.count}`

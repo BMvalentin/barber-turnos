@@ -7,31 +7,31 @@ import { Payment } from "mercadopago";
 import { obtenerClienteMP } from "@/lib/mercadopago/obtener-cliente";
 import { confirmarTurnoPorPago } from "@/lib/confirmar-turno-por-pago";
 import { ESTADOS_TURNO, ESTADOS_PAGO } from "@/lib/constants";
+import { revalidarCacheTurno } from "@/lib/revalidar/revalidar-cache-turno";
+import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
+import { z } from "zod";
 
 export const runtime = "nodejs";
+
+const esquemaIdPago = z.union([z.string().regex(/^\d+$/), z.number().int().positive()]);
+const esquemaNotificacion = z.object({
+  type: z.string().optional(),
+  topic: z.string().optional(),
+  data: z.object({ id: esquemaIdPago }).optional(),
+  id: esquemaIdPago.optional(),
+});
 
 /**
  * Verifica la firma X-Signature que envía Mercado Pago.
  * Manifiesto: id:{paymentId};request-id:{x-request-id};ts:{ts};
  * Firma: HMAC-SHA256 del manifiesto con MP_WEBHOOK_SECRET.
  * MP_WEBHOOK_SECRET debe setearse como environment variable en Vercel.
- * Si no está configurado en producción, se falla CERRADO (false).
- * En desarrollo se advierte con console.warn y se acepta (fail-open)
- * para que el flujo local siga funcionando.
+ * Sin secreto configurado, la notificación se rechaza.
  */
 function firmaValida(req: NextRequest, paymentId: string): boolean {
   const secreto = process.env.MP_WEBHOOK_SECRET;
   if (!secreto) {
-    if (process.env.NODE_ENV === "production") {
-      console.error(
-        "❌ MP_WEBHOOK_SECRET no configurado: se rechazó la firma del webhook (fail-closed)."
-      );
-      return false;
-    }
-    console.warn(
-      "⚠️ MP_WEBHOOK_SECRET no configurado: no se verificó la firma del webhook."
-    );
-    return true;
+    return false;
   }
 
   const firma = req.headers.get("x-signature") ?? "";
@@ -53,9 +53,6 @@ function firmaValida(req: NextRequest, paymentId: string): boolean {
   const tsMs = Number(ts) * 1000;
   const skewMs = Math.abs(Date.now() - tsMs);
   if (Number.isNaN(tsMs) || skewMs > 5 * 60 * 1000) {
-    console.error(
-      "❌ Firma del webhook con timestamp inválido o fuera de la ventana permitida."
-    );
     return false;
   }
 
@@ -85,26 +82,30 @@ function firmaValida(req: NextRequest, paymentId: string): boolean {
 // Mercado Pago envía las notificaciones como POST
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const cuerpo: unknown = await req.json();
+    const notificacion = esquemaNotificacion.safeParse(cuerpo);
+    if (!notificacion.success) {
+      return NextResponse.json({ error: "Notificación inválida" }, { status: 400 });
+    }
+    const body = notificacion.data;
 
     // MP puede enviar dos tipos de notificaciones:
     // 1. IPN clásica: { id, topic }
     // 2. Webhooks modernos: { type, data: { id } }
-    const paymentId =
-      body?.data?.id ||      // webhook moderno
-      (body?.topic === "payment" ? body?.id : null); // IPN clásica
-
-    console.log("Webhook MP recibido. paymentId:", paymentId);
+    const paymentId = body.type === "payment"
+      ? body.data?.id
+      : body.topic === "payment" ? body.id : undefined;
 
     if (!paymentId) {
+      if (body.type === "payment" || body.topic === "payment") {
+        return NextResponse.json({ error: "ID de pago faltante" }, { status: 400 });
+      }
       // Puede ser una notificación de otro tipo (merchant_order, etc.)
-      console.log("ℹ️ Webhook sin paymentId, tipo:", body?.type || body?.topic);
       return NextResponse.json({ received: true }, { status: 200 });
     }
 
     // Rechazar notificaciones con firma inválida
     if (!firmaValida(req, String(paymentId))) {
-      console.error("❌ Firma inválida en webhook para paymentId:", paymentId);
       return NextResponse.json({ error: "Firma inválida" }, { status: 401 });
     }
 
@@ -112,28 +113,23 @@ export async function POST(req: NextRequest) {
     const mp = await obtenerClienteMP();
     const payment = new Payment(mp);
     const paymentData = await payment.get({ id: paymentId });
-
-    console.log("💳 Datos del pago:", {
-      id: paymentData.id,
-      status: paymentData.status,
-      external_reference: paymentData.external_reference,
-      amount: paymentData.transaction_amount,
-    });
+    const idPago = paymentData.id == null ? "" : String(paymentData.id);
+    if (!idPago || idPago !== String(paymentId)) {
+      return NextResponse.json({ error: "Pago inválido" }, { status: 400 });
+    }
 
     const turnoId = paymentData.external_reference;
 
     if (!turnoId) {
-      console.error("❌ Pago sin external_reference (turnoId)");
       return NextResponse.json({ error: "No turnoId" }, { status: 400 });
     }
 
     const turno = await prisma.turno.findUnique({
       where: { id: String(turnoId) },
-      select: { id: true, estado: true, seniaCongelada: true },
+      select: { id: true, userId: true, barberoId: true, horarioReservado: true },
     });
 
     if (!turno) {
-      console.error("❌ Turno inexistente para webhook:", turnoId);
       return NextResponse.json({ error: "Turno no encontrado" }, { status: 400 });
     }
 
@@ -149,29 +145,20 @@ export async function POST(req: NextRequest) {
           estadoPago: "approved",
           referencia: String(paymentData.external_reference ?? ""),
           montoPago: montoAcreditado,
-          paymentId: paymentData.id,
+          paymentId: idPago,
           tipoPago,
-          soloSiPendiente: true,
         });
 
-        if (resultado.ok && !resultado.yaConfirmado) {
-          console.log(`✅ Turno ${turnoId} CONFIRMADO por pago ${paymentData.id} (${tipoPago ?? "seña"})`);
+        if (!resultado.ok) {
+          const mensaje = resultado.error === "El monto del pago no es válido"
+            ? "Monto no coincide con la seña/total"
+            : "No se pudo confirmar el pago";
+          return NextResponse.json({ error: mensaje }, { status: 400 });
+        }
+        if (!resultado.yaConfirmado) {
           revalidatePath("/turno");
           revalidatePath("/admin");
           revalidatePath("/dashboard");
-        } else if (resultado.yaConfirmado) {
-          console.log(`ℹ️ Turno ${turnoId} ya no está PENDIENTE: ${turno.estado}`);
-        } else if (resultado.error === "El monto del pago no es válido") {
-          console.error(
-            `❌ Monto insuficiente para turno ${turnoId}: acreditado ${montoAcreditado}.`
-          );
-          return NextResponse.json(
-            { error: "Monto no coincide con la seña/total" },
-            { status: 400 }
-          );
-        } else {
-          console.error(`❌ No se pudo confirmar el turno ${turnoId}: ${resultado.error}`);
-          return NextResponse.json({ error: "No se pudo confirmar el pago" }, { status: 400 });
         }
         break;
       }
@@ -179,21 +166,23 @@ export async function POST(req: NextRequest) {
       case "pending":
       case "in_process": {
         // Pago en acreditación → turno sigue PENDIENTE, guarda el paymentId y el estado
-        await prisma.turno.update({
-          where: { id: turnoId },
-          data: { mpPaymentId: String(paymentData.id), estadoPago: ESTADOS_PAGO[6] },
+        await prisma.turno.updateMany({
+          where: {
+            id: turnoId,
+            estado: ESTADOS_TURNO[0],
+            OR: [{ mpPaymentId: null }, { mpPaymentId: idPago }],
+          },
+          data: { mpPaymentId: idPago, estadoPago: ESTADOS_PAGO[6] },
         });
-        console.log(`⏳ Pago ${paymentData.id} en acreditación para turno ${turnoId}`);
         break;
       }
 
       case "rejected": {
         // Pago rechazado → la reserva sigue disponible para reintentar el pago.
         await prisma.turno.updateMany({
-          where: { id: turnoId, estado: ESTADOS_TURNO[0] },
+          where: { id: turnoId, estado: ESTADOS_TURNO[0], mpPaymentId: idPago },
           data: { estadoPago: ESTADOS_PAGO[4] },
         });
-        console.log(`❌ Pago rechazado para turno ${turnoId}`);
         break;
       }
 
@@ -201,33 +190,42 @@ export async function POST(req: NextRequest) {
         // Un pago cancelado antes de confirmar no debe ocultar la reserva ni
         // impedir que el cliente elija otro medio de pago.
         await prisma.turno.updateMany({
-          where: { id: turnoId, estado: ESTADOS_TURNO[0] },
+          where: { id: turnoId, estado: ESTADOS_TURNO[0], mpPaymentId: idPago },
           data: { estadoPago: ESTADOS_PAGO[5] },
         });
-        console.log(`❌ Pago cancelado para turno ${turnoId}`);
         break;
       }
 
       case "refunded":
       case "charged_back": {
         // Devolución → cancelar el turno y el estado de pago
-        await prisma.turno.update({
-          where: { id: turnoId },
-          data: { estado: ESTADOS_TURNO[3], estadoPago: ESTADOS_PAGO[5] },
+        const resultado = await prisma.turno.updateMany({
+          where: {
+            id: turnoId,
+            mpPaymentId: idPago,
+            estado: { in: [ESTADOS_TURNO[1], ESTADOS_TURNO[2]] },
+          },
+          data: { estado: ESTADOS_TURNO[3], estadoPago: ESTADOS_PAGO[5], claveSlot: null },
         });
-        console.log(`↩️ Turno ${turnoId} CANCELADO por devolución/contracargo`);
+        if (resultado.count > 0) {
+          revalidarCacheTurno(
+            turno.barberoId,
+            obtenerFechaSola(turno.horarioReservado),
+            turno.userId,
+          );
+          revalidatePath("/dashboard");
+        }
         break;
       }
 
       default:
-        console.log(`ℹ️ Estado de pago no manejado: ${paymentData.status}`);
+        break;
     }
 
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (error) {
-    console.error("❌ Error en webhook MP:", error instanceof Error ? error.message : String(error));
-    // Siempre retornar 200 para que MP no reintente indefinidamente
-    return NextResponse.json({ received: true }, { status: 200 });
+    console.error("Error al procesar webhook de Mercado Pago:", error instanceof Error ? error.name : "Error desconocido");
+    return NextResponse.json({ error: "No se pudo procesar la notificación" }, { status: 500 });
   }
 }
 

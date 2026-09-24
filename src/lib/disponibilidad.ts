@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
-import { MAPA_DIA_SEMANA_DB, ESTADOS_TURNO, MINIMO_ANTICIPACION_MS, ZONA_HORARIA } from "@/lib/constants";
+import { MAPA_DIA_SEMANA_DB, ESTADOS_TURNO_ACTIVOS, MINIMO_ANTICIPACION_MS, ZONA_HORARIA } from "@/lib/constants";
 import { obtenerRangoDelDia } from "@/lib/utils/obtener-rango-del-dia";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 
@@ -19,8 +19,15 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
   const { inicio: inicioHoy } = obtenerRangoDelDia(obtenerFechaSola(ahoraConsulta));
   const inicioConsulta = inicioRango < inicioHoy ? inicioHoy : inicioRango;
 
-  const [servicio, horariosBarbero, turnosRango, excepciones] = await Promise.all([
-    prisma.servicio.findUnique({ where: { id: servicioId }, select: { duracion: true } }),
+  const [servicio, barbero, horariosBarbero, turnosRango, excepciones] = await Promise.all([
+    prisma.servicio.findUnique({ where: { id: servicioId }, select: { duracion: true, estado: true } }),
+    prisma.barbero.findUnique({
+      where: { id: barberoId },
+      select: {
+        estado: true,
+        servicios: { where: { servicioId }, select: { id: true }, take: 1 },
+      },
+    }),
     prisma.margen_laboral_barbero.findMany({
       where: { barberoId, estado: true },
       select: {
@@ -29,7 +36,7 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
             estado: true,
             desde: true,
             hasta: true,
-            dia: { select: { dia: true } },
+            dia: { select: { dia: true, estado: true } },
           },
         },
       },
@@ -38,7 +45,7 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
       where: {
         barberoId,
         horarioReservado: { gte: inicioConsulta, lte: finRango },
-        estado: { notIn: [ESTADOS_TURNO[3]] },
+        estado: { in: [...ESTADOS_TURNO_ACTIVOS] },
         ...(turnoIdAExcluir && { id: { not: turnoIdAExcluir } }),
       },
       select: {
@@ -58,10 +65,11 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
   ]);
 
   if (!servicio?.duracion) throw new Error("Servicio no encontrado");
+  if (!servicio.estado || !barbero?.estado || barbero.servicios.length === 0) return {};
 
   const horariosPorDia = new Map<string, typeof horariosBarbero>();
   for (const horario of horariosBarbero) {
-    if (!horario.margenLaboral.estado) continue;
+    if (!horario.margenLaboral.estado || !horario.margenLaboral.dia.estado) continue;
     const dia = horario.margenLaboral.dia.dia;
     const horarios = horariosPorDia.get(dia) ?? [];
     horarios.push(horario);
@@ -77,8 +85,7 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
 
   const turnosPorFecha = new Map<string, Array<{ inicio: number; fin: number }>>();
   for (const turno of turnosRango) {
-    const fechaZonificada = toZonedTime(turno.horarioReservado, ZONA_HORARIA);
-    const fecha = `${fechaZonificada.getFullYear()}-${String(fechaZonificada.getMonth() + 1).padStart(2, "0")}-${String(fechaZonificada.getDate()).padStart(2, "0")}`;
+    const fecha = obtenerFechaSola(turno.horarioReservado);
     const turnos = turnosPorFecha.get(fecha) ?? [];
     const inicio = turno.horarioReservado.getTime();
     turnos.push({ inicio, fin: inicio + turno.servicio.duracion * 60_000 });
@@ -96,20 +103,15 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
     const { inicio: inicioDia, fin: finDia } = obtenerRangoDelDia(fechaStr);
 
     // Avanzar siempre al día siguiente, incluso en los `continue` (evita loop infinito)
-    const siguienteDia = new Date(anio, mes - 1, dia + 1);
+    const siguienteDia = new Date(Date.UTC(anio, mes - 1, dia + 1));
     const avanzarDia = () => {
-      [anio, mes, dia] = [siguienteDia.getFullYear(), siguienteDia.getMonth() + 1, siguienteDia.getDate()];
+      [anio, mes, dia] = [siguienteDia.getUTCFullYear(), siguienteDia.getUTCMonth() + 1, siguienteDia.getUTCDate()];
     };
 
     if (finDia.getTime() < ahora.getTime()) {
       avanzarDia();
       continue;
     }
-    if (excepciones.some((ex) => inicioDia < ex.hasta && finDia > ex.desde)) {
-      avanzarDia();
-      continue;
-    }
-
     const diaEnum = MAPA_DIA_SEMANA_DB[toZonedTime(inicioDia, ZONA_HORARIA).getDay()];
     const horariosDia = horariosPorDia.get(diaEnum) ?? [];
     const turnosDia = turnosPorFecha.get(fechaStr) ?? [];
@@ -124,7 +126,8 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
         const inicioSlot = slotUTC.getTime();
         const finSlot = inicioSlot + servicio.duracion * 60_000;
 
-        if (!turnosDia.some((turno) => inicioSlot < turno.fin && finSlot > turno.inicio)
+        if (!excepciones.some((ex) => ex.desde.getTime() <= finSlot && ex.hasta.getTime() >= inicioSlot)
+          && !turnosDia.some((turno) => inicioSlot < turno.fin && finSlot > turno.inicio)
           && inicioSlot > ahora.getTime() + MINIMO_ANTICIPACION_MS) {
           slots.push(slotUTC.toISOString());
         }

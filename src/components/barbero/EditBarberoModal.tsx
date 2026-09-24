@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { useState, useTransition } from "react";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { updateBarbero } from "@/actions/barberos/editar.actions";
-import { uploadBarberImages } from "@/actions/mercadopago/subir-barberos.actions";
+import { uploadBarberImages } from "@/actions/barberos/subir-imagenes.actions";
 import { esImagenValida } from "@/lib/es-imagen-valida";
 import { useImagenServicio } from "@/hooks/useImagenServicio";
 import type { ServicioOpcion, DiaLaboral, BarberoEdicion } from "@/types/barbero";

@@ -5,30 +5,20 @@ import { enviarEmailTurnoSeguro } from "@/lib/email/enviar-email-turno-seguro";
 import { revalidarCacheTurno } from "@/lib/revalidar/revalidar-cache-turno";
 import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { actualizarTurnoEnTransaccion } from "@/lib/turnos/actualizar-turno-en-transaccion";
-import { INCLUDE_TURNO_CON_DETALLE } from "@/lib/turno-con-detalle";
+import { serializarTurnoConDetalle } from "@/lib/serializar-turno-con-detalle";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import { ESTADOS_PAGO, ESTADOS_PAGO_MANUALES, ESTADOS_TURNO, MINIMO_ANTICIPACION_MS } from "@/lib/constants";
 import type { ActionState } from "@/types/action-state";
 import type { TurnoConDetalle } from "@/types/turno";
-import type { Prisma, estado_pago, turno_estado } from "../../../generated/prisma/client";
+import type { turno_estado } from "../../../generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
-type TurnoConDetalleCrudo = Prisma.turnoGetPayload<{
-  include: typeof INCLUDE_TURNO_CON_DETALLE;
-}>;
+function esEstadoTurno(valor: unknown): valor is turno_estado {
+  return typeof valor === "string" && ESTADOS_TURNO.some((estado) => estado === valor);
+}
 
-function serializarTurnoActualizado(turno: TurnoConDetalleCrudo): TurnoConDetalle {
-  return {
-    ...turno,
-    precioCongelado: Number(turno.precioCongelado),
-    seniaCongelada: Number(turno.seniaCongelada),
-    servicio: {
-      ...turno.servicio,
-      precio: Number(turno.servicio.precio),
-      senia: Number(turno.servicio.senia),
-      descuento: Number(turno.servicio.descuento),
-    },
-  };
+function esEstadoPagoManual(valor: unknown): valor is (typeof ESTADOS_PAGO_MANUALES)[number] {
+  return typeof valor === "string" && ESTADOS_PAGO_MANUALES.some((estado) => estado === valor);
 }
 
 export async function actualizarTurno(
@@ -67,18 +57,25 @@ export async function actualizarTurno(
     if (Number.isNaN(horario.getTime())) return { success: false, error: "Fecha inválida" };
 
     const estadoRecibido = formData.get("estado");
-    const estado = (typeof estadoRecibido === "string" && estadoRecibido
-      ? estadoRecibido
-      : turnoActual.estado) as turno_estado;
+    if (estadoRecibido !== null && !esEstadoTurno(estadoRecibido)) {
+      return { success: false, error: "Estado de turno inválido" };
+    }
+    const estado = estadoRecibido ?? turnoActual.estado;
     const estadoPagoRecibido = formData.get("estadoPago");
+    if (
+      estadoPagoRecibido !== null &&
+      !esEstadoPagoManual(estadoPagoRecibido) &&
+      estadoPagoRecibido !== turnoActual.estadoPago
+    ) {
+      return { success: false, error: "Estado de pago inválido" };
+    }
     const estadoPago = (
       estado === ESTADOS_TURNO[3]
         ? ESTADOS_PAGO[4]
-        : typeof estadoPagoRecibido === "string" &&
-            (ESTADOS_PAGO_MANUALES as readonly string[]).includes(estadoPagoRecibido)
+        : estadoPagoRecibido !== null
           ? estadoPagoRecibido
           : turnoActual.estadoPago
-    ) as estado_pago;
+    );
 
     const cambiaReserva =
       servicioId !== turnoActual.servicioId ||
@@ -117,7 +114,7 @@ export async function actualizarTurno(
       enviarEmailTurnoBarberoSeguro(resultado.turno, "CONFIRMADO");
     }
 
-    return { success: true, data: serializarTurnoActualizado(resultado.turno) };
+    return { success: true, data: serializarTurnoConDetalle(resultado.turno) };
   } catch (error) {
     console.error("Error al actualizar turno:", error);
     return { success: false, error: "Error al actualizar el turno" };

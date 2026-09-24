@@ -4,7 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { ESTADOS_TURNO, SELECCION_USUARIO_BASICA } from "@/lib/constants";
+import { obtenerRangoDelDia } from "@/lib/utils/obtener-rango-del-dia";
 import type { Prisma, turno_estado } from "../../../generated/prisma/client";
+import { z } from "zod";
 
 function esEstadoTurno(valor: string): valor is turno_estado {
   return ESTADOS_TURNO.some((estado) => estado === valor);
@@ -19,7 +21,7 @@ export async function getTurnos(page: number = 1, estadoFiltro?: string, fechaFi
     const estadoValido = estadoFiltro && estadoFiltro !== "TODOS" && esEstadoTurno(estadoFiltro)
       ? estadoFiltro
       : undefined;
-    if (fechaFiltro && !/^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
+    if (fechaFiltro && !z.iso.date().safeParse(fechaFiltro).success) {
       return { success: false, error: "Fecha inválida" };
     }
     const session = await requerirSesion();
@@ -44,13 +46,10 @@ export async function getTurnos(page: number = 1, estadoFiltro?: string, fechaFi
 
     // Filtrado por fecha (convierte el string 'YYYY-MM-DD' a rango)
     if (fechaFiltro) {
-      const start = new Date(fechaFiltro);
-      const end = new Date(fechaFiltro);
-      end.setDate(end.getDate() + 1);
-
+      const { inicio, fin } = obtenerRangoDelDia(fechaFiltro);
       where.horarioReservado = {
-        gte: start,
-        lt: end,
+        gte: inicio,
+        lte: fin,
       };
     }
 

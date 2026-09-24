@@ -1,5 +1,5 @@
 import { getBarberos } from "@/actions/barberos/listar.actions";
-import { FeriadosYCierresCliente } from "@/componentes/panel/horarios/feriados-y-cierres/feriados-y-cierres-cliente";
+import { FeriadosYCierresCliente } from "@/components/horarios/feriados-y-cierres/FeriadosYCierresCliente";
 import { Breadcrumb } from "@/components/ui/breadcrumb/Breadcrumb";
 import { prisma } from "@/lib/prisma";
 import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
