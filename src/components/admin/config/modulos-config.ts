@@ -30,6 +30,7 @@ export const CAMPOS_POR_MODULO: Record<IdModuloConfig, Array<keyof DatosConfigur
     "transferenciaAlias",
     "transferenciaCbu",
     "transferenciaBanco",
+    "transferenciaActiva",
   ],
   apariencia: ["primaryColor", "secondaryColor", "bgColor"],
   imagenes: ["logo", "favicon", "backgroundImage"],

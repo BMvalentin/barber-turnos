@@ -202,7 +202,7 @@ export default function TurnoManager({
                 : "Administrá y organizá todos los turnos de tu barbería."}
             </p>
           </div>
-          {!esEmpleado && <CargadorModalGestionTurno
+          <CargadorModalGestionTurno
             session={session}
             initialServicios={initialServicios}
             initialBarberos={initialBarberos}
@@ -211,7 +211,7 @@ export default function TurnoManager({
             whatsappPhone={whatsappPhone}
             datosTransferencia={datosTransferencia}
             onTurnoCreado={() => void reiniciarBusqueda(filtroEstado, fecha)}
-          />}
+          />
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           {mostrarFiltroBarbero && <SelectorBarberoTurnos barberos={barberosFiltro} valor={barberoId} onChange={cambiarBarbero} />}

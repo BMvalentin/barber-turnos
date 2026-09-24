@@ -14,6 +14,7 @@ async function removerHorarioDeBarberoBase(
   try {
     const contexto = await requerirPanel();
     if (!contexto) return { success: false, error: "No autorizado" };
+
     const idsRaw = formData.get("ids");
 
     if (!idsRaw) {
@@ -37,11 +38,15 @@ async function removerHorarioDeBarberoBase(
     }
 
     if (contexto.rol === "EMPLEADO") {
+      const idsUnicos = [...new Set(ids)];
       const asignaciones = await prisma.margen_laboral_barbero.findMany({
-        where: { id: { in: ids } },
+        where: { id: { in: idsUnicos } },
         select: { barberoId: true },
       });
-      if (asignaciones.some((asignacion) => asignacion.barberoId !== contexto.barberoId)) {
+      if (
+        asignaciones.length !== idsUnicos.length ||
+        asignaciones.some((asignacion) => asignacion.barberoId !== contexto.barberoId)
+      ) {
         return { success: false, error: "No autorizado" };
       }
     }

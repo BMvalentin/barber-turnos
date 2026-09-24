@@ -7,6 +7,7 @@ import { useDisponibilidadHorarios } from "@/hooks/useDisponibilidadHorarios";
 import PanelBarberoServicio from "@/components/turno/reserva/PanelBarberoServicio";
 import PanelFechaHorario from "@/components/turno/reserva/PanelFechaHorario";
 import ResumenReserva from "@/components/turno/reserva/ResumenReserva";
+import { esAdmin, esEmpleado } from "@/lib/seguridad/es-admin";
 
 export default function FormularioReservaTurno({
   session,
@@ -48,7 +49,7 @@ export default function FormularioReservaTurno({
   const barbero = barberos.find((b) => b.id === selectedBarberoId) ?? null;
 
   const esUsuarioNormal = session?.user?.role === "USER";
-  const esAdmin = session?.user?.role === "ADMIN";
+  const puedeGestionarTurnos = esAdmin(session) || esEmpleado(session);
   const clienteCompleto = esUsuarioNormal || Boolean(selectedUserId);
   const completo = Boolean(
     selectedServicioId &&
@@ -98,7 +99,7 @@ export default function FormularioReservaTurno({
       <input type="hidden" name="servicioId" value={selectedServicioId} />
       <input type="hidden" name="barberoId" value={selectedBarberoId} />
       {turnoInicial && <input type="hidden" name="id" value={turnoInicial.id} />}
-      {esAdmin && <input type="hidden" name="estadoPago" value={estadoPago} />}
+      {puedeGestionarTurnos && <input type="hidden" name="estadoPago" value={estadoPago} />}
       <input
         type="hidden"
         name="horarioReservado"
@@ -133,7 +134,7 @@ export default function FormularioReservaTurno({
             slotSeleccionado={disponibilidad.slotSeleccionado}
             completo={completo}
             onCancelar={onCancelar}
-            esAdmin={esAdmin}
+            puedeGestionarTurnos={puedeGestionarTurnos}
             usuarios={usuarios}
             selectedUserId={selectedUserId}
             onCambiarCliente={setSelectedUserId}

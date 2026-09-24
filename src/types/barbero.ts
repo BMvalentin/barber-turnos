@@ -7,14 +7,6 @@ export type ServicioOpcion = {
   nombre: string;
 };
 
-export type CuentaUsuarioBarbero = {
-  id: string;
-  name: string | null;
-  email: string;
-  role: "USER" | "ADMIN" | "EMPLEADO";
-  barbero: { id: string } | null;
-};
-
 /* Barbero base (id, nombre, imagen y estado) usado por formularios y listas. */
 export type Barbero = {
   id: string;

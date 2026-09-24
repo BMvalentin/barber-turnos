@@ -32,10 +32,12 @@ async function updateBarberoBase(
       return { success: false, error: "No autorizado" };
     }
 
+    const puedeEditarServicios = contexto.rol === "ADMIN" || contexto.barberoId === id;
+
     await prisma.$transaction(async (tx) => {
       const barbero = await tx.barbero.findUnique({
         where: { id },
-        select: { id: true, usuario: { select: { email: true } } },
+        select: { id: true, estado: true, usuario: { select: { email: true } } },
       });
       if (!barbero) throw new Error("BARBERO_NO_ENCONTRADO");
 
@@ -46,35 +48,38 @@ async function updateBarberoBase(
           // El correo se deriva siempre de la cuenta asociada; nunca del formulario.
           email: barbero.usuario?.email ?? null,
           srcImage: srcImage || null,
-          ...(contexto.rol === "ADMIN" ? { estado: estado ?? true } : {}),
+          estado: estado ?? barbero.estado,
           updatedAt: new Date(),
         },
       });
 
-      // El empleado puede administrar los datos de su propio perfil, servicios y horarios.
-      await tx.servicioxbarbero.deleteMany({ where: { barberoId: id } });
-      if (serviciosIds?.length) {
-        await tx.servicioxbarbero.createMany({
-          data: serviciosIds.map((sId: string) => ({
-            barberoId: id,
-            servicioId: sId,
-          })),
-        });
+      if (puedeEditarServicios) {
+        await tx.servicioxbarbero.deleteMany({ where: { barberoId: id } });
+        if (serviciosIds?.length) {
+          await tx.servicioxbarbero.createMany({
+            data: serviciosIds.map((sId: string) => ({
+              barberoId: id,
+              servicioId: sId,
+            })),
+          });
+        }
       }
 
-      await tx.margen_laboral_barbero.deleteMany({ where: { barberoId: id } });
-      if (margenesIds?.length) {
-        const margenes = await tx.margen_laboral.findMany({
-          where: { id: { in: margenesIds } },
-        });
+      if (contexto.rol === "ADMIN") {
+        await tx.margen_laboral_barbero.deleteMany({ where: { barberoId: id } });
+        if (margenesIds?.length) {
+          const margenes = await tx.margen_laboral.findMany({
+            where: { id: { in: margenesIds } },
+          });
 
-        await tx.margen_laboral_barbero.createMany({
-          data: margenes.map((m) => ({
-            barberoId: id,
-            margenLaboralId: m.id,
-            diaId: m.diaId,
-          })),
-        });
+          await tx.margen_laboral_barbero.createMany({
+            data: margenes.map((m) => ({
+              barberoId: id,
+              margenLaboralId: m.id,
+              diaId: m.diaId,
+            })),
+          });
+        }
       }
     });
 

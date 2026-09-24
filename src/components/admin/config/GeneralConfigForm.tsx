@@ -50,6 +50,7 @@ export default function GeneralConfigForm({ initialData, seccionInicial }: Gener
     transferenciaAlias: initialData?.transferenciaAlias || "",
     transferenciaCbu: initialData?.transferenciaCbu || "",
     transferenciaBanco: initialData?.transferenciaBanco || "",
+    transferenciaActiva: initialData?.transferenciaActiva ?? true,
   });
 
   const primaryColor = formData.primaryColor || COLORES_TEMA_POR_DEFECTO.primario;
@@ -59,6 +60,10 @@ export default function GeneralConfigForm({ initialData, seccionInicial }: Gener
   const manejarCambio = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const manejarCambioTransferenciaActiva = (activa: boolean) => {
+    setFormData((prev) => ({ ...prev, transferenciaActiva: activa }));
   };
 
   const aplicarPlantilla = (plantilla: PlantillaColor) => {
@@ -109,7 +114,7 @@ export default function GeneralConfigForm({ initialData, seccionInicial }: Gener
 
     const payload: PageConfigData = {};
     for (const campo of CAMPOS_POR_MODULO[seccionInicial]) {
-      payload[campo] = formData[campo];
+      Object.assign(payload, { [campo]: formData[campo] });
     }
 
     startTransition(async () => {
@@ -157,7 +162,9 @@ export default function GeneralConfigForm({ initialData, seccionInicial }: Gener
             alias={formData.transferenciaAlias}
             cbu={formData.transferenciaCbu}
             banco={formData.transferenciaBanco}
+            activa={formData.transferenciaActiva}
             manejarCambio={manejarCambio}
+            manejarCambioActiva={manejarCambioTransferenciaActiva}
           />
         )}
 

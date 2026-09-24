@@ -11,27 +11,22 @@ import type { ActionState } from "@/types/action-state";
 const esquemaCambioRol = z.object({
   userId: z.string().min(1, "Usuario inválido"),
   role: z.enum(ROLES_USUARIO),
-  barberoId: z.string().min(1).nullable(),
 });
 
 export async function actualizarRolUsuario(
   userId: string,
   role: RolUsuario,
-  barberoId: string | null,
 ): Promise<ActionState> {
   try {
     const sesionAdmin = await requerirAdmin();
     if (!sesionAdmin) return { success: false, error: "No autorizado" };
 
-    const parsed = esquemaCambioRol.safeParse({ userId, role, barberoId });
+    const parsed = esquemaCambioRol.safeParse({ userId, role });
     if (!parsed.success) return { success: false, error: "Datos de rol inválidos" };
-    if (parsed.data.role === "EMPLEADO" && !parsed.data.barberoId) {
-      return { success: false, error: "Seleccioná el barbero asociado al empleado" };
-    }
 
     const usuario = await prisma.user.findUnique({
       where: { id: parsed.data.userId },
-      select: { id: true, role: true },
+      select: { id: true, role: true, email: true },
     });
     if (!usuario) return { success: false, error: "Usuario no encontrado" };
 
@@ -53,35 +48,32 @@ export async function actualizarRolUsuario(
       });
 
       if (parsed.data.role === "EMPLEADO" || parsed.data.role === "ADMIN") {
-        if (parsed.data.role === "EMPLEADO" && !parsed.data.barberoId) {
-          throw new Error("BARBERO_REQUERIDO");
-        }
+        const perfilExistente = barberoActual ?? await tx.barbero.findFirst({
+          where: { usuarioId: null, email: usuario.email },
+          orderBy: { createdAt: "asc" },
+          select: { id: true },
+        });
 
-        if (!parsed.data.barberoId) {
-          if (barberoActual) {
-            await tx.barbero.update({ where: { id: barberoActual.id }, data: { usuarioId: null, email: null } });
-          }
-        } else {
-          const barberoSeleccionado = await tx.barbero.findFirst({
-            where: {
-              id: parsed.data.barberoId,
-              OR: [{ usuarioId: null }, { usuarioId: parsed.data.userId }],
-            },
-            select: { id: true },
-          });
-          if (!barberoSeleccionado) throw new Error("BARBERO_NO_DISPONIBLE");
-
-          if (barberoActual && barberoActual.id !== barberoSeleccionado.id) {
-            await tx.barbero.update({ where: { id: barberoActual.id }, data: { usuarioId: null, email: null } });
-          }
-          const cuenta = await tx.user.findUnique({ where: { id: parsed.data.userId }, select: { email: true } });
+        if (perfilExistente) {
           await tx.barbero.update({
-            where: { id: barberoSeleccionado.id },
-            data: { usuarioId: parsed.data.userId, email: cuenta?.email ?? null },
+            where: { id: perfilExistente.id },
+            data: { usuarioId: parsed.data.userId, email: usuario.email },
+          });
+        } else {
+          await tx.barbero.create({
+            data: {
+              nombre: "Sin nombre",
+              email: usuario.email,
+              usuarioId: parsed.data.userId,
+              estado: true,
+            },
           });
         }
       } else if (barberoActual) {
-        await tx.barbero.update({ where: { id: barberoActual.id }, data: { usuarioId: null, email: null } });
+        await tx.barbero.update({
+          where: { id: barberoActual.id },
+          data: { usuarioId: null, email: null, estado: false },
+        });
       }
 
       await tx.user.update({
@@ -96,12 +88,6 @@ export async function actualizarRolUsuario(
     revalidatePath("/admin");
     return { success: true };
   } catch (error) {
-    if (error instanceof Error && error.message === "BARBERO_NO_DISPONIBLE") {
-      return { success: false, error: "El barbero seleccionado ya está asociado a otra cuenta" };
-    }
-    if (error instanceof Error && error.message === "BARBERO_REQUERIDO") {
-      return { success: false, error: "Seleccioná el barbero asociado al empleado" };
-    }
     console.error("Error al actualizar el rol del usuario:", error);
     return { success: false, error: "No se pudo actualizar el rol" };
   }

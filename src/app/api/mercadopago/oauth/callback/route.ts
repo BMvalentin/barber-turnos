@@ -36,7 +36,8 @@ function verificarFirma(estadoFirmado: string, userId: string): boolean {
 }
 
 export async function GET(req: NextRequest) {
-  const url = new URL("/admin/mercadopago", req.url);
+  const url = new URL("/admin/config/medios-pago", req.url);
+  url.searchParams.set("tab", "mercado-pago");
 
   // Solo un admin autenticado puede completar la conexión OAuth con Mercado Pago
   const sesion = await requerirAdmin();

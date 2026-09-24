@@ -46,8 +46,9 @@ export async function registrarTransferencia(
       transferenciaAlias: configuracion.transferenciaAlias || "",
       transferenciaCbu: configuracion.transferenciaCbu || "",
       transferenciaBanco: configuracion.transferenciaBanco || "",
+      transferenciaActiva: configuracion.transferenciaActiva,
     })) {
-      return { success: false, error: "La transferencia no está configurada" };
+      return { success: false, error: "La transferencia no está activa o configurada" };
     }
     if (turno.estado === ESTADOS_TURNO[3]) {
       return { success: false, error: "Este turno está cancelado" };

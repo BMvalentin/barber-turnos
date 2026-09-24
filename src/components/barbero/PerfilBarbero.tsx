@@ -11,6 +11,8 @@ type Props = {
   barbero: BarberoListado;
   servicios: ServicioOpcion[];
   diasLaborales: DiaLaboral[];
+  esEmpleado?: boolean;
+  perfilPropio?: boolean;
 };
 
 type Horario = NonNullable<BarberoListado["horarios"]>[number];
@@ -36,7 +38,7 @@ function nombreDia(dia: string) {
   return dia === "Miercoles" ? "Miércoles" : dia === "Sabado" ? "Sábado" : dia;
 }
 
-export default function PerfilBarbero({ barbero, servicios, diasLaborales }: Props) {
+export default function PerfilBarbero({ barbero, servicios, diasLaborales, esEmpleado = false, perfilPropio = false }: Props) {
   const [modalAbierto, establecerModalAbierto] = useState(false);
   const horarios = obtenerHorariosPorDia(barbero.horarios);
   const nombre = barbero.nombre?.trim() || "Sin nombre";
@@ -86,7 +88,7 @@ export default function PerfilBarbero({ barbero, servicios, diasLaborales }: Pro
         <section className="rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6">
           <div className="mb-4 flex items-center gap-2 border-b border-[var(--admin-border)] pb-3">
             <Scissors className="h-4 w-4 text-[var(--page-primary-tinta)]" aria-hidden="true" />
-            <h2 className="text-sm font-semibold text-[var(--admin-texto-primario)]">Servicios que ofrecés</h2>
+            <h2 className="text-sm font-semibold text-[var(--admin-texto-primario)]">{esEmpleado ? "Servicios asignados" : "Servicios que ofrecés"}</h2>
           </div>
           {barbero.servicios?.length ? (
             <div className="flex flex-wrap gap-2">
@@ -106,7 +108,7 @@ export default function PerfilBarbero({ barbero, servicios, diasLaborales }: Pro
             <Clock3 className="h-4 w-4 text-[var(--page-primary-tinta)]" aria-hidden="true" />
             <div>
               <h2 className="text-sm font-semibold text-[var(--admin-texto-primario)]">Tu disponibilidad</h2>
-              <p className="mt-0.5 text-xs text-[var(--admin-texto-muted)]">Administrá los horarios desde “Mis horarios”.</p>
+              <p className="mt-0.5 text-xs text-[var(--admin-texto-muted)]">{esEmpleado ? "Los horarios los administra un administrador." : "Administrá los horarios desde “Horarios”."}</p>
             </div>
           </div>
           {horarios.length ? (
@@ -131,7 +133,8 @@ export default function PerfilBarbero({ barbero, servicios, diasLaborales }: Pro
           barbero={barbero}
           servicios={servicios}
           diasLaborales={diasLaborales}
-          soloEdicionPropia
+          soloEdicionPropia={esEmpleado}
+          perfilPropio={perfilPropio || esEmpleado}
           onClose={() => establecerModalAbierto(false)}
         />
       )}

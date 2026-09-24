@@ -44,6 +44,7 @@ export default async function TurnoPage() {
             transferenciaAlias: config?.transferenciaAlias || "",
             transferenciaCbu: config?.transferenciaCbu || "",
             transferenciaBanco: config?.transferenciaBanco || "",
+            transferenciaActiva: config?.transferenciaActiva ?? false,
           }}
         />
       </div>

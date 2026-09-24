@@ -1,10 +1,11 @@
 import { getServicios } from "@/actions/servicios/listar.actions";
 import ServicioList from "@/components/servicio/ServicioList";
-import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
+import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { redirect } from "next/navigation";
 
 export default async function ServiciosPage() {
-  if (!(await requerirAdmin())) redirect("/admin");
+  const contexto = await requerirPanel();
+  if (!contexto) redirect("/dashboard");
 
   const resultServicios = await getServicios();
 
@@ -24,7 +25,7 @@ export default async function ServiciosPage() {
 
       {/* Lista de servicios - Abajo */}
       <div>
-        <ServicioList servicios={servicios} />
+        <ServicioList servicios={servicios} puedeGestionar={contexto.rol === "ADMIN"} />
       </div>
     </div>
   );

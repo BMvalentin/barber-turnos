@@ -23,19 +23,23 @@ export async function createTurno(
     const session = await requerirSesion();
     if (!session?.user) return { success: false, error: "Iniciá sesión para reservar un turno" };
     const contextoPanel = await requerirPanel();
-    if (contextoPanel?.rol === "EMPLEADO") return { success: false, error: "Los empleados gestionan sus turnos desde el panel" };
     // Para clientes normales el rol firmado del JWT alcanza para descartar
     // privilegios. Un supuesto admin siempre se confirma contra la BD.
     const usuarioEsAdmin = contextoPanel?.rol === "ADMIN" && Boolean(await requerirAdmin());
+    const usuarioEsEmpleado = contextoPanel?.rol === "EMPLEADO";
+    const puedeGestionarTurnos = usuarioEsAdmin || usuarioEsEmpleado;
     const estadoPagoRaw = formData.get("estadoPago") as string;
     const servicioId = formData.get("servicioId") as string;
-    const userId = usuarioEsAdmin ? (formData.get("userId") as string) : session.user.id;
+    const userId = puedeGestionarTurnos ? (formData.get("userId") as string) : session.user.id;
     const barberoId = formData.get("barberoId") as string;
     const horarioStr = formData.get("horarioReservado") as string;
     if (!servicioId || !userId || !barberoId || !horarioStr) {
       return { success: false, error: "Datos incompletos" };
     }
-    if (!usuarioEsAdmin && !session.user.telefono) {
+    if (usuarioEsEmpleado && contextoPanel?.barberoId !== barberoId) {
+      return { success: false, error: "Solo podés crear turnos para tu propia agenda" };
+    }
+    if (!puedeGestionarTurnos && !session.user.telefono) {
       return { success: false, error: "Completá tu teléfono en tu perfil antes de reservar un turno" };
     }
     const inicio = new Date(horarioStr);
@@ -44,7 +48,7 @@ export async function createTurno(
     if (inicio.getTime() <= ahora.getTime() + MINIMO_ANTICIPACION_MS) {
       return { success: false, error: "Reservá con 10 minutos de anticipación" };
     }
-    const estadoPago = usuarioEsAdmin && (ESTADOS_PAGO_MANUALES as readonly string[]).includes(estadoPagoRaw) ? (estadoPagoRaw as (typeof ESTADOS_PAGO_MANUALES)[number]) : ESTADOS_PAGO[0];
+    const estadoPago = puedeGestionarTurnos && (ESTADOS_PAGO_MANUALES as readonly string[]).includes(estadoPagoRaw) ? (estadoPagoRaw as (typeof ESTADOS_PAGO_MANUALES)[number]) : ESTADOS_PAGO[0];
     const estadoFinal = estadoPago === ESTADOS_PAGO[1] || estadoPago === ESTADOS_PAGO[2] ? ESTADOS_TURNO[1] : ESTADOS_TURNO[0];
     const resultado = await crearTurnoEnTransaccion({
       servicioId,
@@ -54,7 +58,7 @@ export async function createTurno(
       inicio,
       estadoPago,
       estadoFinal,
-      confirmarSinSeña: !usuarioEsAdmin,
+      confirmarSinSeña: !puedeGestionarTurnos,
     });
     if (!resultado.ok) return { success: false, error: resultado.error };
     const turno = resultado.turno;

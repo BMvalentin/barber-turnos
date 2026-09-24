@@ -256,6 +256,7 @@ model PageConfig {
   transferenciaAlias   String?
   transferenciaCbu     String?
   transferenciaBanco   String?
+  transferenciaActiva  Boolean  @default(true)
   backgroundImage    String?  @db.Text
 }
 

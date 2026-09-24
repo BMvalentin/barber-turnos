@@ -53,7 +53,7 @@ export default function MercadoPagoConnectionPanel({
         duration: 4000,
       });
       router.refresh();
-      router.replace("/admin/mercadopago");
+      router.replace("/admin/config/medios-pago?tab=mercado-pago");
     }
 
     const codigoError = parametrosBusqueda.get("mp_error");
@@ -65,7 +65,7 @@ export default function MercadoPagoConnectionPanel({
         description: mensaje,
         duration: 4000,
       });
-      router.replace("/admin/mercadopago");
+      router.replace("/admin/config/medios-pago?tab=mercado-pago");
     }
   }, [parametrosBusqueda, router]);
 

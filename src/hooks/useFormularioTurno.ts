@@ -11,7 +11,7 @@ import { useSessionId } from "@/hooks/useSessionId";
 import { useDatosFormularioTurno } from "./useDatosFormularioTurno";
 import type { ParametrosDatosTurno } from "./useDatosFormularioTurno";
 import { usePagoTurno } from "./usePagoTurno";
-import { esAdmin } from "@/lib/seguridad/es-admin";
+import { esAdmin, esEmpleado } from "@/lib/seguridad/es-admin";
 import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
 import type { DatosTransferencia } from "@/types/pago";
 
@@ -40,6 +40,7 @@ export function useFormularioTurno({
   onTurnoCreado,
 }: ParametrosFormularioTurno) {
   const esEdicion = Boolean(turnoInicial);
+  const puedeGestionarTurnos = esAdmin(session) || esEmpleado(session);
 
   const datos = useDatosFormularioTurno({
     session,
@@ -110,8 +111,8 @@ export function useFormularioTurno({
       return;
     }
 
-    if (esAdmin(session)) {
-      // El admin carga el turno directamente: sin modal de seña ni WhatsApp
+    if (puedeGestionarTurnos) {
+      // El personal del panel carga el turno directamente: sin modal de seña ni WhatsApp
       toast.success("Turno creado correctamente");
       // TurnoManager ya actualiza el listado con el callback. El refresh queda
       // como respaldo para otros consumidores que no provean uno.
@@ -138,6 +139,7 @@ export function useFormularioTurno({
     setTransferenciaLista,
     setShowPagoModal,
     session,
+    puedeGestionarTurnos,
     onTurnoCreado,
     router,
   ]);

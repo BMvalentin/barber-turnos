@@ -50,7 +50,8 @@ async function generarCodeChallenge(verifier: string): Promise<string> {
 }
 
 export async function GET(req: NextRequest) {
-  const urlAdmin = new URL("/admin/mercadopago", req.url);
+  const urlAdmin = new URL("/admin/config/medios-pago", req.url);
+  urlAdmin.searchParams.set("tab", "mercado-pago");
 
   // Solo un admin autenticado puede iniciar la conexión OAuth con Mercado Pago
   const sesion = await requerirAdmin();

@@ -1,18 +1,16 @@
 import { obtenerServiciosActivos } from "@/lib/consultas/obtener-servicios-activos";
 import { obtenerDiasLaboralesActivos } from "@/lib/consultas/obtener-dias-laborales-activos";
 import { obtenerBarberosConRelaciones } from "@/lib/consultas/obtener-barberos-con-relaciones";
-import { listarUsuarios } from "@/actions/usuarios/listar.actions";
 
 import BarberoList from "@/components/barbero/BarberoList";
-import CreateBarberoModal from "@/components/barbero/CreateBarberoModal";
 import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { redirect } from "next/navigation";
 
-async function getData(barberoId?: string) {
+async function getData(barberoId?: string, soloEmpleados = false) {
   const [servicios, diasLaborales, barberos] = await Promise.all([
     obtenerServiciosActivos(),
     obtenerDiasLaboralesActivos(),
-    obtenerBarberosConRelaciones(barberoId),
+    obtenerBarberosConRelaciones(barberoId, soloEmpleados),
   ]);
 
   const serializedBarberos = barberos.map(barbero => ({
@@ -39,11 +37,10 @@ export default async function BarberosPage() {
   const contexto = await requerirPanel();
   if (!contexto) redirect("/dashboard");
   const esEmpleado = contexto.rol === "EMPLEADO";
-  const { servicios, diasLaborales, barberos } = await getData(contexto.barberoId ?? undefined);
-  const resultadoCuentas = contexto.rol === "ADMIN" ? await listarUsuarios() : null;
-  const cuentas = resultadoCuentas?.success && resultadoCuentas.data
-    ? [...resultadoCuentas.data.usuarios, ...resultadoCuentas.data.empleados, ...resultadoCuentas.data.administradores]
-    : [];
+  const { servicios, diasLaborales, barberos } = await getData(
+    esEmpleado ? contexto.barberoId ?? undefined : undefined,
+    !esEmpleado,
+  );
 
   return (
     <div className="space-y-8">
@@ -51,26 +48,23 @@ export default async function BarberosPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight md:text-[28px] text-[var(--admin-texto-primario)]">
-            {esEmpleado ? "Mi perfil profesional" : "Gestión de Barberos"}
+            {esEmpleado ? "Mi perfil profesional" : "Empleados"}
           </h1>
           <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
             {esEmpleado
               ? "Consultá y actualizá la información de tu perfil."
-              : "Administrá tu equipo de barberos y sus horarios."}
+              : "Administrá los perfiles de tus empleados y sus horarios."}
           </p>
         </div>
-
-        {/* BOTÓN MODAL (PASANDO CONFIG) */}
-        {!esEmpleado && <CreateBarberoModal servicios={servicios} diasLaborales={diasLaborales} usuarios={cuentas} />}
       </div>
 
       {/* LISTA */}
-      <BarberoList 
-        barberos={barberos} 
-        servicios={servicios} 
-      diasLaborales={diasLaborales}
-      soloEdicionPropia={esEmpleado}
-    />
+      <BarberoList
+        barberos={barberos}
+        servicios={servicios}
+        diasLaborales={diasLaborales}
+        soloEdicionPropia={esEmpleado}
+      />
     </div>
   );
 }

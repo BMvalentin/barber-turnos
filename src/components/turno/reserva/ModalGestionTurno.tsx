@@ -19,6 +19,7 @@ const DATOS_TRANSFERENCIA_VACIOS: DatosTransferencia = {
   transferenciaAlias: "",
   transferenciaCbu: "",
   transferenciaBanco: "",
+  transferenciaActiva: false,
 };
 
 const ESTILO_TEMAS = {

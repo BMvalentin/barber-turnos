@@ -31,6 +31,7 @@ export default async function DashboardPage() {
           transferenciaAlias: config?.transferenciaAlias || "",
           transferenciaCbu: config?.transferenciaCbu || "",
           transferenciaBanco: config?.transferenciaBanco || "",
+          transferenciaActiva: config?.transferenciaActiva ?? false,
         }}
       />
     </>

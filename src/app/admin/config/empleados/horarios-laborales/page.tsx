@@ -10,6 +10,8 @@ export default async function HorariosLaboralesPage() {
   const contexto = await requerirPanel();
   if (!contexto) redirect("/dashboard");
   const esEmpleado = contexto.rol === "EMPLEADO";
+  const barberoId = esEmpleado ? contexto.barberoId ?? undefined : undefined;
+  if (esEmpleado && !barberoId) redirect("/admin/barbero/perfil");
 
   return (
     <div className="space-y-8">
@@ -26,16 +28,25 @@ export default async function HorariosLaboralesPage() {
             ]}
       />
       <Suspense fallback={<CargaHorarios />}>
-        <ContenidoHorarios barberoId={esEmpleado ? contexto.barberoId ?? undefined : undefined} esEmpleado={esEmpleado} />
+        <ContenidoHorarios
+          barberoId={barberoId}
+          esEmpleado={esEmpleado}
+        />
       </Suspense>
     </div>
   );
 }
 
-async function ContenidoHorarios({ barberoId, esEmpleado }: { barberoId?: string; esEmpleado: boolean }) {
+async function ContenidoHorarios({
+  barberoId,
+  esEmpleado,
+}: {
+  barberoId?: string;
+  esEmpleado: boolean;
+}) {
   const [diasLaborales, barberos] = await Promise.all([
     getDiasLaborales(),
-    obtenerBarberosParaHorarios(barberoId),
+    obtenerBarberosParaHorarios(barberoId, !esEmpleado),
   ]);
 
   return (

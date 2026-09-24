@@ -6,13 +6,12 @@ import { Search, Save } from "lucide-react";
 import { toast } from "sonner";
 import { actualizarRolUsuario } from "@/actions/usuarios/rol.actions";
 import { ETIQUETAS_ROL, ROLES_USUARIO, type RolUsuario } from "@/types/usuario";
-import type { BarberoOpcionUsuario, UsuarioAdministrable } from "@/actions/usuarios/listar.actions";
+import type { UsuarioAdministrable } from "@/actions/usuarios/listar.actions";
 
 type Props = {
   usuarios: UsuarioAdministrable[];
   empleados: UsuarioAdministrable[];
   administradores: UsuarioAdministrable[];
-  barberos: BarberoOpcionUsuario[];
   actorId: string;
 };
 
@@ -22,7 +21,7 @@ function rolDesdeValor(valor: string): RolUsuario {
   return ROLES_USUARIO.find((rol) => rol === valor) ?? "USER";
 }
 
-export default function UsuarioList({ usuarios, empleados, administradores, barberos, actorId }: Props) {
+export default function UsuarioList({ usuarios, empleados, administradores, actorId }: Props) {
   const [listaActiva, setListaActiva] = useState<ListaActiva>("usuarios");
   const [busqueda, setBusqueda] = useState("");
   const listas: Record<ListaActiva, { etiqueta: string; registros: UsuarioAdministrable[] }> = {
@@ -76,13 +75,13 @@ export default function UsuarioList({ usuarios, empleados, administradores, barb
             <tr>
               <th className="px-5 py-3 font-medium">Usuario</th>
               <th className="px-5 py-3 font-medium">Rol</th>
-              <th className="px-5 py-3 font-medium">Barbero asociado</th>
+              <th className="px-5 py-3 font-medium">Perfil de barbero</th>
               <th className="px-5 py-3 text-right font-medium">Acción</th>
             </tr>
           </thead>
           <tbody className="divide-y" style={{ borderColor: "var(--admin-border)" }}>
             {usuariosFiltrados.map((usuario) => (
-              <UsuarioFila key={usuario.id} usuario={usuario} barberos={barberos} esActual={usuario.id === actorId} />
+              <UsuarioFila key={usuario.id} usuario={usuario} esActual={usuario.id === actorId} />
             ))}
           </tbody>
         </table>
@@ -92,17 +91,15 @@ export default function UsuarioList({ usuarios, empleados, administradores, barb
   );
 }
 
-function UsuarioFila({ usuario, barberos, esActual }: { usuario: UsuarioAdministrable; barberos: BarberoOpcionUsuario[]; esActual: boolean }) {
+function UsuarioFila({ usuario, esActual }: { usuario: UsuarioAdministrable; esActual: boolean }) {
   const [rol, setRol] = useState<RolUsuario>(usuario.role);
-  const [barberoId, setBarberoId] = useState(usuario.barbero?.id ?? "");
   const [pendiente, iniciarTransicion] = useTransition();
   const router = useRouter();
-  const puedeAsociarBarbero = rol === "EMPLEADO" || rol === "ADMIN";
-  const cambioPendiente = rol !== usuario.role || (puedeAsociarBarbero && barberoId !== (usuario.barbero?.id ?? ""));
+  const cambioPendiente = rol !== usuario.role || ((rol === "EMPLEADO" || rol === "ADMIN") && !usuario.barbero);
 
   const guardar = () => {
     iniciarTransicion(async () => {
-      const resultado = await actualizarRolUsuario(usuario.id, rol, puedeAsociarBarbero ? barberoId || null : null);
+      const resultado = await actualizarRolUsuario(usuario.id, rol);
       if (resultado.success) {
         toast.success("Cuenta actualizada");
         router.refresh();
@@ -124,15 +121,17 @@ function UsuarioFila({ usuario, barberos, esActual }: { usuario: UsuarioAdminist
         </select>
       </td>
       <td className="px-5 py-4">
-        {puedeAsociarBarbero ? (
-          <select value={barberoId} onChange={(evento) => setBarberoId(evento.target.value)} disabled={pendiente} aria-label={`Barbero de ${usuario.email}`} className="h-9 min-w-52 rounded-lg border bg-[var(--admin-surface-elevated)] px-3 text-sm text-[var(--admin-texto-primario)]" style={{ borderColor: "var(--admin-border)" }}>
-            <option value="">Seleccionar...</option>
-            {barberos.map((barbero) => <option key={barbero.id} value={barbero.id} disabled={Boolean(barbero.usuarioId && barbero.usuarioId !== usuario.id)}>{barbero.nombre}{barbero.usuarioId && barbero.usuarioId !== usuario.id ? " (asignado)" : ""}</option>)}
-          </select>
-        ) : <span className="text-sm text-[var(--admin-texto-muted)]">—</span>}
+        {usuario.barbero ? (
+          <div>
+            <span className="font-medium text-[var(--admin-texto-primario)]">{usuario.barbero.nombre}</span>
+            <span className="mt-1 block text-xs text-[var(--admin-texto-muted)]">Correo sincronizado automáticamente</span>
+          </div>
+        ) : rol === "EMPLEADO" || rol === "ADMIN" ? (
+          <span className="text-sm text-[var(--admin-texto-muted)]">Se creará al guardar el rol</span>
+        ) : <span className="text-sm text-[var(--admin-texto-muted)]">Sin perfil</span>}
       </td>
       <td className="px-5 py-4 text-right">
-        <button type="button" onClick={guardar} disabled={!cambioPendiente || pendiente || (rol === "EMPLEADO" && !barberoId)} className="inline-flex items-center gap-2 rounded-lg bg-[var(--page-primary)] px-3 py-2 text-xs font-semibold text-[var(--page-primary-foreground)] disabled:cursor-not-allowed disabled:opacity-50">
+        <button type="button" onClick={guardar} disabled={!cambioPendiente || pendiente || esActual} className="inline-flex items-center gap-2 rounded-lg bg-[var(--page-primary)] px-3 py-2 text-xs font-semibold text-[var(--page-primary-foreground)] disabled:cursor-not-allowed disabled:opacity-50">
           <Save className="h-3.5 w-3.5" />{pendiente ? "Guardando..." : "Guardar"}
         </button>
       </td>

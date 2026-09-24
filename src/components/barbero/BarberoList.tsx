@@ -27,7 +27,7 @@ export default function BarberoList({ barberos = [], servicios = [], diasLaboral
   if (!barberos.length) return <EmptyState icono={<UserRound />} mensaje={soloEdicionPropia ? "No pudimos encontrar tu perfil profesional" : "Todavía no hay barberos"} claseContenedor="rounded-xl border bg-[var(--admin-surface)] p-10" estiloContenedor={{ borderColor: "var(--admin-border)" }} claseIcono="h-12 w-12" estiloIcono={{ color: "var(--page-primary-tinta)" }} estiloMensaje={{ color: "var(--admin-texto-primario)" }} />;
 
   if (soloEdicionPropia) {
-    return <PerfilBarbero barbero={barberos[0]} servicios={servicios} diasLaborales={diasLaborales} />;
+    return <PerfilBarbero barbero={barberos[0]} servicios={servicios} diasLaborales={diasLaborales} esEmpleado />;
   }
 
   return <section className="space-y-5">

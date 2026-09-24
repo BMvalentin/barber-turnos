@@ -1,37 +1,5 @@
-import { Suspense } from "react";
-import { obtenerEstadoConexionMP } from "@/actions/mercadopago/estado-conexion.actions";
-import MercadoPagoConnectionPanel from "@/components/admin/MercadoPagoConnectionPanel";
-import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { redirect } from "next/navigation";
 
-export default async function PaginaConfiguracionMercadoPago() {
-  if (!(await requerirAdmin())) redirect("/admin");
-
-  const estadoConexion = await obtenerEstadoConexionMP();
-
-  return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight md:text-[28px] text-[var(--admin-texto-primario)]">
-          Mercado Pago
-        </h1>
-        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-          Estado de la conexión y cobros.
-        </p>
-      </div>
-
-      <Suspense
-        fallback={
-          <p className="text-[var(--admin-texto-muted)]">
-            Cargando estado de conexión...
-          </p>
-        }
-      >
-        <MercadoPagoConnectionPanel
-          estadoInicial={estadoConexion}
-        />
-      </Suspense>
-    </div>
-  );
+export default function PaginaConfiguracionMercadoPago() {
+  redirect("/admin/config/medios-pago?tab=mercado-pago");
 }

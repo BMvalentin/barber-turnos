@@ -8,6 +8,7 @@ import type { Servicio } from "@/types/servicio";
 
 type ServicioTablaProps = {
   servicios: Servicio[];
+  puedeGestionar: boolean;
   onEliminar: (id: string) => void;
   estaVacio: boolean;
   sinServicios: boolean;
@@ -23,6 +24,7 @@ type ServicioTablaProps = {
 
 export default function ServicioTabla({
   servicios,
+  puedeGestionar,
   onEliminar,
   estaVacio,
   sinServicios,
@@ -65,10 +67,10 @@ export default function ServicioTabla({
   return (
     <div className="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl overflow-hidden">
       <div className="hidden md:grid md:grid-cols-12 gap-4 p-4 border-b border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] text-[11px] font-bold text-[var(--admin-texto-secundario)] uppercase tracking-wider">
-        <div className="col-span-6">Servicio</div>
+        <div className={puedeGestionar ? "col-span-6" : "col-span-8"}>Servicio</div>
         <div className="col-span-2 text-center">Duración</div>
         <div className="col-span-2 text-center">Precio</div>
-        <div className="col-span-2 text-right">Acciones</div>
+        {puedeGestionar && <div className="col-span-2 text-right">Acciones</div>}
       </div>
 
       <div className="divide-y divide-[var(--admin-border)]">
@@ -76,6 +78,7 @@ export default function ServicioTabla({
           <ServicioRow
             key={servicio.id}
             servicio={servicio}
+            puedeGestionar={puedeGestionar}
             onEliminar={onEliminar}
           />
         ))}

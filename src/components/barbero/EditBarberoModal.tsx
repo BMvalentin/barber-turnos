@@ -22,6 +22,7 @@ type EditBarberoModalProps = {
   diasLaborales: DiaLaboral[];
   onClose: () => void;
   soloEdicionPropia?: boolean;
+  perfilPropio?: boolean;
 };
 
 export default function EditBarberoModal({
@@ -29,12 +30,13 @@ export default function EditBarberoModal({
   servicios,
   diasLaborales,
   soloEdicionPropia = false,
+  perfilPropio = false,
   onClose,
 }: EditBarberoModalProps) {
   const [isPending, startTransition] = useTransition();
   const { retroalimentar } = useRetroalimentacionAccion({
-    mensajeExito: soloEdicionPropia ? "Perfil actualizado" : "Barbero actualizado",
-    descripcionExito: soloEdicionPropia
+    mensajeExito: perfilPropio ? "Perfil actualizado" : "Barbero actualizado",
+    descripcionExito: perfilPropio
       ? "Los cambios de tu perfil se guardaron correctamente."
       : "Los cambios se han guardado correctamente.",
     descripcionError: "Error al actualizar el barbero",
@@ -100,8 +102,8 @@ export default function EditBarberoModal({
         nombre: nombre.trim(),
         srcImage: srcImage.trim() === "" ? null : srcImage.trim(),
         estado: Boolean(estado),
-        serviciosIds: selectedServicios || [],
-        margenesIds: selectedHorarios,
+        serviciosIds: selectedServicios,
+        margenesIds: soloEdicionPropia ? undefined : selectedHorarios,
       });
       if (!result.success) {
         toast.error("Error", {
@@ -118,7 +120,7 @@ export default function EditBarberoModal({
   return (
     <ModalBase
       onClose={onClose}
-      titulo={soloEdicionPropia ? "Editar mi perfil profesional" : "Editar Barbero"}
+      titulo={perfilPropio ? "Editar mi perfil profesional" : "Editar Barbero"}
       maxWidth="max-w-2xl"
       overlayClase="bg-black/80 backdrop-blur-md p-4"
       contenedorClase="max-h-[90vh] overflow-y-auto bg-[var(--admin-surface)] rounded-xl p-6 space-y-6 border"
@@ -145,14 +147,14 @@ export default function EditBarberoModal({
             variante="barbero"
             onFileChange={handleFileChange}
             onRemove={quitarImagen}
-            tituloBarbero={soloEdicionPropia ? "Tu foto de perfil" : undefined}
+            tituloBarbero={perfilPropio ? "Tu foto de perfil" : undefined}
           />
           <SelectorServicios
             abierto={showServicios}
             onAlternarAbierto={() => setShowServicios(!showServicios)}
             seleccionados={selectedServicios}
             opciones={servicios}
-            titulo={soloEdicionPropia ? "Tus servicios" : undefined}
+            titulo={perfilPropio ? "Mis servicios" : undefined}
             onAlternarSeleccion={(id) =>
               setSelectedServicios((prev) =>
                 prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
@@ -172,7 +174,7 @@ export default function EditBarberoModal({
               }
             />
           )}
-          {!soloEdicionPropia && <label className="flex cursor-pointer items-center justify-between gap-4 border-t rounded-lg pt-4 text-sm font-medium text-[var(--admin-texto-primario)] transition-colors hover:bg-[var(--admin-item-hover)] focus-within:ring-2 focus-within:ring-[var(--page-focus-ring)]" style={{ borderColor: "var(--admin-border)" }}>
+          <label className="flex cursor-pointer items-center justify-between gap-4 border-t rounded-lg pt-4 text-sm font-medium text-[var(--admin-texto-primario)] transition-colors hover:bg-[var(--admin-item-hover)] focus-within:ring-2 focus-within:ring-[var(--page-focus-ring)]" style={{ borderColor: "var(--admin-border)" }}>
             <span><span className="block">Barbero activo</span><span className="mt-1 block text-xs font-normal text-[var(--admin-texto-muted)]">Los clientes podrán reservar turnos con este barbero.</span></span>
             <input
               type="checkbox"
@@ -182,8 +184,8 @@ export default function EditBarberoModal({
               role="switch"
               className="peer sr-only"
             />
-            <span aria-hidden="true" className="relative h-6 w-11 shrink-0 rounded-full border bg-[var(--admin-item)] transition-colors duration-200 peer-checked:border-[var(--page-primary)] peer-checked:bg-[var(--page-primary)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--page-focus-ring)]" style={{ borderColor: "var(--admin-border-fuerte)" }}><span className="absolute left-1 top-1 h-4 w-4 rounded-full bg-[var(--admin-texto-primario)] transition-transform duration-200 peer-checked:translate-x-5 peer-checked:bg-[var(--page-primary-foreground)]" /></span>
-          </label>}
+            <span aria-hidden="true" className="relative h-6 w-11 shrink-0 rounded-full border border-[var(--admin-border-fuerte)] bg-[var(--admin-item)] transition-colors duration-300 ease-in-out after:absolute after:left-1 after:top-1 after:h-4 after:w-4 after:rounded-full after:bg-[var(--admin-texto-primario)] after:transition-[transform,background-color] after:duration-300 after:ease-in-out peer-checked:border-[var(--page-primary)] peer-checked:bg-[var(--page-primary)] peer-checked:after:translate-x-5 peer-checked:after:bg-[var(--page-primary-foreground)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--page-focus-ring)]" />
+          </label>
         </div>
         <div className="flex justify-end gap-3 pt-4 border-t" style={{ borderColor: "var(--admin-border)" }}>
           <Button
@@ -202,7 +204,7 @@ export default function EditBarberoModal({
           <BotonSubmitPending
             pendiente={isPending}
             tipo="button"
-            texto={soloEdicionPropia ? "Guardar perfil" : "Guardar Cambios"}
+            texto={perfilPropio ? "Guardar perfil" : "Guardar Cambios"}
             onClic={handleSubmit}
             claseAdicional="hover:opacity-90"
           />

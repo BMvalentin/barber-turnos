@@ -108,7 +108,7 @@ export type PropsResumenReserva = {
   slotSeleccionado: string;
   completo: boolean;
   onCancelar: () => void;
-  esAdmin: boolean;
+  puedeGestionarTurnos: boolean;
   usuarios: UsuarioData[];
   selectedUserId: string;
   onCambiarCliente: (id: string) => void;

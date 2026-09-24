@@ -40,6 +40,38 @@ export function invalidarCacheRol(userId: string): void {
   cacheRolPorUsuario.delete(userId);
 }
 
+async function asegurarPerfilBarbero(userId: string, email: string): Promise<string> {
+  const perfil = await prisma.$transaction(async (tx) => {
+    const perfilExistente = await tx.barbero.findFirst({
+      where: { usuarioId: null, email },
+      orderBy: { createdAt: "asc" },
+      select: { id: true },
+    });
+
+    if (perfilExistente) {
+      return tx.barbero.update({
+        where: { id: perfilExistente.id },
+        data: { usuarioId: userId, email },
+        select: { id: true },
+      });
+    }
+
+    return tx.barbero.upsert({
+      where: { usuarioId: userId },
+      update: { email },
+      create: {
+        nombre: "Sin nombre",
+        email,
+        usuarioId: userId,
+        estado: true,
+      },
+      select: { id: true },
+    });
+  });
+
+  return perfil.id;
+}
+
 export type ContextoPanel = {
   session: Session;
   rol: RolPanel;
@@ -56,7 +88,22 @@ export async function requerirPanel(): Promise<ContextoPanel | null> {
 
   const usuario = await consultarUsuarioReal(session.user.id);
   if (usuario.rol !== "ADMIN" && usuario.rol !== "EMPLEADO") return null;
-  if (usuario.rol === "EMPLEADO" && !usuario.barberoId) return null;
+
+  let barberoId = usuario.barberoId;
+  if (!barberoId) {
+    const cuenta = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { email: true },
+    });
+    if (!cuenta) return null;
+    try {
+      barberoId = await asegurarPerfilBarbero(session.user.id, cuenta.email);
+      invalidarCacheRol(session.user.id);
+    } catch (error) {
+      console.error("No se pudo asegurar el perfil de barbero:", error);
+      return null;
+    }
+  }
 
   return {
     session: {
@@ -64,7 +111,7 @@ export async function requerirPanel(): Promise<ContextoPanel | null> {
       user: { ...session.user, role: usuario.rol },
     },
     rol: usuario.rol,
-    barberoId: usuario.barberoId,
+    barberoId,
   };
 }
 

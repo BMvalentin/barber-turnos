@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   Users,
   Scissors,
-  CreditCard,
   Landmark,
   Calendar,
   Settings,
@@ -54,14 +53,13 @@ export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
         href: "/admin",
         icono: LayoutDashboard,
       },
-      { titulo: "Servicios", href: "/admin/servicio", icono: Scissors, roles: ["ADMIN"] },
+      { titulo: "Servicios", href: "/admin/servicio", icono: Scissors, roles: ["ADMIN", "EMPLEADO"] },
     ],
   },
   {
     titulo: "Operación",
     tituloPorRol: { EMPLEADO: "Agenda" },
     items: [
-      { titulo: "Mercado Pago", href: "/admin/mercadopago", icono: CreditCard, roles: ["ADMIN"] },
       {
         titulo: "Turnos",
         tituloPorRol: { EMPLEADO: "Mis turnos" },
@@ -89,12 +87,13 @@ export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
           { titulo: "Apariencia", href: "/admin/config/apariencia", icono: Palette, roles: ["ADMIN"] },
           { titulo: "Imágenes", href: "/admin/config/imagenes", icono: ImageIcon, roles: ["ADMIN"] },
           {
-            titulo: "Empleados",
+            titulo: "Mi perfil",
             tituloPorRol: { EMPLEADO: "Mis datos" },
-            href: "/admin/barbero",
+            href: "/admin/barbero/perfil",
             icono: Users,
             roles: ["ADMIN", "EMPLEADO"],
           },
+          { titulo: "Empleados", href: "/admin/barbero", icono: Users, roles: ["ADMIN"] },
           {
             titulo: "Horarios",
             tituloPorRol: { EMPLEADO: "Mis horarios" },

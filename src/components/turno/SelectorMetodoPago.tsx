@@ -19,7 +19,7 @@ export default function SelectorMetodoPago({
       <legend className="text-sm font-semibold text-[var(--admin-texto-primario)]">
         Elegí cómo pagar
       </legend>
-      <div className="grid gap-3 sm:grid-cols-2" role="radiogroup">
+      <div className={`grid gap-3 ${transferenciaDisponible ? "sm:grid-cols-2" : ""}`} role="radiogroup">
         <button
           type="button"
           role="radio"
@@ -40,31 +40,27 @@ export default function SelectorMetodoPago({
           </span>
         </button>
 
-        <button
-          type="button"
-          role="radio"
-          aria-checked={valor === "TRANSFERENCIA"}
-          disabled={!transferenciaDisponible}
-          onClick={() => onChange("TRANSFERENCIA")}
-          className={`rounded-xl border p-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-55 ${
-            valor === "TRANSFERENCIA"
-              ? "border-[var(--page-primary)] bg-[var(--page-primary-15)]"
-              : "border-[var(--admin-border)] bg-[var(--admin-item)] hover:bg-[var(--admin-item-hover)]"
-          }`}
-        >
-          <span className="flex items-center gap-2 font-semibold text-[var(--admin-texto-primario)]">
-            <Landmark className="h-5 w-5 text-[var(--admin-texto-primario)]" />
-            Transferencia bancaria
-          </span>
-          <span className="mt-2 block text-xs text-[var(--admin-texto-secundario)]">
-            Transferí y mandá el comprobante por WhatsApp.
-          </span>
-          {!transferenciaDisponible && (
-            <span className="mt-2 block text-xs text-[var(--admin-texto-muted)]">
-              Medio no configurado todavía.
+        {transferenciaDisponible && (
+          <button
+            type="button"
+            role="radio"
+            aria-checked={valor === "TRANSFERENCIA"}
+            onClick={() => onChange("TRANSFERENCIA")}
+            className={`rounded-xl border p-4 text-left transition-colors ${
+              valor === "TRANSFERENCIA"
+                ? "border-[var(--page-primary)] bg-[var(--page-primary-15)]"
+                : "border-[var(--admin-border)] bg-[var(--admin-item)] hover:bg-[var(--admin-item-hover)]"
+            }`}
+          >
+            <span className="flex items-center gap-2 font-semibold text-[var(--admin-texto-primario)]">
+              <Landmark className="h-5 w-5 text-[var(--admin-texto-primario)]" />
+              Transferencia bancaria
             </span>
-          )}
-        </button>
+            <span className="mt-2 block text-xs text-[var(--admin-texto-secundario)]">
+              Transferí y mandá el comprobante por WhatsApp.
+            </span>
+          </button>
+        )}
       </div>
     </fieldset>
   );

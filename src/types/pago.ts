@@ -8,4 +8,5 @@ export type DatosTransferencia = {
   transferenciaAlias: string;
   transferenciaCbu: string;
   transferenciaBanco: string;
+  transferenciaActiva: boolean;
 };

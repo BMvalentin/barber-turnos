@@ -10,19 +10,18 @@ export default async function UsuariosPage() {
   const resultado = await listarUsuarios();
   const datos = resultado.success && resultado.data
     ? resultado.data
-    : { usuarios: [], empleados: [], administradores: [], barberos: [] };
+    : { usuarios: [], empleados: [], administradores: [] };
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-[var(--admin-texto-primario)] md:text-[28px]">Gestión de usuarios</h1>
-        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">Asigná roles y vinculá las cuentas con sus perfiles de barbero.</p>
+        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">Asigná roles. Los perfiles de barbero se crean automáticamente para empleados y administradores.</p>
       </div>
       <UsuarioList
         usuarios={datos.usuarios}
         empleados={datos.empleados}
         administradores={datos.administradores}
-        barberos={datos.barberos}
         actorId={sesionAdmin.user.id}
       />
     </div>
