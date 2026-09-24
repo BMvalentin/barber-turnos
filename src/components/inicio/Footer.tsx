@@ -15,9 +15,9 @@ export function Footer({ openPrivacy, openTerms, barberiaNombre, logoUrl, descri
       <div className="h-px bg-gradient-to-r from-transparent via-[var(--page-primary)]/60 to-transparent" />
       <div className="container mx-auto px-4">
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="grid gap-10 md:gap-8 lg:grid-cols-[1.4fr_0.8fr_1.1fr_1fr]">
-          <MarcaFooter barberiaNombre={barberiaNombre} logoUrl={logoUrl} descripcion={descripcion} instagram={instagram} whatsapp={whatsapp} />
+          <MarcaFooter barberiaNombre={barberiaNombre} logoUrl={logoUrl} descripcion={descripcion} />
           <NavegacionFooter />
-          <ContactoFooter direccion={direccion} ciudad={ciudad} telefono={telefono} email={email} />
+          <ContactoFooter direccion={direccion} ciudad={ciudad} telefono={telefono} email={email} whatsapp={whatsapp} instagram={instagram} />
           <LegalFooter openTerms={openTerms} openPrivacy={openPrivacy} />
         </motion.div>
         <div className="mt-12 grid items-center justify-items-center gap-4 border-t border-[var(--admin-border)] pt-6 sm:grid-cols-[1fr_auto_1fr]">
