@@ -22,6 +22,7 @@ export interface ItemNavegacion {
   icono: LucideIcon;
   externo?: boolean;
   roles?: readonly RolPanel[];
+  tituloPorRol?: Partial<Record<RolPanel, string>>;
 }
 
 export interface GrupoDesplegable {
@@ -34,6 +35,7 @@ export type EntradaNavegacion = ItemNavegacion | GrupoDesplegable;
 
 export interface GrupoNavegacion {
   titulo: string;
+  tituloPorRol?: Partial<Record<RolPanel, string>>;
   items: EntradaNavegacion[];
 }
 
@@ -44,20 +46,33 @@ export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
   },
   {
     titulo: "Principal",
+    tituloPorRol: { EMPLEADO: "Inicio" },
     items: [
-      { titulo: "Dashboard", href: "/admin", icono: LayoutDashboard },
+      {
+        titulo: "Dashboard",
+        tituloPorRol: { EMPLEADO: "Mi resumen" },
+        href: "/admin",
+        icono: LayoutDashboard,
+      },
       { titulo: "Servicios", href: "/admin/servicio", icono: Scissors, roles: ["ADMIN"] },
     ],
   },
   {
     titulo: "Operación",
+    tituloPorRol: { EMPLEADO: "Agenda" },
     items: [
       { titulo: "Mercado Pago", href: "/admin/mercadopago", icono: CreditCard, roles: ["ADMIN"] },
-      { titulo: "Turnos", href: "/admin/turno", icono: Calendar },
+      {
+        titulo: "Turnos",
+        tituloPorRol: { EMPLEADO: "Mis turnos" },
+        href: "/admin/turno",
+        icono: Calendar,
+      },
     ],
   },
   {
     titulo: "Configuración",
+    tituloPorRol: { EMPLEADO: "Mi espacio" },
     items: [
       {
         titulo: "Configuración",
@@ -73,9 +88,16 @@ export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
           { titulo: "Medios de pago", href: "/admin/config/medios-pago", icono: Landmark, roles: ["ADMIN"] },
           { titulo: "Apariencia", href: "/admin/config/apariencia", icono: Palette, roles: ["ADMIN"] },
           { titulo: "Imágenes", href: "/admin/config/imagenes", icono: ImageIcon, roles: ["ADMIN"] },
-          { titulo: "Empleados", href: "/admin/barbero", icono: Users, roles: ["ADMIN", "EMPLEADO"] },
+          {
+            titulo: "Empleados",
+            tituloPorRol: { EMPLEADO: "Mis datos" },
+            href: "/admin/barbero",
+            icono: Users,
+            roles: ["ADMIN", "EMPLEADO"],
+          },
           {
             titulo: "Horarios",
+            tituloPorRol: { EMPLEADO: "Mis horarios" },
             href: "/admin/config/empleados/horarios-laborales",
             icono: Clock,
             roles: ["ADMIN", "EMPLEADO"],

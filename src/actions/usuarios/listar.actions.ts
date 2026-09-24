@@ -21,6 +21,8 @@ export type BarberoOpcionUsuario = {
 
 export type DatosUsuariosAdministrables = {
   usuarios: UsuarioAdministrable[];
+  empleados: UsuarioAdministrable[];
+  administradores: UsuarioAdministrable[];
   barberos: BarberoOpcionUsuario[];
 };
 
@@ -45,7 +47,15 @@ export async function listarUsuarios(): Promise<ActionState<DatosUsuariosAdminis
       }),
     ]);
 
-    return { success: true, data: { usuarios, barberos } };
+    return {
+      success: true,
+      data: {
+        usuarios: usuarios.filter((usuario) => usuario.role === "USER"),
+        empleados: usuarios.filter((usuario) => usuario.role === "EMPLEADO"),
+        administradores: usuarios.filter((usuario) => usuario.role === "ADMIN"),
+        barberos,
+      },
+    };
   } catch (error) {
     console.error("Error al listar usuarios:", error);
     return { success: false, error: "No se pudieron cargar los usuarios" };

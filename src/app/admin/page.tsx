@@ -11,6 +11,7 @@ import { formatearHora } from "@/lib/utils/formatear-hora";
 import { StatCard } from "@/components/panel/StatCard";
 import { DetailCard } from "@/components/panel/DetailCard";
 import { ItemLista } from "@/components/panel/ItemLista";
+import PanelResumenEmpleado from "@/components/panel/PanelResumenEmpleado";
 import { ESTADOS_TURNO_ACTIVOS, ESTADOS_TURNO } from "@/lib/constants";
 import { obtenerBarberosConTurnosHoy } from "@/lib/consultas/obtener-barberos-con-turnos-hoy";
 import { obtenerServiciosPopulares } from "@/lib/consultas/obtener-servicios-populares";
@@ -126,6 +127,10 @@ export default async function AdminDashboard() {
   const esEmpleado = contexto.rol === "EMPLEADO";
   const stats = await getStats(esEmpleado ? contexto.barberoId ?? undefined : undefined);
 
+  if (esEmpleado) {
+    return <PanelResumenEmpleado stats={stats} />;
+  }
+
   return (
     <div className="space-y-8">
       {/* ENCABEZADO */}
@@ -134,7 +139,7 @@ export default async function AdminDashboard() {
           Dashboard
         </h1>
         <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-          {esEmpleado ? "Resumen de tus turnos y servicios." : "Resumen general de tu barbería."}
+          Resumen general de tu barbería.
         </p>
       </div>
 
@@ -150,7 +155,7 @@ export default async function AdminDashboard() {
           title="Servicios"
           value={stats.totalServicios}
           icon={Scissors}
-          href={esEmpleado ? "/admin/barbero" : "/admin/servicio"}
+          href="/admin/servicio"
         />
         <StatCard
           title="Total Turnos"

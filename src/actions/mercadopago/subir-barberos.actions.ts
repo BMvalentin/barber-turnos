@@ -1,15 +1,19 @@
 "use server";
 
 import { uploadMultipleToCloudinary } from "@/lib/cloudinary-uploader/subir-varios";
-import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
+import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { validarArchivoImagen } from "@/lib/validar-imagen";
 
 export async function uploadBarberImages(
   files: File[],
   folder?: string
 ): Promise<{ success: boolean; images: string[]; error?: string }> {
-  const sesion = await requerirAdmin();
-  if (!sesion) return { success: false, images: [], error: "No autorizado" };
+  const contexto = await requerirPanel();
+  if (!contexto) return { success: false, images: [], error: "No autorizado" };
+
+  if (contexto.rol === "EMPLEADO" && folder !== "barberia/barberos") {
+    return { success: false, images: [], error: "No autorizado" };
+  }
 
   const finalFolder = folder ?? "barbers";
 

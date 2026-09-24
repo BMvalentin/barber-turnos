@@ -119,7 +119,7 @@ export async function validarReservaEnTransaccion(
       b.id AS barberoId,
       b.srcImage AS barberoImagen,
       b.nombre AS barberoNombre,
-      b.email AS barberoEmail,
+      barberoUsuario.email AS barberoEmail,
       b.usuarioId AS barberoUsuarioId,
       s.estado AS servicioEstado,
       b.estado AS barberoEstado,
@@ -190,6 +190,8 @@ export async function validarReservaEnTransaccion(
     FROM barbero b
     CROSS JOIN servicio s
     CROSS JOIN \`user\` u
+    LEFT JOIN \`user\` barberoUsuario
+      ON barberoUsuario.id = b.usuarioId
     LEFT JOIN servicioxbarbero sx
       ON sx.barberoId = b.id
       AND sx.servicioId = s.id

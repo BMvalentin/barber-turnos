@@ -8,15 +8,23 @@ export default async function UsuariosPage() {
   if (!sesionAdmin) redirect("/admin");
 
   const resultado = await listarUsuarios();
-  const datos = resultado.success && resultado.data ? resultado.data : { usuarios: [], barberos: [] };
+  const datos = resultado.success && resultado.data
+    ? resultado.data
+    : { usuarios: [], empleados: [], administradores: [], barberos: [] };
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-[var(--admin-texto-primario)] md:text-[28px]">Gestión de usuarios</h1>
-        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">Asigná roles y vinculá las cuentas de empleados con su barbero.</p>
+        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">Asigná roles y vinculá las cuentas con sus perfiles de barbero.</p>
       </div>
-      <UsuarioList usuarios={datos.usuarios} barberos={datos.barberos} actorId={sesionAdmin.user.id} />
+      <UsuarioList
+        usuarios={datos.usuarios}
+        empleados={datos.empleados}
+        administradores={datos.administradores}
+        barberos={datos.barberos}
+        actorId={sesionAdmin.user.id}
+      />
     </div>
   );
 }

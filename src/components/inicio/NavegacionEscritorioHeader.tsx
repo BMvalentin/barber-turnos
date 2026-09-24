@@ -3,15 +3,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { handleSignOut } from "@/actions/sesion/logout.actions";
 import type { NavegacionEscritorioHeaderProps } from "@/components/inicio/header-tipos";
-import { esAdmin } from "@/lib/seguridad/es-admin";
+import { esAdmin, esEmpleado } from "@/lib/seguridad/es-admin";
 
 export function NavegacionEscritorioHeader({ sesion, menuSesionAbierto, setMenuSesionAbierto, contenedorSesion }: NavegacionEscritorioHeaderProps) {
   const claseEnlace = "text-sm font-medium text-[var(--admin-texto-secundario)] transition-colors hover:text-[var(--admin-texto-primario)]";
+  const esUsuarioEmpleado = esEmpleado(sesion);
   return (
     <div className="hidden items-center gap-6 md:flex">
       <nav className="flex items-center gap-6">
         <Link href="/#servicios" className={claseEnlace}>Servicios</Link><Link href="/#ubicacion" className={claseEnlace}>Ubicación</Link>
-        {esAdmin(sesion) && <Link href="/admin" className={claseEnlace}>Administrador</Link>}
+        {(esAdmin(sesion) || esUsuarioEmpleado) && <Link href="/admin" className={claseEnlace}>{esUsuarioEmpleado ? "Mi panel" : "Administrador"}</Link>}
       </nav>
       <Link href={sesion ? "/turno" : "/login"} className="rounded-lg bg-[var(--page-primary)] px-3.5 py-2 text-sm font-semibold text-[var(--page-primary-foreground)] transition-colors hover:bg-[var(--page-primary-hover)]">Turnos</Link>
       {sesion ? (

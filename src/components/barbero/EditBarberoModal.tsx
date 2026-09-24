@@ -10,7 +10,6 @@ import { esImagenValida } from "@/lib/es-imagen-valida";
 import { useImagenServicio } from "@/hooks/useImagenServicio";
 import type { ServicioOpcion, DiaLaboral, BarberoEdicion } from "@/types/barbero";
 import CampoNombreBarbero from "./CampoNombreBarbero";
-import CampoEmailBarbero from "./CampoEmailBarbero";
 import SeccionImagenServicio from "@/components/servicio/SeccionImagenServicio";
 import SelectorServicios from "./SelectorServicios";
 import SelectorHorarios from "./SelectorHorarios";
@@ -34,14 +33,15 @@ export default function EditBarberoModal({
 }: EditBarberoModalProps) {
   const [isPending, startTransition] = useTransition();
   const { retroalimentar } = useRetroalimentacionAccion({
-    mensajeExito: "Barbero actualizado",
-    descripcionExito: "Los cambios se han guardado correctamente.",
+    mensajeExito: soloEdicionPropia ? "Perfil actualizado" : "Barbero actualizado",
+    descripcionExito: soloEdicionPropia
+      ? "Los cambios de tu perfil se guardaron correctamente."
+      : "Los cambios se han guardado correctamente.",
     descripcionError: "Error al actualizar el barbero",
     refrescar: true,
     onExito: onClose,
   });
   const [nombre, setNombre] = useState(barbero.nombre || "");
-  const [email, setEmail] = useState(barbero.email || "");
   const [estado, setEstado] = useState(barbero.estado);
   const [selectedServicios, setSelectedServicios] = useState<string[]>(
     barbero.servicios?.map((s) => s.servicio.id) || []
@@ -98,7 +98,6 @@ export default function EditBarberoModal({
       const result = await updateBarbero({
         id: barbero.id,
         nombre: nombre.trim(),
-        email: email.trim() === "" ? null : email.trim(),
         srcImage: srcImage.trim() === "" ? null : srcImage.trim(),
         estado: Boolean(estado),
         serviciosIds: selectedServicios || [],
@@ -119,7 +118,7 @@ export default function EditBarberoModal({
   return (
     <ModalBase
       onClose={onClose}
-      titulo="Editar Barbero"
+      titulo={soloEdicionPropia ? "Editar mi perfil profesional" : "Editar Barbero"}
       maxWidth="max-w-2xl"
       overlayClase="bg-black/80 backdrop-blur-md p-4"
       contenedorClase="max-h-[90vh] overflow-y-auto bg-[var(--admin-surface)] rounded-xl p-6 space-y-6 border"
@@ -129,17 +128,16 @@ export default function EditBarberoModal({
       animado
     >
       <div className="space-y-4">
-          {!soloEdicionPropia && <CampoNombreBarbero
+          <CampoNombreBarbero
             valor={nombre}
             error={null}
             onCambio={setNombre}
-          />}
-          {!soloEdicionPropia && <CampoEmailBarbero
-            valor={email}
-            error={null}
-            onCambio={setEmail}
-          />}
-          {!soloEdicionPropia && <SeccionImagenServicio
+          />
+          <div className="rounded-lg border bg-[var(--admin-item)] px-3 py-2.5 text-sm" style={{ borderColor: "var(--admin-border)" }}>
+            <p className="font-semibold text-[var(--page-primary-tinta)]">Correo de la cuenta asociada</p>
+            <p className="mt-1 text-[var(--admin-texto-muted)]">{barbero.usuario?.email ?? "Sin cuenta asociada"}</p>
+          </div>
+          <SeccionImagenServicio
             previewUrl={previewUrl}
             srcImage={srcImage}
             uploadError={uploadError}
@@ -147,29 +145,33 @@ export default function EditBarberoModal({
             variante="barbero"
             onFileChange={handleFileChange}
             onRemove={quitarImagen}
-          />}
+            tituloBarbero={soloEdicionPropia ? "Tu foto de perfil" : undefined}
+          />
           <SelectorServicios
             abierto={showServicios}
             onAlternarAbierto={() => setShowServicios(!showServicios)}
             seleccionados={selectedServicios}
             opciones={servicios}
+            titulo={soloEdicionPropia ? "Tus servicios" : undefined}
             onAlternarSeleccion={(id) =>
               setSelectedServicios((prev) =>
                 prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
               )
             }
           />
-          <SelectorHorarios
-            abierto={showHorarios}
-            onAlternarAbierto={() => setShowHorarios(!showHorarios)}
-            seleccionados={selectedHorarios}
-            diasLaborales={diasLaborales}
-            onAlternarSeleccion={(id) =>
-              setSelectedHorarios((prev) =>
-                prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-              )
-            }
-          />
+          {!soloEdicionPropia && (
+            <SelectorHorarios
+              abierto={showHorarios}
+              onAlternarAbierto={() => setShowHorarios(!showHorarios)}
+              seleccionados={selectedHorarios}
+              diasLaborales={diasLaborales}
+              onAlternarSeleccion={(id) =>
+                setSelectedHorarios((prev) =>
+                  prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+                )
+              }
+            />
+          )}
           {!soloEdicionPropia && <label className="flex cursor-pointer items-center justify-between gap-4 border-t rounded-lg pt-4 text-sm font-medium text-[var(--admin-texto-primario)] transition-colors hover:bg-[var(--admin-item-hover)] focus-within:ring-2 focus-within:ring-[var(--page-focus-ring)]" style={{ borderColor: "var(--admin-border)" }}>
             <span><span className="block">Barbero activo</span><span className="mt-1 block text-xs font-normal text-[var(--admin-texto-muted)]">Los clientes podrán reservar turnos con este barbero.</span></span>
             <input
@@ -200,7 +202,7 @@ export default function EditBarberoModal({
           <BotonSubmitPending
             pendiente={isPending}
             tipo="button"
-            texto="Guardar Cambios"
+            texto={soloEdicionPropia ? "Guardar perfil" : "Guardar Cambios"}
             onClic={handleSubmit}
             claseAdicional="hover:opacity-90"
           />

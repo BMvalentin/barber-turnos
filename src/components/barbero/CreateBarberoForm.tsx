@@ -5,9 +5,8 @@ import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { createBarbero } from "@/actions/barberos/crear.actions";
 import { uploadBarberImages } from "@/actions/mercadopago/subir-barberos.actions";
 import { useImagenServicio } from "@/hooks/useImagenServicio";
-import type { ServicioOpcion, DiaLaboral } from "@/types/barbero";
+import type { ServicioOpcion, DiaLaboral, CuentaUsuarioBarbero } from "@/types/barbero";
 import CampoNombreBarbero from "./CampoNombreBarbero";
-import CampoEmailBarbero from "./CampoEmailBarbero";
 import SeccionImagenServicio from "@/components/servicio/SeccionImagenServicio";
 import SelectorServicios from "./SelectorServicios";
 import SelectorHorarios from "./SelectorHorarios";
@@ -16,6 +15,7 @@ import BotonSubmitPending from "@/components/ui/boton-submit-pending";
 type Props = {
   servicios: ServicioOpcion[];
   diasLaborales: DiaLaboral[];
+  usuarios: CuentaUsuarioBarbero[];
   onSuccess?: () => void;
   onCancel?: () => void;
 };
@@ -23,6 +23,7 @@ type Props = {
 export default function CreateBarberoForm({
   servicios,
   diasLaborales,
+  usuarios,
   onSuccess,
   onCancel,
 }: Props) {
@@ -34,7 +35,7 @@ export default function CreateBarberoForm({
     refrescar: true,
     onExito: () => {
       setNombre("");
-      setEmail("");
+      setUsuarioId("");
       quitarImagen();
       setSelectedServicios([]);
       setSelectedHorarios([]);
@@ -42,7 +43,7 @@ export default function CreateBarberoForm({
     },
   });
   const [nombre, setNombre] = useState("");
-  const [email, setEmail] = useState("");
+  const [usuarioId, setUsuarioId] = useState("");
   const [selectedServicios, setSelectedServicios] = useState<string[]>([]);
   const [selectedHorarios, setSelectedHorarios] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -64,16 +65,6 @@ export default function CreateBarberoForm({
     const regex = /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/;
     if (!regex.test(value)) {
       setError("El nombre no puede tener números ni caracteres especiales");
-    } else {
-      setError(null);
-    }
-  };
-
-  const handleEmailChange = (value: string) => {
-    setEmail(value);
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (value.trim() !== "" && !regex.test(value.trim())) {
-      setError("El email no es válido");
     } else {
       setError(null);
     }
@@ -122,7 +113,7 @@ export default function CreateBarberoForm({
     startTransition(async () => {
       const result = await createBarbero({
         nombre: nombre.trim(),
-        email: email.trim() || null,
+        usuarioId: usuarioId || null,
         srcImage: finalImageUrl?.trim() || null,
         serviciosIds: selectedServicios,
         margenesIds: selectedHorarios,
@@ -139,11 +130,22 @@ export default function CreateBarberoForm({
         requerido
         onCambio={handleNombreChange}
       />
-      <CampoEmailBarbero
-        valor={email}
-        error={error}
-        onCambio={handleEmailChange}
-      />
+      <div className="space-y-2">
+        <label htmlFor="cuenta-barbero" className="text-sm font-semibold" style={{ color: "var(--page-primary-tinta)" }}>Cuenta asociada</label>
+        <select
+          id="cuenta-barbero"
+          value={usuarioId}
+          onChange={(evento) => setUsuarioId(evento.target.value)}
+          className="h-11 w-full rounded-lg border bg-[var(--admin-surface-elevated)] px-3 text-sm text-[var(--admin-texto-primario)] focus:outline-none focus:ring-2 focus:ring-[var(--page-focus-ring)]"
+          style={{ borderColor: "var(--admin-border)" }}
+        >
+          <option value="">Crear sin cuenta asociada</option>
+          {usuarios.filter((usuario) => !usuario.barbero).map((usuario) => (
+            <option key={usuario.id} value={usuario.id}>{usuario.email}{usuario.name ? ` — ${usuario.name}` : ""}</option>
+          ))}
+        </select>
+        <p className="text-xs text-[var(--admin-texto-muted)]">El correo se toma automáticamente de esta cuenta. Si es un usuario común, pasará a ser empleado.</p>
+      </div>
       <SeccionImagenServicio
         previewUrl={previewUrl}
         srcImage={srcImage}

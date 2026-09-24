@@ -11,14 +11,15 @@ import { DialogClose } from "@/components/ui/dialog/DialogClose";
 import { Button } from "@/components/ui/button/Button";
 import { X } from "lucide-react";
 import CreateBarberoForm from "@/components/barbero/CreateBarberoForm";
-import type { ServicioOpcion, DiaLaboral } from "@/types/barbero";
+import type { ServicioOpcion, DiaLaboral, CuentaUsuarioBarbero } from "@/types/barbero";
 
 type Props = {
   servicios: ServicioOpcion[];
   diasLaborales: DiaLaboral[];
+  usuarios: CuentaUsuarioBarbero[];
 };
 
-export default function CreateBarberoModal({ servicios, diasLaborales }: Props) {
+export default function CreateBarberoModal({ servicios, diasLaborales, usuarios }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -60,6 +61,7 @@ export default function CreateBarberoModal({ servicios, diasLaborales }: Props) 
           <CreateBarberoForm
             servicios={servicios}
             diasLaborales={diasLaborales}
+            usuarios={usuarios}
             onSuccess={() => setOpen(false)}
             onCancel={() => setOpen(false)}
           />

@@ -35,7 +35,7 @@ export default async function AdminTurnoPage() {
   const esEmpleado = contexto.rol === "EMPLEADO";
   const [datosTurno, result] = await Promise.all([
     getTurnoData(esEmpleado ? contexto.barberoId : null, !esEmpleado),
-    getTurnos(1, esEmpleado ? "TODOS" : "CONFIRMADO", undefined, esEmpleado ? contexto.barberoId ?? undefined : undefined),
+    getTurnos(1, "CONFIRMADO", undefined, esEmpleado ? contexto.barberoId ?? undefined : undefined),
   ]);
   const { servicios, barberos, barberosFiltro, usuarios, relaciones, config } = datosTurno;
 

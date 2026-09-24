@@ -9,24 +9,30 @@ import { redirect } from "next/navigation";
 export default async function HorariosLaboralesPage() {
   const contexto = await requerirPanel();
   if (!contexto) redirect("/dashboard");
+  const esEmpleado = contexto.rol === "EMPLEADO";
 
   return (
     <div className="space-y-8">
       <Breadcrumb
-        items={[
-          { etiqueta: "Configuración", href: "/admin/config" },
-          { etiqueta: "Empleados" },
-          { etiqueta: "Horarios laborales" },
-        ]}
+        items={esEmpleado
+          ? [
+              { etiqueta: "Mi resumen", href: "/admin" },
+              { etiqueta: "Mis horarios" },
+            ]
+          : [
+              { etiqueta: "Configuración", href: "/admin/config" },
+              { etiqueta: "Empleados" },
+              { etiqueta: "Horarios laborales" },
+            ]}
       />
       <Suspense fallback={<CargaHorarios />}>
-        <ContenidoHorarios barberoId={contexto.rol === "EMPLEADO" ? contexto.barberoId ?? undefined : undefined} />
+        <ContenidoHorarios barberoId={esEmpleado ? contexto.barberoId ?? undefined : undefined} esEmpleado={esEmpleado} />
       </Suspense>
     </div>
   );
 }
 
-async function ContenidoHorarios({ barberoId }: { barberoId?: string }) {
+async function ContenidoHorarios({ barberoId, esEmpleado }: { barberoId?: string; esEmpleado: boolean }) {
   const [diasLaborales, barberos] = await Promise.all([
     getDiasLaborales(),
     obtenerBarberosParaHorarios(barberoId),
@@ -36,6 +42,7 @@ async function ContenidoHorarios({ barberoId }: { barberoId?: string }) {
     <HorariosLaboralesClient
       diasLaborales={diasLaborales}
       barberos={barberos}
+      esEmpleado={esEmpleado}
     />
   );
 }

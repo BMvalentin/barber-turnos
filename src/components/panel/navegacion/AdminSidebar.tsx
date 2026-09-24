@@ -6,7 +6,37 @@ import { GRUPOS_NAVEGACION } from "@/components/panel/navegacion/items-navegacio
 import DesplegableNavegacion from "@/components/panel/navegacion/DesplegableNavegacion";
 import ItemNavegacionEnlace from "@/components/panel/navegacion/ItemNavegacionEnlace";
 import UsuarioSidebar from "@/components/panel/navegacion/UsuarioSidebar";
+import type { EntradaNavegacion } from "@/components/panel/navegacion/items-navegacion";
 import type { RolPanel } from "@/types/usuario";
+
+function adaptarEntrada(entrada: EntradaNavegacion, rol: RolPanel): EntradaNavegacion {
+  if ("href" in entrada) {
+    return {
+      ...entrada,
+      titulo: entrada.tituloPorRol?.[rol] ?? entrada.titulo,
+    };
+  }
+
+  return {
+    ...entrada,
+    items: entrada.items
+      .filter((item) => !item.roles || item.roles.includes(rol))
+      .map((item) => ({
+        ...item,
+        titulo: item.tituloPorRol?.[rol] ?? item.titulo,
+      })),
+  };
+}
+
+function obtenerNavegacionVisible(rol: RolPanel) {
+  return GRUPOS_NAVEGACION.map((grupo) => ({
+    ...grupo,
+    titulo: grupo.tituloPorRol?.[rol] ?? grupo.titulo,
+    items: grupo.items
+      .filter((entrada) => "href" in entrada ? (!entrada.roles || entrada.roles.includes(rol)) : true)
+      .map((entrada) => adaptarEntrada(entrada, rol)),
+  }));
+}
 
 interface AdminSidebarProps {
   colapsado: boolean;
@@ -19,6 +49,7 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ colapsado, alAlternar, abierto, alCerrar, config, rol }: AdminSidebarProps) {
   const marca = config?.name || "Mayoraz";
+  const gruposVisibles = obtenerNavegacionVisible(rol);
   const logo = config?.logo ? (
     <Image src={config.logo} alt={`Logo de ${marca}`} width={30} height={30} className="h-[30px] w-[30px] rounded-md object-cover" />
   ) : (
@@ -44,13 +75,13 @@ export default function AdminSidebar({ colapsado, alAlternar, abierto, alCerrar,
           </button>
         </div>
         <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {GRUPOS_NAVEGACION.map((grupo) => (
+          {gruposVisibles.map((grupo) => (
             <div key={grupo.titulo} className="space-y-0.5">
               <p className={`px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--admin-texto-muted)] ${colapsado ? "md:hidden" : ""}`}>{grupo.titulo}</p>
-              {grupo.items.filter((entrada) => "href" in entrada ? (!entrada.roles || entrada.roles.includes(rol)) : true).map((entrada) => "href" in entrada ? (
+              {grupo.items.map((entrada) => "href" in entrada ? (
                 <ItemNavegacionEnlace key={entrada.href} item={entrada} colapsado={colapsado} alCerrar={alCerrar} />
               ) : (
-                <DesplegableNavegacion key={entrada.titulo} grupo={{ ...entrada, items: entrada.items.filter((item) => !item.roles || item.roles.includes(rol)) }} colapsado={colapsado} alCerrar={alCerrar} alExpandirSidebar={alAlternar} />
+                <DesplegableNavegacion key={entrada.titulo} grupo={entrada} colapsado={colapsado} alCerrar={alCerrar} alExpandirSidebar={alAlternar} />
               ))}
             </div>
           ))}

@@ -26,28 +26,32 @@ async function updateBarberoBase(
       };
     }
 
-    const { id, nombre, email, srcImage, estado, serviciosIds, margenesIds } = parsed.data;
+    const { id, nombre, srcImage, estado, serviciosIds, margenesIds } = parsed.data;
 
     if (contexto.rol === "EMPLEADO" && contexto.barberoId !== id) {
       return { success: false, error: "No autorizado" };
     }
 
     await prisma.$transaction(async (tx) => {
-      if (contexto.rol === "ADMIN") {
-        await tx.barbero.update({
-          where: { id },
-          data: {
-            nombre,
-            email: email?.trim() ? email.trim() : null,
-            srcImage: srcImage || null,
-            estado: estado ?? true,
-            updatedAt: new Date(),
-          },
-        });
-      }
+      const barbero = await tx.barbero.findUnique({
+        where: { id },
+        select: { id: true, usuario: { select: { email: true } } },
+      });
+      if (!barbero) throw new Error("BARBERO_NO_ENCONTRADO");
 
-      // Los empleados solo pueden sincronizar servicios y horarios del barbero
-      // asociado a su cuenta; el administrador conserva la edición completa.
+      await tx.barbero.update({
+        where: { id },
+        data: {
+          nombre,
+          // El correo se deriva siempre de la cuenta asociada; nunca del formulario.
+          email: barbero.usuario?.email ?? null,
+          srcImage: srcImage || null,
+          ...(contexto.rol === "ADMIN" ? { estado: estado ?? true } : {}),
+          updatedAt: new Date(),
+        },
+      });
+
+      // El empleado puede administrar los datos de su propio perfil, servicios y horarios.
       await tx.servicioxbarbero.deleteMany({ where: { barberoId: id } });
       if (serviciosIds?.length) {
         await tx.servicioxbarbero.createMany({

@@ -1,6 +1,7 @@
 import { obtenerServiciosActivos } from "@/lib/consultas/obtener-servicios-activos";
 import { obtenerDiasLaboralesActivos } from "@/lib/consultas/obtener-dias-laborales-activos";
 import { obtenerBarberosConRelaciones } from "@/lib/consultas/obtener-barberos-con-relaciones";
+import { listarUsuarios } from "@/actions/usuarios/listar.actions";
 
 import BarberoList from "@/components/barbero/BarberoList";
 import CreateBarberoModal from "@/components/barbero/CreateBarberoModal";
@@ -39,6 +40,10 @@ export default async function BarberosPage() {
   if (!contexto) redirect("/dashboard");
   const esEmpleado = contexto.rol === "EMPLEADO";
   const { servicios, diasLaborales, barberos } = await getData(contexto.barberoId ?? undefined);
+  const resultadoCuentas = contexto.rol === "ADMIN" ? await listarUsuarios() : null;
+  const cuentas = resultadoCuentas?.success && resultadoCuentas.data
+    ? [...resultadoCuentas.data.usuarios, ...resultadoCuentas.data.empleados, ...resultadoCuentas.data.administradores]
+    : [];
 
   return (
     <div className="space-y-8">
@@ -46,15 +51,17 @@ export default async function BarberosPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight md:text-[28px] text-[var(--admin-texto-primario)]">
-            Gestión de Barberos
+            {esEmpleado ? "Mi perfil profesional" : "Gestión de Barberos"}
           </h1>
           <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-            Administrá tu equipo de barberos y sus horarios.
+            {esEmpleado
+              ? "Consultá y actualizá la información de tu perfil."
+              : "Administrá tu equipo de barberos y sus horarios."}
           </p>
         </div>
 
         {/* BOTÓN MODAL (PASANDO CONFIG) */}
-        {!esEmpleado && <CreateBarberoModal servicios={servicios} diasLaborales={diasLaborales} />}
+        {!esEmpleado && <CreateBarberoModal servicios={servicios} diasLaborales={diasLaborales} usuarios={cuentas} />}
       </div>
 
       {/* LISTA */}

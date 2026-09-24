@@ -64,7 +64,7 @@ export default function TurnoManager({
   barberoIdInicial = "",
 }: Props) {
   const esEmpleado = session?.user?.role === "EMPLEADO";
-  const filtroInicial = esAdmin(session) ? "CONFIRMADO" : esEmpleado ? "TODOS" : "PENDIENTE";
+  const filtroInicial = esAdmin(session) || esEmpleado ? "CONFIRMADO" : "PENDIENTE";
   const [filtroEstado, setFiltroEstado] = useState(filtroInicial);
   const [fecha, setFecha] = useState("");
   const [barberoId, setBarberoId] = useState(barberoIdInicial);
@@ -194,13 +194,15 @@ export default function TurnoManager({
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-[var(--admin-texto-primario)] md:text-[28px]">
-              Gestión de Turnos
+              {esEmpleado ? "Mis turnos" : "Gestión de Turnos"}
             </h1>
             <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-              Administrá y organizá todos los turnos de tu barbería.
+              {esEmpleado
+                ? "Consultá las reservas asignadas a tu agenda."
+                : "Administrá y organizá todos los turnos de tu barbería."}
             </p>
           </div>
-          {esAdmin(session) && <CargadorModalGestionTurno
+          {!esEmpleado && <CargadorModalGestionTurno
             session={session}
             initialServicios={initialServicios}
             initialBarberos={initialBarberos}
@@ -216,7 +218,7 @@ export default function TurnoManager({
           <TurnosFiltros
             estado={filtroEstado}
             onChange={cambiarEstado}
-            mostrarTodos={esAdmin(session) || session?.user?.role === "EMPLEADO"}
+            mostrarTodos={esAdmin(session)}
           />
           <NavegacionFecha
             fecha={fecha}

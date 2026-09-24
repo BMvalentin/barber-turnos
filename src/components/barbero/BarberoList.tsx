@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Search, UserRound } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import BarberoFila from "@/components/barbero/BarberoFila";
+import PerfilBarbero from "@/components/barbero/PerfilBarbero";
 import type { BarberoListado, DiaLaboral, ServicioOpcion } from "@/types/barbero";
 
 type FiltroEstado = "todos" | "activos" | "inactivos";
@@ -17,12 +18,17 @@ export default function BarberoList({ barberos = [], servicios = [], diasLaboral
     const termino = busqueda.trim().toLocaleLowerCase();
     return barberos.filter((barbero) => {
       const coincideEstado = filtroEstado === "todos" || (filtroEstado === "activos" ? barbero.estado : !barbero.estado);
-      const coincideBusqueda = !termino || barbero.nombre?.toLocaleLowerCase().includes(termino) || barbero.email?.toLocaleLowerCase().includes(termino);
+      const correo = barbero.usuario?.email ?? "";
+      const coincideBusqueda = !termino || barbero.nombre?.toLocaleLowerCase().includes(termino) || correo.toLocaleLowerCase().includes(termino);
       return coincideEstado && coincideBusqueda;
     });
   }, [barberos, busqueda, filtroEstado]);
 
-  if (!barberos.length) return <EmptyState icono={<UserRound />} mensaje="Todavía no hay barberos" claseContenedor="rounded-xl border bg-[var(--admin-surface)] p-10" estiloContenedor={{ borderColor: "var(--admin-border)" }} claseIcono="h-12 w-12" estiloIcono={{ color: "var(--page-primary-tinta)" }} estiloMensaje={{ color: "var(--admin-texto-primario)" }} />;
+  if (!barberos.length) return <EmptyState icono={<UserRound />} mensaje={soloEdicionPropia ? "No pudimos encontrar tu perfil profesional" : "Todavía no hay barberos"} claseContenedor="rounded-xl border bg-[var(--admin-surface)] p-10" estiloContenedor={{ borderColor: "var(--admin-border)" }} claseIcono="h-12 w-12" estiloIcono={{ color: "var(--page-primary-tinta)" }} estiloMensaje={{ color: "var(--admin-texto-primario)" }} />;
+
+  if (soloEdicionPropia) {
+    return <PerfilBarbero barbero={barberos[0]} servicios={servicios} diasLaborales={diasLaborales} />;
+  }
 
   return <section className="space-y-5">
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
