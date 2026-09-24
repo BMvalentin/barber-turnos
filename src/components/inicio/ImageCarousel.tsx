@@ -17,7 +17,7 @@ export function ImageCarousel({ servicios }: ImageCarouselProps) {
   if (!servicios || servicios.length === 0) return null;
 
   return (
-    <section id="servicios" className="py-12 bg-[var(--page-bg)] border-t border-[var(--page-bg-foreground)]/5">
+    <section id="servicios" className="py-12 bg-[var(--page-bg)]">
       <div className="container px-4 max-w-6xl mx-auto">
 
         <motion.div

@@ -49,7 +49,7 @@ export function LocationSection({ config }: LocationSectionProps) {
   }, []);
 
   return (
-    <section id="ubicacion" className="py-20 md:py-32 bg-linear-to-b from-[var(--page-bg)]/90 to-[var(--page-bg)] justify-center items-center mx-auto border-y border-[var(--admin-border)]">
+    <section id="ubicacion" className="py-20 md:py-32 bg-linear-to-b from-[var(--page-bg)]/90 to-[var(--page-bg)] justify-center items-center mx-auto">
       <div className="container justify-around items-center mx-auto px-4">
 
         {/* HEADER DE LA SECCIÓN */}
