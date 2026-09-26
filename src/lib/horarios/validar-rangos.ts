@@ -17,6 +17,13 @@ export function validarRangosHorarios(rangos: RangoHorario[]): string | null {
     if (compararHoras(rango.hasta, rango.desde) <= 0) {
       return "La hora de fin debe ser posterior a la de inicio.";
     }
+    if (
+      i > 0 &&
+      rango.desde === rangosOrdenados[i - 1].desde &&
+      rango.hasta === rangosOrdenados[i - 1].hasta
+    ) {
+      return "No podés repetir el mismo rango de horario.";
+    }
     if (i > 0 && compararHoras(rango.desde, rangosOrdenados[i - 1].hasta) < 0) {
       return "Los rangos de horario no pueden superponerse.";
     }

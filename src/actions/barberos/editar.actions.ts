@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidarBarberos } from "@/lib/revalidar/revalidar-barberos";
 import { updateBarberoSchema } from "@/lib/barbero-zod";
 import type { ActionState } from "@/types/action-state";
-import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
+import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import type { z } from "zod";
 
 type DatosActualizarBarbero = z.infer<typeof updateBarberoSchema>;
@@ -13,6 +13,9 @@ async function updateBarberoBase(
   data: DatosActualizarBarbero
 ): Promise<ActionState> {
   try {
+    const contexto = await requerirPanel();
+    if (!contexto) return { success: false, error: "No autorizado" };
+
     const parsed = updateBarberoSchema.safeParse(data);
 
     if (!parsed.success) {
@@ -23,46 +26,62 @@ async function updateBarberoBase(
       };
     }
 
-    const { id, nombre, email, srcImage, estado, serviciosIds, margenesIds } = parsed.data;
+    const { id, nombre, srcImage, estado, serviciosIds, margenesIds } = parsed.data;
+
+    if (contexto.rol === "EMPLEADO" && contexto.barberoId !== id) {
+      return { success: false, error: "No autorizado" };
+    }
+
+    const puedeEditarServicios = contexto.rol === "ADMIN" || contexto.barberoId === id;
 
     await prisma.$transaction(async (tx) => {
-      // 1. Actualizar datos básicos
+      const barbero = await tx.barbero.findUnique({
+        where: { id },
+        select: { id: true, estado: true, usuario: { select: { email: true } } },
+      });
+      if (!barbero) throw new Error("BARBERO_NO_ENCONTRADO");
+
       await tx.barbero.update({
         where: { id },
         data: {
           nombre,
-          email: email?.trim() ? email.trim() : null,
+          // El correo se deriva siempre de la cuenta asociada; nunca del formulario.
+          email: barbero.usuario?.email ?? null,
           srcImage: srcImage || null,
-          estado: estado ?? true,
+          estado: estado ?? barbero.estado,
           updatedAt: new Date(),
         },
       });
 
-      // 2. Sincronizar Servicios
-      await tx.servicioxbarbero.deleteMany({ where: { barberoId: id } });
-      if (serviciosIds?.length) {
-        await tx.servicioxbarbero.createMany({
-          data: serviciosIds.map((sId: string) => ({
-            barberoId: id,
-            servicioId: sId,
-          })),
-        });
+      // No reconstruir relaciones cuando el formulario solo modifica datos
+      // básicos. Así una relación antigua no impide cambiar el nombre.
+      if (puedeEditarServicios && serviciosIds !== undefined) {
+        await tx.servicioxbarbero.deleteMany({ where: { barberoId: id } });
+        if (serviciosIds?.length) {
+          await tx.servicioxbarbero.createMany({
+            data: serviciosIds.map((sId: string) => ({
+              barberoId: id,
+              servicioId: sId,
+            })),
+          });
+        }
       }
 
-      // 3. Sincronizar Horarios
-      await tx.margen_laboral_barbero.deleteMany({ where: { barberoId: id } });
-      if (margenesIds?.length) {
-        const margenes = await tx.margen_laboral.findMany({
-          where: { id: { in: margenesIds } },
-        });
+      if (contexto.rol === "ADMIN" && margenesIds !== undefined) {
+        await tx.margen_laboral_barbero.deleteMany({ where: { barberoId: id } });
+        if (margenesIds?.length) {
+          const margenes = await tx.margen_laboral.findMany({
+            where: { id: { in: margenesIds } },
+          });
 
-        await tx.margen_laboral_barbero.createMany({
-          data: margenes.map((m) => ({
-            barberoId: id,
-            margenLaboralId: m.id,
-            diaId: m.diaId,
-          })),
-        });
+          await tx.margen_laboral_barbero.createMany({
+            data: margenes.map((m) => ({
+              barberoId: id,
+              margenLaboralId: m.id,
+              diaId: m.diaId,
+            })),
+          });
+        }
       }
     });
 
@@ -74,4 +93,4 @@ async function updateBarberoBase(
   }
 }
 
-export const updateBarbero = exigirAdmin(updateBarberoBase);
+export const updateBarbero = updateBarberoBase;

@@ -5,13 +5,14 @@ import { interpretarErrorTurno } from "@/lib/interpretar-error-turno";
 import { ESTADOS_TURNO, ESTADOS_PAGO } from "@/lib/constants";
 import { ejecutarConBloqueReserva } from "@/lib/turnos/ejecutar-con-bloque-reserva";
 import { validarReservaEnTransaccion } from "@/lib/turnos/validar-reserva-en-transaccion";
+import { obtenerTurnoDuplicado } from "@/lib/consultas/obtener-turno-duplicado";
 
 type TurnoConDetalleCrudo = Prisma.turnoGetPayload<{
   include: typeof INCLUDE_TURNO_CON_DETALLE;
 }>;
 
 export type ResultadoCrearTurno =
-  | { ok: true; turno: TurnoConDetalleCrudo }
+  | { ok: true; turno: TurnoConDetalleCrudo; creado: boolean }
   | { ok: false; error: string };
 
 export interface ParametrosCrearTurno {
@@ -22,6 +23,7 @@ export interface ParametrosCrearTurno {
   inicio: Date;
   estadoPago: (typeof ESTADOS_PAGO)[number];
   estadoFinal: (typeof ESTADOS_TURNO)[number];
+  confirmarSinSeña?: boolean;
 }
 
 /**
@@ -32,37 +34,61 @@ export async function crearTurnoEnTransaccion(
   p: ParametrosCrearTurno,
 ): Promise<ResultadoCrearTurno> {
   try {
-    const turno = await prisma.$transaction(
+    const resultadoTransaccion = await prisma.$transaction(
       async (tx) => {
         return ejecutarConBloqueReserva(tx, p.barberoId, async () => {
-          const servicio = await validarReservaEnTransaccion(tx, {
+          const reserva = await validarReservaEnTransaccion(tx, {
             servicioId: p.servicioId,
             barberoId: p.barberoId,
+            userId: p.userId,
             inicio: p.inicio,
             idUsuarioActual: p.idUsuarioActual,
           });
 
-          return tx.turno.create({
+          const turno = await tx.turno.create({
             data: {
               servicioId: p.servicioId,
               userId: p.userId,
               barberoId: p.barberoId,
               horarioReservado: p.inicio,
-              precioCongelado: servicio.precio,
-              seniaCongelada: servicio.senia,
-              estado: p.estadoFinal,
-              estadoPago: p.estadoPago,
+              precioCongelado: reserva.precio,
+              seniaCongelada: reserva.senia,
+              estado: p.confirmarSinSeña && reserva.senia.toNumber() <= 0
+                ? ESTADOS_TURNO[1]
+                : p.estadoFinal,
+              estadoPago: p.confirmarSinSeña && reserva.senia.toNumber() <= 0
+                ? ESTADOS_PAGO[3]
+                : p.estadoPago,
               claveSlot: `${p.barberoId}|${p.inicio.toISOString()}`,
             },
-            include: INCLUDE_TURNO_CON_DETALLE,
           });
+
+          return { turno, reserva };
         });
       },
-      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+        maxWait: 10000,
+        timeout: 15000,
+      },
     );
-    return { ok: true, turno };
+    const turno: TurnoConDetalleCrudo = {
+      ...resultadoTransaccion.turno,
+      user: resultadoTransaccion.reserva.user,
+      barbero: resultadoTransaccion.reserva.barbero,
+      servicio: resultadoTransaccion.reserva.servicio,
+    };
+    return { ok: true, turno, creado: true };
   } catch (error) {
     const mensaje = interpretarErrorTurno(error);
+    if (mensaje === "Horario ocupado") {
+      const turnoDuplicado = await obtenerTurnoDuplicado({
+        userId: p.userId,
+        barberoId: p.barberoId,
+        horarioReservado: p.inicio,
+      });
+      if (turnoDuplicado) return { ok: true, turno: turnoDuplicado, creado: false };
+    }
     if (mensaje) return { ok: false, error: mensaje };
     console.error(error);
     return { ok: false, error: "Error al crear turno" };

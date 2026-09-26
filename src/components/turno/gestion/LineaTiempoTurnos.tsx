@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import TurnoRow from "./TurnoRow";
 import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
+import type { DatosTransferencia } from "@/types/pago";
 
 interface Props {
   turnos: TurnoListado[];
@@ -11,6 +12,8 @@ interface Props {
   onCancelar: (id: string) => void;
   onCompletar: (id: string) => void;
   onConfirmar: (id: string) => void;
+  whatsappPhone?: string;
+  datosTransferencia?: DatosTransferencia;
 }
 
 type Medidas = { pixelesPorHora: number; ejeX: number; anchoGutter: number };
@@ -130,6 +133,8 @@ export default function LineaTiempoTurnos({
   onCancelar,
   onCompletar,
   onConfirmar,
+  whatsappPhone = "",
+  datosTransferencia,
 }: Props) {
   const medidas = useMedidasLineaTiempo();
   const { pixelesPorHora, ejeX, anchoGutter } = medidas;
@@ -215,6 +220,8 @@ export default function LineaTiempoTurnos({
                         onCancelar={onCancelar}
                         onCompletar={onCompletar}
                         onConfirmar={onConfirmar}
+                        whatsappPhone={whatsappPhone}
+                        datosTransferencia={datosTransferencia}
                       />
                     </div>
                   </div>

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { randomUUID, randomBytes, createHmac } from "crypto";
+import { randomUUID, randomBytes } from "crypto";
 import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { construirUrlAutorizacionMP } from "@/lib/mercadopago/url-autorizacion";
+import { firmarEstadoOAuth } from "@/lib/mercadopago/estado-oauth";
 
 type CodigoErrorInicio =
   | "no_autorizado"
@@ -13,24 +14,6 @@ type CodigoErrorInicio =
 function redirigirConError(urlBase: URL, codigo: CodigoErrorInicio): NextResponse {
   urlBase.searchParams.set("mp_error", codigo);
   return NextResponse.redirect(urlBase);
-}
-
-/**
- * Secreto para firmar el state del OAuth. Prioriza las variables de Auth.js;
- * si ninguna existe, deriva una clave del userId del admin con un salt fijo.
- * En producción debe existir NEXTAUTH_SECRET o AUTH_SECRET (el fallback solo
- * evita romper el flujo en desarrollo sin exponer capacidades de firma).
- */
-function obtenerSecretoFirma(userId: string): string {
-  const secreto = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
-  return secreto || `barber-turnos-oauth-v1:${userId}:sal-fija`;
-}
-
-/** Firma el state con HMAC-SHA256 para ligarlo al admin autenticado. */
-function firmarState(estado: string, userId: string): string {
-  return createHmac("sha256", obtenerSecretoFirma(userId))
-    .update(estado)
-    .digest("base64url");
 }
 
 function generarCodeVerifier(): string {
@@ -50,7 +33,8 @@ async function generarCodeChallenge(verifier: string): Promise<string> {
 }
 
 export async function GET(req: NextRequest) {
-  const urlAdmin = new URL("/admin/mercadopago", req.url);
+  const urlAdmin = new URL("/admin/config/medios-pago", req.url);
+  urlAdmin.searchParams.set("tab", "mercado-pago");
 
   // Solo un admin autenticado puede iniciar la conexión OAuth con Mercado Pago
   const sesion = await requerirAdmin();
@@ -76,13 +60,11 @@ export async function GET(req: NextRequest) {
 
   try {
     const uuidEstado = randomUUID();
-    const estado = `${uuidEstado}.${firmarState(uuidEstado, sesion.user.id)}`;
+    const estado = `${uuidEstado}.${firmarEstadoOAuth(uuidEstado, sesion.user.id)}`;
     const codeVerifier = generarCodeVerifier();
     const codeChallenge = await generarCodeChallenge(codeVerifier);
 
     const urlAutorizacion = construirUrlAutorizacionMP(estado, codeChallenge);
-
-    console.log("🔗 Redirigiendo a autorización de MP:", urlAutorizacion);
 
     const respuesta = NextResponse.redirect(urlAutorizacion);
 

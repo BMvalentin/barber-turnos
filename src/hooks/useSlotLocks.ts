@@ -32,15 +32,21 @@ export function useSlotLocks({
 
   const slotActivoRef = useRef<string | null>(null);
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const solicitudLocksRef = useRef(0);
 
   const fechaStr = fecha ? format(fecha, "yyyy-MM-dd") : null;
 
   // ── GET: leer locks de otros usuarios ────────────────────────────────
   const fetchLocks = useCallback(async () => {
     if (!barberoId || !fechaStr) return;
+    const idSolicitud = ++solicitudLocksRef.current;
     try {
       const resultado = await listarLocksDelDia(barberoId, fechaStr);
-      if (resultado.success && Array.isArray(resultado.data)) {
+      if (
+        idSolicitud === solicitudLocksRef.current &&
+        resultado.success &&
+        Array.isArray(resultado.data)
+      ) {
         setSlotsBlockeados(resultado.data.map((slot) => ({ slot })));
       }
     } catch {
@@ -54,29 +60,48 @@ export function useSlotLocks({
       if (!barberoId) return;
       try {
         await crearLockSlot(barberoId, slot, sessionId);
-        await fetchLocks();
       } catch {
         // Silencioso
       }
     },
-    [barberoId, sessionId, fetchLocks]
+    [barberoId, sessionId]
   );
 
   // ── DELETE: eliminar lock via action ──────────────────────────
   const eliminarLockAction = useCallback(async () => {
     try {
       await eliminarLockSlot(sessionId);
-      await fetchLocks();
     } catch {
       // Silencioso
     }
-  }, [sessionId, fetchLocks]);
+  }, [sessionId]);
 
   // ── Efecto principal: polling + heartbeat ────────────────────
   useEffect(() => {
-    if (!activo) return;
+    if (!activo || !barberoId || !fechaStr) {
+      solicitudLocksRef.current += 1;
+      setSlotsBlockeados([]);
+      return;
+    }
 
-    const polling = setInterval(fetchLocks, 10_000);
+    let polling: ReturnType<typeof setInterval> | null = null;
+
+    const detenerPolling = () => {
+      if (!polling) return;
+      clearInterval(polling);
+      polling = null;
+    };
+
+    const iniciarPolling = () => {
+      if (polling || document.visibilityState === "hidden") return;
+      void fetchLocks();
+      polling = setInterval(fetchLocks, 10_000);
+    };
+
+    const manejarVisibilidad = () => {
+      if (document.visibilityState === "hidden") detenerPolling();
+      else iniciarPolling();
+    };
 
     heartbeatRef.current = setInterval(async () => {
       if (!slotActivoRef.current) return;
@@ -87,16 +112,20 @@ export function useSlotLocks({
       }
     }, 60_000);
 
-    fetchLocks();
+    iniciarPolling();
+    document.addEventListener("visibilitychange", manejarVisibilidad);
 
     return () => {
-      clearInterval(polling);
+      solicitudLocksRef.current += 1;
+      detenerPolling();
+      document.removeEventListener("visibilitychange", manejarVisibilidad);
       if (heartbeatRef.current) clearInterval(heartbeatRef.current);
       if (slotActivoRef.current) {
+        slotActivoRef.current = null;
         eliminarLockSlot(sessionId).catch(() => {});
       }
     };
-  }, [fetchLocks, sessionId, activo]);
+  }, [fetchLocks, sessionId, activo, barberoId, fechaStr]);
 
   const lockSlot = useCallback(
     (slot: string) => {
@@ -107,6 +136,7 @@ export function useSlotLocks({
   );
 
   const unlockSlot = useCallback(() => {
+    if (!slotActivoRef.current) return;
     slotActivoRef.current = null;
     eliminarLockAction();
   }, [eliminarLockAction]);

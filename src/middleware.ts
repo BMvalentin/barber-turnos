@@ -10,7 +10,7 @@ export default auth((req) => {
   const { nextUrl } = req;
 
   const isAuthRoute = ["/login", "/register"].includes(nextUrl.pathname);
-  const isAdminRoute = nextUrl.pathname.startsWith("/admin");
+  const isPanelRoute = nextUrl.pathname.startsWith("/admin");
 
   const isProtectedRoute = ["/dashboard", "/turno", "/admin"].some((route) => 
     nextUrl.pathname.startsWith(route)
@@ -19,21 +19,17 @@ export default auth((req) => {
   // 1. .redirect
   if (isAuthRoute) {
     if (isLoggedIn) {
-      return NextResponse.redirect(new URL("/dashboard", nextUrl));
+      const destino = userRole === "ADMIN" || userRole === "EMPLEADO" ? "/admin" : "/dashboard";
+      return NextResponse.redirect(new URL(destino, nextUrl));
     }
     return NextResponse.next();
   }
 
-  // 2. Lógica de ADMIN
-  if (isAdminRoute) {
+  // 2. Lógica del panel administrativo
+  if (isPanelRoute) {
     if (!isLoggedIn) {
       const callbackUrl = nextUrl.pathname + nextUrl.search;
       return NextResponse.redirect(new URL(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`, nextUrl));
-    }
-    
-    if (userRole !== "ADMIN") {
-      // Redirigir si no tiene permisos
-      return NextResponse.redirect(new URL("/dashboard", nextUrl));
     }
     
     return NextResponse.next();
@@ -48,8 +44,8 @@ export default auth((req) => {
     return NextResponse.redirect(new URL(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`, nextUrl));
   }
 
-  // 4. Requiere teléfono para sacar turno (los admins gestionan turnos en /admin/turno)
-  if (nextUrl.pathname.startsWith("/turno") && isLoggedIn && req.auth?.user?.role !== "ADMIN" && !req.auth?.user?.telefono) {
+  // 4. Requiere teléfono para clientes que sacan turno (los roles de panel gestionan desde /admin/turno)
+  if (nextUrl.pathname.startsWith("/turno") && isLoggedIn && req.auth?.user?.role !== "ADMIN" && req.auth?.user?.role !== "EMPLEADO" && !req.auth?.user?.telefono) {
     return NextResponse.redirect(new URL("/dashboard", nextUrl));
   }
 

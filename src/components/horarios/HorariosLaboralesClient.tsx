@@ -20,9 +20,10 @@ import type { BarberoParaHorarios, DiaLaboral, HorarioDiaBarbero } from "@/types
 type Props = {
   diasLaborales: DiaLaboral[];
   barberos: BarberoParaHorarios[];
+  esEmpleado: boolean;
 };
 
-export function HorariosLaboralesClient({ diasLaborales, barberos }: Props) {
+export function HorariosLaboralesClient({ diasLaborales, barberos, esEmpleado }: Props) {
   const router = useRouter();
   const [pendiente, startTransition] = useTransition();
   const [barberoId, setBarberoId] = useState(() => barberos[0]?.id ?? "");
@@ -38,11 +39,12 @@ export function HorariosLaboralesClient({ diasLaborales, barberos }: Props) {
 
   const { retroalimentar: retroalimentarGuardado } = useRetroalimentacionAccion({
     mensajeExito: "Horario guardado",
-    descripcionExito: "Los horarios del empleado se guardaron correctamente.",
+    descripcionExito: esEmpleado
+      ? "Tu disponibilidad se guardó correctamente."
+      : "Los horarios del empleado se guardaron correctamente.",
     descripcionError: "Error al guardar los horarios",
     onExito: () => {
       setValores(estadoDesdeDiasGuardados(diasGuardadosRef.current, valores));
-      router.refresh();
     },
   });
 
@@ -113,6 +115,7 @@ export function HorariosLaboralesClient({ diasLaborales, barberos }: Props) {
         diasGuardadosRef.current,
       );
       await retroalimentarGuardado(resultado);
+      if (resultado.success && resultado.data?.actualizado) router.refresh();
     });
   };
 
@@ -141,6 +144,7 @@ export function HorariosLaboralesClient({ diasLaborales, barberos }: Props) {
         diasGuardadosRef.current,
       );
       await retroalimentarGuardado(resultado);
+      if (resultado.success && resultado.data?.actualizado) router.refresh();
     });
   };
 
@@ -158,18 +162,21 @@ export function HorariosLaboralesClient({ diasLaborales, barberos }: Props) {
 
   return (
     <div className="space-y-8">
-      <EncabezadoHorarios hayEmpleados={barberos.length > 0} alNuevoHorario={alNuevoHorario} />
+      <EncabezadoHorarios esEmpleado={esEmpleado} hayEmpleados={barberos.length > 0} alNuevoHorario={alNuevoHorario} />
 
       {barberos.length === 0 ? (
         <EmptyState
           icono={<Clock className="h-10 w-10" />}
-          titulo="No hay empleados configurados"
-          mensaje="Creá un barbero en el panel para poder asignarle horarios."
+          titulo={esEmpleado ? "No encontramos tu perfil profesional" : "No hay empleados configurados"}
+          mensaje={esEmpleado
+            ? "Tu cuenta todavía no tiene un perfil de barbero asociado."
+            : "Creá un barbero en el panel para poder asignarle horarios."}
         />
       ) : (
         <EditorHorarios
           tarjetaRef={tarjetaRef}
           barberos={barberos}
+          esEmpleado={esEmpleado}
           barberoId={barberoId}
           dias={diasTabla}
           valores={valores}

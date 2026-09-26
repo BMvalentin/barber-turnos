@@ -4,25 +4,31 @@ import { useMemo, useState } from "react";
 import { Search, UserRound } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import BarberoFila from "@/components/barbero/BarberoFila";
+import PerfilBarbero from "@/components/barbero/PerfilBarbero";
 import type { BarberoListado, DiaLaboral, ServicioOpcion } from "@/types/barbero";
 
 type FiltroEstado = "todos" | "activos" | "inactivos";
-type PropiedadesListaBarberos = { barberos?: BarberoListado[]; servicios?: ServicioOpcion[]; diasLaborales?: DiaLaboral[] };
+type PropiedadesListaBarberos = { barberos?: BarberoListado[]; servicios?: ServicioOpcion[]; diasLaborales?: DiaLaboral[]; soloEdicionPropia?: boolean };
 
-export default function BarberoList({ barberos = [], servicios = [], diasLaborales = [] }: PropiedadesListaBarberos) {
+export default function BarberoList({ barberos = [], servicios = [], diasLaborales = [], soloEdicionPropia = false }: PropiedadesListaBarberos) {
   const [busqueda, establecerBusqueda] = useState("");
-  const [filtroEstado, establecerFiltroEstado] = useState<FiltroEstado>("todos");
+  const [filtroEstado, establecerFiltroEstado] = useState<FiltroEstado>("activos");
   const [idMenuAbierto, establecerIdMenuAbierto] = useState<string | null>(null);
   const barberosFiltrados = useMemo(() => {
     const termino = busqueda.trim().toLocaleLowerCase();
     return barberos.filter((barbero) => {
       const coincideEstado = filtroEstado === "todos" || (filtroEstado === "activos" ? barbero.estado : !barbero.estado);
-      const coincideBusqueda = !termino || barbero.nombre?.toLocaleLowerCase().includes(termino) || barbero.email?.toLocaleLowerCase().includes(termino);
+      const correo = barbero.usuario?.email ?? "";
+      const coincideBusqueda = !termino || barbero.nombre?.toLocaleLowerCase().includes(termino) || correo.toLocaleLowerCase().includes(termino);
       return coincideEstado && coincideBusqueda;
     });
   }, [barberos, busqueda, filtroEstado]);
 
-  if (!barberos.length) return <EmptyState icono={<UserRound />} mensaje="Todavía no hay barberos" claseContenedor="rounded-xl border bg-[var(--admin-surface)] p-10" estiloContenedor={{ borderColor: "var(--admin-border)" }} claseIcono="h-12 w-12" estiloIcono={{ color: "var(--page-primary-tinta)" }} estiloMensaje={{ color: "var(--admin-texto-primario)" }} />;
+  if (!barberos.length) return <EmptyState icono={<UserRound />} mensaje={soloEdicionPropia ? "No pudimos encontrar tu perfil profesional" : "Todavía no hay barberos"} claseContenedor="rounded-xl border bg-[var(--admin-surface)] p-10" estiloContenedor={{ borderColor: "var(--admin-border)" }} claseIcono="h-12 w-12" estiloIcono={{ color: "var(--page-primary-tinta)" }} estiloMensaje={{ color: "var(--admin-texto-primario)" }} />;
+
+  if (soloEdicionPropia) {
+    return <PerfilBarbero barbero={barberos[0]} servicios={servicios} diasLaborales={diasLaborales} esEmpleado />;
+  }
 
   return <section className="space-y-5">
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -31,7 +37,7 @@ export default function BarberoList({ barberos = [], servicios = [], diasLaboral
     </div>
     {barberosFiltrados.length ? <div className="rounded-xl border bg-[var(--admin-surface)]" style={{ borderColor: "var(--admin-border)" }}>
       <div className="hidden grid-cols-[minmax(220px,1.5fr)_minmax(170px,1fr)_minmax(150px,0.8fr)_110px_120px] gap-5 border-b px-6 py-3 text-xs font-medium uppercase tracking-wide text-[var(--admin-texto-muted)] lg:grid" style={{ borderColor: "var(--admin-border)" }}><span>Barbero</span><span>Servicios</span><span>Disponibilidad</span><span>Estado</span><span>Acciones</span></div>
-      {barberosFiltrados.map((barbero) => <BarberoFila key={barbero.id} barbero={barbero} servicios={servicios} diasLaborales={diasLaborales} menuAbierto={idMenuAbierto === barbero.id} onAlternarMenu={() => establecerIdMenuAbierto((idActual) => idActual === barbero.id ? null : barbero.id)} onCerrarMenu={() => establecerIdMenuAbierto(null)} />)}
+      {barberosFiltrados.map((barbero) => <BarberoFila key={barbero.id} barbero={barbero} servicios={servicios} diasLaborales={diasLaborales} soloEdicionPropia={soloEdicionPropia} menuAbierto={idMenuAbierto === barbero.id} onAlternarMenu={() => establecerIdMenuAbierto((idActual) => idActual === barbero.id ? null : barbero.id)} onCerrarMenu={() => establecerIdMenuAbierto(null)} />)}
     </div> : <div className="rounded-xl border bg-[var(--admin-surface)] px-6 py-12 text-center" style={{ borderColor: "var(--admin-border)" }}><p className="font-medium text-[var(--admin-texto-primario)]">No encontramos barberos</p><p className="mt-1 text-sm text-[var(--admin-texto-muted)]">No hay resultados para esta búsqueda.</p><button type="button" onClick={() => { establecerBusqueda(""); establecerFiltroEstado("todos"); }} className="mt-4 text-sm font-medium text-[var(--page-primary-tinta)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]">Limpiar filtros</button></div>}
   </section>;
 }

@@ -13,6 +13,7 @@ type DiaTabla = {
 type Props = {
   tarjetaRef: RefObject<HTMLElement | null>;
   barberos: BarberoParaHorarios[];
+  esEmpleado: boolean;
   barberoId: string;
   dias: DiaTabla[];
   valores: Record<string, EstadoDiaEditor>;
@@ -32,6 +33,7 @@ type Props = {
 export function EditorHorarios({
   tarjetaRef,
   barberos,
+  esEmpleado,
   barberoId,
   dias,
   valores,
@@ -54,15 +56,19 @@ export function EditorHorarios({
       style={{ border: "1px solid var(--admin-border)" }}
     >
       <h2 className="text-lg font-semibold text-[var(--admin-texto-primario)]">
-        Registrar / Editar horario
+        {esEmpleado ? "Mi disponibilidad" : "Registrar / Editar horario"}
       </h2>
       <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-        Seleccioná el empleado y configurá sus días de trabajo.
+        {esEmpleado
+          ? "Definí tus días y rangos de atención."
+          : "Seleccioná el empleado y configurá sus días de trabajo."}
       </p>
 
-      <div className="mt-5">
-        <SelectorEmpleado barberos={barberos} valor={barberoId} alCambiar={alCambiarBarbero} />
-      </div>
+      {!esEmpleado && (
+        <div className="mt-5">
+          <SelectorEmpleado barberos={barberos} valor={barberoId} alCambiar={alCambiarBarbero} />
+        </div>
+      )}
 
       <div className="mt-5">
         <TablaDiasBarbero
@@ -78,6 +84,7 @@ export function EditorHorarios({
 
       <AccionesHorarios
         destinos={destinos}
+        mostrarCopia={!esEmpleado}
         pendiente={pendiente}
         hayEmpleadoSeleccionado={Boolean(barberoId)}
         alCopiar={alCopiar}

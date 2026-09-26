@@ -63,6 +63,7 @@ export async function actualizarTurnoEnTransaccion(
           ? await validarReservaEnTransaccion(tx, {
               servicioId: parametros.servicioId,
               barberoId: parametros.barberoId,
+              userId: turnoAnterior.userId,
               inicio: parametros.horario,
               idUsuarioActual: parametros.idUsuarioActual,
               turnoIdAExcluir: parametros.id,
@@ -108,7 +109,11 @@ export async function actualizarTurnoEnTransaccion(
         bloqueos[0].barberoId,
         ejecutarSegundoBloque,
       );
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
+    }, {
+      isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+      maxWait: 10000,
+      timeout: 15000,
+    });
 
     return { ok: true, ...resultado };
   } catch (error) {

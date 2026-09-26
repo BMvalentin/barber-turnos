@@ -2,12 +2,16 @@
 import { getPageConfig } from "@/actions/configuracion/leer-config.actions";
 import GeneralConfigForm from "@/components/admin/config/GeneralConfigForm";
 import { MODULOS_CONFIG, type IdModuloConfig } from "@/components/admin/config/modulos-config";
+import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
+import { redirect } from "next/navigation";
 
 interface PaginaConfigSeccionProps {
   seccion: IdModuloConfig;
 }
 
 export default async function PaginaConfigSeccion({ seccion }: PaginaConfigSeccionProps) {
+  if (!(await requerirAdmin())) redirect("/admin");
+
   const config = await getPageConfig();
 
   return (

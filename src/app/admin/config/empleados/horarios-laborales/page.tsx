@@ -3,34 +3,57 @@ import { getDiasLaborales } from "@/actions/horarios/listar.actions";
 import { obtenerBarberosParaHorarios } from "@/lib/consultas/obtener-barberos-para-horarios";
 import { Breadcrumb } from "@/components/ui/breadcrumb/Breadcrumb";
 import { HorariosLaboralesClient } from "@/components/horarios/HorariosLaboralesClient";
+import { requerirPanel } from "@/lib/seguridad/requerir-admin";
+import { redirect } from "next/navigation";
 
 export default async function HorariosLaboralesPage() {
+  const contexto = await requerirPanel();
+  if (!contexto) redirect("/dashboard");
+  const esEmpleado = contexto.rol === "EMPLEADO";
+  const barberoId = esEmpleado ? contexto.barberoId ?? undefined : undefined;
+  if (esEmpleado && !barberoId) redirect("/admin/barbero/perfil");
+
   return (
     <div className="space-y-8">
       <Breadcrumb
-        items={[
-          { etiqueta: "Configuración", href: "/admin/config" },
-          { etiqueta: "Empleados" },
-          { etiqueta: "Horarios laborales" },
-        ]}
+        items={esEmpleado
+          ? [
+              { etiqueta: "Mi resumen", href: "/admin" },
+              { etiqueta: "Mis horarios" },
+            ]
+          : [
+              { etiqueta: "Configuración", href: "/admin/config" },
+              { etiqueta: "Empleados" },
+              { etiqueta: "Horarios laborales" },
+            ]}
       />
       <Suspense fallback={<CargaHorarios />}>
-        <ContenidoHorarios />
+        <ContenidoHorarios
+          barberoId={barberoId}
+          esEmpleado={esEmpleado}
+        />
       </Suspense>
     </div>
   );
 }
 
-async function ContenidoHorarios() {
+async function ContenidoHorarios({
+  barberoId,
+  esEmpleado,
+}: {
+  barberoId?: string;
+  esEmpleado: boolean;
+}) {
   const [diasLaborales, barberos] = await Promise.all([
     getDiasLaborales(),
-    obtenerBarberosParaHorarios(),
+    obtenerBarberosParaHorarios(barberoId, !esEmpleado),
   ]);
 
   return (
     <HorariosLaboralesClient
       diasLaborales={diasLaborales}
       barberos={barberos}
+      esEmpleado={esEmpleado}
     />
   );
 }

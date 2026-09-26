@@ -3,6 +3,18 @@ import { URL_TOKEN_MP } from "./constantes";
 import { validarConfiguracionOAuthMP } from "./validar-oauth";
 import { obtenerUriRedireccion } from "./uri-redireccion";
 import type { RespuestaTokenMP } from "./tipos";
+import { z } from "zod";
+
+const esquemaRespuestaToken = z.object({
+  access_token: z.string().min(1),
+  token_type: z.string().optional(),
+  expires_in: z.number().int().positive().optional(),
+  scope: z.string().optional(),
+  user_id: z.number().int().optional(),
+  refresh_token: z.string().optional(),
+  public_key: z.string().optional(),
+  live_mode: z.boolean().optional(),
+});
 
 /**
  * Intercambia el código de autorización que devuelve Mercado Pago
@@ -26,15 +38,13 @@ export async function intercambiarCodigoPorToken(codigo: string, codeVerifier: s
     body: JSON.stringify(cuerpo),
   });
 
-  const datos = await respuesta.json();
+  const datos: unknown = await respuesta.json();
 
   if (!respuesta.ok) {
     console.error("Error al intercambiar el código de autorización MP. Status:", respuesta.status);
-    throw new Error(
-      datos?.message ||
-      datos?.error_description ||
-      `Error ${respuesta.status} al conectar con Mercado Pago`,
-    );
+    throw new Error(`Error ${respuesta.status} al conectar con Mercado Pago`);
   }
-  return datos as RespuestaTokenMP;
+  const validacion = esquemaRespuestaToken.safeParse(datos);
+  if (!validacion.success) throw new Error("Respuesta inválida al conectar con Mercado Pago");
+  return validacion.data;
 }

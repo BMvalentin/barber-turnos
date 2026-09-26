@@ -3,6 +3,7 @@
 interface Props {
   estado: string;
   onChange: (estado: string) => void;
+  mostrarTodos?: boolean;
 }
 
 const OPCIONES_ESTADO: ReadonlyArray<{ valor: string; etiqueta: string }> = [
@@ -13,10 +14,14 @@ const OPCIONES_ESTADO: ReadonlyArray<{ valor: string; etiqueta: string }> = [
   { valor: "CANCELADO", etiqueta: "Cancelados" },
 ];
 
-export default function TurnosFiltros({ estado, onChange }: Props) {
+export default function TurnosFiltros({ estado, onChange, mostrarTodos = true }: Props) {
+  const opcionesVisibles = mostrarTodos
+    ? OPCIONES_ESTADO
+    : OPCIONES_ESTADO.filter((opcion) => opcion.valor !== "TODOS");
+
   return (
     <div className="flex flex-wrap items-center gap-1">
-      {OPCIONES_ESTADO.map((opcion) => {
+      {opcionesVisibles.map((opcion) => {
         const activo = opcion.valor === estado;
         return (
           <button

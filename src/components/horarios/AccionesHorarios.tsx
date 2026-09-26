@@ -5,6 +5,7 @@ import type { BarberoParaHorarios } from "@/types/horarios";
 
 type Props = {
   destinos: BarberoParaHorarios[];
+  mostrarCopia?: boolean;
   pendiente: boolean;
   hayEmpleadoSeleccionado: boolean;
   alCopiar: (barberoDestinoId: string) => void;
@@ -14,6 +15,7 @@ type Props = {
 
 export function AccionesHorarios({
   destinos,
+  mostrarCopia = true,
   pendiente,
   hayEmpleadoSeleccionado,
   alCopiar,
@@ -22,10 +24,10 @@ export function AccionesHorarios({
 }: Props) {
   return (
     <div
-      className="mt-5 flex flex-col gap-4 border-t pt-5 sm:flex-row sm:items-center sm:justify-between"
+      className={`mt-5 flex flex-col gap-4 border-t pt-5 sm:flex-row sm:items-center ${mostrarCopia ? "sm:justify-between" : "sm:justify-end"}`}
       style={{ borderColor: "var(--admin-border)" }}
     >
-      <CopiarHorario destinos={destinos} pendiente={pendiente} alCopiar={alCopiar} />
+      {mostrarCopia && <CopiarHorario destinos={destinos} pendiente={pendiente} alCopiar={alCopiar} />}
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <Button

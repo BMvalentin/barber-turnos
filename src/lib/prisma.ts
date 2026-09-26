@@ -12,11 +12,19 @@ const sslStatus =
     ? false
     : true;
 
+const puertoBaseDatos = process.env.DATABASE_PORT === undefined
+  ? 3306
+  : Number(process.env.DATABASE_PORT);
+if (!Number.isInteger(puertoBaseDatos) || puertoBaseDatos < 1 || puertoBaseDatos > 65535) {
+  throw new Error("DATABASE_PORT debe ser un puerto válido");
+}
+
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     adapter: new PrismaMariaDb({
       host: process.env.DATABASE_HOST,
+      port: puertoBaseDatos,
       user: process.env.DATABASE_USER,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,

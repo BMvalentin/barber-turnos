@@ -33,9 +33,11 @@ model barbero {
   srcImage    String?
   nombre      String
   email       String?
+  usuarioId   String?                  @unique
   estado      Boolean                  @default(true)
   createdAt   DateTime                 @default(now())
   updatedAt   DateTime                 @updatedAt
+  usuario     user?                    @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
   turnos      turno[]
   servicios   servicioxbarbero[]
   horarios    margen_laboral_barbero[]
@@ -86,6 +88,7 @@ model turno {
   updatedAt        DateTime     @updatedAt
   mpPaymentId      String?
   mpPreferenceId   String?
+  metodoPago       String?      @db.VarChar(20)
   claveSlot        String?      @db.VarChar(120)
   user             user         @relation(fields: [userId], references: [id], onDelete: Cascade)
   barbero          barbero      @relation(fields: [barberoId], references: [id], onDelete: Cascade)
@@ -117,6 +120,7 @@ model user {
   telefono      String?
   account       account[]
   turno         turno[]
+  barbero       barbero?
   verificaciones verificacion_usuario[]
 }
 
@@ -260,12 +264,19 @@ model PageConfig {
   name               String
   phone              String?
   whatsapp           String?
+  transferenciaTitular String?
+  transferenciaCuit    String?
+  transferenciaAlias   String?
+  transferenciaCbu     String?
+  transferenciaBanco   String?
+  transferenciaActiva  Boolean  @default(true)
   backgroundImage    String?  @db.Text
 }
 
 enum user_role {
   USER
   ADMIN
+  EMPLEADO
 }
 
 enum turno_estado {

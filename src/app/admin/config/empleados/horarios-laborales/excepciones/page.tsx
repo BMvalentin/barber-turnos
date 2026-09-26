@@ -1,9 +1,13 @@
 import { getBarberos } from "@/actions/barberos/listar.actions";
-import { FeriadosYCierresCliente } from "@/componentes/panel/horarios/feriados-y-cierres/feriados-y-cierres-cliente";
+import { FeriadosYCierresCliente } from "@/components/horarios/feriados-y-cierres/FeriadosYCierresCliente";
 import { Breadcrumb } from "@/components/ui/breadcrumb/Breadcrumb";
 import { prisma } from "@/lib/prisma";
+import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
+import { redirect } from "next/navigation";
 
 export default async function FeriadosYCierresPage() {
+  if (!(await requerirAdmin())) redirect("/admin");
+
   const [excepciones, respuestaBarberos] = await Promise.all([
     prisma.excepcion_laboral.findMany({
       where: { estado: true },

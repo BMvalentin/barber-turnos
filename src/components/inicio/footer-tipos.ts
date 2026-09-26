@@ -13,6 +13,6 @@ export interface FooterProps {
   ciudad?: string | null;
 }
 
-export type MarcaFooterProps = Pick<FooterProps, "barberiaNombre" | "logoUrl" | "descripcion" | "instagram" | "whatsapp">;
-export type ContactoFooterProps = Pick<FooterProps, "telefono" | "email" | "direccion" | "ciudad">;
+export type MarcaFooterProps = Pick<FooterProps, "barberiaNombre" | "logoUrl" | "descripcion">;
+export type ContactoFooterProps = Pick<FooterProps, "telefono" | "email" | "direccion" | "ciudad" | "whatsapp" | "instagram">;
 export type LegalFooterProps = Pick<FooterProps, "openPrivacy" | "openTerms">;

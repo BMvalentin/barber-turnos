@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { MoreHorizontal, Ban, Pencil } from "lucide-react";
-import ModalGestionTurno from "../reserva/ModalGestionTurno";
+import CargadorModalGestionTurno from "../reserva/CargadorModalGestionTurno";
 import { esAdmin } from "@/lib/seguridad/es-admin";
 import { ESTADOS_TURNO } from "@/lib/constants";
 import type { TurnoListado } from "@/types/turno";
@@ -53,6 +53,9 @@ export default function MenuAccionesTurno({
   const esDueno =
     turno.user?.id === session?.user?.id && session?.user?.role !== "ADMIN";
   const puedeCancelar = turnoActivo && (esAdmin(session) || esDueno);
+  const puedeEditar = esAdmin(session);
+
+  if (!puedeEditar && !puedeCancelar) return null;
 
   return (
     <div ref={contenedorRef} className="relative inline-block">
@@ -73,19 +76,21 @@ export default function MenuAccionesTurno({
           abierto ? "" : "pointer-events-none invisible"
         }`}
       >
-        <ModalGestionTurno
-          session={session}
-          turnoInicial={turno}
-          whatsappPhone=""
-          claseTrigger="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[var(--admin-texto-primario)] hover:bg-[var(--admin-item-hover)] transition-colors"
-          contenidoTrigger={
-            <>
-              <Pencil className="h-4 w-4" />
-              Editar Turno
-            </>
-          }
-          onTriggerClick={cerrarMenu}
-        />
+        {puedeEditar && (
+          <CargadorModalGestionTurno
+            session={session}
+            turnoInicial={turno}
+            whatsappPhone=""
+            claseTrigger="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[var(--admin-texto-primario)] hover:bg-[var(--admin-item-hover)] transition-colors"
+            contenidoTrigger={
+              <>
+                <Pencil className="h-4 w-4" />
+                Editar Turno
+              </>
+            }
+            onTriggerClick={cerrarMenu}
+          />
+        )}
         {puedeCancelar && (
           <button
             type="button"

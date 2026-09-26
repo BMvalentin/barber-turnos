@@ -17,8 +17,10 @@ import type { Servicio } from "@/types/servicio";
 
 export default function ServicioList({
   servicios,
+  puedeGestionar = true,
 }: {
   servicios: Servicio[];
+  puedeGestionar?: boolean;
 }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
@@ -139,6 +141,7 @@ export default function ServicioList({
 
         <ServicioTabla
           servicios={paginatedServicios}
+          puedeGestionar={puedeGestionar}
           onEliminar={handleEliminar}
           estaVacio={serviciosFiltrados.length === 0}
           sinServicios={servicios.length === 0}

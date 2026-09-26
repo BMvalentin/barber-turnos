@@ -9,6 +9,7 @@ type Props = {
   seleccionados: string[];
   opciones: ServicioOpcion[];
   onAlternarSeleccion: (id: string) => void;
+  titulo?: string;
 };
 
 export default function SelectorServicios({
@@ -17,10 +18,11 @@ export default function SelectorServicios({
   seleccionados,
   opciones,
   onAlternarSeleccion,
+  titulo = "Servicios disponibles",
 }: Props) {
   return (
     <SelectorCheckboxColapsable
-      titulo="Servicios disponibles"
+      titulo={titulo}
       abierto={abierto}
       onAlternarAbierto={onAlternarAbierto}
       seleccionados={seleccionados}

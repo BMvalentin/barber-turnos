@@ -26,7 +26,7 @@ CA="./isrgrootx1.pem"   # opcional, solo TiDB Cloud
 | `DATABASE_NAME` | Nombre de la base de datos a usar. |
 | `CA` | Ruta al certificado CA de TiDB Cloud (opcional, solo para la Opción B). |
 
-> **Importante:** el adaptador nativo de Prisma (`@prisma/adapter-mariadb`) usa en runtime `DATABASE_HOST`, `DATABASE_USER`, `DATABASE_PASSWORD` y `DATABASE_NAME` para conectarse (ver `src/lib/prisma.ts`). La variable `DATABASE_URL` se usa únicamente para los comandos del CLI.
+> **Importante:** el adaptador nativo de Prisma (`@prisma/adapter-mariadb`) usa en runtime `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USER`, `DATABASE_PASSWORD` y `DATABASE_NAME` para conectarse (ver `src/lib/prisma.ts`). La variable `DATABASE_URL` se usa únicamente para los comandos del CLI.
 
 ---
 
@@ -160,7 +160,7 @@ npx prisma db seed
 
 El seed está en `prisma/seed.ts` y crea los días laborables, entre otros datos iniciales.
 
-> **Recordatorio:** el adaptador nativo en `src/lib/prisma.ts` usa `DATABASE_HOST`, `DATABASE_USER`, `DATABASE_PASSWORD` y `DATABASE_NAME` para la conexión en runtime; la URL solo la usa el CLI de Prisma. Si conectas a una base distinta desde la app, revisa esas cuatro variables además de `DATABASE_URL`.
+> **Recordatorio:** el adaptador nativo en `src/lib/prisma.ts` usa `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USER`, `DATABASE_PASSWORD` y `DATABASE_NAME` para la conexión en runtime; la URL solo la usa el CLI de Prisma. Si conectás a una base distinta desde la app, revisá esas cinco variables además de `DATABASE_URL`.
 
 ---
 

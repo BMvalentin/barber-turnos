@@ -1,7 +1,12 @@
 import { getServicios } from "@/actions/servicios/listar.actions";
 import ServicioList from "@/components/servicio/ServicioList";
+import { requerirPanel } from "@/lib/seguridad/requerir-admin";
+import { redirect } from "next/navigation";
 
 export default async function ServiciosPage() {
+  const contexto = await requerirPanel();
+  if (!contexto) redirect("/dashboard");
+
   const resultServicios = await getServicios();
 
   const servicios = resultServicios.success ? resultServicios.data ?? [] : [];
@@ -20,7 +25,7 @@ export default async function ServiciosPage() {
 
       {/* Lista de servicios - Abajo */}
       <div>
-        <ServicioList servicios={servicios} />
+        <ServicioList servicios={servicios} puedeGestionar={contexto.rol === "ADMIN"} />
       </div>
     </div>
   );

@@ -32,7 +32,7 @@ export default function ResumenReserva({
   slotSeleccionado,
   completo,
   onCancelar,
-  esAdmin,
+  puedeGestionarTurnos,
   usuarios,
   selectedUserId,
   onCambiarCliente,
@@ -117,7 +117,7 @@ export default function ResumenReserva({
         </div>
       </div>
 
-      {!esAdmin && clienteUsuario && (
+      {!puedeGestionarTurnos && clienteUsuario && (
         <div className="flex items-start gap-3">
           <div className={CLASE_ICONO}>
             <UserRound className="h-4 w-4" />
@@ -155,7 +155,7 @@ export default function ResumenReserva({
         </span>
       </div>
 
-      {esAdmin && (
+      {puedeGestionarTurnos && (
         <>
           <SelectorClienteReserva
             usuarios={usuarios}

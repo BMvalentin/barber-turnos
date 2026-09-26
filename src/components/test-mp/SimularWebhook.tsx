@@ -26,9 +26,8 @@ export function SimularWebhook({
       </div>
       <div className="p-4 space-y-3">
         <p className="text-xs text-zinc-600">
-          Hace un POST a <code className="text-sky-400">/api/mercadopago/webhook</code> con
-          un paymentId de prueba. El webhook intentará consultar ese pago a la API de MP.
-          Con el token de sandbox devolverá error si el ID no existe — es normal.
+          Envía una notificación de prueba sin firma a <code className="text-sky-400">/api/mercadopago/webhook</code>.
+          El webhook debe rechazarla antes de consultar Mercado Pago.
         </p>
         <div className="flex gap-2">
           <input

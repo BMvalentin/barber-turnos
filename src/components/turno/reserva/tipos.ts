@@ -45,6 +45,7 @@ export type PropsCalendarioReserva = {
   onMesAnterior: () => void;
   onMesSiguiente: () => void;
   onSeleccionarDia: (dia: Date) => void;
+  permitirFechasPasadas?: boolean;
 };
 
 export type PropsDiaCalendarioReserva = {
@@ -108,7 +109,7 @@ export type PropsResumenReserva = {
   slotSeleccionado: string;
   completo: boolean;
   onCancelar: () => void;
-  esAdmin: boolean;
+  puedeGestionarTurnos: boolean;
   usuarios: UsuarioData[];
   selectedUserId: string;
   onCambiarCliente: (id: string) => void;
@@ -151,4 +152,5 @@ export type PropsModalGestionTurno = ParametrosFormularioTurno & {
   claseTrigger?: string;
   contenidoTrigger?: ReactNode;
   onTriggerClick?: () => void;
+  abrirAlMontar?: boolean;
 };

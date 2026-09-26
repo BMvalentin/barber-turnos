@@ -5,12 +5,11 @@ import { toast } from "sonner";
 import { useState, useTransition } from "react";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { updateBarbero } from "@/actions/barberos/editar.actions";
-import { uploadBarberImages } from "@/actions/mercadopago/subir-barberos.actions";
+import { uploadBarberImages } from "@/actions/barberos/subir-imagenes.actions";
 import { esImagenValida } from "@/lib/es-imagen-valida";
 import { useImagenServicio } from "@/hooks/useImagenServicio";
 import type { ServicioOpcion, DiaLaboral, BarberoEdicion } from "@/types/barbero";
 import CampoNombreBarbero from "./CampoNombreBarbero";
-import CampoEmailBarbero from "./CampoEmailBarbero";
 import SeccionImagenServicio from "@/components/servicio/SeccionImagenServicio";
 import SelectorServicios from "./SelectorServicios";
 import SelectorHorarios from "./SelectorHorarios";
@@ -22,30 +21,45 @@ type EditBarberoModalProps = {
   servicios: ServicioOpcion[];
   diasLaborales: DiaLaboral[];
   onClose: () => void;
+  soloEdicionPropia?: boolean;
+  perfilPropio?: boolean;
 };
+
+function mismosIds(primeros: string[], segundos: string[]): boolean {
+  if (primeros.length !== segundos.length) return false;
+
+  const primerosOrdenados = [...primeros].sort();
+  const segundosOrdenados = [...segundos].sort();
+  return primerosOrdenados.every((id, indice) => id === segundosOrdenados[indice]);
+}
 
 export default function EditBarberoModal({
   barbero,
   servicios,
   diasLaborales,
+  soloEdicionPropia = false,
+  perfilPropio = false,
   onClose,
 }: EditBarberoModalProps) {
   const [isPending, startTransition] = useTransition();
   const { retroalimentar } = useRetroalimentacionAccion({
-    mensajeExito: "Barbero actualizado",
-    descripcionExito: "Los cambios se han guardado correctamente.",
+    mensajeExito: perfilPropio ? "Perfil actualizado" : "Barbero actualizado",
+    descripcionExito: perfilPropio
+      ? "Los cambios de tu perfil se guardaron correctamente."
+      : "Los cambios se han guardado correctamente.",
     descripcionError: "Error al actualizar el barbero",
     refrescar: true,
     onExito: onClose,
   });
   const [nombre, setNombre] = useState(barbero.nombre || "");
-  const [email, setEmail] = useState(barbero.email || "");
   const [estado, setEstado] = useState(barbero.estado);
+  const serviciosIniciales = barbero.servicios?.map((s) => s.servicio.id) || [];
+  const horariosIniciales = barbero.horarios?.map((h) => h.margenLaboralId) || [];
   const [selectedServicios, setSelectedServicios] = useState<string[]>(
-    barbero.servicios?.map((s) => s.servicio.id) || []
+    serviciosIniciales
   );
   const [selectedHorarios, setSelectedHorarios] = useState<string[]>(
-    barbero.horarios?.map((h) => h.margenLaboralId) || []
+    horariosIniciales
   );
   const [showServicios, setShowServicios] = useState(false);
   const [showHorarios, setShowHorarios] = useState(false);
@@ -96,11 +110,15 @@ export default function EditBarberoModal({
       const result = await updateBarbero({
         id: barbero.id,
         nombre: nombre.trim(),
-        email: email.trim() === "" ? null : email.trim(),
         srcImage: srcImage.trim() === "" ? null : srcImage.trim(),
         estado: Boolean(estado),
-        serviciosIds: selectedServicios || [],
-        margenesIds: selectedHorarios,
+        serviciosIds: mismosIds(serviciosIniciales, selectedServicios)
+          ? undefined
+          : selectedServicios,
+        margenesIds:
+          soloEdicionPropia || mismosIds(horariosIniciales, selectedHorarios)
+            ? undefined
+            : selectedHorarios,
       });
       if (!result.success) {
         toast.error("Error", {
@@ -117,7 +135,7 @@ export default function EditBarberoModal({
   return (
     <ModalBase
       onClose={onClose}
-      titulo="Editar Barbero"
+      titulo={perfilPropio ? "Editar mi perfil profesional" : "Editar Barbero"}
       maxWidth="max-w-2xl"
       overlayClase="bg-black/80 backdrop-blur-md p-4"
       contenedorClase="max-h-[90vh] overflow-y-auto bg-[var(--admin-surface)] rounded-xl p-6 space-y-6 border"
@@ -132,11 +150,10 @@ export default function EditBarberoModal({
             error={null}
             onCambio={setNombre}
           />
-          <CampoEmailBarbero
-            valor={email}
-            error={null}
-            onCambio={setEmail}
-          />
+          <div className="rounded-lg border bg-[var(--admin-item)] px-3 py-2.5 text-sm" style={{ borderColor: "var(--admin-border)" }}>
+            <p className="font-semibold text-[var(--page-primary-tinta)]">Correo de la cuenta asociada</p>
+            <p className="mt-1 text-[var(--admin-texto-muted)]">{barbero.usuario?.email ?? "Sin cuenta asociada"}</p>
+          </div>
           <SeccionImagenServicio
             previewUrl={previewUrl}
             srcImage={srcImage}
@@ -145,29 +162,33 @@ export default function EditBarberoModal({
             variante="barbero"
             onFileChange={handleFileChange}
             onRemove={quitarImagen}
+            tituloBarbero={perfilPropio ? "Tu foto de perfil" : undefined}
           />
           <SelectorServicios
             abierto={showServicios}
             onAlternarAbierto={() => setShowServicios(!showServicios)}
             seleccionados={selectedServicios}
             opciones={servicios}
+            titulo={perfilPropio ? "Mis servicios" : undefined}
             onAlternarSeleccion={(id) =>
               setSelectedServicios((prev) =>
                 prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
               )
             }
           />
-          <SelectorHorarios
-            abierto={showHorarios}
-            onAlternarAbierto={() => setShowHorarios(!showHorarios)}
-            seleccionados={selectedHorarios}
-            diasLaborales={diasLaborales}
-            onAlternarSeleccion={(id) =>
-              setSelectedHorarios((prev) =>
-                prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-              )
-            }
-          />
+          {!soloEdicionPropia && (
+            <SelectorHorarios
+              abierto={showHorarios}
+              onAlternarAbierto={() => setShowHorarios(!showHorarios)}
+              seleccionados={selectedHorarios}
+              diasLaborales={diasLaborales}
+              onAlternarSeleccion={(id) =>
+                setSelectedHorarios((prev) =>
+                  prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+                )
+              }
+            />
+          )}
           <label className="flex cursor-pointer items-center justify-between gap-4 border-t rounded-lg pt-4 text-sm font-medium text-[var(--admin-texto-primario)] transition-colors hover:bg-[var(--admin-item-hover)] focus-within:ring-2 focus-within:ring-[var(--page-focus-ring)]" style={{ borderColor: "var(--admin-border)" }}>
             <span><span className="block">Barbero activo</span><span className="mt-1 block text-xs font-normal text-[var(--admin-texto-muted)]">Los clientes podrán reservar turnos con este barbero.</span></span>
             <input
@@ -178,7 +199,7 @@ export default function EditBarberoModal({
               role="switch"
               className="peer sr-only"
             />
-            <span aria-hidden="true" className="relative h-6 w-11 shrink-0 rounded-full border bg-[var(--admin-item)] transition-colors duration-200 peer-checked:border-[var(--page-primary)] peer-checked:bg-[var(--page-primary)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--page-focus-ring)]" style={{ borderColor: "var(--admin-border-fuerte)" }}><span className="absolute left-1 top-1 h-4 w-4 rounded-full bg-[var(--admin-texto-primario)] transition-transform duration-200 peer-checked:translate-x-5 peer-checked:bg-[var(--page-primary-foreground)]" /></span>
+            <span aria-hidden="true" className="relative h-6 w-11 shrink-0 rounded-full border border-[var(--admin-border-fuerte)] bg-[var(--admin-item)] transition-colors duration-300 ease-in-out after:absolute after:left-1 after:top-1 after:h-4 after:w-4 after:rounded-full after:bg-[var(--admin-texto-primario)] after:transition-[transform,background-color] after:duration-300 after:ease-in-out peer-checked:border-[var(--page-primary)] peer-checked:bg-[var(--page-primary)] peer-checked:after:translate-x-5 peer-checked:after:bg-[var(--page-primary-foreground)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--page-focus-ring)]" />
           </label>
         </div>
         <div className="flex justify-end gap-3 pt-4 border-t" style={{ borderColor: "var(--admin-border)" }}>
@@ -198,7 +219,7 @@ export default function EditBarberoModal({
           <BotonSubmitPending
             pendiente={isPending}
             tipo="button"
-            texto="Guardar Cambios"
+            texto={perfilPropio ? "Guardar perfil" : "Guardar Cambios"}
             onClic={handleSubmit}
             claseAdicional="hover:opacity-90"
           />
