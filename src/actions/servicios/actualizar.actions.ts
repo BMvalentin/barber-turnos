@@ -3,8 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { servicioSchema } from "@/lib/servicios-zod";
 import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
-import { limpiarUrlImagen } from "@/lib/limpiar-url-imagen";
 import { subirImagenServicio } from "@/lib/subir-imagen-servicio";
+import { leerSlotsImagenesServicio } from "@/lib/servicio-imagenes/leer-slots";
+import { MAX_IMAGENES_SERVICIO } from "@/lib/servicio-imagenes/constantes";
 import { revalidarServicios } from "@/lib/revalidar/revalidar-servicios";
 import type { ActionState } from "@/types/action-state";
 import type { ServicioCreado } from "@/types/servicio";
@@ -17,17 +18,12 @@ const actualizarServicioBase = async (
     const id = formData.get("id") as string;
 
     if (!id) {
-      return {
-        success: false,
-        error: "ID no proporcionado",
-      };
+      return { success: false, error: "ID no proporcionado" };
     }
-    // 👇 Obtener imagen nueva si existe
-    const image = formData.get("image") as File | null;
-    const rawData = Object.fromEntries(formData.entries());
 
-    // No mandar File al zod
-    delete rawData.image;
+    const rawData = Object.fromEntries(formData.entries());
+    const clavesSlots = Object.keys(rawData).filter((clave) => clave.startsWith("slot"));
+    clavesSlots.forEach((clave) => delete rawData[clave]);
 
     const validated = servicioSchema.safeParse(rawData);
 
@@ -39,55 +35,91 @@ const actualizarServicioBase = async (
       };
     }
 
-    const {
-      nombre,
-      descripcion,
-      srcImage: srcImageRaw,
-      estado,
-      duracion,
-      precio,
-      descuento,
-      senia,
-    } = validated.data;
+    const { nombre, descripcion, estado, duracion, precio, descuento, senia } = validated.data;
 
-    let srcImage = limpiarUrlImagen(srcImageRaw || null);
+    const entradasImagenes = leerSlotsImagenesServicio(formData);
 
-    // 👇 Si seleccionó nueva imagen, reemplaza la anterior
-    if (image && image.size > 0) {
-      const subida = await subirImagenServicio(image, { mensajeError: "No se pudo subir la nueva imagen." });
+    if (entradasImagenes.length > MAX_IMAGENES_SERVICIO) {
+      return {
+        success: false,
+        error: "Un servicio no puede tener más de 3 imágenes.",
+      };
+    }
+
+    const urlsFinales: string[] = [];
+
+    for (const entrada of entradasImagenes) {
+      if (typeof entrada === "string") {
+        urlsFinales.push(entrada);
+        continue;
+      }
+
+      const subida = await subirImagenServicio(entrada, {
+        mensajeError: "No se pudo subir una de las imágenes.",
+      });
 
       if (!subida.ok) {
         return { success: false, error: subida.error };
       }
 
-      srcImage = subida.url;
+      urlsFinales.push(subida.url);
     }
 
-    const servicioActualizado = await prisma.servicio.update({
+    await prisma.$transaction([
+      prisma.servicio_imagen.deleteMany({ where: { servicioId: id } }),
+      prisma.servicio_imagen.createMany({
+        data: urlsFinales.map((url, indice) => ({ url, orden: indice, servicioId: id })),
+      }),
+      prisma.servicio.update({
+        where: { id },
+        data: {
+          nombre: nombre.trim(),
+          descripcion: descripcion || null,
+          srcImage: urlsFinales[0] ?? null,
+          estado: estado ?? true,
+          duracion,
+          precio,
+          descuento,
+          senia,
+          updatedAt: new Date(),
+        },
+      }),
+    ]);
+
+    const servicioActualizado = await prisma.servicio.findUnique({
       where: { id },
-      data: {
-        nombre: nombre.trim(),
-        descripcion: descripcion || null,
-        srcImage,
-        estado: estado ?? true,
-        duracion,
-        precio,
-        descuento,
-        senia,
-        updatedAt: new Date(),
+      include: {
+        imagenes: { orderBy: { orden: "asc" }, select: { url: true } },
       },
     });
 
-    revalidarServicios(servicioActualizado.id);
+    revalidarServicios(id);
 
     return {
       success: true,
-      data: {
-        ...servicioActualizado,
-        precio: Number(servicioActualizado.precio),
-        descuento: Number(servicioActualizado.descuento),
-        senia: Number(servicioActualizado.senia),
-      },
+      data:
+        servicioActualizado
+          ? {
+              ...servicioActualizado,
+              precio: Number(servicioActualizado.precio),
+              descuento: Number(servicioActualizado.descuento),
+              senia: Number(servicioActualizado.senia),
+              imagenes: servicioActualizado.imagenes.map((imagen) => imagen.url),
+            }
+          : {
+              id,
+              nombre: nombre.trim(),
+              descripcion: descripcion || null,
+              srcImage: urlsFinales[0] ?? null,
+              estado: estado ?? true,
+              duracion,
+              precio,
+              descuento,
+              senia,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              imagenes: urlsFinales,
+            },
     };
   } catch (error) {
     console.error("Error al actualizar servicio:", error);
@@ -97,4 +129,5 @@ const actualizarServicioBase = async (
     };
   }
 };
+
 export const actualizarServicio = exigirAdmin(actualizarServicioBase);
