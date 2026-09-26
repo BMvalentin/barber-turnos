@@ -11,11 +11,13 @@ import { useSessionId } from "@/hooks/useSessionId";
 import { useDatosFormularioTurno } from "./useDatosFormularioTurno";
 import type { ParametrosDatosTurno } from "./useDatosFormularioTurno";
 import { usePagoTurno } from "./usePagoTurno";
-import { esAdmin } from "@/lib/seguridad/es-admin";
-import { ESTADOS_PAGO } from "@/lib/constants";
+import { esAdmin, esEmpleado } from "@/lib/seguridad/es-admin";
+import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
+import type { DatosTransferencia } from "@/types/pago";
 
 export type ParametrosFormularioTurno = ParametrosDatosTurno & {
   whatsappPhone: string;
+  datosTransferencia?: DatosTransferencia;
   turnoInicial?: TurnoListado | null;
   /** Callback opcional que se invoca al crear un turno con éxito, para refrescar el listado. */
   onTurnoCreado?: () => void;
@@ -38,6 +40,7 @@ export function useFormularioTurno({
   onTurnoCreado,
 }: ParametrosFormularioTurno) {
   const esEdicion = Boolean(turnoInicial);
+  const puedeGestionarTurnos = esAdmin(session) || esEmpleado(session);
 
   const datos = useDatosFormularioTurno({
     session,
@@ -59,7 +62,7 @@ export function useFormularioTurno({
     setSelectedUserId,
     setEstadoPago,
   } = datos;
-  const { setTurnoCreado, setShowPagoModal } = pago;
+  const { setTurnoCreado, setShowPagoModal, setTransferenciaLista } = pago;
 
   const accion = esEdicion ? actualizarTurno : createTurno;
   const [state, formAction] = useActionState(accion, estadoInicial);
@@ -100,12 +103,23 @@ export function useFormularioTurno({
 
     onTurnoCreado?.();
 
-    if (esAdmin(session)) {
-      // El admin carga el turno directamente: sin modal de seña ni WhatsApp
+    if (nuevoTurno.estado === ESTADOS_TURNO[1]) {
+      toast.success("Turno confirmado", {
+        description: "No necesitás abonar una seña para este servicio.",
+      });
+      if (!onTurnoCreado) router.refresh();
+      return;
+    }
+
+    if (puedeGestionarTurnos) {
+      // El personal del panel carga el turno directamente: sin modal de seña ni WhatsApp
       toast.success("Turno creado correctamente");
-      router.refresh();
+      // TurnoManager ya actualiza el listado con el callback. El refresh queda
+      // como respaldo para otros consumidores que no provean uno.
+      if (!onTurnoCreado) router.refresh();
     } else {
       setTurnoCreado(nuevoTurno);
+      setTransferenciaLista(false);
       setShowPagoModal(true);
     }
   }, [
@@ -122,8 +136,10 @@ export function useFormularioTurno({
     setSelectedUserId,
     setEstadoPago,
     setTurnoCreado,
+    setTransferenciaLista,
     setShowPagoModal,
     session,
+    puedeGestionarTurnos,
     onTurnoCreado,
     router,
   ]);

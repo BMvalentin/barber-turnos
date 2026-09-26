@@ -17,12 +17,18 @@ export type DatosConfiguracion = {
   whatsapp: string;
   mapsUrl: string;
   address: string;
+  transferenciaTitular: string;
+  transferenciaCuit: string;
+  transferenciaAlias: string;
+  transferenciaCbu: string;
+  transferenciaBanco: string;
+  transferenciaActiva: boolean;
 };
 
 /* Payload parcial para la server action de actualización (config-general.actions). */
 export type PageConfigData = Partial<DatosConfiguracion>;
 
 /* Datos iniciales del formulario (pueden venir con null desde Prisma). */
-export type DatosConfiguracionInicial = Partial<
-  Record<keyof DatosConfiguracion, string | null>
->;
+export type DatosConfiguracionInicial = Partial<{
+  [Campo in keyof DatosConfiguracion]: DatosConfiguracion[Campo] | null;
+}>;

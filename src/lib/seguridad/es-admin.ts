@@ -1,4 +1,5 @@
 import type { Session } from "next-auth";
+import type { RolUsuario } from "@/types/usuario";
 
 /**
  * Chequeo manual barato de rol ADMIN a partir del JWT de la sesión.
@@ -7,4 +8,12 @@ import type { Session } from "next-auth";
  */
 export function esAdmin(sesion: Session | null): boolean {
   return sesion?.user?.role === "ADMIN";
+}
+
+export function esEmpleado(sesion: Session | null): boolean {
+  return sesion?.user?.role === "EMPLEADO";
+}
+
+export function obtenerRol(sesion: Session | null): RolUsuario | null {
+  return sesion?.user?.role ?? null;
 }

@@ -3,22 +3,24 @@ import {
   LayoutDashboard,
   Users,
   Scissors,
-  CreditCard,
+  Landmark,
   Calendar,
   Settings,
-  Home,
   Building2,
   MapPin,
   Palette,
   Image as ImageIcon,
   Clock,
 } from "lucide-react";
+import type { RolPanel } from "@/types/usuario";
 
 export interface ItemNavegacion {
   titulo: string;
   href: string;
   icono: LucideIcon;
   externo?: boolean;
+  roles?: readonly RolPanel[];
+  tituloPorRol?: Partial<Record<RolPanel, string>>;
 }
 
 export interface GrupoDesplegable {
@@ -31,26 +33,56 @@ export type EntradaNavegacion = ItemNavegacion | GrupoDesplegable;
 
 export interface GrupoNavegacion {
   titulo: string;
+  tituloPorRol?: Partial<Record<RolPanel, string>>;
   items: EntradaNavegacion[];
 }
 
 export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
   {
-    titulo: "Acceso",
-    items: [{ titulo: "Ver sitio", href: "/", icono: Home, externo: true }],
-  },
-  {
     titulo: "Principal",
+    tituloPorRol: { EMPLEADO: "Inicio" },
     items: [
-      { titulo: "Dashboard", href: "/admin", icono: LayoutDashboard },
-      { titulo: "Servicios", href: "/admin/servicio", icono: Scissors },
+      {
+        titulo: "Dashboard",
+        tituloPorRol: { EMPLEADO: "Mi resumen" },
+        href: "/admin",
+        icono: LayoutDashboard,
+      },
     ],
   },
   {
     titulo: "Operación",
+    tituloPorRol: { EMPLEADO: "Agenda" },
     items: [
-      { titulo: "Mercado Pago", href: "/admin/mercadopago", icono: CreditCard },
-      { titulo: "Turnos", href: "/admin/turno", icono: Calendar },
+      {
+        titulo: "Turnos",
+        tituloPorRol: { EMPLEADO: "Mis turnos" },
+        href: "/admin/turno",
+        icono: Calendar,
+      },
+      { titulo: "Empleados", href: "/admin/barbero", icono: Users, roles: ["ADMIN"] },
+      { titulo: "Usuarios", href: "/admin/usuarios", icono: Users, roles: ["ADMIN"] },
+    ],
+  },
+  {
+    titulo: "Perfil",
+    tituloPorRol: { EMPLEADO: "Mi espacio" },
+    items: [
+      { titulo: "Servicios", href: "/admin/servicio", icono: Scissors, roles: ["ADMIN", "EMPLEADO"] },
+      {
+        titulo: "Mi perfil",
+        tituloPorRol: { EMPLEADO: "Mis datos" },
+        href: "/admin/barbero/perfil",
+        icono: Users,
+        roles: ["ADMIN", "EMPLEADO"],
+      },
+      {
+        titulo: "Horarios",
+        tituloPorRol: { EMPLEADO: "Mis horarios" },
+        href: "/admin/config/empleados/horarios-laborales",
+        icono: Clock,
+        roles: ["ADMIN", "EMPLEADO"],
+      },
     ],
   },
   {
@@ -60,24 +92,21 @@ export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
         titulo: "Configuración",
         icono: Settings,
         items: [
-          { titulo: "Información general", href: "/admin/config", icono: Building2 },
+          { titulo: "Información general", href: "/admin/config", icono: Building2, roles: ["ADMIN"] },
           {
             titulo: "Ubicación y contacto",
             href: "/admin/config/ubicacion-contacto",
             icono: MapPin,
+            roles: ["ADMIN"],
           },
-          { titulo: "Apariencia", href: "/admin/config/apariencia", icono: Palette },
-          { titulo: "Imágenes", href: "/admin/config/imagenes", icono: ImageIcon },
-          { titulo: "Empleados", href: "/admin/barbero", icono: Users },
-          {
-            titulo: "Horarios",
-            href: "/admin/config/empleados/horarios-laborales",
-            icono: Clock,
-          },
+          { titulo: "Medios de pago", href: "/admin/config/medios-pago", icono: Landmark, roles: ["ADMIN"] },
+          { titulo: "Apariencia", href: "/admin/config/apariencia", icono: Palette, roles: ["ADMIN"] },
+          { titulo: "Imágenes", href: "/admin/config/imagenes", icono: ImageIcon, roles: ["ADMIN"] },
           {
             titulo: "Feriados y excepciones",
             href: "/admin/config/empleados/horarios-laborales/excepciones",
             icono: Calendar,
+            roles: ["ADMIN"],
           },
         ],
       },

@@ -18,7 +18,7 @@ export default function TarjetaBarberoReserva({
       aria-pressed={seleccionado}
       onClick={() => onSeleccionar(barbero.id)}
       className={cn(
-        "relative flex h-[116px] flex-col items-center gap-2 rounded-xl border p-4 transition",
+        "relative flex min-h-[116px] flex-col items-center gap-2 rounded-xl border p-4 transition",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]",
         seleccionado
           ? "border-[var(--admin-border-fuerte)] bg-[var(--admin-item)]"
@@ -27,7 +27,7 @@ export default function TarjetaBarberoReserva({
     >
       <div
         className={cn(
-          "h-14 w-14 overflow-hidden rounded-full",
+          "h-14 w-14 shrink-0 overflow-hidden rounded-full",
           seleccionado && "ring-2 ring-[var(--page-primary)] ring-offset-2 ring-offset-[var(--admin-surface)]"
         )}
       >
@@ -41,7 +41,7 @@ export default function TarjetaBarberoReserva({
       </div>
       <span
         className={cn(
-          "max-w-full truncate text-sm font-medium text-[var(--admin-texto-primario)]",
+          "max-w-full break-words text-center text-sm font-medium leading-tight text-[var(--admin-texto-primario)] [overflow-wrap:anywhere]",
           seleccionado && "font-semibold text-[var(--admin-texto-primario)]"
         )}
       >

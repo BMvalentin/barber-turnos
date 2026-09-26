@@ -8,6 +8,7 @@ import { softDeleteExcepcion } from "@/actions/excepciones/eliminar.actions";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
 import EmptyState from "@/components/ui/EmptyState";
 import { formatearHora } from "@/lib/utils/formatear-hora";
+import { ZONA_HORARIA } from "@/lib/constants";
 import type { ExcepcionLaboral } from "@/types/excepcion";
 
 type ListaFeriadosYCierresProps = {
@@ -26,7 +27,11 @@ export function ListaFeriadosYCierres({ excepciones }: ListaFeriadosYCierresProp
     try {
       const datosFormulario = new FormData();
       datosFormulario.append("id", idPendienteDeEliminar);
-      await softDeleteExcepcion(datosFormulario);
+      const resultado = await softDeleteExcepcion(datosFormulario);
+      if (!resultado.success) {
+        toast.error(resultado.error ?? "No se pudo eliminar el cierre");
+        return;
+      }
       setIdPendienteDeEliminar(null);
       toast.success("Cierre eliminado", {
         description: "El feriado o cierre dejó de bloquear la disponibilidad.",
@@ -105,7 +110,7 @@ export function ListaFeriadosYCierres({ excepciones }: ListaFeriadosYCierresProp
 function FechaExcepcion({ fecha }: { fecha: Date }) {
   return (
     <div className="text-[var(--admin-texto-primario)]">
-      <p>{new Intl.DateTimeFormat("es-AR", { dateStyle: "medium" }).format(fecha)}</p>
+      <p>{new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeZone: ZONA_HORARIA }).format(fecha)}</p>
       <p className="mt-0.5 text-xs text-[var(--admin-texto-muted)]">{formatearHora(fecha)}</p>
     </div>
   );

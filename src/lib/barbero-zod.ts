@@ -12,27 +12,6 @@ const nombreSchema = esquemaNombre(
 );
 
 /* =========================
-   CREATE BARBERO
-========================= */
-export const barberoSchema = z.object({
-  nombre: esquemaNombre(
-    "nombre",
-    /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/,
-    "El nombre no puede tener números ni caracteres especiales"
-  ),
-
-  srcImage: esquemaImagenOpcional,
-
-  email: z.string().trim().email("El email no es válido").nullable().optional(),
-
-  serviciosIds: z.array(z.string()).optional(),
-
-  margenesIds: z.array(z.string()).optional(),
-
-  estado: z.boolean().optional(),
-});
-
-/* =========================
    UPDATE BARBERO
 ========================= */
 export const updateBarberoSchema = z.object({
@@ -41,8 +20,6 @@ export const updateBarberoSchema = z.object({
   nombre: nombreSchema,
 
   srcImage: esquemaImagenOpcional,
-
-  email: z.string().trim().email("El email no es válido").nullable().optional(),
 
   estado: z.boolean().optional(),
 

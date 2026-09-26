@@ -17,8 +17,8 @@ export default function SelectorBarberosReserva({
   }
 
   return (
-    // Altura = 2 filas exactas (116px por tarjeta + gap-3 de 12px) para que
-    // las dos primeras filas se vean completas; el resto scrollea dentro.
+    // El selector mantiene una altura acotada y permite desplazarse cuando
+    // hay más barberos o algún nombre ocupa varias líneas.
     <div className="grid max-h-[244px] grid-cols-2 gap-3 overflow-y-auto pr-1 sm:grid-cols-3">
       {barberos.map((barbero) => (
         <TarjetaBarberoReserva

@@ -2,15 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, LogOut, User } from "lucide-react";
-import { handleSignOut } from "@/actions/sesion/logout.actions";
 import useSugerenciaLateral from "@/components/panel/navegacion/useSugerenciaLateral";
+import type { RolPanel } from "@/types/usuario";
 
-interface UsuarioSidebarProps { colapsado: boolean; alCerrar: () => void; }
+interface UsuarioSidebarProps { colapsado: boolean; alCerrar: () => void; rol: RolPanel; }
 
-export default function UsuarioSidebar({ colapsado, alCerrar }: UsuarioSidebarProps) {
+export default function UsuarioSidebar({ colapsado, alCerrar, rol }: UsuarioSidebarProps) {
   const { data: sesion } = useSession();
   const [abierto, setAbierto] = useState(false);
   const contenedorRef = useRef<HTMLDivElement>(null);
@@ -18,6 +18,12 @@ export default function UsuarioSidebar({ colapsado, alCerrar }: UsuarioSidebarPr
   const nombre = sesion?.user?.name || "Usuario";
   const identificadorDesplegable = "opciones-usuario-sidebar";
   const { mostrar, ocultar, sugerencia } = useSugerenciaLateral(botonRef, nombre, colapsado);
+
+  const cerrarSesion = () => {
+    setAbierto(false);
+    alCerrar();
+    void signOut({ redirectTo: "/" });
+  };
 
   useEffect(() => {
     if (!abierto) return;
@@ -41,17 +47,15 @@ export default function UsuarioSidebar({ colapsado, alCerrar }: UsuarioSidebarPr
         <Link href="/dashboard" onClick={() => { setAbierto(false); alCerrar(); }} className="group flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[var(--admin-texto-secundario)] transition-[background-color,color,transform] duration-200 ease-out motion-reduce:transition-none hover:translate-x-0.5 hover:bg-[var(--admin-border)] hover:text-[var(--admin-texto-primario)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]">
           <User className="h-4 w-4 transition-transform duration-200 ease-out motion-reduce:transition-none group-hover:scale-110" /> Mi perfil
           </Link>
-        <form action={handleSignOut}>
-          <button type="submit" className="group flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-400 transition-[background-color,color,transform] duration-200 ease-out motion-reduce:transition-none hover:translate-x-0.5 hover:bg-red-500/10 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]">
+        <button type="button" onClick={cerrarSesion} className="group flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-400 transition-[background-color,color,transform] duration-200 ease-out motion-reduce:transition-none hover:translate-x-0.5 hover:bg-red-500/10 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]">
             <LogOut className="h-4 w-4 transition-transform duration-200 ease-out motion-reduce:transition-none group-hover:translate-x-0.5" /> Cerrar sesión
-          </button>
-        </form>
+        </button>
       </div>
       <button ref={botonRef} type="button" onClick={() => setAbierto((valor) => !valor)} onMouseEnter={mostrar} onMouseLeave={ocultar} onFocus={mostrar} onBlur={ocultar} aria-label={`Opciones de ${nombre}`} aria-expanded={abierto} aria-controls={identificadorDesplegable} className={`flex w-full items-center rounded-lg py-2 transition-[background-color,transform] duration-200 ease-out motion-reduce:transition-none hover:-translate-y-px hover:bg-[var(--admin-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] ${colapsado ? "gap-3 px-2 md:justify-center md:px-0 md:hover:scale-105" : "gap-3 px-2"}`}>
         <Image src={sesion?.user?.image || "/images/avatar-default.svg"} alt="Avatar del usuario" width={32} height={32} className="h-8 w-8 shrink-0 rounded-full object-cover" />
         <span className={`min-w-0 flex-1 text-left ${colapsado ? "md:hidden" : ""}`}>
           <span className="block truncate text-sm font-medium text-[var(--admin-texto-primario)]">{nombre}</span>
-          <span className="block text-xs text-[var(--admin-texto-muted)]">Administrador</span>
+          <span className="block text-xs text-[var(--admin-texto-muted)]">{rol === "ADMIN" ? "Administrador" : "Empleado"}</span>
         </span>
         <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--admin-texto-muted)] transition-transform duration-200 ease-out motion-reduce:transition-none ${abierto ? "rotate-180" : ""} ${colapsado ? "md:hidden" : ""}`} />
       </button>

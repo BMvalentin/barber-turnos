@@ -8,7 +8,7 @@ import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
 async function desconectarMPBase() {
   try {
     await eliminarConfiguracionMP();
-    revalidatePath("/admin/mercadopago");
+    revalidatePath("/admin/config/medios-pago");
     return { success: true };
   } catch (error) {
     const detalle = error instanceof Error ? error.message : String(error);

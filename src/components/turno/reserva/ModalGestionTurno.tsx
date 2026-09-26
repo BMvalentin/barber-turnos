@@ -1,6 +1,7 @@
 "use client";
 
 import { createPortal } from "react-dom";
+import { useEffect, useRef } from "react";
 import { useFormularioTurno } from "@/hooks/useFormularioTurno";
 import type { PropsModalGestionTurno } from "@/components/turno/reserva/tipos";
 import { Pencil, Plus, X } from "lucide-react";
@@ -10,6 +11,16 @@ import FormularioReservaTurno from "@/components/turno/reserva/FormularioReserva
 import ModalPagoTurno from "@/components/turno/ModalPagoTurno";
 import BadgeEstadoTurno from "@/components/turno/gestion/BadgeEstadoTurno";
 import { CLASES_BOTON_CERRAR } from "@/lib/constants";
+import type { DatosTransferencia } from "@/types/pago";
+
+const DATOS_TRANSFERENCIA_VACIOS: DatosTransferencia = {
+  transferenciaTitular: "",
+  transferenciaCuit: "",
+  transferenciaAlias: "",
+  transferenciaCbu: "",
+  transferenciaBanco: "",
+  transferenciaActiva: false,
+};
 
 const ESTILO_TEMAS = {
   "--primary": "var(--page-primary)",
@@ -25,11 +36,13 @@ export default function ModalGestionTurno({
   initialUsuarios = [],
   initialRelaciones = [],
   whatsappPhone,
+  datosTransferencia = DATOS_TRANSFERENCIA_VACIOS,
   turnoInicial,
   claseTrigger,
   contenidoTrigger,
   onTriggerClick,
   onTurnoCreado,
+  abrirAlMontar = false,
 }: PropsModalGestionTurno) {
   const {
     esEdicion,
@@ -55,6 +68,9 @@ export default function ModalGestionTurno({
     showPagoModal,
     cargandoPago,
     errorPago,
+    transferenciaLista,
+    setTransferenciaLista,
+    setShowPagoModal,
     handlePagar,
   } = useFormularioTurno({
     session,
@@ -63,9 +79,17 @@ export default function ModalGestionTurno({
     initialUsuarios,
     initialRelaciones,
     whatsappPhone,
+    datosTransferencia,
     turnoInicial,
     onTurnoCreado,
   });
+
+  const aperturaInicialProcesadaRef = useRef(false);
+  useEffect(() => {
+    if (!abrirAlMontar || aperturaInicialProcesadaRef.current) return;
+    aperturaInicialProcesadaRef.current = true;
+    setIsOpen(true);
+  }, [abrirAlMontar, setIsOpen]);
 
   const abrir = () => {
     onTriggerClick?.();
@@ -156,7 +180,15 @@ export default function ModalGestionTurno({
               turnoCreado={turnoCreado}
               cargandoPago={cargandoPago}
               errorPago={errorPago}
+              transferenciaLista={transferenciaLista}
+              datosTransferencia={datosTransferencia}
+              whatsappPhone={whatsappPhone}
               onPagar={handlePagar}
+              onVolverTransferencia={() => setTransferenciaLista(false)}
+              onClose={() => {
+                setTransferenciaLista(false);
+                setShowPagoModal(false);
+              }}
             />
           </div>,
           document.body,

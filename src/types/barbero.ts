@@ -24,6 +24,7 @@ export type BarberoListado = {
   email: string | null;
   srcImage: string | null;
   estado: boolean;
+  usuario: { id: string; email: string } | null;
   servicios?: {
     servicio: { id: string; nombre: string };
   }[];
@@ -53,6 +54,7 @@ export type BarberoEdicion = {
   email: string | null;
   srcImage: string | null;
   estado: boolean;
+  usuario: { id: string; email: string } | null;
   servicios?: { servicio: { id: string; nombre: string } }[];
   horarios?: { margenLaboralId: string }[];
 };
@@ -71,6 +73,7 @@ type ServicioBarbero = Omit<
 export type BarberoConRelaciones = Omit<
   Prisma.barberoGetPayload<{
     include: {
+      usuario: { select: { id: true; email: true } };
       servicios: { include: { servicio: true } };
       horarios: { include: { dia: true; margenLaboral: true } };
     };

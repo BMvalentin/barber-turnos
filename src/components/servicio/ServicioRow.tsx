@@ -8,11 +8,13 @@ import type { Servicio } from "@/types/servicio";
 
 type ServicioRowProps = {
   servicio: Servicio;
+  puedeGestionar: boolean;
   onEliminar: (id: string) => void;
 };
 
 export default function ServicioRow({
   servicio,
+  puedeGestionar,
   onEliminar,
 }: ServicioRowProps) {
   const [showEditModal, setShowEditModal] = useState(false);
@@ -20,7 +22,7 @@ export default function ServicioRow({
   return (
     <>
       <div className="flex flex-col md:grid md:grid-cols-12 gap-4 p-4 md:items-center hover:bg-[var(--admin-item-hover)] transition-colors duration-150 group">
-        <div className="md:col-span-6 flex items-start md:items-center gap-4">
+        <div className={`flex items-start gap-4 md:items-center ${puedeGestionar ? "md:col-span-6" : "md:col-span-8"}`}>
           <div
             className="w-10 h-10 rounded-lg bg-[var(--admin-surface-elevated)] border border-[var(--admin-border)] flex items-center justify-center flex-shrink-0"
             style={{ color: "var(--page-primary-tinta)" }}
@@ -64,23 +66,25 @@ export default function ServicioRow({
           ${servicio.precio}
         </div>
 
-        <div className="hidden md:flex col-span-2 justify-end gap-2 items-center">
-          <button
-            onClick={() => setShowEditModal(true)}
-            title="Editar servicio"
-            className="text-[var(--admin-texto-muted)] transition-colors duration-150 p-1 hover:bg-[var(--admin-item-hover)] rounded"
-            style={{ color: "var(--page-primary-tinta)" }}
-          >
-            <SquarePen className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => onEliminar(servicio.id)}
-            title="Eliminar servicio"
-            className="text-[var(--admin-texto-muted)] hover:text-red-500 transition-colors duration-150 p-1 hover:bg-[var(--admin-item-hover)] rounded"
-          >
-            <Trash2 className="w-5 h-5" />
-          </button>
-        </div>
+        {puedeGestionar && (
+          <div className="hidden items-center justify-end gap-2 md:col-span-2 md:flex">
+            <button
+              onClick={() => setShowEditModal(true)}
+              title="Editar servicio"
+              className="text-[var(--admin-texto-muted)] transition-colors duration-150 p-1 hover:bg-[var(--admin-item-hover)] rounded"
+              style={{ color: "var(--page-primary-tinta)" }}
+            >
+              <SquarePen className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => onEliminar(servicio.id)}
+              title="Eliminar servicio"
+              className="text-[var(--admin-texto-muted)] hover:text-red-500 transition-colors duration-150 p-1 hover:bg-[var(--admin-item-hover)] rounded"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          </div>
+        )}
 
         <div className="flex md:hidden items-center justify-between mt-2 pt-3 border-t border-[var(--admin-border)]">
           <div className="flex items-center gap-4">
@@ -94,22 +98,24 @@ export default function ServicioRow({
               <Clock className="w-3 h-3" /> {servicio.duracion} min
             </span>
           </div>
-          <div className="flex justify-end gap-2 items-center">
-            <button
-              onClick={() => setShowEditModal(true)}
-              title="Editar servicio"
-              className="text-[var(--admin-texto-muted)] transition-colors duration-150 p-1.5 bg-[var(--admin-surface-elevated)] rounded border border-[var(--admin-border)]"
-            >
-              <SquarePen className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => onEliminar(servicio.id)}
-              title="Eliminar servicio"
-              className="text-[var(--admin-texto-muted)] hover:text-red-500 transition-colors duration-150 p-1.5 bg-[var(--admin-surface-elevated)] rounded border border-[var(--admin-border)]"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
+          {puedeGestionar && (
+            <div className="flex items-center justify-end gap-2">
+              <button
+                onClick={() => setShowEditModal(true)}
+                title="Editar servicio"
+                className="text-[var(--admin-texto-muted)] transition-colors duration-150 p-1.5 bg-[var(--admin-surface-elevated)] rounded border border-[var(--admin-border)]"
+              >
+                <SquarePen className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => onEliminar(servicio.id)}
+                title="Eliminar servicio"
+                className="text-[var(--admin-texto-muted)] hover:text-red-500 transition-colors duration-150 p-1.5 bg-[var(--admin-surface-elevated)] rounded border border-[var(--admin-border)]"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

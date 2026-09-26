@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { addMonths, subMonths, format } from "date-fns";
 import { obtenerDiasDisponibles } from "@/actions/turnos/disponibilidad.actions";
-import { obtenerHorariosDisponibles } from "@/actions/turnos/horarios-disponibles.actions";
 import { useSlotLocks } from "@/hooks/useSlotLocks";
+import { filtrarSlotsVigentes } from "@/lib/turnos/filtrar-slots-vigentes";
 
 interface OpcionesDisponibilidadHorarios {
   servicioId?: string;
@@ -25,18 +25,25 @@ export function useDisponibilidadHorarios({ servicioId, barberoId, turnoIdAExclu
   const [mesVisible, setMesVisible] = useState<Date>(defaultValue ? new Date(defaultValue) : new Date());
   const [diasDisponibles, setDiasDisponibles] = useState<string[]>([]);
   const [cargandoDias, setCargandoDias] = useState(false);
-  const [slots, setSlots] = useState<string[]>([]);
-  const [cargando, setCargando] = useState(false);
+  const [estadoMes, setEstadoMes] = useState<{
+    clave: string;
+    horarios: Record<string, string[]> | null;
+  } | null>(null);
   const [slotSeleccionado, setSlotSeleccionado] = useState<string>(defaultValue ?? "");
+  const solicitudDiasRef = useRef(0);
+  const mesVisibleStr = format(mesVisible, "yyyy-MM");
+  const claveMes = JSON.stringify([mesVisibleStr, servicioId, barberoId, turnoIdAExcluir]);
+  const fechaStr = fecha ? format(fecha, "yyyy-MM-dd") : null;
+  const fechaDelMesVisible = fechaStr?.slice(0, 7) === mesVisibleStr;
+  const consultaHorarioActiva = activo && Boolean(fechaStr && servicioId && barberoId && fechaDelMesVisible);
+  const cargando = consultaHorarioActiva && estadoMes?.clave !== claveMes;
+  const slots = consultaHorarioActiva && !cargando && fechaStr
+    ? filtrarSlotsVigentes(estadoMes?.horarios?.[fechaStr] ?? [])
+    : [];
 
-  // Ref para evitar resetear el slot en la carga inicial
-  const esPrimeraCarga = useRef(true);
-
-  // Valores iniciales de barbero/servicio: el slot solo se limpia cuando estos
-  // CAMBIAN respecto de la inicialización (no en el montaje). Comparar valores
-  // en vez de un ref booleano es robusto a la doble invocación de efectos que
-  // hace React StrictMode en desarrollo (setup -> cleanup -> setup).
-  const valoresInicialesRef = useRef({ servicioId, barberoId });
+  // Comparar con los valores anteriores evita limpiar el turno precargado al
+  // montar y también contempla volver a la selección inicial.
+  const valoresAnterioresRef = useRef({ servicioId, barberoId });
 
   // Locks en tiempo real (polling REST)
   const { isSlotBloqueado, lockSlot, unlockSlot } = useSlotLocks({
@@ -53,83 +60,65 @@ export function useDisponibilidadHorarios({ servicioId, barberoId, turnoIdAExclu
     unlockSlotRef.current = unlockSlot;
   }, [unlockSlot]);
 
-  // Al cambiar barbero/servicio el horario seleccionado deja de ser válido:
-  // se libera el lock y se limpia la selección. En el montaje inicial no se
+  // Al cambiar barbero/servicio la fecha y el horario dejan de ser válidos:
+  // se libera el lock y se limpian las selecciones. En el montaje inicial no se
   // limpia nada para no romper el modo edición (que inicializa defaultValue).
   useEffect(() => {
     if (
-      servicioId === valoresInicialesRef.current.servicioId &&
-      barberoId === valoresInicialesRef.current.barberoId
+      servicioId === valoresAnterioresRef.current.servicioId &&
+      barberoId === valoresAnterioresRef.current.barberoId
     ) {
       return;
     }
+    valoresAnterioresRef.current = { servicioId, barberoId };
     unlockSlotRef.current();
+    setFecha(undefined);
     setSlotSeleccionado("");
   }, [servicioId, barberoId]);
 
   const cargarDiasDelMes = useCallback(async () => {
+    const idSolicitud = ++solicitudDiasRef.current;
     if (!servicioId || !barberoId) {
       setDiasDisponibles([]);
+      setCargandoDias(false);
+      setEstadoMes(null);
       return;
     }
     try {
       setCargandoDias(true);
-      const mesStr = format(mesVisible, "yyyy-MM");
       const resultado = await obtenerDiasDisponibles(
-        mesStr,
+        mesVisibleStr,
         servicioId,
         barberoId,
         turnoIdAExcluir
       );
-      setDiasDisponibles(
-        resultado.success && Array.isArray(resultado.data)
-          ? resultado.data
-          : []
-      );
+      if (idSolicitud === solicitudDiasRef.current) {
+        const datos = resultado.success ? resultado.data : undefined;
+        setDiasDisponibles(datos?.dias ?? []);
+        setEstadoMes({ clave: claveMes, horarios: datos?.horarios ?? null });
+      }
     } catch (error) {
       console.error("Error cargando días disponibles:", error);
-      setDiasDisponibles([]);
+      if (idSolicitud === solicitudDiasRef.current) {
+        setDiasDisponibles([]);
+        setEstadoMes({ clave: claveMes, horarios: null });
+      }
     } finally {
-      setCargandoDias(false);
+      if (idSolicitud === solicitudDiasRef.current) {
+        setCargandoDias(false);
+      }
     }
-  }, [mesVisible, servicioId, barberoId, turnoIdAExcluir]);
+  }, [mesVisibleStr, servicioId, barberoId, turnoIdAExcluir, claveMes]);
 
   useEffect(() => {
-    if (!activo) return;
+    if (!activo) {
+      solicitudDiasRef.current += 1;
+      setCargandoDias(false);
+      setEstadoMes(null);
+      return;
+    }
     cargarDiasDelMes();
   }, [cargarDiasDelMes, activo]);
-
-  useEffect(() => {
-    if (!activo) return;
-    (async () => {
-      if (!fecha || !servicioId || !barberoId) {
-        setSlots([]);
-        return;
-      }
-      const fechaStr = format(fecha, "yyyy-MM-dd");
-      try {
-        setCargando(true);
-        const resultado = await obtenerHorariosDisponibles(
-          fechaStr,
-          servicioId,
-          barberoId,
-          turnoIdAExcluir
-        );
-        setSlots(
-          resultado.success && Array.isArray(resultado.data)
-            ? resultado.data
-            : []
-        );
-      } catch (error) {
-        console.error("Error cargando horarios:", error);
-        setSlots([]);
-      } finally {
-        setCargando(false);
-        // Marcar que la primera carga ya ocurrió
-        esPrimeraCarga.current = false;
-      }
-    })();
-  }, [fecha, servicioId, barberoId, turnoIdAExcluir, activo]);
 
   const irAlMesAnterior = useCallback(() => setMesVisible((m) => subMonths(m, 1)), []);
   const irAlMesSiguiente = useCallback(() => setMesVisible((m) => addMonths(m, 1)), []);
@@ -139,14 +128,13 @@ export function useDisponibilidadHorarios({ servicioId, barberoId, turnoIdAExclu
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
       if (dia < hoy) return;
+      if (fecha && format(fecha, "yyyy-MM-dd") === format(dia, "yyyy-MM-dd")) return;
       setFecha(dia);
       // Liberar slot anterior al cambiar de fecha
-      if (!esPrimeraCarga.current) {
-        unlockSlot();
-        setSlotSeleccionado("");
-      }
+      unlockSlot();
+      setSlotSeleccionado("");
     },
-    [unlockSlot]
+    [fecha, unlockSlot]
   );
 
   const manejarSeleccionSlot = useCallback(

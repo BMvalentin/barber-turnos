@@ -3,13 +3,14 @@ import { obtenerDiasLaboralesActivos } from "@/lib/consultas/obtener-dias-labora
 import { obtenerBarberosConRelaciones } from "@/lib/consultas/obtener-barberos-con-relaciones";
 
 import BarberoList from "@/components/barbero/BarberoList";
-import CreateBarberoModal from "@/components/barbero/CreateBarberoModal";
+import { requerirPanel } from "@/lib/seguridad/requerir-admin";
+import { redirect } from "next/navigation";
 
-async function getData() {
+async function getData(barberoId?: string, soloEmpleados = false) {
   const [servicios, diasLaborales, barberos] = await Promise.all([
     obtenerServiciosActivos(),
     obtenerDiasLaboralesActivos(),
-    obtenerBarberosConRelaciones(),
+    obtenerBarberosConRelaciones(barberoId, soloEmpleados),
   ]);
 
   const serializedBarberos = barberos.map(barbero => ({
@@ -33,7 +34,13 @@ async function getData() {
 }
 
 export default async function BarberosPage() {
-  const { servicios, diasLaborales, barberos } = await getData();
+  const contexto = await requerirPanel();
+  if (!contexto) redirect("/dashboard");
+  const esEmpleado = contexto.rol === "EMPLEADO";
+  const { servicios, diasLaborales, barberos } = await getData(
+    esEmpleado ? contexto.barberoId ?? undefined : undefined,
+    !esEmpleado,
+  );
 
   return (
     <div className="space-y-8">
@@ -41,25 +48,22 @@ export default async function BarberosPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight md:text-[28px] text-[var(--admin-texto-primario)]">
-            Gestión de Barberos
+            {esEmpleado ? "Mi perfil profesional" : "Empleados"}
           </h1>
           <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-            Administrá tu equipo de barberos y sus horarios.
+            {esEmpleado
+              ? "Consultá y actualizá la información de tu perfil."
+              : "Administrá los perfiles de tus empleados y sus horarios."}
           </p>
         </div>
-
-        {/* BOTÓN MODAL (PASANDO CONFIG) */}
-        <CreateBarberoModal
-          servicios={servicios}
-          diasLaborales={diasLaborales}
-        />
       </div>
 
       {/* LISTA */}
-      <BarberoList 
-        barberos={barberos} 
-        servicios={servicios} 
-        diasLaborales={diasLaborales} 
+      <BarberoList
+        barberos={barberos}
+        servicios={servicios}
+        diasLaborales={diasLaborales}
+        soloEdicionPropia={esEmpleado}
       />
     </div>
   );

@@ -4,19 +4,22 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requerirPropietarioOAdmin } from "@/lib/seguridad/requerir-propietario";
 import type { ActionState } from "@/types/action-state";
+import { z } from "zod";
 
 type DatosPerfilActualizado = {
   name: string | null;
   telefono: string | null;
 };
 
+const esquemaPerfil = z.object({
+  name: z.string().trim().max(100),
+  telefono: z.string().trim().regex(/^\+?[0-9][0-9\s().-]{5,31}$/),
+});
+
 export async function updateProfile(
   userId: string,
   formData: FormData
 ): Promise<ActionState<DatosPerfilActualizado>> {
-  const name = formData.get("name") as string;
-  let telefono = formData.get("telefono") as string;
-
   if (!userId) {
     return { success: false, error: "ID de usuario no encontrado" };
   }
@@ -27,18 +30,18 @@ export async function updateProfile(
     return { success: false, error: "No autorizado" };
   }
 
-  if (!telefono || telefono.trim() === "") {
-    return { success: false, error: "El teléfono es obligatorio" };
-  }
-
-  telefono = telefono.trim();
+  const perfil = esquemaPerfil.safeParse({
+    name: formData.get("name"),
+    telefono: formData.get("telefono"),
+  });
+  if (!perfil.success) return { success: false, error: "Ingresá un teléfono válido" };
 
   try {
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
-        name,
-        telefono,
+        name: perfil.data.name,
+        telefono: perfil.data.telefono,
       },
     });
 

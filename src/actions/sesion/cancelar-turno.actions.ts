@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { enviarEmailTurnoSeguro } from "@/lib/email/enviar-email-turno-seguro";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
-import { ESTADOS_TURNO } from "@/lib/constants";
+import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
 import { actualizarTurnoConDetalle } from "@/lib/turno-con-detalle";
 import { revalidarCacheTurno } from "@/lib/revalidar/revalidar-cache-turno";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
@@ -32,6 +32,7 @@ export async function cancelTurno(turnoId: string): Promise<ActionState> {
 
     const turnoActualizado = await actualizarTurnoConDetalle(turnoId, {
       estado: ESTADOS_TURNO[3],
+      estadoPago: ESTADOS_PAGO[4],
       claveSlot: null,
     });
 
@@ -44,6 +45,8 @@ export async function cancelTurno(turnoId: string): Promise<ActionState> {
     );
 
     revalidatePath("/dashboard");
+    revalidatePath("/turno");
+    revalidatePath("/admin");
 
     return { success: true };
   } catch {

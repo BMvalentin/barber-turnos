@@ -6,15 +6,15 @@ import { obtenerDiasLaborales } from "@/lib/consultas/obtener-dias-laborales";
 
 import type { Prisma, dias_laborales } from "../../../generated/prisma/client";
 
-type DiaLaboralConMargenes = Prisma.dia_laboralGetPayload<{
-  include: { margenes: true };
+type DiaLaboralDb = Prisma.dia_laboralGetPayload<{
+  select: { id: true; dia: true };
 }>;
 
 export async function getDiasLaborales() {
   try {
     const diasEnDb = await obtenerDiasLaborales();
 
-    const formatDia = (d: DiaLaboralConMargenes) => ({
+    const formatDia = (d: DiaLaboralDb) => ({
       ...d,
       dia: REVERSE_MAPA_DIA_SEMANA_DB[d.dia]
     });

@@ -22,6 +22,8 @@ async function updatePageConfigBase(
       return { success: false, error: "Formato de color inválido. Usá #RRGGBB (ej.: #d97706)." };
     if (data.bgColor !== undefined && !esquemaColor.safeParse(data.bgColor).success)
       return { success: false, error: "Formato de color inválido. Usá #RRGGBB (ej.: #d97706)." };
+    if (data.transferenciaActiva !== undefined && typeof data.transferenciaActiva !== "boolean")
+      return { success: false, error: "El estado de la transferencia no es válido." };
 
     const cleanWhatsapp = data.whatsapp ? data.whatsapp.replace(/\D/g, "") : undefined;
     await prisma.pageConfig.upsert({
@@ -39,6 +41,24 @@ async function updatePageConfigBase(
         ...(data.mapsUrl !== undefined && { mapsUrl: data.mapsUrl }),
         ...(data.address !== undefined && { address: data.address }),
         ...(cleanWhatsapp !== undefined && { whatsapp: cleanWhatsapp }),
+        ...(data.transferenciaTitular !== undefined && {
+          transferenciaTitular: data.transferenciaTitular,
+        }),
+        ...(data.transferenciaCuit !== undefined && {
+          transferenciaCuit: data.transferenciaCuit,
+        }),
+        ...(data.transferenciaAlias !== undefined && {
+          transferenciaAlias: data.transferenciaAlias,
+        }),
+        ...(data.transferenciaCbu !== undefined && {
+          transferenciaCbu: data.transferenciaCbu,
+        }),
+        ...(data.transferenciaBanco !== undefined && {
+          transferenciaBanco: data.transferenciaBanco,
+        }),
+        ...(data.transferenciaActiva !== undefined && {
+          transferenciaActiva: data.transferenciaActiva,
+        }),
       },
       create: {
         id: 1,
@@ -54,6 +74,12 @@ async function updatePageConfigBase(
         whatsapp: cleanWhatsapp || "",
         mapsUrl: data.mapsUrl || "",
         address: data.address || "",
+        transferenciaTitular: data.transferenciaTitular || "",
+        transferenciaCuit: data.transferenciaCuit || "",
+        transferenciaAlias: data.transferenciaAlias || "",
+        transferenciaCbu: data.transferenciaCbu || "",
+        transferenciaBanco: data.transferenciaBanco || "",
+        transferenciaActiva: data.transferenciaActiva ?? true,
       },
     });
 

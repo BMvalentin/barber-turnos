@@ -4,12 +4,14 @@ import { Clock } from "lucide-react";
 import BadgeEstadoTurno from "./BadgeEstadoTurno";
 import BadgeEstadoPago from "./BadgeEstadoPago";
 import MenuAccionesTurno from "./MenuAccionesTurno";
+import PagoPendienteTurno from "@/components/turno/PagoPendienteTurno";
 import { esAdmin } from "@/lib/seguridad/es-admin";
 import { formatearHora } from "@/lib/utils/formatear-hora";
 import { formatearMoneda } from "@/lib/utils/formatear-moneda";
 import { ESTADOS_TURNO } from "@/lib/constants";
 import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
+import type { DatosTransferencia } from "@/types/pago";
 
 interface Props {
   turno: TurnoListado;
@@ -17,6 +19,8 @@ interface Props {
   onCancelar: (id: string) => void;
   onCompletar: (id: string) => void;
   onConfirmar: (id: string) => void;
+  whatsappPhone?: string;
+  datosTransferencia?: DatosTransferencia;
 }
 
 export default function TurnoRow({
@@ -25,8 +29,11 @@ export default function TurnoRow({
   onCancelar,
   onCompletar,
   onConfirmar,
+  whatsappPhone = "",
+  datosTransferencia,
 }: Props) {
   const esAdminUsuario = esAdmin(session);
+  const esEmpleado = session?.user?.role === "EMPLEADO";
   const esDueno =
     turno.user?.id === session?.user?.id && session?.user?.role !== "ADMIN";
   const turnoActivo =
@@ -107,6 +114,11 @@ export default function TurnoRow({
         <div className="flex max-w-full flex-wrap items-center gap-1.5">
           <BadgeEstadoTurno estado={turno.estado} />
           <BadgeEstadoPago estado={turno.estadoPago} />
+          {turno.metodoPago === "TRANSFERENCIA" && (
+            <span className="inline-flex items-center rounded-full border border-sky-400/20 bg-sky-400/10 px-2.5 py-0.5 text-[11px] font-semibold text-sky-400">
+              Transferencia
+            </span>
+          )}
         </div>
       </div>
 
@@ -118,14 +130,16 @@ export default function TurnoRow({
             {turno.servicio?.duracion || 0} min
           </span>
         </span>
-        <span className="flex min-w-0 basis-full items-center gap-1.5 sm:basis-auto">
-          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[var(--page-primary-20)] text-[10px] font-bold text-[var(--admin-texto-primario)]">
-            {inicialBarbero}
+        {!esEmpleado && (
+          <span className="flex min-w-0 basis-full items-center gap-1.5 sm:basis-auto">
+            <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[var(--page-primary-20)] text-[10px] font-bold text-[var(--admin-texto-primario)]">
+              {inicialBarbero}
+            </span>
+            <span className="min-w-0 break-words [overflow-wrap:anywhere]">
+              {turno.barbero?.nombre || "Barbero eliminado"}
+            </span>
           </span>
-          <span className="min-w-0 break-words [overflow-wrap:anywhere]">
-            {turno.barbero?.nombre || "Barbero eliminado"}
-          </span>
-        </span>
+        )}
       </div>
 
       <div className="mt-2.5 flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-3">
@@ -140,12 +154,21 @@ export default function TurnoRow({
           )}
         </div>
         <div className="flex min-w-0 items-center justify-between gap-2 sm:justify-end">
+          {esDueno && datosTransferencia && (
+            <PagoPendienteTurno
+              turno={turno}
+              whatsappPhone={whatsappPhone}
+              datosTransferencia={datosTransferencia}
+            />
+          )}
           {ctaPrincipal}
-          <MenuAccionesTurno
-            turno={turno}
-            session={session}
-            onCancelar={onCancelar}
-          />
+          {esAdminUsuario && (
+            <MenuAccionesTurno
+              turno={turno}
+              session={session}
+              onCancelar={onCancelar}
+            />
+          )}
         </div>
       </div>
     </div>

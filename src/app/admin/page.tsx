@@ -1,6 +1,4 @@
 // app/admin/page.tsx
-import { prisma } from "@/lib/prisma";
-import { getCachedData } from "@/lib/cache";
 import {
   Users,
   Scissors,
@@ -11,111 +9,21 @@ import { formatearHora } from "@/lib/utils/formatear-hora";
 import { StatCard } from "@/components/panel/StatCard";
 import { DetailCard } from "@/components/panel/DetailCard";
 import { ItemLista } from "@/components/panel/ItemLista";
-import { ESTADOS_TURNO_ACTIVOS, ESTADOS_TURNO } from "@/lib/constants";
-import { obtenerBarberosConConteoDeTurnos } from "@/lib/consultas/obtener-barberos-con-conteo-de-turnos";
-import { obtenerBarberosConTurnosHoy } from "@/lib/consultas/obtener-barberos-con-turnos-hoy";
-import { obtenerBarberosConRendimientoHoy } from "@/lib/consultas/obtener-barberos-con-rendimiento-hoy";
-import { obtenerServiciosPopulares } from "@/lib/consultas/obtener-servicios-populares";
-
-async function getStats() {
-  const hoy = new Date();
-  const inicioDia = new Date(
-    hoy.getFullYear(),
-    hoy.getMonth(),
-    hoy.getDate(),
-    0,
-    0,
-    0,
-  );
-  const finDia = new Date(
-    hoy.getFullYear(),
-    hoy.getMonth(),
-    hoy.getDate(),
-    23,
-    59,
-    59,
-  );
-  const claveDia = `${hoy.getFullYear()}-${String(
-    hoy.getMonth() + 1,
-  ).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`;
-
-  const [
-    totalBarberos,
-    totalServicios,
-    totalTurnos,
-    turnosPendientes,
-    barberos,
-    serviciosPopulares,
-    turnosHoyPorBarbero,
-    rendimientoHoyPorBarbero,
-  ] = await Promise.all([
-    getCachedData(
-      ["admin-dashboard-total-barberos"],
-      ["admin-dashboard"],
-      () => prisma.barbero.count({ where: { estado: true } }),
-      30,
-    ),
-    getCachedData(
-      ["admin-dashboard-total-servicios"],
-      ["admin-dashboard"],
-      () => prisma.servicio.count({ where: { estado: true } }),
-      30,
-    ),
-    getCachedData(
-      ["admin-dashboard-total-turnos"],
-      ["admin-dashboard"],
-      () => prisma.turno.count(),
-      30,
-    ),
-    getCachedData(
-      ["admin-dashboard-turnos-pendientes"],
-      ["admin-dashboard"],
-      () =>
-        prisma.turno.count({
-          where: { estado: { in: [...ESTADOS_TURNO_ACTIVOS] } },
-        }),
-      30,
-    ),
-    getCachedData(
-      ["admin-dashboard-barberos"],
-      ["admin-dashboard"],
-      () => obtenerBarberosConConteoDeTurnos(),
-      30,
-    ),
-    getCachedData(
-      ["admin-dashboard-servicios-populares"],
-      ["admin-dashboard"],
-      () => obtenerServiciosPopulares(),
-      30,
-    ),
-    getCachedData(
-      ["admin-dashboard-turnos-hoy-por-barbero", claveDia],
-      ["admin-dashboard"],
-      () => obtenerBarberosConTurnosHoy(inicioDia, finDia),
-      30,
-    ),
-    getCachedData(
-      ["admin-dashboard-rendimiento-hoy-por-barbero", claveDia],
-      ["admin-dashboard"],
-      () => obtenerBarberosConRendimientoHoy(inicioDia, finDia),
-      30,
-    ),
-  ]);
-
-  return {
-    totalBarberos,
-    totalServicios,
-    totalTurnos,
-    turnosPendientes,
-    barberos,
-    serviciosPopulares,
-    turnosHoyPorBarbero,
-    rendimientoHoyPorBarbero,
-  };
-}
+import PanelResumenEmpleado from "@/components/panel/PanelResumenEmpleado";
+import { ESTADOS_TURNO } from "@/lib/constants";
+import { obtenerEstadisticasPanel } from "@/lib/consultas/obtener-estadisticas-panel";
+import { requerirPanel } from "@/lib/seguridad/requerir-admin";
+import { redirect } from "next/navigation";
 
 export default async function AdminDashboard() {
-  const stats = await getStats();
+  const contexto = await requerirPanel();
+  if (!contexto) redirect("/dashboard");
+  const esEmpleado = contexto.rol === "EMPLEADO";
+  const stats = await obtenerEstadisticasPanel(esEmpleado ? contexto.barberoId ?? undefined : undefined);
+
+  if (esEmpleado) {
+    return <PanelResumenEmpleado stats={stats} />;
+  }
 
   return (
     <div className="space-y-8">

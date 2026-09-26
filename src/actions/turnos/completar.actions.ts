@@ -12,14 +12,14 @@ export async function completedTurno(
   formData: FormData,
 ): Promise<ActionState<TurnoResumen>> {
   try {
-    const id = formData.get("id") as string;
-    if (!id) return { success: false, error: "ID inválido" };
+    const id = formData.get("id");
+    if (typeof id !== "string" || !id) return { success: false, error: "ID inválido" };
 
     const sesion = await requerirAdmin();
     if (!sesion) return { success: false, error: "No autorizado" };
 
     const turno = await prisma.turno.update({
-      where: { id },
+      where: { id, estado: ESTADOS_TURNO[1] },
       data: { estado: ESTADOS_TURNO[2], claveSlot: null },
     });
 
@@ -37,6 +37,9 @@ export async function completedTurno(
       },
     };
   } catch (error) {
+    if (typeof error === "object" && error !== null && "code" in error && error.code === "P2025") {
+      return { success: false, error: "El turno no existe o no está confirmado" };
+    }
     console.error(error);
     return { success: false, error: "Error al completar turno" };
   }

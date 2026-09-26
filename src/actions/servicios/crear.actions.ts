@@ -2,7 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { servicioSchema } from "@/lib/servicios-zod";
-import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
+import { requerirPanel } from "@/lib/seguridad/requerir-admin";
+import { limpiarUrlImagen } from "@/lib/limpiar-url-imagen";
 import { subirImagenServicio } from "@/lib/subir-imagen-servicio";
 import { leerSlotsImagenesServicio } from "@/lib/servicio-imagenes/leer-slots";
 import { MAX_IMAGENES_SERVICIO } from "@/lib/servicio-imagenes/constantes";
@@ -15,6 +16,9 @@ const createServicioBase = async (
   formData: FormData,
 ): Promise<ActionState<ServicioCreado>> => {
   try {
+    if (!(await requerirPanel())) return { success: false, error: "No autorizado" };
+
+    const image = formData.get("image") as File | null;
     const rawData = Object.fromEntries(formData.entries());
     const clavesSlots = Object.keys(rawData).filter((clave) => clave.startsWith("slot"));
     clavesSlots.forEach((clave) => delete rawData[clave]);
@@ -99,4 +103,4 @@ const createServicioBase = async (
   }
 };
 
-export const createServicio = exigirAdmin(createServicioBase);
+export const createServicio = createServicioBase;

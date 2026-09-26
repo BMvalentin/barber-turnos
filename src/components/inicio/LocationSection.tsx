@@ -23,23 +23,33 @@ export function LocationSection({ config }: LocationSectionProps) {
   const whatsapp = config?.whatsapp;
 
   useEffect(() => {
-    try {
-      getHorariosCompactos().then((res) => {
+    let vigente = true;
+
+    const cargarHorarios = async () => {
+      try {
+        const res = await getHorariosCompactos();
+        if (!vigente) return;
         if (res.length > 0) {
           setHorarios(res);
         } else {
           setHorarios(["Cerrado"]);
         }
-      });
-    } catch {
-      setHorarios(["Error al cargar horarios"]);
-    } finally {
-      setCargando(false);
-    }
+      } catch {
+        if (vigente) setHorarios(["Error al cargar horarios"]);
+      } finally {
+        if (vigente) setCargando(false);
+      }
+    };
+
+    void cargarHorarios();
+
+    return () => {
+      vigente = false;
+    };
   }, []);
 
   return (
-    <section id="ubicacion" className="py-20 md:py-32 bg-linear-to-b from-[var(--page-bg)]/90 to-[var(--page-bg)] justify-center items-center mx-auto border-y border-[var(--admin-border)]">
+    <section id="ubicacion" className="py-20 md:py-32 bg-linear-to-b from-[var(--page-bg)]/90 to-[var(--page-bg)] justify-center items-center mx-auto">
       <div className="container justify-around items-center mx-auto px-4">
 
         {/* HEADER DE LA SECCIÓN */}

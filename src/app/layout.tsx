@@ -5,7 +5,7 @@ import AppGate from "@/components/comunes/AppGate";
 import { Toaster } from "sonner";
 import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 import { crearVariablesTema } from "@/lib/contraste/crear-variables-tema";
-import { auth } from "@/auth";
+import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -20,8 +20,10 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const config = await obtenerConfigCacheada();
-  const session = await auth();
+  const [config, session] = await Promise.all([
+    obtenerConfigCacheada(),
+    requerirSesion(),
+  ]);
 
   const variablesTema = crearVariablesTema({
     primario: config?.primaryColor,
