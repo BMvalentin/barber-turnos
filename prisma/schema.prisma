@@ -33,7 +33,7 @@ model barbero {
   srcImage    String?
   nombre      String
   email       String?
-  usuarioId   String?                  @unique
+  usuarioId   String?                  @unique @map("usuarioId")
   estado      Boolean                  @default(true)
   createdAt   DateTime                 @default(now())
   updatedAt   DateTime                 @updatedAt
