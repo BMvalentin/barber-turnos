@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/prisma";
+import { listarUrlImagenesServicio } from "@/lib/servicio-imagenes/listar-url";
 
 export async function obtenerServiciosConBarberos() {
-  return prisma.servicio.findMany({
+  const registros = await prisma.servicio.findMany({
     where: { estado: true },
     include: {
+      imagenes: { orderBy: { orden: "asc" }, select: { url: true } },
       servicios: {
         include: {
           barbero: {
@@ -23,4 +25,9 @@ export async function obtenerServiciosConBarberos() {
     },
     orderBy: { createdAt: "desc" },
   });
+
+  return registros.map((registro) => ({
+    ...registro,
+    imagenes: listarUrlImagenesServicio(registro),
+  }));
 }

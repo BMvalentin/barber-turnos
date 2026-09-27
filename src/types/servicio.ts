@@ -13,6 +13,8 @@ export type Servicio = {
   descuento: number;
   senia: number;
   createdAt: Date;
+  /* URLs de las imágenes del servicio en orden (máx. 3). */
+  imagenes: string[];
   barberos?: {
     barbero: {
       id: string;
@@ -25,7 +27,7 @@ export type Servicio = {
 export type ServicioCreado = Omit<
   Prisma.servicioGetPayload<Prisma.servicioDefaultArgs>,
   "precio" | "descuento" | "senia"
-> & { precio: number; descuento: number; senia: number };
+> & { precio: number; descuento: number; senia: number; imagenes: string[] };
 
 /* Servicio listado con sus barberos (getServicios). */
 export type ServicioConBarberos = Omit<
@@ -47,7 +49,7 @@ export type ServicioConBarberos = Omit<
     };
   }>,
   "precio" | "descuento" | "senia"
-> & { precio: number; descuento: number; senia: number };
+> & { precio: number; descuento: number; senia: number; imagenes: string[] };
 
 /* Servicio del carrusel público (getServiciosCarrusel), con montos convertidos a Number. */
 export type ServicioCarrusel = Omit<
@@ -62,4 +64,4 @@ export type ServicioCarrusel = Omit<
     };
   }>,
   "precio" | "descuento"
-> & { precio: number; descuento: number };
+> & { precio: number; descuento: number; imagenes: string[] };
