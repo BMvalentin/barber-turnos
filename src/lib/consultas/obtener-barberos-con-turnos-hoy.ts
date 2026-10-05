@@ -7,6 +7,7 @@ export async function obtenerBarberosConTurnosHoy(inicioDia: Date, finDia: Date,
     select: {
       id: true,
       nombre: true,
+      porcentajeGanancia: true,
       _count: {
         select: {
           turnos: { where: { estado: { in: [...ESTADOS_TURNO_ACTIVOS] } } },

@@ -35,6 +35,8 @@ model barbero {
   email       String?
   usuarioId   String?                  @unique @map("usuarioId")
   estado      Boolean                  @default(true)
+  /* Porcentaje (0-100) del precio de cada corte que corresponde al empleado. */
+  porcentajeGanancia Decimal           @default(0.00) @db.Decimal(5, 2)
   createdAt   DateTime                 @default(now())
   updatedAt   DateTime                 @updatedAt
   usuario     user?                    @relation(fields: [usuarioId], references: [id], onDelete: SetNull)

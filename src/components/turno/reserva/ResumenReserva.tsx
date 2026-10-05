@@ -46,7 +46,7 @@ export default function ResumenReserva({
   const montoSaldo = (servicio?.precio ?? 0) - montoSeña;
 
   return (
-    <aside className="flex flex-col gap-5 rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-5 lg:sticky lg:top-0 lg:self-start">
+    <aside className="flex flex-col gap-5 rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-5">
       <h2 className="text-lg font-semibold text-[var(--admin-texto-primario)]">
         Resumen del turno
       </h2>

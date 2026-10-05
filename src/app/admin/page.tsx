@@ -1,11 +1,7 @@
 // app/admin/page.tsx
-import {
-  Users,
-  Scissors,
-  Calendar,
-  DollarSign,
-} from "lucide-react";
+import { Users, Scissors, Calendar, DollarSign } from "lucide-react";
 import { formatearHora } from "@/lib/utils/formatear-hora";
+import { formatearMoneda } from "@/lib/utils/formatear-moneda";
 import { StatCard } from "@/components/panel/StatCard";
 import { DetailCard } from "@/components/panel/DetailCard";
 import { ItemLista } from "@/components/panel/ItemLista";
@@ -19,7 +15,9 @@ export default async function AdminDashboard() {
   const contexto = await requerirPanel();
   if (!contexto) redirect("/dashboard");
   const esEmpleado = contexto.rol === "EMPLEADO";
-  const stats = await obtenerEstadisticasPanel(esEmpleado ? contexto.barberoId ?? undefined : undefined);
+  const stats = await obtenerEstadisticasPanel(
+    esEmpleado ? (contexto.barberoId ?? undefined) : undefined,
+  );
 
   if (esEmpleado) {
     return <PanelResumenEmpleado stats={stats} />;
@@ -105,36 +103,28 @@ export default async function AdminDashboard() {
           {stats.rendimientoHoyPorBarbero.length === 0 ? (
             <Empty text="No hay barberos" />
           ) : (
-            stats.rendimientoHoyPorBarbero.map((b) => {
-              const completados = b.turnos.length;
-              const recaudado = b.turnos.reduce(
-                (acc, t) => acc + Number(t.precioCongelado),
-                0,
-              );
-              const comision = recaudado * 0.5; // Asumiendo un 50% de comisión
-              return (
-                <ItemLista key={b.id}>
-                  <div>
-                    <p className="text-sm text-[var(--admin-texto-primario)]">
-                      {b.nombre}
-                    </p>
-                    <p className="text-xs text-[var(--admin-texto-muted)]">
-                      {completados} cortes completados
-                    </p>
+            stats.rendimientoHoyPorBarbero.map((b) => (
+              <ItemLista key={b.id}>
+                <div>
+                  <p className="text-sm text-[var(--admin-texto-primario)]">
+                    {b.nombre}
+                  </p>
+                  <p className="text-xs text-[var(--admin-texto-muted)]">
+                    {b.completados}{" "}
+                    {b.completados === 1
+                      ? "corte completado"
+                      : "cortes completados"}
+                  </p>
+                </div>
+                {b.completados > 0 && (
+                  <div className="mt-1 pt-1 border-t border-[var(--admin-border)] flex flex-col items-end text-right">
+                    <span className="text-green-500/80 text-xs">
+                      ${formatearMoneda(b.ganancia)}
+                    </span>
                   </div>
-                  {completados > 0 && (
-                    <div className="mt-1 pt-1 border-t border-[var(--admin-border)] flex flex-col items-end text-right">
-                      <span className="text-[var(--page-primary-tinta)] text-xs">
-                        Total: ${recaudado.toFixed(2)}
-                      </span>
-                      <span className="text-green-500/80 text-xs">
-                        Comisión (50%): ${comision.toFixed(2)}
-                      </span>
-                    </div>
-                  )}
-                </ItemLista>
-              );
-            })
+                )}
+              </ItemLista>
+            ))
           )}
         </DetailCard>
       </div>
@@ -165,9 +155,7 @@ export default async function AdminDashboard() {
                     >
                       <div>
                         <p className="text-sm text-[var(--admin-texto-primario)]">
-                          {t.user?.name ||
-                            t.user?.email ||
-                            "Usuario eliminado"}
+                          {t.user?.name || t.user?.email || "Usuario eliminado"}
                         </p>
                         <p className="text-xs text-[var(--admin-texto-muted)]">
                           {t.servicio?.nombre || "Servicio eliminado"}

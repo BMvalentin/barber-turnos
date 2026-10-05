@@ -1,7 +1,11 @@
 /* Tipos compartidos del flujo de creación de turnos. */
 
 import type { Prisma } from "../../generated/prisma/client";
-import { ESTADOS_TURNO, SELECCION_USUARIO_BASICA } from "@/lib/constants";
+import {
+  ESTADOS_TURNO,
+  SELECCION_BARBERO_PUBLICA,
+  SELECCION_USUARIO_BASICA,
+} from "@/lib/constants";
 
 export type ServicioData = {
   id: string;
@@ -47,7 +51,7 @@ export type TurnoConDetalle = Omit<
   Prisma.turnoGetPayload<{
     include: {
       user: { select: typeof SELECCION_USUARIO_BASICA };
-      barbero: true;
+      barbero: { select: typeof SELECCION_BARBERO_PUBLICA };
       servicio: true;
     };
   }>,

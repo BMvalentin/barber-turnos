@@ -5,6 +5,7 @@ import { obtenerBarberosConTurnosHoy } from "@/lib/consultas/obtener-barberos-co
 import { obtenerServiciosPopulares } from "@/lib/consultas/obtener-servicios-populares";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import { obtenerRangoDelDia } from "@/lib/utils/obtener-rango-del-dia";
+import { calcularGananciaEmpleado } from "@/lib/ganancias/calcular-ganancia-empleado";
 
 export async function obtenerEstadisticasPanel(barberoId?: string) {
   const claveDia = obtenerFechaSola(new Date());
@@ -52,7 +53,8 @@ export async function obtenerEstadisticasPanel(barberoId?: string) {
       30,
     ),
     getCachedData(
-      ["admin-dashboard-actividad-hoy-por-barbero", claveDia, barberoId ?? "todos"],
+      // Versionar la clave cuando cambie la forma del resultado: la caché persiste entre despliegues.
+      ["admin-dashboard-actividad-hoy-por-barbero", "v2", claveDia, barberoId ?? "todos"],
       ["admin-dashboard", "barberos", "turnos-global"],
       () => obtenerBarberosConTurnosHoy(inicioDia, finDia, barberoId),
       30,
@@ -74,9 +76,12 @@ export async function obtenerEstadisticasPanel(barberoId?: string) {
   const rendimientoHoyPorBarbero = barberosConActividadHoy.map((barbero) => ({
     id: barbero.id,
     nombre: barbero.nombre,
-    turnos: barbero.turnos
-      .filter((turno) => turno.estado === ESTADOS_TURNO[2])
-      .map((turno) => ({ precioCongelado: turno.precioCongelado })),
+    ...calcularGananciaEmpleado(
+      barbero.turnos
+        .filter((turno) => turno.estado === ESTADOS_TURNO[2])
+        .map((turno) => turno.precioCongelado),
+      barbero.porcentajeGanancia,
+    ),
   }));
 
   return {

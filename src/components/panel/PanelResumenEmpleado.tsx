@@ -1,5 +1,7 @@
 import { Calendar, DollarSign, Scissors } from "lucide-react";
 import { formatearHora } from "@/lib/utils/formatear-hora";
+import { formatearMoneda } from "@/lib/utils/formatear-moneda";
+import type { GananciaEmpleado } from "@/lib/ganancias/calcular-ganancia-empleado";
 import { ESTADOS_TURNO } from "@/lib/constants";
 import { DetailCard } from "@/components/panel/DetailCard";
 import { ItemLista } from "@/components/panel/ItemLista";
@@ -23,20 +25,13 @@ export type DatosResumenEmpleado = {
     _count: { turnos: number };
   }>;
   turnosHoyPorBarbero: Array<{ turnos: TurnoAgendaEmpleado[] }>;
-  rendimientoHoyPorBarbero: Array<{
-    turnos: Array<{ precioCongelado: unknown }>;
-  }>;
+  rendimientoHoyPorBarbero: GananciaEmpleado[];
 };
 
 export default function PanelResumenEmpleado({ stats }: { stats: DatosResumenEmpleado }) {
   const rendimiento = stats.rendimientoHoyPorBarbero[0];
   const turnosHoy = stats.turnosHoyPorBarbero[0]?.turnos ?? [];
-  const completados = rendimiento?.turnos.length ?? 0;
-  const recaudado = rendimiento?.turnos.reduce(
-    (acumulado, turno) => acumulado + Number(turno.precioCongelado),
-    0,
-  ) ?? 0;
-  const comision = recaudado * 0.5;
+  const completados = rendimiento?.completados ?? 0;
 
   return (
     <div className="space-y-8">
@@ -84,8 +79,8 @@ export default function PanelResumenEmpleado({ stats }: { stats: DatosResumenEmp
               </div>
               {completados > 0 && (
                 <div className="mt-1 flex flex-col items-end border-t border-[var(--admin-border)] pt-1 text-right">
-                  <span className="text-xs text-[var(--page-primary-tinta)]">Total: ${recaudado.toFixed(2)}</span>
-                  <span className="text-xs text-green-500/80">Comisión (50%): ${comision.toFixed(2)}</span>
+                  <span className="text-xs text-[var(--page-primary-tinta)]">Total: ${formatearMoneda(rendimiento.recaudado)}</span>
+                  <span className="text-xs text-green-500/80">Tu ganancia ({rendimiento.porcentajeGanancia}%): ${formatearMoneda(rendimiento.ganancia)}</span>
                 </div>
               )}
             </ItemLista>
