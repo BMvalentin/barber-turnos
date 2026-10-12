@@ -60,6 +60,8 @@ export function useFormularioTurno({
     setSelectedServicioId,
     setSelectedBarberoId,
     setSelectedUserId,
+    setClienteNombre,
+    setClienteApellido,
     setEstadoPago,
   } = datos;
   const { setTurnoCreado, setShowPagoModal, setTransferenciaLista } = pago;
@@ -99,6 +101,8 @@ export function useFormularioTurno({
     setSelectedServicioId("");
     setSelectedBarberoId("");
     setSelectedUserId(session?.user?.role === "USER" ? session?.user?.id ?? "" : "");
+    setClienteNombre("");
+    setClienteApellido("");
     setEstadoPago(ESTADOS_PAGO[0]);
 
     onTurnoCreado?.();
@@ -134,6 +138,8 @@ export function useFormularioTurno({
     setSelectedServicioId,
     setSelectedBarberoId,
     setSelectedUserId,
+    setClienteNombre,
+    setClienteApellido,
     setEstadoPago,
     setTurnoCreado,
     setTransferenciaLista,

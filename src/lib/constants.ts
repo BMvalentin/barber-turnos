@@ -101,7 +101,10 @@ export const DIAS_SEMANA = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves"
 export const ABREVIATURAS_DIAS = ["DOM", "LUN", "MAR", "MIE", "JUE", "VIE", "SAB"] as const;
 
 /* Selección de usuario básica (id, name, email, telefono) */
-export const SELECCION_USUARIO_BASICA = { id: true, name: true, email: true, telefono: true } as const;
+export const SELECCION_USUARIO_BASICA = {
+  id: true, name: true, email: true, telefono: true,
+  esInvitado: true, emailContacto: true,
+} as const;
 
 /* Campos del barbero que pueden llegar a clientes y vistas públicas.
    Excluye datos internos como el porcentaje de ganancia. */

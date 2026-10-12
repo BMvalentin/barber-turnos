@@ -2,9 +2,13 @@ import { prisma } from "@/lib/prisma";
 
 import type { BarberoParaHorarios } from "@/types/horarios";
 
-export async function obtenerBarberosParaHorarios(barberoId?: string, soloEmpleados = false): Promise<BarberoParaHorarios[]> {
+export async function obtenerBarberosParaHorarios(barberoId?: string, soloPersonal = false): Promise<BarberoParaHorarios[]> {
   return prisma.barbero.findMany({
-    where: barberoId ? { id: barberoId } : soloEmpleados ? { usuario: { role: "EMPLEADO" } } : undefined,
+    where: barberoId
+      ? { id: barberoId }
+      : soloPersonal
+        ? { usuario: { role: { in: ["ADMIN", "EMPLEADO"] } } }
+        : undefined,
     select: {
       id: true,
       nombre: true,

@@ -14,6 +14,16 @@ import { MINIMO_ANTICIPACION_MS, ESTADOS_TURNO, ESTADOS_PAGO, ESTADOS_PAGO_MANUA
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import type { ActionState } from "@/types/action-state";
 import type { TurnoConDetalle } from "@/types/turno";
+import { z } from "zod";
+
+const esquemaClienteNuevo = z.object({
+  nombre: z.string().trim().min(1).max(95),
+  apellido: z.string().trim().min(1).max(95),
+  telefono: z.string().trim().max(40).refine((telefono) =>
+    !telefono || (/^\+?[0-9\s().-]+$/.test(telefono) && telefono.replace(/\D/g, "").length >= 6)
+  ),
+  email: z.string().trim().max(191).refine((email) => !email || z.email().safeParse(email).success),
+});
 
 export async function createTurno(
   prevState: ActionState<TurnoConDetalle>,
@@ -30,17 +40,39 @@ export async function createTurno(
     const puedeGestionarTurnos = usuarioEsAdmin || usuarioEsEmpleado;
     const estadoPagoRaw = formData.get("estadoPago");
     const servicioId = formData.get("servicioId");
-    const userId = puedeGestionarTurnos ? formData.get("userId") : session.user.id;
+    const clienteNuevoSolicitado = puedeGestionarTurnos && formData.get("userId") === "nuevo";
+    const userId = clienteNuevoSolicitado
+      ? null
+      : puedeGestionarTurnos ? formData.get("userId") : session.user.id;
     const barberoId = formData.get("barberoId");
     const horarioStr = formData.get("horarioReservado");
     if (
       typeof servicioId !== "string" || !servicioId ||
-      typeof userId !== "string" || !userId ||
+      (!clienteNuevoSolicitado && (typeof userId !== "string" || !userId)) ||
       typeof barberoId !== "string" || !barberoId ||
       typeof horarioStr !== "string" || !horarioStr
     ) {
       return { success: false, error: "Datos incompletos" };
     }
+    const datosCliente = clienteNuevoSolicitado
+      ? esquemaClienteNuevo.safeParse({
+          nombre: formData.get("clienteNombre"),
+          apellido: formData.get("clienteApellido"),
+          telefono: formData.get("clienteTelefono"),
+          email: formData.get("clienteEmail"),
+        })
+      : null;
+    if (datosCliente && !datosCliente.success) {
+      return { success: false, error: "Revisá el nombre, apellido, teléfono y correo del cliente" };
+    }
+    const clienteNuevo = datosCliente?.success
+      ? {
+          nombre: datosCliente.data.nombre,
+          apellido: datosCliente.data.apellido,
+          telefono: datosCliente.data.telefono || null,
+          email: datosCliente.data.email ? datosCliente.data.email.toLowerCase() : null,
+        }
+      : undefined;
     if (usuarioEsEmpleado && contextoPanel?.barberoId !== barberoId) {
       return { success: false, error: "Solo podés crear turnos para tu propia agenda" };
     }
@@ -67,7 +99,8 @@ export async function createTurno(
     const estadoFinal = estadoPago === ESTADOS_PAGO[1] || estadoPago === ESTADOS_PAGO[2] ? ESTADOS_TURNO[1] : ESTADOS_TURNO[0];
     const resultado = await crearTurnoEnTransaccion({
       servicioId,
-      userId,
+      userId: typeof userId === "string" ? userId : null,
+      clienteNuevo,
       barberoId,
       idUsuarioActual: session.user.id,
       inicio,
@@ -77,30 +110,34 @@ export async function createTurno(
     });
     if (!resultado.ok) return { success: false, error: resultado.error };
     const turno = resultado.turno;
-    revalidarDisponibilidadTurno(barberoId, obtenerFechaSola(inicio), userId);
+    revalidarDisponibilidadTurno(barberoId, obtenerFechaSola(inicio), turno.userId);
     after(async () => {
       const tareas: Promise<unknown>[] = [
-        prisma.slotLock.deleteMany({ where: { userId, barberoId, horarioReservado: inicio } }),
+        prisma.slotLock.deleteMany({
+          where: { userId: clienteNuevoSolicitado ? session.user.id : turno.userId, barberoId, horarioReservado: inicio },
+        }),
       ];
       if (resultado.creado && turno.estado === ESTADOS_TURNO[1]) {
         tareas.push(
           enviarEmailTurnoSeguro(turno, "CONFIRMADO"),
           enviarEmailTurnoBarberoSeguro(turno, "CONFIRMADO"),
         );
+      } else if (resultado.creado && clienteNuevoSolicitado) {
+        tareas.push(enviarEmailTurnoSeguro(turno, "CREADO"));
       }
       const resultados = await Promise.allSettled(tareas);
       for (const resultadoTarea of resultados) {
         if (resultadoTarea.status === "rejected") {
           console.error(
             "Error en tarea posterior a la creación del turno:",
-            resultadoTarea.reason,
+            resultadoTarea.reason instanceof Error ? resultadoTarea.reason.name : "desconocido",
           );
         }
       }
     });
     return { success: true, data: serializarTurnoConDetalle(turno) };
   } catch (error) {
-    console.error(error);
+    console.error("Error al crear turno:", error instanceof Error ? error.name : "desconocido");
     return { success: false, error: "Error al crear turno" };
   }
 }

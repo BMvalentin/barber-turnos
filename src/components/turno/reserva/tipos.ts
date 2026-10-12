@@ -113,6 +113,10 @@ export type PropsResumenReserva = {
   usuarios: UsuarioData[];
   selectedUserId: string;
   onCambiarCliente: (id: string) => void;
+  clienteNombre: string;
+  onCambiarClienteNombre: (nombre: string) => void;
+  clienteApellido: string;
+  onCambiarClienteApellido: (apellido: string) => void;
   esEdicion?: boolean;
   estadoPago: (typeof ESTADOS_PAGO)[number];
   onCambiarEstadoPago: (valor: (typeof ESTADOS_PAGO)[number]) => void;
@@ -124,6 +128,11 @@ export type PropsSelectorClienteReserva = {
   usuarios: UsuarioData[];
   selectedUserId: string;
   onCambiar: (id: string) => void;
+  esEdicion: boolean;
+  clienteNombre: string;
+  onCambiarClienteNombre: (nombre: string) => void;
+  clienteApellido: string;
+  onCambiarClienteApellido: (apellido: string) => void;
 };
 
 export type PropsFormularioReservaTurno = {
@@ -139,6 +148,10 @@ export type PropsFormularioReservaTurno = {
   selectedBarberoId: string;
   selectedUserId: string;
   setSelectedUserId: (id: string) => void;
+  clienteNombre: string;
+  setClienteNombre: (nombre: string) => void;
+  clienteApellido: string;
+  setClienteApellido: (apellido: string) => void;
   serviciosFiltrados: ServicioData[];
   handleBarberoChange: (id: string) => void;
   handleServicioChange: (id: string) => void;

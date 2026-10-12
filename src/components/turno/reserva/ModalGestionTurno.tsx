@@ -59,6 +59,10 @@ export default function ModalGestionTurno({
     selectedBarberoId,
     selectedUserId,
     setSelectedUserId,
+    clienteNombre,
+    setClienteNombre,
+    clienteApellido,
+    setClienteApellido,
     estadoPago,
     setEstadoPago,
     serviciosFiltrados,
@@ -160,6 +164,10 @@ export default function ModalGestionTurno({
                 selectedBarberoId={selectedBarberoId}
                 selectedUserId={selectedUserId}
                 setSelectedUserId={setSelectedUserId}
+                clienteNombre={clienteNombre}
+                setClienteNombre={setClienteNombre}
+                clienteApellido={clienteApellido}
+                setClienteApellido={setClienteApellido}
                 serviciosFiltrados={serviciosFiltrados}
                 handleBarberoChange={handleBarberoChange}
                 handleServicioChange={handleServicioChange}

@@ -28,7 +28,7 @@ export async function crearPreferenciaPago(
     const turno = await prisma.turno.findUnique({
       where: { id: turnoId },
       include: {
-        user: { select: { name: true, email: true } },
+        user: { select: { name: true, email: true, esInvitado: true, emailContacto: true } },
         servicio: { select: { nombre: true, descripcion: true } },
         barbero: { select: { nombre: true } },
       },
@@ -38,6 +38,9 @@ export async function crearPreferenciaPago(
     // Solo el dueño del turno (o un admin) puede generar su preferencia de pago
     const sesionAutorizada = await requerirPropietarioOAdmin(turno.userId);
     if (!sesionAutorizada) return { success: false, error: "No autorizado" };
+    if (turno.user.esInvitado && !turno.user.emailContacto) {
+      return { success: false, error: "El cliente necesita un correo para pagar con Mercado Pago" };
+    }
 
     const pagoReintentable = (ESTADOS_PAGO_REINTENTABLES as readonly string[]).includes(turno.estadoPago);
     if (!pagoReintentable) {

@@ -11,6 +11,8 @@ type TurnoAgendaEmpleado = {
   id: string;
   estado: string;
   horarioReservado: Date;
+  clienteNombre?: string | null;
+  clienteApellido?: string | null;
   user: { name: string | null; email: string | null } | null;
   servicio: { nombre: string } | null;
 };
@@ -103,7 +105,9 @@ export default function PanelResumenEmpleado({ stats }: { stats: DatosResumenEmp
                 <div key={turno.id} className="flex items-center justify-between gap-4 rounded-lg bg-[var(--admin-surface-elevated)] p-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm text-[var(--admin-texto-primario)]">
-                      {turno.user?.name || turno.user?.email || "Usuario eliminado"}
+                      {turno.clienteNombre
+                        ? [turno.clienteNombre, turno.clienteApellido].filter(Boolean).join(" ")
+                        : turno.user?.name || turno.user?.email || "Usuario eliminado"}
                     </p>
                     <p className="truncate text-xs text-[var(--admin-texto-muted)]">
                       {turno.servicio?.nombre || "Servicio eliminado"}

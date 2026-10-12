@@ -25,12 +25,20 @@ export async function obtenerDatosReserva(incluirUsuarios: boolean) {
     obtenerCatalogoReserva(),
     incluirUsuarios
       ? prisma.user.findMany({
-          select: { id: true, name: true, email: true },
+          where: { OR: [{ esInvitado: false }, { turno: { some: {} } }] },
+          select: { id: true, name: true, email: true, esInvitado: true, emailContacto: true },
           orderBy: { name: "asc" },
         })
       : [],
     obtenerConfigCacheada(),
   ]);
 
-  return { ...catalogo, usuarios, config };
+  return {
+    ...catalogo,
+    usuarios: usuarios.map((usuario) => ({
+      ...usuario,
+      email: usuario.esInvitado ? null : usuario.email,
+    })),
+    config,
+  };
 }

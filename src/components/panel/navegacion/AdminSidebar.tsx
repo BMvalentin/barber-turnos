@@ -74,7 +74,7 @@ export default function AdminSidebar({ colapsado, alAlternar, abierto, alCerrar,
             <span className={`min-w-0 truncate text-sm font-semibold text-[var(--admin-texto-primario)] ${colapsado ? "md:hidden" : ""}`}>{marca}</span>
           </Link>
           {colapsado && (
-            <button type="button" onClick={alAlternar} aria-label="Expandir sidebar" aria-expanded="false" className="absolute right-1 top-1 hidden h-6 w-6 items-center justify-center rounded-md text-[var(--admin-texto-secundario)] opacity-0 transition-[opacity,color,background-color,transform] duration-200 ease-out motion-reduce:transition-none hover:scale-105 hover:bg-[var(--admin-border)] hover:text-[var(--admin-texto-primario)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] md:flex md:group-hover/header:opacity-100 md:group-focus-within/header:opacity-100">
+            <button type="button" onClick={alAlternar} aria-label="Expandir sidebar" aria-expanded="false" className="absolute left-1/2 top-1/2 hidden h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-md text-[var(--admin-texto-secundario)] opacity-0 transition-[opacity,color,background-color,transform] duration-200 ease-out motion-reduce:transition-none hover:scale-105 hover:bg-[var(--admin-border)] hover:text-[var(--admin-texto-primario)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] md:flex md:group-hover/header:opacity-100 md:group-focus-within/header:opacity-100">
               <ChevronsRight className="h-4 w-4" />
             </button>
           )}
