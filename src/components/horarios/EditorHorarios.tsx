@@ -61,7 +61,7 @@ export function EditorHorarios({
       <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
         {esEmpleado
           ? "Definí tus días y rangos de atención."
-          : "Seleccioná el empleado y configurá sus días de trabajo."}
+          : "Seleccioná un perfil del equipo y configurá sus días de trabajo."}
       </p>
 
       {!esEmpleado && (

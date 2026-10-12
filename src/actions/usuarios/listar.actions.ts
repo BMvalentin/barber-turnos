@@ -23,6 +23,7 @@ export async function listarUsuarios(): Promise<ActionState<DatosUsuariosAdminis
     if (!(await requerirAdmin())) return { success: false, error: "No autorizado" };
 
     const usuarios = await prisma.user.findMany({
+      where: { esInvitado: false },
       select: {
         id: true,
         name: true,

@@ -20,14 +20,18 @@ import type { BarberoParaHorarios, DiaLaboral, HorarioDiaBarbero } from "@/types
 type Props = {
   diasLaborales: DiaLaboral[];
   barberos: BarberoParaHorarios[];
+  barberoIdInicial: string;
   esEmpleado: boolean;
 };
 
-export function HorariosLaboralesClient({ diasLaborales, barberos, esEmpleado }: Props) {
+export function HorariosLaboralesClient({ diasLaborales, barberos, barberoIdInicial, esEmpleado }: Props) {
   const router = useRouter();
   const [pendiente, startTransition] = useTransition();
-  const [barberoId, setBarberoId] = useState(() => barberos[0]?.id ?? "");
-  const [valores, setValores] = useState<Record<string, EstadoDiaEditor>>(() => construirEstado(barberos, diasLaborales, barberos[0]?.id ?? ""));
+  const idInicialDisponible = barberos.some((barbero) => barbero.id === barberoIdInicial)
+    ? barberoIdInicial
+    : barberos[0]?.id ?? "";
+  const [barberoId, setBarberoId] = useState(idInicialDisponible);
+  const [valores, setValores] = useState<Record<string, EstadoDiaEditor>>(() => construirEstado(barberos, diasLaborales, idInicialDisponible));
   const [eliminarDia, setEliminarDia] = useState<{ diaId: string; asignacionIds: string[] } | null>(null);
 
   const tarjetaRef = useRef<HTMLElement | null>(null);
@@ -162,7 +166,7 @@ export function HorariosLaboralesClient({ diasLaborales, barberos, esEmpleado }:
 
   return (
     <div className="space-y-8">
-      <EncabezadoHorarios esEmpleado={esEmpleado} hayEmpleados={barberos.length > 0} alNuevoHorario={alNuevoHorario} />
+      <EncabezadoHorarios esEmpleado={esEmpleado} hayPerfiles={barberos.length > 0} alNuevoHorario={alNuevoHorario} />
 
       {barberos.length === 0 ? (
         <EmptyState

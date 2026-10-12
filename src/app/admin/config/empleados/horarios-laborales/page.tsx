@@ -30,6 +30,7 @@ export default async function HorariosLaboralesPage() {
       <Suspense fallback={<CargaHorarios />}>
         <ContenidoHorarios
           barberoId={barberoId}
+          barberoIdInicial={contexto.barberoId ?? ""}
           esEmpleado={esEmpleado}
         />
       </Suspense>
@@ -39,9 +40,11 @@ export default async function HorariosLaboralesPage() {
 
 async function ContenidoHorarios({
   barberoId,
+  barberoIdInicial,
   esEmpleado,
 }: {
   barberoId?: string;
+  barberoIdInicial: string;
   esEmpleado: boolean;
 }) {
   const [diasLaborales, barberos] = await Promise.all([
@@ -53,6 +56,7 @@ async function ContenidoHorarios({
     <HorariosLaboralesClient
       diasLaborales={diasLaborales}
       barberos={barberos}
+      barberoIdInicial={barberoIdInicial}
       esEmpleado={esEmpleado}
     />
   );

@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button/Button";
 
 type Props = {
   esEmpleado: boolean;
-  hayEmpleados: boolean;
+  hayPerfiles: boolean;
   alNuevoHorario: () => void;
 };
 
-export default function EncabezadoHorarios({ esEmpleado, hayEmpleados, alNuevoHorario }: Props) {
+export default function EncabezadoHorarios({ esEmpleado, hayPerfiles, alNuevoHorario }: Props) {
   return (
     <div className="flex items-start justify-between gap-4">
       <div>
@@ -19,10 +19,10 @@ export default function EncabezadoHorarios({ esEmpleado, hayEmpleados, alNuevoHo
         <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
           {esEmpleado
             ? "Configurá tus días y horarios de atención."
-            : "Gestioná los horarios de trabajo de tus empleados."}
+            : "Gestioná los horarios de tu perfil y los del resto del equipo."}
         </p>
       </div>
-      {hayEmpleados && (
+      {hayPerfiles && (
         <Button
           type="button"
           onClick={alNuevoHorario}

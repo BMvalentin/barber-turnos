@@ -36,6 +36,10 @@ export default function ResumenReserva({
   usuarios,
   selectedUserId,
   onCambiarCliente,
+  clienteNombre,
+  onCambiarClienteNombre,
+  clienteApellido,
+  onCambiarClienteApellido,
   esEdicion = false,
   estadoPago,
   onCambiarEstadoPago,
@@ -161,6 +165,11 @@ export default function ResumenReserva({
             usuarios={usuarios}
             selectedUserId={selectedUserId}
             onCambiar={onCambiarCliente}
+            esEdicion={esEdicion}
+            clienteNombre={clienteNombre}
+            onCambiarClienteNombre={onCambiarClienteNombre}
+            clienteApellido={clienteApellido}
+            onCambiarClienteApellido={onCambiarClienteApellido}
           />
           <SelectorEstadoPago
             valor={estadoPago}

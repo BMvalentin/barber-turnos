@@ -18,6 +18,9 @@ export type DatosEmailTurno = {
 };
 
 type TurnoConRelaciones = {
+  clienteNombre?: string | null;
+  clienteApellido?: string | null;
+  clienteTelefono?: string | null;
   estado: string;
   horarioReservado: Date;
   precioCongelado: number | { toNumber: () => number };
@@ -55,8 +58,12 @@ export function construirDatosEmailTurno(
       : 0;
 
   return {
-    clienteNombre: turno.user?.name || "Cliente",
-    clienteTelefono: turno.user?.telefono || "",
+    clienteNombre: turno.clienteNombre
+      ? [turno.clienteNombre, turno.clienteApellido].filter(Boolean).join(" ")
+      : turno.user?.name || "Cliente",
+    clienteTelefono: turno.clienteNombre
+      ? turno.clienteTelefono ?? ""
+      : turno.user?.telefono ?? "",
     servicioNombre: turno.servicio?.nombre || "Servicio",
     barberoNombre: turno.barbero?.nombre || "Barbero",
     fechaSemana,

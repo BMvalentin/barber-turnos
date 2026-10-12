@@ -78,6 +78,10 @@ model servicio_imagen {
 model turno {
   id               String       @id @default(cuid())
   userId           String
+  clienteNombre    String?
+  clienteApellido  String?
+  clienteTelefono  String?
+  clienteEmail     String?
   barberoId        String
   servicioId       String
   horarioReservado DateTime
@@ -120,6 +124,8 @@ model user {
   createdAt     DateTime              @default(now())
   updatedAt     DateTime              @updatedAt
   telefono      String?
+  esInvitado    Boolean               @default(false)
+  emailContacto String?               @unique
   account       account[]
   turno         turno[]
   barbero       barbero?

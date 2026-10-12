@@ -26,6 +26,8 @@ export type ReservaValidada = {
     name: string | null;
     email: string;
     telefono: string | null;
+    esInvitado: boolean;
+    emailContacto: string | null;
   };
   barbero: {
     id: string;
@@ -59,6 +61,8 @@ type FilaValidacionReserva = {
   usuarioNombre: string | null;
   usuarioEmail: string;
   usuarioTelefono: string | null;
+  usuarioEsInvitado: ValorBooleanoDb;
+  usuarioEmailContacto: string | null;
   barberoId: string;
   barberoImagen: string | null;
   barberoNombre: string;
@@ -116,6 +120,8 @@ export async function validarReservaEnTransaccion(
       u.name AS usuarioNombre,
       u.email AS usuarioEmail,
       u.telefono AS usuarioTelefono,
+      u.esInvitado AS usuarioEsInvitado,
+      u.emailContacto AS usuarioEmailContacto,
       b.id AS barberoId,
       b.srcImage AS barberoImagen,
       b.nombre AS barberoNombre,
@@ -224,6 +230,8 @@ export async function validarReservaEnTransaccion(
       name: fila.usuarioNombre,
       email: fila.usuarioEmail,
       telefono: fila.usuarioTelefono,
+      esInvitado: esVerdaderoDb(fila.usuarioEsInvitado),
+      emailContacto: fila.usuarioEmailContacto,
     },
     barbero: {
       id: fila.barberoId,
