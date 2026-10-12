@@ -22,6 +22,10 @@ export default function FormularioReservaTurno({
   selectedBarberoId,
   selectedUserId,
   setSelectedUserId,
+  clienteNombre,
+  setClienteNombre,
+  clienteApellido,
+  setClienteApellido,
   serviciosFiltrados,
   handleBarberoChange,
   handleServicioChange,
@@ -50,7 +54,11 @@ export default function FormularioReservaTurno({
 
   const esUsuarioNormal = session?.user?.role === "USER";
   const puedeGestionarTurnos = esAdmin(session) || esEmpleado(session);
-  const clienteCompleto = esUsuarioNormal || Boolean(selectedUserId);
+  const clienteCompleto = esUsuarioNormal || (
+    selectedUserId === "nuevo"
+      ? Boolean(clienteNombre.trim() && clienteApellido.trim())
+      : Boolean(selectedUserId)
+  );
   const completo = Boolean(
     selectedServicioId &&
       selectedBarberoId &&
@@ -83,8 +91,10 @@ export default function FormularioReservaTurno({
         description: "Seleccioná un horario disponible.",
       });
     } else if (!clienteCompleto) {
-      toast.error("Elegí un cliente.", {
-        description: "Seleccioná el cliente que tomará el turno.",
+      toast.error(selectedUserId === "nuevo" ? "Completá los datos del cliente." : "Elegí un cliente.", {
+        description: selectedUserId === "nuevo"
+          ? "Ingresá el nombre y el apellido del cliente."
+          : "Seleccioná el cliente que tomará el turno.",
       });
     }
   };
@@ -138,6 +148,10 @@ export default function FormularioReservaTurno({
             usuarios={usuarios}
             selectedUserId={selectedUserId}
             onCambiarCliente={setSelectedUserId}
+            clienteNombre={clienteNombre}
+            onCambiarClienteNombre={setClienteNombre}
+            clienteApellido={clienteApellido}
+            onCambiarClienteApellido={setClienteApellido}
             esEdicion={Boolean(turnoInicial)}
             estadoPago={estadoPago}
             onCambiarEstadoPago={setEstadoPago}

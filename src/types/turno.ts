@@ -27,6 +27,8 @@ export type UsuarioData = {
   id: string;
   name: string | null;
   email: string | null;
+  esInvitado: boolean;
+  emailContacto: string | null;
 };
 
 export type RelacionData = {

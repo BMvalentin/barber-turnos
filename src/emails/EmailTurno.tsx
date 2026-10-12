@@ -36,8 +36,8 @@ const INFO_POR_ESTADO: Record<
 > = {
   CREADO: {
     cliente: {
-      titulo: "Turno Confirmado",
-      mensaje: "Tu turno fue agendado con éxito. ¡Te esperamos!",
+      titulo: "Turno registrado",
+      mensaje: "Tu turno fue agendado y está pendiente de confirmación.",
     },
     barbero: {
       titulo: "Nuevo Turno Reservado",

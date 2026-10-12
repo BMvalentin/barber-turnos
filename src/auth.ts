@@ -5,12 +5,31 @@ import { authConfig } from "./auth.config";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google"; // <--- Importar Google
 import { loginSchema } from "@/lib/zod";
+import { vincularTurnosInvitadoDesdeGoogle } from "@/lib/turnos/vincular-turnos-invitado";
 import bcrypt from "bcryptjs";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" }, // OAuth funciona mejor con JWT en NextAuth v5 si no quieres sesiones en DB
+  events: {
+    async signIn({ user, account, profile }) {
+      if (
+        account?.provider !== "google" ||
+        profile?.email_verified !== true ||
+        typeof profile.email !== "string" ||
+        !user.id ||
+        !user.email ||
+        profile.email.trim().toLowerCase() !== user.email.trim().toLowerCase()
+      ) return;
+      try {
+        await vincularTurnosInvitadoDesdeGoogle(user.id, profile.email);
+      } catch {
+        // El turno puede vincularse en un siguiente ingreso; no interrumpir el acceso.
+        console.error("No se pudieron vincular los turnos del cliente.");
+      }
+    },
+  },
   providers: [
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,

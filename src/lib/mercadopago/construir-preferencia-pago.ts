@@ -4,9 +4,17 @@ import type { TipoPago } from "@/types/mercadopago";
 /* Datos mínimos del turno para construir la preferencia de Mercado Pago. */
 export interface TurnoParaPreferencia {
   id: string;
+  clienteNombre?: string | null;
+  clienteApellido?: string | null;
+  clienteEmail?: string | null;
   servicio: { nombre: string };
   barbero: { nombre: string };
-  user: { name: string | null; email: string | null };
+  user: {
+    name: string | null;
+    email: string | null;
+    esInvitado?: boolean;
+    emailContacto?: string | null;
+  };
   horarioReservado: Date;
 }
 
@@ -60,8 +68,12 @@ export function construirPreferenciaPago(
       },
     ],
     payer: {
-      name: turno.user.name ?? "Cliente",
-      email: turno.user.email ?? "cliente@email.com",
+      name: turno.clienteNombre
+        ? [turno.clienteNombre, turno.clienteApellido].filter(Boolean).join(" ")
+        : turno.user.name ?? "Cliente",
+      email: turno.clienteEmail ?? (
+        turno.user.esInvitado ? turno.user.emailContacto : turno.user.email
+      ) ?? "cliente@email.com",
     },
     back_urls: {
       success: `${baseUrl}/pago/success?turnoId=${turno.id}`,

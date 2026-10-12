@@ -49,6 +49,8 @@ export function useDatosFormularioTurno({
     turnoInicial?.user?.id ||
       (session?.user?.role === "USER" ? session?.user?.id ?? "" : ""),
   );
+  const [clienteNombre, setClienteNombre] = useState("");
+  const [clienteApellido, setClienteApellido] = useState("");
   const [estadoPago, setEstadoPago] = useState<(typeof ESTADOS_PAGO)[number]>(
     turnoInicial?.estadoPago ?? ESTADOS_PAGO[0],
   );
@@ -94,6 +96,10 @@ export function useDatosFormularioTurno({
     setSelectedBarberoId,
     selectedUserId,
     setSelectedUserId,
+    clienteNombre,
+    setClienteNombre,
+    clienteApellido,
+    setClienteApellido,
     estadoPago,
     setEstadoPago,
     serviciosFiltrados,

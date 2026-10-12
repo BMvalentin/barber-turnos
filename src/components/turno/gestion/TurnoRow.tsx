@@ -39,10 +39,15 @@ export default function TurnoRow({
   const turnoActivo =
     turno.estado === ESTADOS_TURNO[0] || turno.estado === ESTADOS_TURNO[1];
   const nombreCliente =
-    turno.user?.name || turno.user?.email || "Usuario eliminado";
+    turno.clienteNombre
+      ? [turno.clienteNombre, turno.clienteApellido].filter(Boolean).join(" ")
+      : turno.user?.name || (turno.user?.esInvitado ? null : turno.user?.email) || "Usuario eliminado";
+  const emailVisible = turno.clienteEmail ?? (
+    turno.user?.esInvitado ? turno.user.emailContacto : turno.user?.email
+  );
   const correoCliente =
-    turno.user?.email && turno.user.email !== nombreCliente
-      ? turno.user.email
+    emailVisible && emailVisible !== nombreCliente
+      ? emailVisible
       : null;
 
   const ctaPrincipal =
@@ -72,14 +77,17 @@ export default function TurnoRow({
       </button>
     ) : null;
 
-  const telefonoCliente = turno.user?.telefono ? (
+  const celular = turno.clienteNombre
+    ? turno.clienteTelefono
+    : turno.user?.telefono;
+  const telefonoCliente = celular ? (
     <a
-      href={`https://wa.me/${turno.user.telefono.replace(/\D/g, "")}`}
+      href={`https://wa.me/${celular.replace(/\D/g, "")}`}
       target="_blank"
       rel="noopener noreferrer"
       className="block max-w-full break-words text-xs text-[var(--admin-texto-muted)] transition-colors [overflow-wrap:anywhere] hover:text-[var(--page-primary-tinta)]"
     >
-      {turno.user.telefono}
+      {celular}
     </a>
   ) : (
     <p className="text-xs text-[var(--admin-texto-muted)]">Sin teléfono</p>

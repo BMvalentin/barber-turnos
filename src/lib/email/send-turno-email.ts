@@ -5,7 +5,7 @@ import type { DatosEmailTurno } from "./turno-datos-email";
 import { enviarCorreo } from "./enviar-correo";
 
 const ASUNTOS_CLIENTE: Record<DatosEmailTurno["estado"], string> = {
-  CREADO: "Turno Confirmado",
+  CREADO: "Turno registrado",
   CONFIRMADO: "Turno Confirmado",
   ACTUALIZADO: "Turno Modificado",
   CANCELADO: "Turno Cancelado",

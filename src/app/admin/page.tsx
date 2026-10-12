@@ -155,7 +155,9 @@ export default async function AdminDashboard() {
                     >
                       <div>
                         <p className="text-sm text-[var(--admin-texto-primario)]">
-                          {t.user?.name || t.user?.email || "Usuario eliminado"}
+                          {t.clienteNombre
+                            ? [t.clienteNombre, t.clienteApellido].filter(Boolean).join(" ")
+                            : t.user?.name || t.user?.email || "Usuario eliminado"}
                         </p>
                         <p className="text-xs text-[var(--admin-texto-muted)]">
                           {t.servicio?.nombre || "Servicio eliminado"}
