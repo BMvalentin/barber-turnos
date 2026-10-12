@@ -103,6 +103,19 @@ export const ABREVIATURAS_DIAS = ["DOM", "LUN", "MAR", "MIE", "JUE", "VIE", "SAB
 /* Selección de usuario básica (id, name, email, telefono) */
 export const SELECCION_USUARIO_BASICA = { id: true, name: true, email: true, telefono: true } as const;
 
+/* Campos del barbero que pueden llegar a clientes y vistas públicas.
+   Excluye datos internos como el porcentaje de ganancia. */
+export const SELECCION_BARBERO_PUBLICA = {
+  id: true,
+  srcImage: true,
+  nombre: true,
+  email: true,
+  usuarioId: true,
+  estado: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
 /* Estilo de fondo sólido de marca (botones, íconos, chips) */
 export const ESTILO_FONDO_MARCA: CSSProperties = {
   backgroundColor: "var(--page-primary)",

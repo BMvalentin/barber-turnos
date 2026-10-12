@@ -121,7 +121,7 @@ export default function ModalGestionTurno({
             <ModalBase
               maxWidth="max-w-6xl"
               overlayClase="bg-black/80 backdrop-blur-md p-2 sm:p-4"
-              contenedorClase="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-2xl max-h-[92vh] overflow-hidden flex flex-col"
+              contenedorClase="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-2xl max-h-[92dvh] overflow-hidden flex flex-col"
               onClose={() => setIsOpen(false)}
               header={
                 <div className="flex items-center justify-between border-b border-[var(--admin-border)] p-5 sm:p-6">
