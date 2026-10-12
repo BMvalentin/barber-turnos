@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
 export async function obtenerBarberosConRelaciones(barberoId?: string, soloEmpleados = false) {
-  return prisma.barbero.findMany({
+  const barberos = await prisma.barbero.findMany({
     where: barberoId ? { id: barberoId } : soloEmpleados ? { usuario: { role: "EMPLEADO" } } : undefined,
     include: {
       usuario: { select: { id: true, email: true } },
@@ -10,4 +10,10 @@ export async function obtenerBarberosConRelaciones(barberoId?: string, soloEmple
     },
     orderBy: { nombre: "asc" },
   });
+
+  // Decimal no es serializable hacia Client Components: se expone como número.
+  return barberos.map((barbero) => ({
+    ...barbero,
+    porcentajeGanancia: Number(barbero.porcentajeGanancia),
+  }));
 }

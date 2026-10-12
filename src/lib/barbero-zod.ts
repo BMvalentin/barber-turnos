@@ -23,6 +23,16 @@ export const updateBarberoSchema = z.object({
 
   estado: z.boolean().optional(),
 
+  porcentajeGanancia: z
+    .number({ message: "El porcentaje debe ser un número" })
+    .min(0, "El porcentaje no puede ser negativo")
+    .max(100, "El porcentaje no puede superar 100")
+    .refine(
+      (valor) => Math.abs(valor * 100 - Math.round(valor * 100)) < 1e-6,
+      "El porcentaje admite como máximo dos decimales"
+    )
+    .optional(),
+
   serviciosIds: z.array(z.string()).optional(),
 
   margenesIds: z.array(z.string()).optional(),

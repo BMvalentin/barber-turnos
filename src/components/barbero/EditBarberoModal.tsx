@@ -10,6 +10,7 @@ import { esImagenValida } from "@/lib/es-imagen-valida";
 import { useImagenServicio } from "@/hooks/useImagenServicio";
 import type { ServicioOpcion, DiaLaboral, BarberoEdicion } from "@/types/barbero";
 import CampoNombreBarbero from "./CampoNombreBarbero";
+import CampoPorcentajeGanancia from "./CampoPorcentajeGanancia";
 import SeccionImagenServicio from "@/components/servicio/SeccionImagenServicio";
 import SelectorServicios from "./SelectorServicios";
 import SelectorHorarios from "./SelectorHorarios";
@@ -33,6 +34,15 @@ function mismosIds(primeros: string[], segundos: string[]): boolean {
   return primerosOrdenados.every((id, indice) => id === segundosOrdenados[indice]);
 }
 
+/* Convierte el texto del input en porcentaje; null si no es un valor válido. */
+function interpretarPorcentaje(texto: string): number | null {
+  const normalizado = texto.trim().replace(",", ".");
+  if (!/^\d{1,3}(\.\d{1,2})?$/.test(normalizado)) return null;
+
+  const valor = Number(normalizado);
+  return valor >= 0 && valor <= 100 ? valor : null;
+}
+
 export default function EditBarberoModal({
   barbero,
   servicios,
@@ -53,6 +63,8 @@ export default function EditBarberoModal({
   });
   const [nombre, setNombre] = useState(barbero.nombre || "");
   const [estado, setEstado] = useState(barbero.estado);
+  const [porcentaje, setPorcentaje] = useState(String(barbero.porcentajeGanancia));
+  const [errorPorcentaje, setErrorPorcentaje] = useState<string | null>(null);
   const serviciosIniciales = barbero.servicios?.map((s) => s.servicio.id) || [];
   const horariosIniciales = barbero.horarios?.map((h) => h.margenLaboralId) || [];
   const [selectedServicios, setSelectedServicios] = useState<string[]>(
@@ -106,12 +118,23 @@ export default function EditBarberoModal({
   };
 
   const handleSubmit = () => {
+    const porcentajeGanancia = soloEdicionPropia ? null : interpretarPorcentaje(porcentaje);
+    if (!soloEdicionPropia && porcentajeGanancia === null) {
+      setErrorPorcentaje("Ingresá un porcentaje entre 0 y 100, con hasta dos decimales.");
+      return;
+    }
+    setErrorPorcentaje(null);
+
     startTransition(async () => {
       const result = await updateBarbero({
         id: barbero.id,
         nombre: nombre.trim(),
         srcImage: srcImage.trim() === "" ? null : srcImage.trim(),
         estado: Boolean(estado),
+        porcentajeGanancia:
+          porcentajeGanancia === null || porcentajeGanancia === barbero.porcentajeGanancia
+            ? undefined
+            : porcentajeGanancia,
         serviciosIds: mismosIds(serviciosIniciales, selectedServicios)
           ? undefined
           : selectedServicios,
@@ -154,6 +177,18 @@ export default function EditBarberoModal({
             <p className="font-semibold text-[var(--page-primary-tinta)]">Correo de la cuenta asociada</p>
             <p className="mt-1 text-[var(--admin-texto-muted)]">{barbero.usuario?.email ?? "Sin cuenta asociada"}</p>
           </div>
+          {soloEdicionPropia ? (
+            <div className="rounded-lg border bg-[var(--admin-item)] px-3 py-2.5 text-sm" style={{ borderColor: "var(--admin-border)" }}>
+              <p className="font-semibold text-[var(--page-primary-tinta)]">Porcentaje de ganancia por corte</p>
+              <p className="mt-1 text-[var(--admin-texto-muted)]">{barbero.porcentajeGanancia}% · Lo define un administrador.</p>
+            </div>
+          ) : (
+            <CampoPorcentajeGanancia
+              valor={porcentaje}
+              error={errorPorcentaje}
+              onCambio={setPorcentaje}
+            />
+          )}
           <SeccionImagenServicio
             previewUrl={previewUrl}
             srcImage={srcImage}

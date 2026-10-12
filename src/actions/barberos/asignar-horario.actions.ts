@@ -31,7 +31,8 @@ async function asignarHorarioABarberoBase(
         margenLaboralId: margen.id,
         diaId: margen.diaId,
       },
-    });
+    })
+    // necesitaba hacer push
 
     revalidarBarberos();
 

@@ -26,9 +26,15 @@ async function updateBarberoBase(
       };
     }
 
-    const { id, nombre, srcImage, estado, serviciosIds, margenesIds } = parsed.data;
+    const { id, nombre, srcImage, estado, porcentajeGanancia, serviciosIds, margenesIds } =
+      parsed.data;
 
     if (contexto.rol === "EMPLEADO" && contexto.barberoId !== id) {
+      return { success: false, error: "No autorizado" };
+    }
+
+    // Solo un administrador define la comisión; un empleado no puede fijarse la propia.
+    if (contexto.rol !== "ADMIN" && porcentajeGanancia !== undefined) {
       return { success: false, error: "No autorizado" };
     }
 
@@ -49,6 +55,7 @@ async function updateBarberoBase(
           email: barbero.usuario?.email ?? null,
           srcImage: srcImage || null,
           estado: estado ?? barbero.estado,
+          ...(porcentajeGanancia !== undefined && { porcentajeGanancia }),
           updatedAt: new Date(),
         },
       });

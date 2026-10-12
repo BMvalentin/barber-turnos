@@ -126,7 +126,7 @@ export default function FormularioReservaTurno({
           />
         </div>
 
-        <div className="lg:order-3">
+        <div className="flex min-w-0 flex-col lg:order-3 lg:min-h-0 lg:overflow-y-auto">
           <ResumenReserva
             servicio={servicio}
             barbero={barbero}

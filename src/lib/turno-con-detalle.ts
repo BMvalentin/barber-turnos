@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma";
-import { SELECCION_USUARIO_BASICA } from "@/lib/constants";
+import { SELECCION_BARBERO_PUBLICA, SELECCION_USUARIO_BASICA } from "@/lib/constants";
 import type { Prisma } from "../../generated/prisma/client";
 
 export const INCLUDE_TURNO_CON_DETALLE = {
   user: { select: SELECCION_USUARIO_BASICA },
-  barbero: true,
+  barbero: { select: SELECCION_BARBERO_PUBLICA },
   servicio: true,
 };
 
