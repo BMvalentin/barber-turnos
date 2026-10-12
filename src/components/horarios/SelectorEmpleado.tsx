@@ -78,7 +78,7 @@ export default function SelectorEmpleado({ barberos, valor, alCambiar }: Props) 
             </>
           ) : (
             <span className="text-sm text-[var(--admin-texto-muted)]">
-              {barberos.length === 0 ? "Sin empleados" : "Seleccionar empleado..."}
+              {barberos.length === 0 ? "Sin perfiles" : "Seleccionar perfil..."}
             </span>
           )}
         </span>
