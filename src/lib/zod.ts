@@ -25,6 +25,19 @@ export const registerSchema = loginSchema
     path: ["confirmPassword"],
   });
 
+export const restablecerPasswordSchema = z
+  .object({
+    token: z.string().min(1, "Token inválido"),
+    password: z
+      .string()
+      .min(8, "La contraseña debe tener al menos 8 caracteres"),
+    confirmPassword: z.string(),
+  })
+  .refine((datos) => datos.password === datos.confirmPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"],
+  });
+
 /* Esquema base de nombre (mín. 3, máx. 100) con regex opcional */
 export function esquemaNombre(
   etiqueta: string,
