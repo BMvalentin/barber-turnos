@@ -65,8 +65,16 @@ export default function EditBarberoModal({
   const [estado, setEstado] = useState(barbero.estado);
   const [porcentaje, setPorcentaje] = useState(String(barbero.porcentajeGanancia));
   const [errorPorcentaje, setErrorPorcentaje] = useState<string | null>(null);
-  const serviciosIniciales = barbero.servicios?.map((s) => s.servicio.id) || [];
-  const horariosIniciales = barbero.horarios?.map((h) => h.margenLaboralId) || [];
+  const serviciosIniciales = [
+    ...new Set(barbero.servicios?.map((s) => s.servicio.id) ?? []),
+  ];
+  const horariosIniciales = [
+    ...new Set(
+      barbero.horarios
+        ?.filter((h) => h.estado)
+        .map((h) => h.margenLaboralId) ?? [],
+    ),
+  ];
   const [selectedServicios, setSelectedServicios] = useState<string[]>(
     serviciosIniciales
   );

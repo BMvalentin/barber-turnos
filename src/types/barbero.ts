@@ -31,6 +31,7 @@ export type BarberoListado = {
   }[];
   horarios?: {
     margenLaboralId: string;
+    estado: boolean;
     dia: { id: string; dia: string };
     margenLaboral: { desde: string; hasta: string };
   }[];
@@ -58,7 +59,7 @@ export type BarberoEdicion = {
   porcentajeGanancia: number;
   usuario: { id: string; email: string } | null;
   servicios?: { servicio: { id: string; nombre: string } }[];
-  horarios?: { margenLaboralId: string }[];
+  horarios?: { margenLaboralId: string; estado: boolean }[];
 };
 
 /* Servicio anidado en getBarberos, con montos convertidos a Number. */

@@ -1,17 +1,40 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
 import { revalidarBarberos } from "@/lib/revalidar/revalidar-barberos";
 import { updateBarberoSchema } from "@/lib/barbero-zod";
 import type { ActionState } from "@/types/action-state";
 import { requerirPanel } from "@/lib/seguridad/requerir-admin";
-import type { z } from "zod";
+import {
+  actualizarBarberoEnTransaccion,
+  BarberoNoEncontradoError,
+} from "@/lib/barberos/actualizar-barbero";
 
-type DatosActualizarBarbero = z.infer<typeof updateBarberoSchema>;
+/* Extrae el código de error de Prisma sin aserciones de tipo. */
+function codigoError(error: unknown): string | null {
+  if (typeof error !== "object" || error === null) return null;
+  const codigo = Reflect.get(error, "code");
+  return typeof codigo === "string" ? codigo : null;
+}
 
-async function updateBarberoBase(
-  data: DatosActualizarBarbero
-): Promise<ActionState> {
+function mensajeErrorActualizarBarbero(error: unknown): string {
+  if (error instanceof BarberoNoEncontradoError) {
+    return "El barbero no existe.";
+  }
+
+  const codigo = codigoError(error);
+  if (codigo === "P2002") {
+    return "Ya existe una asociación duplicada para este barbero.";
+  }
+  if (codigo === "P2025") {
+    return "El barbero no existe.";
+  }
+  if (codigo === "P2028") {
+    return "La operación tardó demasiado. Intentá nuevamente.";
+  }
+  return "Error al actualizar barbero";
+}
+
+async function updateBarberoBase(data: unknown): Promise<ActionState> {
   try {
     const contexto = await requerirPanel();
     if (!contexto) return { success: false, error: "No autorizado" };
@@ -26,8 +49,7 @@ async function updateBarberoBase(
       };
     }
 
-    const { id, nombre, srcImage, estado, porcentajeGanancia, serviciosIds, margenesIds } =
-      parsed.data;
+    const { id, porcentajeGanancia } = parsed.data;
 
     if (contexto.rol === "EMPLEADO" && contexto.barberoId !== id) {
       return { success: false, error: "No autorizado" };
@@ -38,65 +60,17 @@ async function updateBarberoBase(
       return { success: false, error: "No autorizado" };
     }
 
-    const puedeEditarServicios = contexto.rol === "ADMIN" || contexto.barberoId === id;
-
-    await prisma.$transaction(async (tx) => {
-      const barbero = await tx.barbero.findUnique({
-        where: { id },
-        select: { id: true, estado: true, usuario: { select: { email: true } } },
-      });
-      if (!barbero) throw new Error("BARBERO_NO_ENCONTRADO");
-
-      await tx.barbero.update({
-        where: { id },
-        data: {
-          nombre,
-          // El correo se deriva siempre de la cuenta asociada; nunca del formulario.
-          email: barbero.usuario?.email ?? null,
-          srcImage: srcImage || null,
-          estado: estado ?? barbero.estado,
-          ...(porcentajeGanancia !== undefined && { porcentajeGanancia }),
-          updatedAt: new Date(),
-        },
-      });
-
-      // No reconstruir relaciones cuando el formulario solo modifica datos
-      // básicos. Así una relación antigua no impide cambiar el nombre.
-      if (puedeEditarServicios && serviciosIds !== undefined) {
-        await tx.servicioxbarbero.deleteMany({ where: { barberoId: id } });
-        if (serviciosIds?.length) {
-          await tx.servicioxbarbero.createMany({
-            data: serviciosIds.map((sId: string) => ({
-              barberoId: id,
-              servicioId: sId,
-            })),
-          });
-        }
-      }
-
-      if (contexto.rol === "ADMIN" && margenesIds !== undefined) {
-        await tx.margen_laboral_barbero.deleteMany({ where: { barberoId: id } });
-        if (margenesIds?.length) {
-          const margenes = await tx.margen_laboral.findMany({
-            where: { id: { in: margenesIds } },
-          });
-
-          await tx.margen_laboral_barbero.createMany({
-            data: margenes.map((m) => ({
-              barberoId: id,
-              margenLaboralId: m.id,
-              diaId: m.diaId,
-            })),
-          });
-        }
-      }
+    await actualizarBarberoEnTransaccion(parsed.data, {
+      puedeEditarServicios:
+        contexto.rol === "ADMIN" || contexto.barberoId === id,
+      puedeEditarMargenes: contexto.rol === "ADMIN",
     });
 
     revalidarBarberos();
     return { success: true };
   } catch (error) {
     console.error("Error al actualizar barbero:", error);
-    return { success: false, error: "Error al actualizar barbero" };
+    return { success: false, error: mensajeErrorActualizarBarbero(error) };
   }
 }
 
