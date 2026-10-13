@@ -31,10 +31,10 @@ const estadoInicial = ActionStateInicial;
  */
 export function useFormularioTurno({
   session,
-  initialServicios = [],
-  initialBarberos = [],
-  initialUsuarios = [],
-  initialRelaciones = [],
+  initialServicios,
+  initialBarberos,
+  initialUsuarios,
+  initialRelaciones,
   whatsappPhone,
   turnoInicial,
   onTurnoCreado,

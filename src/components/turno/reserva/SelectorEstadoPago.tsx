@@ -1,18 +1,35 @@
 "use client";
 
 import type { PropsSelectorEstadoPago } from "@/components/turno/reserva/tipos";
-import { ESTADOS_PAGO_MANUALES } from "@/lib/constants";
+import { ESTADOS_PAGO, ESTADOS_PAGO_MANUALES } from "@/lib/constants";
 
-const ETIQUETAS_ESTADOS: Record<(typeof ESTADOS_PAGO_MANUALES)[number], string> = {
+type EstadoPago = (typeof ESTADOS_PAGO)[number];
+
+const ETIQUETAS_ESTADOS: Record<EstadoPago, string> = {
   PENDIENTE: "Pendiente",
   SEÑADO: "Señado",
   PAGADO: "Pagado",
+  APROBADO: "Aprobado",
+  RECHAZADO: "Rechazado",
+  CANCELADO: "Cancelado",
+  EN_ACREDITACION: "En acreditación",
 };
+
+function esEstadoManual(estado: EstadoPago): boolean {
+  return (ESTADOS_PAGO_MANUALES as readonly string[]).includes(estado);
+}
 
 export default function SelectorEstadoPago({
   valor,
   onChange,
 }: PropsSelectorEstadoPago) {
+  /* Los estados que setea Mercado Pago (APROBADO, RECHAZADO, EN_ACREDITACION)
+     no se pueden elegir a mano, pero sí deben mostrarse cuando son el valor
+     persistido del turno. */
+  const opciones: EstadoPago[] = esEstadoManual(valor)
+    ? [...ESTADOS_PAGO_MANUALES]
+    : [valor, ...ESTADOS_PAGO_MANUALES];
+
   return (
     <div className="flex flex-col gap-2">
       <label
@@ -24,12 +41,10 @@ export default function SelectorEstadoPago({
       <select
         id="estado-pago-reserva"
         value={valor}
-        onChange={(e) =>
-          onChange(e.target.value as (typeof ESTADOS_PAGO_MANUALES)[number])
-        }
+        onChange={(e) => onChange(e.target.value as EstadoPago)}
         className="w-full rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)] px-3 py-2.5 text-sm text-[var(--admin-texto-primario)] focus:outline-none focus:ring-2 focus:ring-[var(--page-focus-ring)]"
       >
-        {ESTADOS_PAGO_MANUALES.map((estado) => (
+        {opciones.map((estado) => (
           <option key={estado} value={estado}>
             {ETIQUETAS_ESTADOS[estado]}
           </option>

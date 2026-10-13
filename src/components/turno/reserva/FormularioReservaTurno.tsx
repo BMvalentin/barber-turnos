@@ -33,6 +33,8 @@ export default function FormularioReservaTurno({
   turnoInicial,
   estadoPago,
   setEstadoPago,
+  estadoTurno,
+  setEstadoTurno,
 }: PropsFormularioReservaTurno) {
   const disponibilidad = useDisponibilidadHorarios({
     servicioId: selectedServicioId,
@@ -109,6 +111,7 @@ export default function FormularioReservaTurno({
       <input type="hidden" name="servicioId" value={selectedServicioId} />
       <input type="hidden" name="barberoId" value={selectedBarberoId} />
       {turnoInicial && <input type="hidden" name="id" value={turnoInicial.id} />}
+      {turnoInicial && <input type="hidden" name="estado" value={estadoTurno} />}
       {puedeGestionarTurnos && <input type="hidden" name="estadoPago" value={estadoPago} />}
       <input
         type="hidden"
@@ -155,6 +158,9 @@ export default function FormularioReservaTurno({
             esEdicion={Boolean(turnoInicial)}
             estadoPago={estadoPago}
             onCambiarEstadoPago={setEstadoPago}
+            estadoTurno={estadoTurno}
+            onCambiarEstadoTurno={setEstadoTurno}
+            total={turnoInicial?.precioCongelado}
             clienteUsuario={
               session?.user
                 ? {

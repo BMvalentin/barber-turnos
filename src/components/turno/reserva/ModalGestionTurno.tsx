@@ -31,10 +31,10 @@ const ESTILO_TEMAS = {
 
 export default function ModalGestionTurno({
   session,
-  initialServicios = [],
-  initialBarberos = [],
-  initialUsuarios = [],
-  initialRelaciones = [],
+  initialServicios,
+  initialBarberos,
+  initialUsuarios,
+  initialRelaciones,
   whatsappPhone,
   datosTransferencia = DATOS_TRANSFERENCIA_VACIOS,
   turnoInicial,
@@ -65,6 +65,8 @@ export default function ModalGestionTurno({
     setClienteApellido,
     estadoPago,
     setEstadoPago,
+    estadoTurno,
+    setEstadoTurno,
     serviciosFiltrados,
     handleBarberoChange,
     handleServicioChange,
@@ -175,6 +177,8 @@ export default function ModalGestionTurno({
                 turnoInicial={turnoInicial}
                 estadoPago={estadoPago}
                 setEstadoPago={setEstadoPago}
+                estadoTurno={estadoTurno}
+                setEstadoTurno={setEstadoTurno}
               />
             </ModalBase>
           </div>,
