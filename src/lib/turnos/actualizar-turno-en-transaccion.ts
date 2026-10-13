@@ -78,7 +78,9 @@ export async function actualizarTurnoEnTransaccion(
             horarioReservado: parametros.horario,
             estado: parametros.estado,
             estadoPago: parametros.estadoPago,
-            ...(servicio
+            /* Solo se re-congelan los importes cuando cambia el servicio; si el
+               admin solo edita estado/pago se preservan los importes históricos. */
+            ...(servicio && turnoAnterior.servicioId !== parametros.servicioId
               ? { precioCongelado: servicio.precio, seniaCongelada: servicio.senia }
               : {}),
             claveSlot: esEstadoActivo(parametros.estado)

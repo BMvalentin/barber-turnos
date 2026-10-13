@@ -70,7 +70,9 @@ export async function actualizarTurno(
       return { success: false, error: "Estado de pago inválido" };
     }
     const estadoPago = (
-      estado === ESTADOS_TURNO[3]
+      /* Cancelar recién ahora fuerza el pago a RECHAZADO. Si el turno ya estaba
+         cancelado, editar estado/pago no lo vuelve a modificar. */
+      estado === ESTADOS_TURNO[3] && turnoActual.estado !== ESTADOS_TURNO[3]
         ? ESTADOS_PAGO[4]
         : estadoPagoRecibido !== null
           ? estadoPagoRecibido

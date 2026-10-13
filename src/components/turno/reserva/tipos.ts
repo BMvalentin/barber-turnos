@@ -1,6 +1,6 @@
 import type { ReactNode, RefObject } from "react";
 import type { Session } from "next-auth";
-import type { ESTADOS_PAGO } from "@/lib/constants";
+import type { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
 import type { ActionState } from "@/types/action-state";
 import type {
   BarberoData,
@@ -35,6 +35,11 @@ export type PropsPanelFechaHorario = {
 export type PropsSelectorEstadoPago = {
   valor: (typeof ESTADOS_PAGO)[number];
   onChange: (valor: (typeof ESTADOS_PAGO)[number]) => void;
+};
+
+export type PropsSelectorEstadoTurno = {
+  valor: (typeof ESTADOS_TURNO)[number];
+  onChange: (valor: (typeof ESTADOS_TURNO)[number]) => void;
 };
 
 export type PropsCalendarioReserva = {
@@ -120,8 +125,11 @@ export type PropsResumenReserva = {
   esEdicion?: boolean;
   estadoPago: (typeof ESTADOS_PAGO)[number];
   onCambiarEstadoPago: (valor: (typeof ESTADOS_PAGO)[number]) => void;
+  estadoTurno: (typeof ESTADOS_TURNO)[number];
+  onCambiarEstadoTurno: (valor: (typeof ESTADOS_TURNO)[number]) => void;
   clienteUsuario?: { nombre?: string | null; telefono?: string | null };
   senia?: number;
+  total?: number;
 };
 
 export type PropsSelectorClienteReserva = {
@@ -159,6 +167,8 @@ export type PropsFormularioReservaTurno = {
   turnoInicial?: TurnoListado | null;
   estadoPago: (typeof ESTADOS_PAGO)[number];
   setEstadoPago: (valor: (typeof ESTADOS_PAGO)[number]) => void;
+  estadoTurno: (typeof ESTADOS_TURNO)[number];
+  setEstadoTurno: (valor: (typeof ESTADOS_TURNO)[number]) => void;
 };
 
 export type PropsModalGestionTurno = ParametrosFormularioTurno & {

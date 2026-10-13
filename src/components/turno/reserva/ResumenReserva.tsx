@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import SelectorClienteReserva from "@/components/turno/reserva/SelectorClienteReserva";
 import SelectorEstadoPago from "@/components/turno/reserva/SelectorEstadoPago";
+import SelectorEstadoTurno from "@/components/turno/reserva/SelectorEstadoTurno";
 import type { PropsResumenReserva } from "@/components/turno/reserva/tipos";
 import { formatearFecha } from "@/lib/utils/formatear-fecha";
 import { formatearHora } from "@/lib/utils/formatear-hora";
@@ -43,11 +44,16 @@ export default function ResumenReserva({
   esEdicion = false,
   estadoPago,
   onCambiarEstadoPago,
+  estadoTurno,
+  onCambiarEstadoTurno,
   clienteUsuario,
   senia,
+  total,
 }: PropsResumenReserva) {
+  const montoTotal = total ?? servicio?.precio ?? 0;
   const montoSeña = senia ?? 0;
-  const montoSaldo = (servicio?.precio ?? 0) - montoSeña;
+  const montoSaldo = montoTotal - montoSeña;
+  const hayImportes = total !== undefined || servicio !== null;
 
   return (
     <aside className="flex flex-col gap-5 rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-5">
@@ -141,21 +147,21 @@ export default function ResumenReserva({
       <div className="flex items-end justify-between">
         <span className={CLASE_LABEL_MONTO}>Total</span>
         <span className="text-2xl font-bold text-[var(--page-primary-tinta)]">
-          {servicio ? `$${formatearMoneda(servicio.precio)}` : "—"}
+          {hayImportes ? `$${formatearMoneda(montoTotal)}` : "—"}
         </span>
       </div>
 
       <div className="flex items-end justify-between">
         <span className={CLASE_LABEL_MONTO}>Seña</span>
         <span className="text-sm font-semibold text-[var(--admin-texto-primario)]">
-          {servicio ? `$${formatearMoneda(montoSeña)}` : "—"}
+          {hayImportes ? `$${formatearMoneda(montoSeña)}` : "—"}
         </span>
       </div>
 
       <div className="flex items-end justify-between">
         <span className={CLASE_LABEL_MONTO}>Saldo restante</span>
         <span className="text-sm font-semibold text-[var(--admin-texto-primario)]">
-          {servicio ? `$${formatearMoneda(montoSaldo)}` : "—"}
+          {hayImportes ? `$${formatearMoneda(montoSaldo)}` : "—"}
         </span>
       </div>
 
@@ -171,6 +177,12 @@ export default function ResumenReserva({
             clienteApellido={clienteApellido}
             onCambiarClienteApellido={onCambiarClienteApellido}
           />
+          {esEdicion && (
+            <SelectorEstadoTurno
+              valor={estadoTurno}
+              onChange={onCambiarEstadoTurno}
+            />
+          )}
           <SelectorEstadoPago
             valor={estadoPago}
             onChange={onCambiarEstadoPago}
