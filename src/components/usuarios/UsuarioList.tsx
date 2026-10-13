@@ -2,9 +2,10 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Save } from "lucide-react";
+import { Search, Save, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { actualizarRolUsuario } from "@/actions/usuarios/rol.actions";
+import { solicitarRestablecimiento } from "@/actions/usuarios/restablecer-password.actions";
 import { ETIQUETAS_ROL, ROLES_USUARIO, type RolUsuario } from "@/types/usuario";
 import type { UsuarioAdministrable } from "@/actions/usuarios/listar.actions";
 
@@ -81,7 +82,7 @@ export default function UsuarioList({ usuarios, empleados, administradores, acto
           </thead>
           <tbody className="divide-y" style={{ borderColor: "var(--admin-border)" }}>
             {usuariosFiltrados.map((usuario) => (
-              <UsuarioFila key={usuario.id} usuario={usuario} esActual={usuario.id === actorId} />
+              <UsuarioFila key={usuario.id} usuario={usuario} esActual={usuario.id === actorId} puedeRestablecer={usuario.role === "EMPLEADO"} />
             ))}
           </tbody>
         </table>
@@ -91,9 +92,10 @@ export default function UsuarioList({ usuarios, empleados, administradores, acto
   );
 }
 
-function UsuarioFila({ usuario, esActual }: { usuario: UsuarioAdministrable; esActual: boolean }) {
+function UsuarioFila({ usuario, esActual, puedeRestablecer }: { usuario: UsuarioAdministrable; esActual: boolean; puedeRestablecer: boolean }) {
   const [rol, setRol] = useState<RolUsuario>(usuario.role);
   const [pendiente, iniciarTransicion] = useTransition();
+  const [restableciendo, iniciarRestablecimiento] = useTransition();
   const router = useRouter();
   const cambioPendiente = rol !== usuario.role || ((rol === "EMPLEADO" || rol === "ADMIN") && !usuario.barbero);
 
@@ -106,6 +108,22 @@ function UsuarioFila({ usuario, esActual }: { usuario: UsuarioAdministrable; esA
         return;
       }
       toast.error(resultado.error ?? "No se pudo actualizar el rol");
+    });
+  };
+
+  const restablecer = () => {
+    if (!window.confirm(`¿Enviar un enlace de restablecimiento de contraseña a ${usuario.email}?`)) return;
+    iniciarRestablecimiento(async () => {
+      const resultado = await solicitarRestablecimiento(usuario.id);
+      if (resultado.success) {
+        if (resultado.aviso) {
+          toast.warning("Enlace generado", { description: resultado.aviso });
+        } else {
+          toast.success("Enlace enviado", { description: "El empleado recibirá un correo para cambiar su contraseña." });
+        }
+        return;
+      }
+      toast.error(resultado.error ?? "No se pudo iniciar el restablecimiento");
     });
   };
 
@@ -131,9 +149,16 @@ function UsuarioFila({ usuario, esActual }: { usuario: UsuarioAdministrable; esA
         ) : <span className="text-sm text-[var(--admin-texto-muted)]">Sin perfil</span>}
       </td>
       <td className="px-5 py-4 text-right">
-        <button type="button" onClick={guardar} disabled={!cambioPendiente || pendiente || esActual} className="inline-flex items-center gap-2 rounded-lg bg-[var(--page-primary)] px-3 py-2 text-xs font-semibold text-[var(--page-primary-foreground)] disabled:cursor-not-allowed disabled:opacity-50">
-          <Save className="h-3.5 w-3.5" />{pendiente ? "Guardando..." : "Guardar"}
-        </button>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {puedeRestablecer && (
+            <button type="button" onClick={restablecer} disabled={restableciendo || pendiente} className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold text-[var(--admin-texto-primario)] disabled:cursor-not-allowed disabled:opacity-50" style={{ borderColor: "var(--admin-border)" }}>
+              <KeyRound className="h-3.5 w-3.5" />{restableciendo ? "Enviando..." : "Restablecer contraseña"}
+            </button>
+          )}
+          <button type="button" onClick={guardar} disabled={!cambioPendiente || pendiente || esActual} className="inline-flex items-center gap-2 rounded-lg bg-[var(--page-primary)] px-3 py-2 text-xs font-semibold text-[var(--page-primary-foreground)] disabled:cursor-not-allowed disabled:opacity-50">
+            <Save className="h-3.5 w-3.5" />{pendiente ? "Guardando..." : "Guardar"}
+          </button>
+        </div>
       </td>
     </tr>
   );

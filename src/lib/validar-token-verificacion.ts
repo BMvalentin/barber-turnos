@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { hashearTokenVerificacion } from "@/lib/seguridad/hashear-token-verificacion";
+import { esIdentificadorDeRestablecimiento } from "@/lib/seguridad/prefijo-token-restablecimiento";
 import {
   revalidarTurnosUsuarioVinculado,
   vincularTurnosInvitadoEnTransaccion,
@@ -19,6 +20,9 @@ export async function validarTokenVerificacion(
     });
 
     if (!encontrado) return null;
+    // Los tokens de restablecimiento comparten la tabla pero no deben
+    // consumirse por la ruta de verificación de email.
+    if (esIdentificadorDeRestablecimiento(encontrado.identifier)) return null;
     if (encontrado.expires <= ahora) {
       await transaccion.verificacion_usuario.deleteMany({
         where: { id: encontrado.id, token: tokenHasheado },

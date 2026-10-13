@@ -16,7 +16,9 @@ export async function crearTokenVerificacion(email: string): Promise<string | nu
   const token = hashearTokenVerificacion(tokenPlano);
 
   await prisma.$transaction([
-    prisma.verificacion_usuario.deleteMany({ where: { userId: user.id } }),
+    // Acotado al identificador de verificación para no invalidar tokens de
+    // restablecimiento de contraseña del mismo usuario.
+    prisma.verificacion_usuario.deleteMany({ where: { identifier: email } }),
     prisma.verificacion_usuario.create({
       data: {
         identifier: email,
