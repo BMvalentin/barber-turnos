@@ -21,6 +21,7 @@ export type BarberoData = {
   id: string;
   nombre: string;
   srcImage?: string | null;
+  estado?: boolean;
 };
 
 export type UsuarioData = {

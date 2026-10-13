@@ -17,7 +17,12 @@ async function getTurnoData(barberoId: string | null, incluirUsuarios: boolean) 
     ? servicios.filter((servicio) => relaciones.some((relacion) => relacion.servicioId === servicio.id))
     : servicios;
   const barberosFiltro = incluirUsuarios
-    ? await prisma.barbero.findMany({ select: { id: true, nombre: true, srcImage: true }, orderBy: { nombre: "asc" } })
+    // Los perfiles sin cuenta y sin turnos son restos de cambios de rol: no aportan al filtro.
+    ? await prisma.barbero.findMany({
+        where: { OR: [{ usuarioId: { not: null } }, { turnos: { some: {} } }] },
+        select: { id: true, nombre: true, srcImage: true, estado: true },
+        orderBy: [{ estado: "desc" }, { nombre: "asc" }],
+      })
     : barberos;
 
   return { servicios: serializarServiciosReserva(serviciosVisibles), barberos, barberosFiltro, usuarios, relaciones, config };

@@ -72,7 +72,9 @@ export async function actualizarRolUsuario(
       } else if (barberoActual) {
         await tx.barbero.update({
           where: { id: barberoActual.id },
-          data: { usuarioId: null, email: null, estado: false },
+          // Se conserva el correo para reutilizar este perfil si la cuenta vuelve a ser
+          // empleado o administrador, en lugar de crear un perfil duplicado.
+          data: { usuarioId: null, estado: false },
         });
       }
 

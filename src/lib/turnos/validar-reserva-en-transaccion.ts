@@ -211,7 +211,9 @@ export async function validarReservaEnTransaccion(
   if (!fila || !esVerdaderoDb(fila.servicioEstado)) {
     throw new Error("SERVICIO_NO_DISPONIBLE");
   }
-  if (!esVerdaderoDb(fila.barberoEstado)) throw new Error("BARBERO_NO_DISPONIBLE");
+  if (!esVerdaderoDb(fila.barberoEstado) || !fila.barberoUsuarioId) {
+    throw new Error("BARBERO_NO_DISPONIBLE");
+  }
   if (!fila.relacionId) throw new Error("SERVICIO_NO_ASIGNADO");
   if (fila.excepcionMotivo) throw new Error(`EXCEPCION:${fila.excepcionMotivo}`);
   if (!esVerdaderoDb(fila.diaLaboralExiste)) throw new Error("CERRADO");
