@@ -4,11 +4,25 @@ import { getUserTurnos } from "@/actions/sesion/listar-turnos-usuario.actions";
 import { prisma } from "@/lib/prisma";
 import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 import { obtenerDatosTransferencia } from "@/lib/pagos/obtener-datos-transferencia";
+import { obtenerDestinoPostLogin } from "@/lib/seguridad/resolver-destino-post-login";
+import { redirect } from "next/navigation";
 
-export default async function DashboardPage() {
-  const session = await requerirSesion();
+type PropiedadesPaginaDashboard = {
+  searchParams: Promise<{ redireccion?: string | string[] }>;
+};
+
+export default async function DashboardPage({ searchParams }: PropiedadesPaginaDashboard) {
+  const [session, parametros] = await Promise.all([requerirSesion(), searchParams]);
 
   if (!session) return null; // El middleware ya protege, pero TypeScript lo agradece
+
+  // Al volver de un inicio de sesión, resolver el destino con datos persistidos.
+  // Si falta el teléfono, `obtenerDestinoPostLogin` devuelve null y se renderiza
+  // el panel (modal de teléfono), por lo que no hay bucle de redirección.
+  if (parametros.redireccion === "post-login") {
+    const destino = await obtenerDestinoPostLogin(session.user.id);
+    if (destino) redirect(destino);
+  }
 
   const [dbUser, resultadoTurnos, config] = await Promise.all([
     prisma.user.findUnique({ where: { id: session.user.id } }),

@@ -9,6 +9,7 @@ import { obtenerIp } from "@/lib/seguridad/obtener-ip";
 import { crearTokenRestablecimiento } from "@/lib/crear-token-restablecimiento";
 import { restablecerPasswordConToken } from "@/lib/validar-token-restablecimiento";
 import { construirUrlRestablecimiento } from "@/lib/construir-url-restablecimiento";
+import { obtenerUrlApp } from "@/lib/obtener-url-app";
 import { sendRestablecimientoEmail } from "@/lib/email-restablecimiento";
 import { restablecerPasswordSchema } from "@/lib/zod";
 import type { ActionState } from "@/types/action-state";
@@ -41,13 +42,17 @@ export async function solicitarRestablecimiento(userId: string): Promise<ActionS
       return { success: false, error: "El usuario no es un empleado válido" };
     }
 
+    // Se resuelve antes de generar el token para no crear un token que no
+    // pueda enviarse por un enlace válido.
+    const urlBase = obtenerUrlApp();
+
     const token = await crearTokenRestablecimiento(usuario.id);
     if (!token) return { success: false, error: "No se pudo iniciar el restablecimiento" };
 
     const enviado = await sendRestablecimientoEmail(
       usuario.email,
       usuario.name || "Empleado",
-      construirUrlRestablecimiento(token),
+      construirUrlRestablecimiento(token, urlBase),
     );
 
     if (!enviado.success) {

@@ -2,8 +2,9 @@
 import { loginAction } from "@/actions/sesion/login.actions";
 import GoogleButton from "@/components/auth/google-button";
 import Link from "next/link";
-import { Suspense, useActionState, useEffect } from "react"; 
+import { Suspense, useActionState, useEffect, useRef } from "react"; 
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import { Mail, Lock, ChevronRight, Scissors } from "lucide-react";
@@ -19,16 +20,21 @@ export default function LoginPage() {
 
 function LoginPageContenido() {
   const router = useRouter();
+  const { update } = useSession();
   const searchParams = useSearchParams();
   const verificado = searchParams.get("verificado") === "true";
   const [state, action, isPending] = useActionState(loginAction, { error: "", success: false });
+  const redirigido = useRef(false);
 
   useEffect(() => {
-    if (state.success) {
-      router.push("/dashboard");
-      router.refresh();
-    }
-  }, [state, router]);
+    if (!state.success || redirigido.current) return;
+    redirigido.current = true;
+    // Sincroniza la sesión del cliente (navbar) sin exigir volver a guardar
+    // el perfil, y delega el destino final al servidor con datos persistidos.
+    void update().finally(() => {
+      router.replace("/dashboard?redireccion=post-login");
+    });
+  }, [state, update, router]);
 
   useEffect(() => {
     if (verificado) {
@@ -155,6 +161,13 @@ function LoginPageContenido() {
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-" />
               </button>
             </form>
+
+            <p className="mt-6 text-center text-sm font-medium text-[var(--admin-texto-muted)] lg:text-left">
+              ¿Olvidaste tu contraseña?{" "}
+              <Link href="/recuperar-password" className="text-[var(--page-primary-tinta)] hover:text-[var(--page-primary-tinta)] font-bold underline-offset-4 hover:underline transition-colors">
+                Recuperala aquí
+              </Link>
+            </p>
 
             <p className="mt-8 text-center text-sm font-medium text-[var(--admin-texto-muted)] lg:text-left">
               ¿No eres miembro aún?{" "}

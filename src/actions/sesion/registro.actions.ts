@@ -7,6 +7,7 @@ import { crearLimitadorDeIntentos, MENSAJE_BLOQUEO } from "@/lib/seguridad/limit
 import { obtenerIp } from "@/lib/seguridad/obtener-ip";
 import { crearTokenVerificacion } from "@/lib/crear-token-verificacion";
 import { construirUrlVerificacion } from "@/lib/construir-url-verificacion";
+import { obtenerUrlApp } from "@/lib/obtener-url-app";
 import { sendVerificacionEmail } from "@/lib/email-verificacion";
 import type { ActionState } from "@/types/action-state";
 
@@ -21,11 +22,12 @@ export const registerAction = async (prevState: ActionState, formData: FormData)
   const { email, password, name } = validated.data;
   const clave = `registro:${email.toLowerCase()}`;
   const ip = await obtenerIp();
-  if (limitadorDeIntentos.estaBloqueado(clave) || limitadorDeIntentos.estaBloqueado(ip)) return { error: MENSAJE_BLOQUEO };
+  const claveIp = `registro:ip:${ip}`;
+  if (limitadorDeIntentos.estaBloqueado(clave) || limitadorDeIntentos.estaBloqueado(claveIp)) return { error: MENSAJE_BLOQUEO };
   try {
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      for (const k of [clave, ip]) limitadorDeIntentos.registrarIntento(k, MAX_REGISTROS_POR_IP);
+      for (const k of [clave, claveIp]) limitadorDeIntentos.registrarIntento(k, MAX_REGISTROS_POR_IP);
       // No revelar si una dirección ya tiene una cuenta.
       return { success: true, email };
     }
@@ -33,15 +35,18 @@ export const registerAction = async (prevState: ActionState, formData: FormData)
     await prisma.user.create({
       data: { email, name, password: hashedPassword, role: "USER" },
     });
+    // Se resuelve antes de generar el token para no crear un token que no
+    // pueda enviarse por un enlace válido.
+    const urlBase = obtenerUrlApp();
     const token = await crearTokenVerificacion(email);
     let aviso: string | undefined;
     if (token) {
-      const enviado = await sendVerificacionEmail(email, name, construirUrlVerificacion(token));
+      const enviado = await sendVerificacionEmail(email, name, construirUrlVerificacion(token, urlBase));
       if (!enviado.success) {
         aviso = "No pudimos enviar el email. Usá el botón de reenviar.";
       }
     }
-    for (const k of [clave, ip]) limitadorDeIntentos.limpiarIntentos(k);
+    for (const k of [clave, claveIp]) limitadorDeIntentos.limpiarIntentos(k);
     return { success: true, email, aviso };
   } catch (error) {
     console.error("Error en el registro de usuario:", error);
