@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { crearTokenRestablecimiento } from "@/lib/crear-token-restablecimiento";
 import { construirUrlRestablecimiento } from "@/lib/construir-url-restablecimiento";
+import { obtenerUrlApp } from "@/lib/obtener-url-app";
 import { sendRestablecimientoEmail } from "@/lib/email-restablecimiento";
 import { crearLimitadorDeIntentos } from "@/lib/seguridad/limitador-intentos";
 import { obtenerIp } from "@/lib/seguridad/obtener-ip";
@@ -52,13 +53,17 @@ export async function solicitarRecuperacion(
     });
     if (!usuario) return RESPUESTA_GENERICA;
 
+    // Se resuelve antes de generar el token para no crear un token que no
+    // pueda enviarse por un enlace válido.
+    const urlBase = obtenerUrlApp();
+
     const token = await crearTokenRestablecimiento(usuario.id);
     if (!token) return RESPUESTA_GENERICA;
 
     await sendRestablecimientoEmail(
       usuario.email,
       usuario.name || "Cliente",
-      construirUrlRestablecimiento(token),
+      construirUrlRestablecimiento(token, urlBase),
     );
   } catch (error) {
     // El fallo se registra en el servidor; la respuesta al cliente es la misma

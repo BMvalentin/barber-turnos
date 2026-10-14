@@ -2,6 +2,7 @@
 import { prisma } from "@/lib/prisma";
 import { crearTokenVerificacion } from "@/lib/crear-token-verificacion";
 import { construirUrlVerificacion } from "@/lib/construir-url-verificacion";
+import { obtenerUrlApp } from "@/lib/obtener-url-app";
 import { sendVerificacionEmail } from "@/lib/email-verificacion";
 import { crearLimitadorDeIntentos } from "@/lib/seguridad/limitador-intentos";
 import { obtenerIp } from "@/lib/seguridad/obtener-ip";
@@ -40,13 +41,16 @@ export async function reenviarVerificacion(
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user || user.emailVerified) return RESPUESTA_REENVIO;
 
+    // Se resuelve antes de generar el token para no crear un token que no
+    // pueda enviarse por un enlace válido.
+    const urlBase = obtenerUrlApp();
     const token = await crearTokenVerificacion(email);
     if (!token) return RESPUESTA_REENVIO;
 
     await sendVerificacionEmail(
       email,
       user.name || "Cliente",
-      construirUrlVerificacion(token),
+      construirUrlVerificacion(token, urlBase),
     );
   } catch (error) {
     console.error("Error al reenviar la verificación:", error);

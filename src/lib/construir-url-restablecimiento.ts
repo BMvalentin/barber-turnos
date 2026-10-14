@@ -1,8 +1,7 @@
 /**
  * Construye la URL de restablecimiento de contraseña a partir del token.
- * Usa `NEXT_PUBLIC_APP_URL` para soportar desarrollo y producción.
+ * Recibe la URL base ya resuelta por `obtenerUrlApp`.
  */
-export function construirUrlRestablecimiento(token: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+export function construirUrlRestablecimiento(token: string, baseUrl: string): string {
   return `${baseUrl}/restablecer-password?token=${encodeURIComponent(token)}`;
 }

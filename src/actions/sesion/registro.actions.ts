@@ -7,6 +7,7 @@ import { crearLimitadorDeIntentos, MENSAJE_BLOQUEO } from "@/lib/seguridad/limit
 import { obtenerIp } from "@/lib/seguridad/obtener-ip";
 import { crearTokenVerificacion } from "@/lib/crear-token-verificacion";
 import { construirUrlVerificacion } from "@/lib/construir-url-verificacion";
+import { obtenerUrlApp } from "@/lib/obtener-url-app";
 import { sendVerificacionEmail } from "@/lib/email-verificacion";
 import type { ActionState } from "@/types/action-state";
 
@@ -33,10 +34,13 @@ export const registerAction = async (prevState: ActionState, formData: FormData)
     await prisma.user.create({
       data: { email, name, password: hashedPassword, role: "USER" },
     });
+    // Se resuelve antes de generar el token para no crear un token que no
+    // pueda enviarse por un enlace válido.
+    const urlBase = obtenerUrlApp();
     const token = await crearTokenVerificacion(email);
     let aviso: string | undefined;
     if (token) {
-      const enviado = await sendVerificacionEmail(email, name, construirUrlVerificacion(token));
+      const enviado = await sendVerificacionEmail(email, name, construirUrlVerificacion(token, urlBase));
       if (!enviado.success) {
         aviso = "No pudimos enviar el email. Usá el botón de reenviar.";
       }
