@@ -38,6 +38,11 @@ export const restablecerPasswordSchema = z
     path: ["confirmPassword"],
   });
 
+/* Email normalizado para solicitar la recuperación de contraseña. */
+export const solicitarRecuperacionSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Email inválido"),
+});
+
 /* Esquema base de nombre (mín. 3, máx. 100) con regex opcional */
 export function esquemaNombre(
   etiqueta: string,

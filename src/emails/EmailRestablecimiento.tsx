@@ -52,7 +52,7 @@ export function EmailRestablecimiento({
                   opacity: 0.85,
                 }}
               >
-                Un administrador inició el proceso por vos.
+                Elegí una nueva contraseña para tu cuenta.
               </Text>
             </Section>
 

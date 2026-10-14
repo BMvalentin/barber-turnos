@@ -19,7 +19,14 @@ export default auth((req) => {
   // 1. .redirect
   if (isAuthRoute) {
     if (isLoggedIn) {
-      const destino = userRole === "ADMIN" || userRole === "EMPLEADO" ? "/admin" : "/dashboard";
+      // Sin teléfono, el perfil está incompleto para cualquier rol: /dashboard.
+      // Con teléfono, se respeta el panel según el rol del JWT.
+      const tieneTelefono = Boolean(req.auth?.user?.telefono?.trim());
+      const destino = !tieneTelefono
+        ? "/dashboard"
+        : userRole === "ADMIN" || userRole === "EMPLEADO"
+          ? "/admin"
+          : "/";
       return NextResponse.redirect(new URL(destino, nextUrl));
     }
     return NextResponse.next();

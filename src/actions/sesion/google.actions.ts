@@ -2,4 +2,5 @@
 
 import { signIn } from "@/auth";
 
-export const googleLoginAction = async () => signIn("google", { redirectTo: "/dashboard" });
+export const googleLoginAction = async () =>
+  signIn("google", { redirectTo: "/dashboard?redireccion=post-login" });
