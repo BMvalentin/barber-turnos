@@ -17,7 +17,8 @@ export const loginAction = async (prevState: ActionState, formData: FormData): P
   if (!validated.success) return { error: "Datos inválidos" };
   const clave = `login:${validated.data.email.toLowerCase()}`;
   const ip = await obtenerIp();
-  if (limitadorDeIntentos.estaBloqueado(clave) || limitadorDeIntentos.estaBloqueado(ip)) return { error: MENSAJE_BLOQUEO };
+  const claveIp = `login:ip:${ip}`;
+  if (limitadorDeIntentos.estaBloqueado(clave) || limitadorDeIntentos.estaBloqueado(claveIp)) return { error: MENSAJE_BLOQUEO };
 
   try {
     await signIn("credentials", {
@@ -25,11 +26,11 @@ export const loginAction = async (prevState: ActionState, formData: FormData): P
       password: validated.data.password,
       redirect: false,
     });
-    for (const k of [clave, ip]) limitadorDeIntentos.limpiarIntentos(k);
+    for (const k of [clave, claveIp]) limitadorDeIntentos.limpiarIntentos(k);
     return { success: true };
   } catch (error) {
     if (error instanceof AuthError) {
-      for (const k of [clave, ip]) limitadorDeIntentos.registrarIntento(k, MAX_INTENTOS_LOGIN);
+      for (const k of [clave, claveIp]) limitadorDeIntentos.registrarIntento(k, MAX_INTENTOS_LOGIN);
       switch (error.type) {
         case "CredentialsSignin":
           return { error: "Credenciales incorrectas" };

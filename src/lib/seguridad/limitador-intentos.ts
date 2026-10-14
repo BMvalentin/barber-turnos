@@ -10,25 +10,27 @@ type RegistroIntentos = {
   bloqueadoHasta: number;
 };
 
-const intentos = new Map<string, RegistroIntentos>();
-
 export const MENSAJE_BLOQUEO = "Demasiados intentos. Intentá de nuevo más tarde.";
 
-function limpiarRegistrosVencidos(ahora: number): void {
-  for (const [clave, registro] of intentos) {
-    if (registro.bloqueadoHasta <= ahora && registro.inicioVentana + VENTANA_BLOQUEO_MS <= ahora) {
-      intentos.delete(clave);
+export function crearLimitadorDeIntentos() {
+  /* Cada instancia conserva su propio almacén: los flujos (login, registro,
+     recuperación, reenvío) no comparten contadores ni claves de IP. */
+  const intentos = new Map<string, RegistroIntentos>();
+
+  function limpiarRegistrosVencidos(ahora: number): void {
+    for (const [clave, registro] of intentos) {
+      if (registro.bloqueadoHasta <= ahora && registro.inicioVentana + VENTANA_BLOQUEO_MS <= ahora) {
+        intentos.delete(clave);
+      }
+    }
+
+    while (intentos.size >= MAXIMO_ENTRADAS) {
+      const claveMasAntigua = intentos.keys().next().value;
+      if (!claveMasAntigua) break;
+      intentos.delete(claveMasAntigua);
     }
   }
 
-  while (intentos.size >= MAXIMO_ENTRADAS) {
-    const claveMasAntigua = intentos.keys().next().value;
-    if (!claveMasAntigua) break;
-    intentos.delete(claveMasAntigua);
-  }
-}
-
-export function crearLimitadorDeIntentos() {
   return {
     estaBloqueado(clave: string): boolean {
       const ahora = Date.now();

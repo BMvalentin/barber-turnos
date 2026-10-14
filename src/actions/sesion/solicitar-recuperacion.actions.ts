@@ -34,7 +34,8 @@ export async function solicitarRecuperacion(
   const resultado = solicitarRecuperacionSchema.safeParse(Object.fromEntries(formData));
   const email = resultado.success ? resultado.data.email : null;
   const ip = await obtenerIp();
-  const claves = email ? [ip, `recuperacion:${email}`] : [ip];
+  const claveIp = `recuperacion:ip:${ip}`;
+  const claves = email ? [claveIp, `recuperacion:${email}`] : [claveIp];
 
   if (claves.some((clave) => limitadorDeSolicitudes.estaBloqueado(clave))) {
     return RESPUESTA_GENERICA;

@@ -25,7 +25,8 @@ export async function reenviarVerificacion(
   const resultadoEmail = esquemaEmail.safeParse(emailCrudo);
   const email = resultadoEmail.success ? resultadoEmail.data : null;
   const ip = await obtenerIp();
-  const claves = email ? [ip, `reenvio:${email}`] : [ip];
+  const claveIp = `reenvio:ip:${ip}`;
+  const claves = email ? [claveIp, `reenvio:${email}`] : [claveIp];
 
   if (claves.some((clave) => limitadorDeReenvios.estaBloqueado(clave))) {
     return RESPUESTA_REENVIO;
