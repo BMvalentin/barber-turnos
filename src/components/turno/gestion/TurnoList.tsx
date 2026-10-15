@@ -8,6 +8,8 @@ import EmptyState from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import LineaTiempoTurnos from "./LineaTiempoTurnos";
 import { useConfirmacionTurno } from "./use-confirmacion-turno";
+import { formatearFecha } from "@/lib/utils/formatear-fecha";
+import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
 import type { DatosTransferencia } from "@/types/pago";
@@ -23,6 +25,22 @@ interface Props {
   onEstadoActualizado?: (id: string, nuevoEstado: string) => void;
   whatsappPhone?: string;
   datosTransferencia?: DatosTransferencia;
+  /** Muestra la fecha de cada día aunque todos los turnos sean del mismo día. */
+  mostrarFechas?: boolean;
+}
+
+type GrupoDia = { dia: string; turnos: TurnoListado[] };
+
+// La línea de tiempo representa un único día: se agrupa por fecha del negocio.
+function agruparPorDia(turnos: TurnoListado[]): GrupoDia[] {
+  const grupos: GrupoDia[] = [];
+  for (const turno of turnos) {
+    const dia = obtenerFechaSola(turno.horarioReservado);
+    const ultimo = grupos[grupos.length - 1];
+    if (ultimo?.dia === dia) ultimo.turnos.push(turno);
+    else grupos.push({ dia, turnos: [turno] });
+  }
+  return grupos;
 }
 
 export default function TurnoList({
@@ -36,15 +54,19 @@ export default function TurnoList({
   onEstadoActualizado = () => {},
   whatsappPhone = "",
   datosTransferencia,
+  mostrarFechas = false,
 }: Props) {
-  const turnosOrdenados = useMemo(
+  const gruposPorDia = useMemo(
     () =>
-      [...turnos].sort(
-        (a, b) =>
-          new Date(a.horarioReservado).getTime() - new Date(b.horarioReservado).getTime(),
+      agruparPorDia(
+        [...turnos].sort(
+          (a, b) =>
+            new Date(a.horarioReservado).getTime() - new Date(b.horarioReservado).getTime(),
+        ),
       ),
     [turnos],
   );
+  const mostrarEncabezados = mostrarFechas || gruposPorDia.length > 1;
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const onCargarMasRef = useRef(onCargarMas);
@@ -80,7 +102,10 @@ export default function TurnoList({
     alActualizarEstado: onEstadoActualizado,
   });
 
-  if (cargandoInicial) {
+  // Sólo se reemplaza la lista por el esqueleto en la primera carga. Durante
+  // un refresco con datos ya visibles se conserva el calendario montado para no
+  // perder la posición de scroll.
+  if (cargandoInicial && turnos.length === 0) {
     return (
       <div className="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl p-4">
         <div className="space-y-3">
@@ -106,15 +131,26 @@ export default function TurnoList({
 
   return (
     <div>
-      <LineaTiempoTurnos
-        turnos={turnosOrdenados}
-        session={session}
-        onCancelar={solicitarCancelar}
-        onCompletar={solicitarCompletar}
-        onConfirmar={solicitarConfirmar}
-        whatsappPhone={whatsappPhone}
-        datosTransferencia={datosTransferencia}
-      />
+      <div className="space-y-6">
+        {gruposPorDia.map((grupo) => (
+          <section key={grupo.dia} aria-label={formatearFecha(grupo.turnos[0].horarioReservado)}>
+            {mostrarEncabezados && (
+              <h3 className="mb-2 text-sm font-semibold capitalize text-[var(--admin-texto-primario)]">
+                {formatearFecha(grupo.turnos[0].horarioReservado)}
+              </h3>
+            )}
+            <LineaTiempoTurnos
+              turnos={grupo.turnos}
+              session={session}
+              onCancelar={solicitarCancelar}
+              onCompletar={solicitarCompletar}
+              onConfirmar={solicitarConfirmar}
+              whatsappPhone={whatsappPhone}
+              datosTransferencia={datosTransferencia}
+            />
+          </section>
+        ))}
+      </div>
 
       <div ref={sentinelRef} aria-hidden="true" className="h-1" />
 
