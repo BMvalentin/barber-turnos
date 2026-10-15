@@ -128,21 +128,26 @@ export default function TurnoManager({
     }
   };
 
+  // Cambiar el filtro reinicia la consulta: se descarta la lista anterior para
+  // no mostrar turnos de la fecha/estado previos mientras llega la respuesta.
   const cambiarEstado = (nuevoEstado: string) => {
     if (nuevoEstado === filtroEstado) return;
     setFiltroEstado(nuevoEstado);
+    setTurnos([]);
     void reiniciarBusqueda(nuevoEstado, fecha);
   };
 
   const cambiarFecha = (nuevaFecha: string) => {
     if (nuevaFecha === fecha) return;
     setFecha(nuevaFecha);
+    setTurnos([]);
     void reiniciarBusqueda(filtroEstado, nuevaFecha);
   };
 
   const cambiarBarbero = (nuevoBarberoId: string) => {
     if (nuevoBarberoId === barberoId) return;
     setBarberoId(nuevoBarberoId);
+    setTurnos([]);
     void reiniciarBusqueda(filtroEstado, fecha, nuevoBarberoId);
   };
 
@@ -189,8 +194,8 @@ export default function TurnoManager({
       relaciones={initialRelaciones}
       whatsappPhone={whatsappPhone}
     >
-      <div className="space-y-5">
-      <div className="sticky top-0 z-30 border-b border-[var(--admin-border)] bg-[var(--admin-background)] pb-4">
+      <div className="flex h-full min-h-0 flex-col gap-5">
+      <div className="shrink-0 border-b border-[var(--admin-border)] bg-[var(--admin-background)] pb-4">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-[var(--admin-texto-primario)] md:text-[28px]">
@@ -228,18 +233,24 @@ export default function TurnoManager({
           />
         </div>
       </div>
-      <TurnoList
-        turnos={turnos}
-        session={session}
-        cargandoInicial={cargandoInicial}
-        cargandoMas={cargandoMas}
-        tieneMas={paginaActual < totalPaginas}
-        errorCargaMas={errorCargaMas}
-        onCargarMas={cargarMas}
-        onEstadoActualizado={actualizarEstadoTurno}
-        whatsappPhone={whatsappPhone}
-        datosTransferencia={datosTransferencia}
-      />
+      <div
+        key={`${filtroEstado}|${fecha}|${barberoId}`}
+        className="min-h-0 flex-1 overflow-y-auto pr-1"
+      >
+        <TurnoList
+          turnos={turnos}
+          session={session}
+          cargandoInicial={cargandoInicial}
+          cargandoMas={cargandoMas}
+          tieneMas={paginaActual < totalPaginas}
+          errorCargaMas={errorCargaMas}
+          onCargarMas={cargarMas}
+          onEstadoActualizado={actualizarEstadoTurno}
+          whatsappPhone={whatsappPhone}
+          datosTransferencia={datosTransferencia}
+          mostrarFechas
+        />
+      </div>
       </div>
     </DatosReservaProveedor>
   );

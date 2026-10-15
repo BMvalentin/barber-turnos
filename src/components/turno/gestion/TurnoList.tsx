@@ -102,7 +102,10 @@ export default function TurnoList({
     alActualizarEstado: onEstadoActualizado,
   });
 
-  if (cargandoInicial) {
+  // Sólo se reemplaza la lista por el esqueleto en la primera carga. Durante
+  // un refresco con datos ya visibles se conserva el calendario montado para no
+  // perder la posición de scroll.
+  if (cargandoInicial && turnos.length === 0) {
     return (
       <div className="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl p-4">
         <div className="space-y-3">
