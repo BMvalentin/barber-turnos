@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { toZonedTime } from "date-fns-tz";
 import TurnoRow from "./TurnoRow";
+import { ZONA_HORARIA } from "@/lib/constants";
 import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
 import type { DatosTransferencia } from "@/types/pago";
@@ -54,8 +56,9 @@ function useMedidasLineaTiempo(): Medidas {
   return medidas;
 }
 
+// Usa la zona horaria del negocio para que la fila coincida con la hora mostrada.
 function minutosDeTurno(turno: TurnoListado): number {
-  const fecha = new Date(turno.horarioReservado);
+  const fecha = toZonedTime(turno.horarioReservado, ZONA_HORARIA);
   return fecha.getHours() * 60 + fecha.getMinutes();
 }
 
