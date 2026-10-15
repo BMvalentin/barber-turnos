@@ -103,7 +103,7 @@ export default function AdminShell({ children, config, rol }: AdminShellProps) {
           </Link>
         </header>
         <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
-          <div className="mx-auto w-full max-w-[1280px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <div className="mx-auto h-full w-full max-w-[1280px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
             {children}
           </div>
         </main>

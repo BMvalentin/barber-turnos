@@ -21,8 +21,8 @@ export default async function TurnoPage() {
   const { servicios, barberos, usuarios, relaciones, config } = await getTurnoData();
 
   return (
-    <div className="min-h-screen w-full p-2 sm:p-6 pt-24 md:pt-24 overflow-x-clip">
-      <div className="container mx-auto max-w-7xl">
+    <div className="flex h-dvh min-h-0 w-full flex-col overflow-x-clip p-2 pt-24 sm:p-6 sm:pt-24">
+      <div className="container mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col">
         <TurnoManager
           turnosIniciales={[]}
           totalPaginasInicial={1}

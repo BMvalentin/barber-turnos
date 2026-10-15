@@ -66,6 +66,7 @@ export default function PanelTurnosUsuario({
         onCargarMas={cargarMas}
         whatsappPhone={whatsappPhone}
         datosTransferencia={datosTransferencia}
+        mostrarFechas
       />
     </div>
   );

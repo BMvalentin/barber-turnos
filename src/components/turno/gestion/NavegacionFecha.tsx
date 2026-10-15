@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import CalendarioNavegacion from "./CalendarioNavegacion";
+import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 
 interface Props {
   fecha: string;
@@ -68,10 +69,14 @@ export default function NavegacionFecha({ fecha, onCambiarFecha, estado, barbero
     };
   }, [abierto]);
 
+  const hoy = obtenerFechaSola(new Date());
   const base = fechaBase(fecha);
   const textoFecha = FORMATO_LARGO.format(base);
-  const textoVisible =
+  const textoFechaCapitalizado =
     textoFecha.charAt(0).toUpperCase() + textoFecha.slice(1);
+  // Sin filtro de fecha el listado muestra todos los días: no debe rotularse
+  // como si fuera el día de hoy.
+  const textoVisible = fecha === "" ? "Todas las fechas" : textoFechaCapitalizado;
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -128,10 +133,10 @@ export default function NavegacionFecha({ fecha, onCambiarFecha, estado, barbero
 
       <button
         type="button"
-        disabled={fecha === ""}
-        onClick={() => onCambiarFecha("")}
+        disabled={fecha === hoy}
+        onClick={() => onCambiarFecha(hoy)}
         className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-          fecha === ""
+          fecha === hoy
             ? "cursor-default text-[var(--admin-texto-muted)] disabled:opacity-60"
             : "cursor-pointer bg-[var(--page-primary-15)] text-[var(--admin-texto-primario)] hover:bg-[var(--page-primary-30)]"
         }`}

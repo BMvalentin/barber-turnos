@@ -44,7 +44,7 @@ export default async function AdminTurnoPage() {
   const totalPaginasInicial = result.success && result.totalPages ? result.totalPages : 1;
 
   return (
-    <div className="space-y-8">
+    <div className="h-full min-h-0">
       <TurnoManager
         turnosIniciales={turnosData}
         totalPaginasInicial={totalPaginasInicial}
