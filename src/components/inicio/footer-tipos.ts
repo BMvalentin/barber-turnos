@@ -1,6 +1,4 @@
 export interface FooterProps {
-  openPrivacy: () => void;
-  openTerms: () => void;
   barberiaNombre?: string | null;
   logoUrl?: string | null;
   descripcion?: string | null;
@@ -15,4 +13,3 @@ export interface FooterProps {
 
 export type MarcaFooterProps = Pick<FooterProps, "barberiaNombre" | "logoUrl" | "descripcion">;
 export type ContactoFooterProps = Pick<FooterProps, "telefono" | "email" | "direccion" | "ciudad" | "whatsapp" | "instagram">;
-export type LegalFooterProps = Pick<FooterProps, "openPrivacy" | "openTerms">;

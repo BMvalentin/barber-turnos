@@ -8,7 +8,7 @@ import { LegalFooter } from "@/components/inicio/LegalFooter";
 import { MarcaFooter } from "@/components/inicio/MarcaFooter";
 import { NavegacionFooter } from "@/components/inicio/NavegacionFooter";
 
-export function Footer({ openPrivacy, openTerms, barberiaNombre, logoUrl, descripcion, localidad, instagram, whatsapp, telefono, email, direccion, ciudad }: FooterProps) {
+export function Footer({ barberiaNombre, logoUrl, descripcion, localidad, instagram, whatsapp, telefono, email, direccion, ciudad }: FooterProps) {
   const anioActual = new Date().getFullYear();
   return (
     <footer className="relative z-10 w-full border-t border-[var(--admin-border)] bg-[var(--page-bg)] pb-6 pt-14">
@@ -18,7 +18,7 @@ export function Footer({ openPrivacy, openTerms, barberiaNombre, logoUrl, descri
           <MarcaFooter barberiaNombre={barberiaNombre} logoUrl={logoUrl} descripcion={descripcion} />
           <NavegacionFooter />
           <ContactoFooter direccion={direccion} ciudad={ciudad} telefono={telefono} email={email} whatsapp={whatsapp} instagram={instagram} />
-          <LegalFooter openTerms={openTerms} openPrivacy={openPrivacy} />
+          <LegalFooter />
         </motion.div>
         <div className="mt-12 grid items-center justify-items-center gap-4 border-t border-[var(--admin-border)] pt-6 sm:grid-cols-[1fr_auto_1fr]">
           <p className="text-center text-xs text-[var(--admin-texto-muted)] sm:justify-self-start sm:text-left">

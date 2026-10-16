@@ -171,9 +171,21 @@ function LoginPageContenido() {
 
             <p className="mt-8 text-center text-sm font-medium text-[var(--admin-texto-muted)] lg:text-left">
               ¿No eres miembro aún?{" "}
-              <Link href="/register" className="text-[var(--page-primary-tinta)] hover:text-[var(--page-primary-tinta)] font-bold underline-offset-4 hover:underline transition-colors">
+              <Link href="/register" className="text-[var(--page-primary-tinta)] font-bold hover:text-[var(--page-primary-tinta)] underline-offset-4 hover:underline transition-colors">
                 Regístrate aquí
               </Link>
+            </p>
+
+            <p className="mt-4 text-center text-xs leading-relaxed text-[var(--admin-texto-muted)] lg:text-left">
+              Consultá los{" "}
+              <Link href="/legal/terminos" className="text-[var(--page-primary-tinta)] font-semibold hover:underline underline-offset-4 transition-colors">
+                Términos y Condiciones
+              </Link>{" "}
+              y la{" "}
+              <Link href="/legal/privacidad" className="text-[var(--page-primary-tinta)] font-semibold hover:underline underline-offset-4 transition-colors">
+                Política de Privacidad
+              </Link>
+              .
             </p>
           </div>
         </div>

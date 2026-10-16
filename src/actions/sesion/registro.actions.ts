@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { registerSchema } from "@/lib/zod";
+import { registerSchema, aceptacionLegalSchema } from "@/lib/zod";
 import bcrypt from "bcryptjs";
 import { crearLimitadorDeIntentos, MENSAJE_BLOQUEO } from "@/lib/seguridad/limitador-intentos";
 import { obtenerIp } from "@/lib/seguridad/obtener-ip";
@@ -9,6 +9,7 @@ import { crearTokenVerificacion } from "@/lib/crear-token-verificacion";
 import { construirUrlVerificacion } from "@/lib/construir-url-verificacion";
 import { obtenerUrlApp } from "@/lib/obtener-url-app";
 import { sendVerificacionEmail } from "@/lib/email-verificacion";
+import { registrarConsentimientosEnTransaccion } from "@/lib/legal/registrar-consentimiento";
 import type { ActionState } from "@/types/action-state";
 
 const MAX_REGISTROS_POR_IP = 5;
@@ -17,6 +18,10 @@ const limitadorDeIntentos = crearLimitadorDeIntentos();
 
 export const registerAction = async (prevState: ActionState, formData: FormData): Promise<ActionState> => {
   const data = Object.fromEntries(formData);
+  const consentimiento = aceptacionLegalSchema.safeParse(data);
+  if (!consentimiento.success) {
+    return { error: "Debés aceptar los Términos y Condiciones y la Política de Privacidad para crear tu cuenta." };
+  }
   const validated = registerSchema.safeParse(data);
   if (!validated.success) return { error: "Datos inválidos. Revisa los campos." };
   const { email, password, name } = validated.data;
@@ -32,8 +37,16 @@ export const registerAction = async (prevState: ActionState, formData: FormData)
       return { success: true, email };
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    await prisma.user.create({
-      data: { email, name, password: hashedPassword, role: "USER" },
+    await prisma.$transaction(async (tx) => {
+      const usuario = await tx.user.create({
+        data: { email, name, password: hashedPassword, role: "USER" },
+      });
+      // El consentimiento se registra en la misma transacción para no dejar
+      // aceptaciones asociadas a una cuenta inexistente.
+      await registrarConsentimientosEnTransaccion(tx, {
+        userId: usuario.id,
+        metodo: "credentials",
+      });
     });
     // Se resuelve antes de generar el token para no crear un token que no
     // pueda enviarse por un enlace válido.

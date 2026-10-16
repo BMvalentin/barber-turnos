@@ -1,11 +1,28 @@
 "use client";
-import { googleLoginAction } from "@/actions/sesion/google.actions";
+import { googleLoginAction, googleLoginConAceptacionAction } from "@/actions/sesion/google.actions";
 import BotonSubmitFormStatus from "@/components/ui/boton-submit-form-status";
 
-export default function GoogleButton() {
+type GoogleButtonProps = {
+  /* Cuando es true, exige la aceptación previa de los documentos legales antes
+     de iniciar el flujo de Google. La aceptación se verifica también en el
+     servidor (callback `signIn`), no solo con el estado del botón. */
+  conAceptacionLegal?: boolean;
+  aceptado?: boolean;
+};
+
+export default function GoogleButton({
+  conAceptacionLegal = false,
+  aceptado = false,
+}: GoogleButtonProps) {
+  const accion = conAceptacionLegal ? googleLoginConAceptacionAction : googleLoginAction;
+
   return (
-    <form action={googleLoginAction}>
+    <form action={accion}>
+      {conAceptacionLegal && (
+        <input type="hidden" name="aceptaTerminos" value={aceptado ? "on" : ""} />
+      )}
       <BotonSubmitFormStatus
+        deshabilitado={conAceptacionLegal && !aceptado}
         texto={
           <>
             {/* Logo oficial de Google optimizado */}

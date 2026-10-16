@@ -11,7 +11,11 @@ import { User, Mail, Lock, Scissors, Eye, EyeOff } from "lucide-react";
 import type { ActionState } from "@/types/action-state";
 import { toast } from "sonner";
 
-export default function FormularioRegistro() {
+export default function FormularioRegistro({
+  consentimientoRequerido = false,
+}: {
+  consentimientoRequerido?: boolean;
+}) {
   const router = useRouter();
   const [state, action, isPending] = useActionState<ActionState, FormData>(
     registerAction,
@@ -23,6 +27,7 @@ export default function FormularioRegistro() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [verPassword, setVerPassword] = useState(false);
   const [verConfirmPassword, setVerConfirmPassword] = useState(false);
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
 
   useEffect(() => {
     if (state.success) {
@@ -78,8 +83,57 @@ export default function FormularioRegistro() {
               <p className="text-[var(--admin-texto-secundario)] text-sm mt-2 font-medium tracking-wide">CREA TU CUENTA EXCLUSIVA</p>
             </div>
 
+            {consentimientoRequerido && (
+              <div
+                role="alert"
+                className="mb-4 rounded-xl border border-[var(--admin-border-fuerte)] bg-[var(--page-primary-15)] p-3 text-xs leading-relaxed text-[var(--admin-texto-secundario)]"
+              >
+                Para crear tu cuenta con Google tenés que aceptar los Términos y Condiciones y la
+                Política de Privacidad.
+              </div>
+            )}
+
+            <div className="mb-6 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-item)] p-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={aceptaTerminos}
+                  onChange={(e) => setAceptaTerminos(e.target.checked)}
+                  aria-describedby="acepta-terminos-ayuda"
+                  className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-[var(--admin-border-fuerte)]"
+                  style={{ accentColor: "var(--page-primary)" }}
+                />
+                <span
+                  id="acepta-terminos-ayuda"
+                  className="text-xs leading-relaxed text-[var(--admin-texto-secundario)]"
+                >
+                  Acepto los{" "}
+                  <Link
+                    href="/legal/terminos"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(evento) => evento.stopPropagation()}
+                    className="font-semibold text-[var(--page-primary-tinta)] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] rounded"
+                  >
+                    Términos y Condiciones
+                  </Link>{" "}
+                  y la{" "}
+                  <Link
+                    href="/legal/privacidad"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(evento) => evento.stopPropagation()}
+                    className="font-semibold text-[var(--page-primary-tinta)] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] rounded"
+                  >
+                    Política de Privacidad
+                  </Link>
+                  .
+                </span>
+              </label>
+            </div>
+
             <div className="space-y-4 mb-8">
-              <GoogleButton />
+              <GoogleButton conAceptacionLegal aceptado={aceptaTerminos} />
             </div>
 
             <div className="relative mb-8">
@@ -170,9 +224,11 @@ export default function FormularioRegistro() {
                 </div>
               </div>
 
+              <input type="hidden" name="aceptaTerminos" value={aceptaTerminos ? "on" : ""} />
+
               <button
                 type="submit"
-                disabled={isPending}
+                disabled={isPending || !aceptaTerminos}
                 className={`w-full mt-4 ${CLASES_BOTON_MARCA} font-black py-4 rounded-xl transition-all shadow- hover:shadow- flex items-center justify-center gap-3 uppercase tracking-widest text-sm sm:text-base active:scale- disabled:opacity-50`}
               >
                 {isPending ? "PROCESANDO..." : (
