@@ -130,6 +130,7 @@ model user {
   turno         turno[]
   barbero       barbero?
   verificaciones verificacion_usuario[]
+  consentimientos consentimiento_legal[]
 }
 
 model verificacion_usuario {
@@ -142,6 +143,21 @@ model verificacion_usuario {
   userId     String
 
   @@index([identifier])
+}
+
+/* Registro auditable de aceptaciones de documentos legales. Se inserta una
+   fila por documento y versión aceptados; nunca se sobrescriben los registros
+   históricos. `metodo` indica el contexto de la aceptación. */
+model consentimiento_legal {
+  id         String   @id @default(cuid())
+  userId     String
+  documento  String
+  version    String
+  aceptadoEn DateTime @default(now())
+  metodo     String
+  user       user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, documento])
 }
 
 model excepcion_laboral {

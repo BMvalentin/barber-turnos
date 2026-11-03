@@ -25,6 +25,20 @@ export const registerSchema = loginSchema
     path: ["confirmPassword"],
   });
 
+/* Aceptación obligatoria de documentos legales en el registro con credenciales.
+   Los checkbox no marcados no se envían en el FormData, por lo que la
+   validación falla si falta el valor. */
+export const aceptacionLegalSchema = z.object({
+  aceptaTerminos: z
+    .preprocess(
+      (valor) => valor === "on" || valor === "true" || valor === true,
+      z.boolean(),
+    )
+    .refine((valor) => valor === true, {
+      message: "Debés aceptar los Términos y la Política de Privacidad",
+    }),
+});
+
 export const restablecerPasswordSchema = z
   .object({
     token: z.string().min(1, "Token inválido"),

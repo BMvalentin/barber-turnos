@@ -8,6 +8,8 @@ export type UsuarioAdministrable = {
   id: string;
   name: string | null;
   email: string;
+  telefono: string | null;
+  cantidadTurnos: number;
   role: "USER" | "ADMIN" | "EMPLEADO";
   barbero: { id: string; nombre: string; email: string | null } | null;
 };
@@ -28,18 +30,25 @@ export async function listarUsuarios(): Promise<ActionState<DatosUsuariosAdminis
         id: true,
         name: true,
         email: true,
+        telefono: true,
         role: true,
         barbero: { select: { id: true, nombre: true, email: true } },
+        _count: { select: { turno: true } },
       },
       orderBy: [{ role: "asc" }, { email: "asc" }],
     });
 
+    const administrables: UsuarioAdministrable[] = usuarios.map(({ _count, ...usuario }) => ({
+      ...usuario,
+      cantidadTurnos: _count.turno,
+    }));
+
     return {
       success: true,
       data: {
-        usuarios: usuarios.filter((usuario) => usuario.role === "USER"),
-        empleados: usuarios.filter((usuario) => usuario.role === "EMPLEADO"),
-        administradores: usuarios.filter((usuario) => usuario.role === "ADMIN"),
+        usuarios: administrables.filter((usuario) => usuario.role === "USER"),
+        empleados: administrables.filter((usuario) => usuario.role === "EMPLEADO"),
+        administradores: administrables.filter((usuario) => usuario.role === "ADMIN"),
       },
     };
   } catch (error) {
