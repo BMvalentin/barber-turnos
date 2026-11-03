@@ -16,7 +16,7 @@ export default async function UsuariosPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-[var(--admin-texto-primario)] md:text-[28px]">Gestión de usuarios</h1>
-        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">Asigná roles. Los perfiles de barbero se crean automáticamente para empleados y administradores.</p>
+        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">Editá los datos de cada cuenta, asigná roles o eliminá cuentas sin turnos. Los perfiles de barbero se crean automáticamente para empleados y administradores.</p>
       </div>
       <UsuarioList
         usuarios={datos.usuarios}
