@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { serializarServiciosReserva } from "@/lib/serializar-servicios-reserva";
 import { obtenerDatosTransferencia } from "@/lib/pagos/obtener-datos-transferencia";
+import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import { redirect } from "next/navigation";
 
 async function getTurnoData(barberoId: string | null, incluirUsuarios: boolean) {
@@ -34,9 +35,10 @@ export default async function AdminTurnoPage() {
   const session = contexto.session;
   const esEmpleado = contexto.rol === "EMPLEADO";
   const barberoIdInicial = contexto.barberoId ?? "";
+  const fechaInicial = obtenerFechaSola(new Date());
   const [datosTurno, result] = await Promise.all([
     getTurnoData(esEmpleado ? contexto.barberoId : null, true),
-    getTurnos(1, "CONFIRMADO", undefined, barberoIdInicial || undefined),
+    getTurnos(1, "CONFIRMADO", fechaInicial, barberoIdInicial || undefined),
   ]);
   const { servicios, barberos, barberosFiltro, usuarios, relaciones, config } = datosTurno;
 
@@ -56,6 +58,8 @@ export default async function AdminTurnoPage() {
         initialRelaciones={relaciones}
         mostrarFiltroBarbero={!esEmpleado}
         barberoIdInicial={barberoIdInicial}
+        fechaInicial={fechaInicial}
+        vistaAgendaCompleta
         whatsappPhone={config?.whatsapp || ""}
         datosTransferencia={obtenerDatosTransferencia(config)}
       />

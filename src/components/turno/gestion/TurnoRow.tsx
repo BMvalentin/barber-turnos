@@ -21,6 +21,8 @@ interface Props {
   onConfirmar: (id: string) => void;
   whatsappPhone?: string;
   datosTransferencia?: DatosTransferencia;
+  mostrarHora?: boolean;
+  compacto?: boolean;
 }
 
 export default function TurnoRow({
@@ -31,6 +33,8 @@ export default function TurnoRow({
   onConfirmar,
   whatsappPhone = "",
   datosTransferencia,
+  mostrarHora = true,
+  compacto = false,
 }: Props) {
   const esAdminUsuario = esAdmin(session);
   const esEmpleado = session?.user?.role === "EMPLEADO";
@@ -96,13 +100,17 @@ export default function TurnoRow({
   const inicialBarbero = turno.barbero?.nombre?.charAt(0) || "B";
 
   return (
-    <div className="min-w-0 rounded-xl bg-[var(--admin-item)] p-3 sm:p-3.5 transition-colors duration-150 hover:bg-[var(--admin-item-hover)]">
+    <div
+      className={`min-w-0 rounded-xl bg-[var(--admin-item)] ${compacto ? "p-2.5" : "p-3 sm:p-3.5"} transition-colors duration-150 hover:bg-[var(--admin-item-hover)]`}
+    >
       <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-x-3">
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2.5">
-            <span className="text-sm font-semibold tabular-nums text-[var(--admin-texto-primario)]">
-              {formatearHora(turno.horarioReservado)}
-            </span>
+            {mostrarHora && (
+              <span className="text-sm font-semibold tabular-nums text-[var(--admin-texto-primario)]">
+                {formatearHora(turno.horarioReservado)}
+              </span>
+            )}
             <p className="min-w-0 break-words text-sm font-semibold text-[var(--admin-texto-primario)] [overflow-wrap:anywhere]">
               {nombreCliente}
             </p>
@@ -130,7 +138,7 @@ export default function TurnoRow({
         </div>
       </div>
 
-      <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[var(--admin-texto-secundario)]">
+      <div className={`${compacto ? "mt-2" : "mt-2.5"} flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[var(--admin-texto-secundario)]`}>
         <span className="flex min-w-0 basis-full items-start gap-1.5 sm:basis-auto sm:items-center">
           <Clock className="h-3.5 w-3.5 flex-shrink-0" />
           <span className="min-w-0 break-words [overflow-wrap:anywhere]">
@@ -138,7 +146,7 @@ export default function TurnoRow({
             {turno.servicio?.duracion || 0} min
           </span>
         </span>
-        {!esEmpleado && (
+        {(!esEmpleado || compacto) && (
           <span className="flex min-w-0 basis-full items-center gap-1.5 sm:basis-auto">
             <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[var(--page-primary-20)] text-[10px] font-bold text-[var(--admin-texto-primario)]">
               {inicialBarbero}
@@ -150,7 +158,9 @@ export default function TurnoRow({
         )}
       </div>
 
-      <div className="mt-2.5 flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-3">
+      <div
+        className={`${compacto ? "mt-2" : "mt-2.5"} flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-3`}
+      >
         <div className="flex flex-wrap items-baseline gap-x-2">
           <p className="text-sm font-semibold text-[var(--admin-texto-primario)]">
             ${formatearMoneda(turno.precioCongelado)}

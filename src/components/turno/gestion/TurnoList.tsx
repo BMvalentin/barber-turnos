@@ -27,6 +27,8 @@ interface Props {
   datosTransferencia?: DatosTransferencia;
   /** Muestra la fecha de cada día aunque todos los turnos sean del mismo día. */
   mostrarFechas?: boolean;
+  modoCronologicoCompacto?: boolean;
+  mensajeVacio?: string;
 }
 
 type GrupoDia = { dia: string; turnos: TurnoListado[] };
@@ -55,6 +57,8 @@ export default function TurnoList({
   whatsappPhone = "",
   datosTransferencia,
   mostrarFechas = false,
+  modoCronologicoCompacto = false,
+  mensajeVacio = "No hay turnos para mostrar.",
 }: Props) {
   const gruposPorDia = useMemo(
     () =>
@@ -121,8 +125,8 @@ export default function TurnoList({
     return (
       <EmptyState
         icono={<Calendar className="h-10 w-10" />}
-        mensaje="No hay turnos para mostrar."
-        claseContenedor="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl p-12"
+        mensaje={mensajeVacio}
+        claseContenedor={`bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl ${modoCronologicoCompacto ? "p-6" : "p-12"}`}
         claseIcono="h-10 w-10 text-[var(--admin-texto-muted)] opacity-50"
         claseMensaje="text-[var(--admin-texto-muted)]"
       />
@@ -147,6 +151,7 @@ export default function TurnoList({
               onConfirmar={solicitarConfirmar}
               whatsappPhone={whatsappPhone}
               datosTransferencia={datosTransferencia}
+              modoCompacto={modoCronologicoCompacto}
             />
           </section>
         ))}
