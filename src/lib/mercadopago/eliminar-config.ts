@@ -1,3 +1,4 @@
+import { revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { ID_CONFIGURACION_MP } from "./constantes";
 
@@ -8,4 +9,5 @@ export async function eliminarConfiguracionMP() {
   await prisma.configuracion_mercadopago.deleteMany({
     where: { id: ID_CONFIGURACION_MP },
   });
+  revalidateTag("mercadopago-config");
 }

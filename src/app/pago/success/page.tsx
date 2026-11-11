@@ -181,7 +181,7 @@ export default async function PagoSuccessPage({
         ) : (
           <div className="flex flex-col gap-3">
             <Link
-              href="/dashboard"
+              href="/dashboard?tab=turnos"
               className={`flex items-center justify-center gap-2 w-full ${CLASES_BOTON_MARCA} font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm`}
             >
               <Calendar className="w-5 h-5" />

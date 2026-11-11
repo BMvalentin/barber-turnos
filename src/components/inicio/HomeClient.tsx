@@ -1,11 +1,18 @@
+"use client";
+
 import { Hero } from "@/components/inicio/Hero";
 import { LocationSection } from "@/components/inicio/LocationSection";
 import { ServiciosCarousel } from "@/components/inicio/ServiciosCarousel";
-import type { PageConfig } from "../../../generated/prisma/client";
 
-// Definís la interfaz para las props
 interface HomeClientProps {
-  config?: PageConfig | null;
+  config?: {
+    slogan: string | null;
+    description: string | null;
+    backgroundImage: string | null;
+    mapsUrl: string | null;
+    address: string | null;
+    whatsapp: string | null;
+  } | null;
 }
 
 export default function HomeClient({ config }: HomeClientProps) {

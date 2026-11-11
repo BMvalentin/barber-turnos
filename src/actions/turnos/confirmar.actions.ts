@@ -19,7 +19,8 @@ export const confirmarTurno = exigirAdmin(async (turnoId: string) => {
     if (!turnoPrevio) return { success: false, error: "No se pudo confirmar el turno" };
 
     if (turnoPrevio.estado === ESTADOS_TURNO[1]) {
-      revalidatePath("/turno");
+      revalidatePath("/dashboard");
+      revalidatePath("/admin/turno");
       return { success: true };
     }
     const claveSlot = `${turnoPrevio.barberoId}|${turnoPrevio.horarioReservado.toISOString()}`;
@@ -52,7 +53,8 @@ export const confirmarTurno = exigirAdmin(async (turnoId: string) => {
         select: { estado: true },
       });
       if (turnoActual?.estado === ESTADOS_TURNO[1]) {
-        revalidatePath("/turno");
+        revalidatePath("/dashboard");
+        revalidatePath("/admin/turno");
         return { success: true };
       }
       return { success: false, error: "Este turno ya no admite confirmación" };
@@ -67,7 +69,8 @@ export const confirmarTurno = exigirAdmin(async (turnoId: string) => {
     }
 
     revalidateTag("turnos-global");
-    revalidatePath("/turno"); // Refresca la página para ver el cambio
+    revalidatePath("/dashboard");
+    revalidatePath("/admin/turno");
     return { success: true };
   } catch {
     return { success: false, error: "No se pudo confirmar el turno" };

@@ -44,7 +44,7 @@ export default function ItemNavegacionEnlace({
         className={`
           group flex items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-[background-color,color,transform] duration-200 ease-out motion-reduce:transition-none
           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]
-          ${colapsado ? "md:justify-center md:px-0 md:hover:scale-105" : "hover:-translate-y-px"}
+          ${colapsado ? "admin-escritorio:justify-center admin-escritorio:px-0 admin-escritorio:hover:scale-105" : "hover:-translate-y-px"}
           ${esActivo
             ? "bg-[var(--page-primary-15)] text-[var(--admin-texto-primario)]"
             : "text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-border)] hover:text-[var(--admin-texto-primario)]"}
@@ -55,7 +55,7 @@ export default function ItemNavegacionEnlace({
             esActivo ? "text-[var(--page-primary-tinta)]" : ""
           }`}
         />
-        <span className={colapsado ? "md:hidden" : ""}>{item.titulo}</span>
+        <span className={colapsado ? "admin-escritorio:hidden" : ""}>{item.titulo}</span>
       </Link>
       {sugerencia}
     </>

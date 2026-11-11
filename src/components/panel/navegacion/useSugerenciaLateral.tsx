@@ -12,7 +12,7 @@ export default function useSugerenciaLateral(
   const [posicion, setPosicion] = useState<{ arriba: number; izquierda: number } | null>(null);
 
   useEffect(() => {
-    const consulta = window.matchMedia("(min-width: 768px)");
+    const consulta = window.matchMedia("(min-width: 768px) and (hover: hover) and (pointer: fine)");
     const ocultarEnMovil = () => {
       if (!consulta.matches) setPosicion(null);
     };
@@ -21,7 +21,7 @@ export default function useSugerenciaLateral(
   }, []);
 
   const mostrar = () => {
-    if (!activa || !window.matchMedia("(min-width: 768px)").matches || !referencia.current) return;
+    if (!activa || !window.matchMedia("(min-width: 768px) and (hover: hover) and (pointer: fine)").matches || !referencia.current) return;
     const rectangulo = referencia.current.getBoundingClientRect();
     setPosicion({
       arriba: rectangulo.top + rectangulo.height / 2,

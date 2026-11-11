@@ -7,14 +7,24 @@ import type { TurnoPagoConfirmado } from "@/types/turno";
 import { redirect } from "next/navigation";
 
 interface PropiedadesPaginaEstadoPago {
-  searchParams: Promise<{ turnoId?: string; status?: string; payment_id?: string; collection_id?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function PaginaEstadoPago({ searchParams }: PropiedadesPaginaEstadoPago) {
   const session = await requerirSesion();
   if (!session?.user) redirect("/login");
-  const { status, turnoId, payment_id, collection_id } = await searchParams;
-  const paymentId = payment_id || collection_id;
+  const { status: estadoRecibido, turnoId: turnoIdRecibido, payment_id, collection_id } = await searchParams;
+  const status = typeof estadoRecibido === "string" && estadoRecibido.length <= 32
+    ? estadoRecibido
+    : undefined;
+  const turnoId = typeof turnoIdRecibido === "string" && /^[\w-]{1,191}$/.test(turnoIdRecibido)
+    ? turnoIdRecibido
+    : null;
+  const paymentId = typeof payment_id === "string" && /^\d{1,32}$/.test(payment_id)
+    ? payment_id
+    : typeof collection_id === "string" && /^\d{1,32}$/.test(collection_id)
+      ? collection_id
+      : undefined;
   if (!turnoId) return <AvisoEstadoPago />;
 
   const config = await obtenerConfigCacheada();

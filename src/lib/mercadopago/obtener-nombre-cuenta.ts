@@ -1,4 +1,7 @@
+import { unstable_cache } from "next/cache";
 import { obtenerConfiguracionMP } from "@/lib/mercadopago/obtener-config";
+
+type ConfiguracionMercadoPago = NonNullable<Awaited<ReturnType<typeof obtenerConfiguracionMP>>>;
 
 function obtenerTexto(datos: Record<string, unknown>, clave: string): string | null {
   const valor = datos[clave];
@@ -18,25 +21,37 @@ function construirNombreCuenta(datos: Record<string, unknown>): string | null {
 }
 
 /** Obtiene un nombre legible de la cuenta conectada sin exponer sus credenciales. */
-export async function obtenerNombreCuentaMP(): Promise<string | null> {
-  const configuracion = await obtenerConfiguracionMP();
-  if (!configuracion?.conectado) return null;
+export async function obtenerNombreCuentaMP(
+  configuracionInicial?: ConfiguracionMercadoPago | null,
+): Promise<string | null> {
+  const configuracion = configuracionInicial === undefined
+    ? await obtenerConfiguracionMP()
+    : configuracionInicial;
+  if (!configuracion?.conectado || !configuracion.mpUserId) return null;
 
-  try {
-    const respuesta = await fetch("https://api.mercadopago.com/users/me", {
-      headers: {
-        Authorization: `Bearer ${configuracion.accessToken}`,
-      },
-      cache: "no-store",
-    });
+  const obtenerNombreCacheado = unstable_cache(
+    async (): Promise<string | null> => {
+      try {
+        const respuesta = await fetch("https://api.mercadopago.com/users/me", {
+          headers: {
+            Authorization: `Bearer ${configuracion.accessToken}`,
+          },
+          cache: "no-store",
+        });
 
-    if (!respuesta.ok) return null;
+        if (!respuesta.ok) return null;
 
-    const datos: unknown = await respuesta.json();
-    if (!datos || typeof datos !== "object" || Array.isArray(datos)) return null;
+        const datos: unknown = await respuesta.json();
+        if (!datos || typeof datos !== "object" || Array.isArray(datos)) return null;
 
-    return construirNombreCuenta(datos as Record<string, unknown>);
-  } catch {
-    return null;
-  }
+        const datosObjeto = Object.fromEntries(Object.entries(datos));
+        return construirNombreCuenta(datosObjeto);
+      } catch {
+        return null;
+      }
+    },
+    ["mercadopago-nombre-cuenta-v1", configuracion.mpUserId],
+    { tags: ["mercadopago-config"], revalidate: 60 },
+  );
+  return obtenerNombreCacheado();
 }

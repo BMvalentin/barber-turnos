@@ -9,6 +9,9 @@ import {
 } from "react";
 import { Loader2, Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button/Button";
+import { listarUsuariosParaReserva } from "@/actions/turnos/listar-usuarios-reserva.actions";
+import { toast } from "sonner";
+import type { UsuarioData } from "@/types/turno";
 import type { PropsModalGestionTurno } from "@/components/turno/reserva/tipos";
 
 type ComponenteModal = ComponentType<PropsModalGestionTurno>;
@@ -38,6 +41,7 @@ export default function CargadorModalGestionTurno(
   props: PropsModalGestionTurno,
 ) {
   const [Modal, setModal] = useState<ComponenteModal | null>(null);
+  const [usuarios, setUsuarios] = useState<UsuarioData[]>(props.initialUsuarios ?? []);
   const [cargando, setCargando] = useState(false);
   const montadoRef = useRef(true);
   const esEdicion = Boolean(props.turnoInicial);
@@ -57,7 +61,20 @@ export default function CargadorModalGestionTurno(
     props.onTriggerClick?.();
     setCargando(true);
     try {
-      const modulo = await cargarModuloModal();
+      const necesitaUsuarios = props.session?.user?.role === "ADMIN" || props.session?.user?.role === "EMPLEADO";
+      const [modulo, resultadoUsuarios] = await Promise.all([
+        cargarModuloModal(),
+        necesitaUsuarios && usuarios.length === 0
+          ? listarUsuariosParaReserva()
+          : Promise.resolve(null),
+      ]);
+      if (resultadoUsuarios && !resultadoUsuarios.success) {
+        toast.error("No se pudo cargar la lista de clientes", {
+          description: resultadoUsuarios.error,
+        });
+        return;
+      }
+      if (resultadoUsuarios?.success) setUsuarios(resultadoUsuarios.data ?? []);
       if (montadoRef.current) setModal(() => modulo.default);
     } catch {
       // El botón queda disponible para reintentar la carga del módulo.
@@ -67,7 +84,7 @@ export default function CargadorModalGestionTurno(
   };
 
   if (Modal) {
-    return <Modal {...props} abrirAlMontar />;
+    return <Modal {...props} initialUsuarios={usuarios} abrirAlMontar />;
   }
 
   if (props.contenidoTrigger) {

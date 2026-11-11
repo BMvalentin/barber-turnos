@@ -8,10 +8,7 @@ import { loginSchema } from "@/lib/zod";
 import { vincularTurnosInvitadoDesdeGoogle } from "@/lib/turnos/vincular-turnos-invitado";
 import { registrarConsentimientosEnTransaccion } from "@/lib/legal/registrar-consentimiento";
 import { decidirIngresoGoogle } from "@/lib/legal/gate-google";
-import {
-  leerIntencionConsentimiento,
-  limpiarIntencionConsentimiento,
-} from "@/lib/legal/intencion-cookies";
+import { leerIntencionConsentimiento } from "@/lib/legal/intencion-cookies";
 import bcrypt from "bcryptjs";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -83,7 +80,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 aceptadas: intencion.aceptadas,
               });
             });
-            await limpiarIntencionConsentimiento();
           }
         } catch (error) {
           console.error(

@@ -8,9 +8,13 @@ export default async function UsuariosPage() {
   if (!sesionAdmin) redirect("/admin");
 
   const resultado = await listarUsuarios();
-  const datos = resultado.success && resultado.data
-    ? resultado.data
-    : { usuarios: [], empleados: [], administradores: [] };
+  const datos = resultado.success && resultado.data ? resultado.data : {
+    registros: [],
+    contadores: { todos: 0, usuarios: 0, empleados: 0, administradores: 0 },
+    pagina: 1,
+    totalPaginas: 1,
+    totalResultados: 0,
+  };
 
   return (
     <div className="space-y-8">
@@ -19,10 +23,9 @@ export default async function UsuariosPage() {
         <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">Editá los datos de cada cuenta, asigná roles o eliminá cuentas sin turnos. Los perfiles de barbero se crean automáticamente para empleados y administradores.</p>
       </div>
       <UsuarioList
-        usuarios={datos.usuarios}
-        empleados={datos.empleados}
-        administradores={datos.administradores}
+        datosIniciales={datos}
         actorId={sesionAdmin.user.id}
+        errorInicial={resultado.success ? undefined : resultado.error ?? "No se pudieron cargar las cuentas."}
       />
     </div>
   );

@@ -4,6 +4,14 @@ import { motion } from "framer-motion";
 import { MapPin, Phone, Clock, Scissors } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getHorariosCompactos } from "@/actions/horarios/horarios-compactos.actions";
+import { guardarCachePublica, leerCachePublica } from "@/components/inicio/cache-contenido-publico";
+
+const CLAVE_CACHE = "barber-horarios-compactos-v1";
+const DURACION_CACHE_MS = 60_000;
+
+function sonHorarios(valor: unknown): valor is string[] {
+  return Array.isArray(valor) && valor.length <= 20 && valor.every((item) => typeof item === "string" && item.length <= 200);
+}
 
 interface LocationSectionProps {
   config?: {
@@ -24,27 +32,45 @@ export function LocationSection({ config }: LocationSectionProps) {
 
   useEffect(() => {
     let vigente = true;
+    let solicitudActual = 0;
 
     const cargarHorarios = async () => {
+      const solicitud = ++solicitudActual;
+      const cache = leerCachePublica(CLAVE_CACHE, sonHorarios);
+      if (cache) {
+        setHorarios(cache);
+        setCargando(false);
+        return;
+      }
+
       try {
         const res = await getHorariosCompactos();
-        if (!vigente) return;
-        if (res.length > 0) {
+        if (!vigente || solicitud !== solicitudActual) return;
+        if (sonHorarios(res) && res.length > 0) {
           setHorarios(res);
+          if (!res.some((horario) => horario.startsWith("Error"))) {
+            guardarCachePublica(CLAVE_CACHE, res, DURACION_CACHE_MS);
+          }
         } else {
           setHorarios(["Cerrado"]);
         }
       } catch {
-        if (vigente) setHorarios(["Error al cargar horarios"]);
+        if (vigente && solicitud === solicitudActual) setHorarios(["Error al cargar horarios"]);
       } finally {
-        if (vigente) setCargando(false);
+        if (vigente && solicitud === solicitudActual) setCargando(false);
       }
     };
 
+    const alCambiarCache = (evento: StorageEvent) => {
+      if (evento.key === CLAVE_CACHE) void cargarHorarios();
+    };
+
     void cargarHorarios();
+    window.addEventListener("storage", alCambiarCache);
 
     return () => {
       vigente = false;
+      window.removeEventListener("storage", alCambiarCache);
     };
   }, []);
 

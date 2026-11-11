@@ -4,18 +4,20 @@ import { useState } from "react";
 import { Clock, Scissors, SquarePen, Trash2 } from "lucide-react";
 import Image from "next/image";
 import EditServicioModal from "./EditServicioModal";
-import type { Servicio } from "@/types/servicio";
+import type { Servicio, ServicioCreado } from "@/types/servicio";
 
 type ServicioRowProps = {
   servicio: Servicio;
   puedeGestionar: boolean;
   onEliminar: (id: string) => void;
+  onServicioActualizado?: (servicio: ServicioCreado) => void;
 };
 
 export default function ServicioRow({
   servicio,
   puedeGestionar,
   onEliminar,
+  onServicioActualizado,
 }: ServicioRowProps) {
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -123,6 +125,7 @@ export default function ServicioRow({
         <EditServicioModal
           servicio={servicio}
           onClose={() => setShowEditModal(false)}
+          onServicioActualizado={onServicioActualizado}
         />
       )}
     </>

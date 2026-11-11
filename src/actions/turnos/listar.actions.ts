@@ -6,7 +6,30 @@ import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { ESTADOS_TURNO, SELECCION_USUARIO_BASICA } from "@/lib/constants";
 import { obtenerRangoDelDia } from "@/lib/utils/obtener-rango-del-dia";
 import type { Prisma, turno_estado } from "../../../generated/prisma/client";
+import type { ActionState } from "@/types/action-state";
+import type { TurnoListado } from "@/types/turno";
 import { z } from "zod";
+
+const SELECT_TURNO_LISTADO = {
+  id: true,
+  userId: true,
+  clienteNombre: true,
+  clienteApellido: true,
+  clienteTelefono: true,
+  clienteEmail: true,
+  barberoId: true,
+  servicioId: true,
+  horarioReservado: true,
+  precioCongelado: true,
+  seniaCongelada: true,
+  estado: true,
+  estadoPago: true,
+  tipoPago: true,
+  metodoPago: true,
+  user: { select: SELECCION_USUARIO_BASICA },
+  servicio: { select: { id: true, nombre: true, duracion: true } },
+  barbero: { select: { id: true, nombre: true } },
+} satisfies Prisma.turnoSelect;
 
 function esEstadoTurno(valor: string): valor is turno_estado {
   return ESTADOS_TURNO.some((estado) => estado === valor);
@@ -58,11 +81,7 @@ export async function getTurnos(page: number = 1, estadoFiltro?: string, fechaFi
         where,
         skip,
         take: pageSize,
-        include: {
-          user: { select: SELECCION_USUARIO_BASICA },
-          servicio: { select: { id: true, nombre: true, duracion: true } },
-          barbero: { select: { id: true, nombre: true } },
-        },
+        select: SELECT_TURNO_LISTADO,
         orderBy: { horarioReservado: "desc" },
       }),
       prisma.turno.count({ where })
@@ -83,5 +102,38 @@ export async function getTurnos(page: number = 1, estadoFiltro?: string, fechaFi
 
   } catch {
     return { success: false, error: "Error al obtener turnos" };
+  }
+}
+
+/** Obtiene una sola colección completa para filtrar y paginar en el cliente. */
+export async function getTodosTurnos(): Promise<ActionState<TurnoListado[]>> {
+  try {
+    const session = await requerirSesion();
+    if (!session?.user) return { success: false, error: "No autorizado" };
+
+    const contextoPanel = await requerirPanel();
+    const where: Prisma.turnoWhereInput = {};
+    if (contextoPanel?.rol === "EMPLEADO") {
+      where.barberoId = contextoPanel.barberoId ?? "";
+    } else if (contextoPanel?.rol !== "ADMIN") {
+      where.userId = session.user.id;
+    }
+
+    const turnos = await prisma.turno.findMany({
+      where,
+      select: SELECT_TURNO_LISTADO,
+      orderBy: [{ horarioReservado: "desc" }, { id: "desc" }],
+    });
+
+    return {
+      success: true,
+      data: turnos.map((turno) => ({
+        ...turno,
+        precioCongelado: Number(turno.precioCongelado),
+        seniaCongelada: Number(turno.seniaCongelada),
+      })),
+    };
+  } catch {
+    return { success: false, error: "Error al obtener los turnos" };
   }
 }

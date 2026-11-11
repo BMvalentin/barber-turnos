@@ -21,6 +21,10 @@ function esEstadoPagoManual(valor: unknown): valor is (typeof ESTADOS_PAGO_MANUA
   return typeof valor === "string" && ESTADOS_PAGO_MANUALES.some((estado) => estado === valor);
 }
 
+function esEstadoPago(valor: unknown): valor is (typeof ESTADOS_PAGO)[number] {
+  return typeof valor === "string" && ESTADOS_PAGO.some((estado) => estado === valor);
+}
+
 export async function actualizarTurno(
   prevState: ActionState<TurnoConDetalle>,
   formData: FormData,
@@ -120,5 +124,67 @@ export async function actualizarTurno(
   } catch (error) {
     console.error("Error al actualizar turno:", error);
     return { success: false, error: "Error al actualizar el turno" };
+  }
+}
+
+export async function actualizarEstadoPagoTurno(
+  id: unknown,
+  estadoPago: unknown,
+  estadoAnterior: unknown,
+): Promise<ActionState<{
+  estadoPago: (typeof ESTADOS_PAGO)[number];
+  estado: (typeof ESTADOS_TURNO)[number];
+}>> {
+  try {
+    const sesion = await requerirAdmin();
+    if (!sesion?.user?.id) return { success: false, error: "No autorizado" };
+    if (typeof id !== "string" || !id.trim()) {
+      return { success: false, error: "ID de turno inválido" };
+    }
+    if (!esEstadoPagoManual(estadoPago)) {
+      return { success: false, error: "Estado de pago inválido" };
+    }
+    if (!esEstadoPago(estadoAnterior)) {
+      return { success: false, error: "Estado de pago anterior inválido" };
+    }
+    if (estadoAnterior === ESTADOS_PAGO[1] && estadoPago === ESTADOS_PAGO[0]) {
+      return { success: false, error: "Un pago señado no puede volver a pendiente" };
+    }
+
+    const resultado = await prisma.turno.updateMany({
+      where: {
+        id,
+        estadoPago: estadoAnterior,
+        estado: { not: ESTADOS_TURNO[3] },
+        NOT: { estadoPago: ESTADOS_PAGO[2] },
+      },
+      data: { estadoPago },
+    });
+    const turno = await prisma.turno.findUnique({
+      where: { id },
+      select: { estado: true, estadoPago: true, barberoId: true, horarioReservado: true, userId: true },
+    });
+    if (!turno) return { success: false, error: "Turno no encontrado" };
+    if (resultado.count === 0) {
+      return {
+        success: false,
+        error: turno.estado === ESTADOS_TURNO[3] || turno.estadoPago === ESTADOS_PAGO[2]
+          ? "El estado del pago de un turno pagado o cancelado no se puede modificar."
+          : "El estado del pago cambió. Revisá el valor actual e intentá de nuevo.",
+        data: { estado: turno.estado, estadoPago: turno.estadoPago },
+      };
+    }
+
+    revalidarCacheTurno(turno.barberoId, obtenerFechaSola(turno.horarioReservado), turno.userId);
+    if (turno.estadoPago !== estadoPago) {
+      return {
+        success: false,
+        error: "El estado del pago volvió a cambiar. Revisá el valor actual.",
+        data: { estado: turno.estado, estadoPago: turno.estadoPago },
+      };
+    }
+    return { success: true, data: { estado: turno.estado, estadoPago: turno.estadoPago } };
+  } catch {
+    return { success: false, error: "No se pudo actualizar el estado del pago" };
   }
 }

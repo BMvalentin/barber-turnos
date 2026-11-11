@@ -1,13 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { obtenerDiasConTurnos } from "@/actions/turnos/obtener-dias-con-turnos.actions";
+import { useCallback, useMemo, useState } from "react";
 import CalendarioReserva from "@/components/turno/reserva/CalendarioReserva";
+import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
+import type { TurnoListado } from "@/types/turno";
 
 interface Props {
   fecha: string;
   estado?: string;
   barberoId?: string;
+  turnos: TurnoListado[];
+  cargandoTurnos: boolean;
   onSeleccionar: (dia: string) => void;
 }
 
@@ -33,32 +36,18 @@ function mesKey(mesVisible: Date): string {
   return dateToString(new Date(mesVisible.getFullYear(), mesVisible.getMonth(), 1)).slice(0, 7);
 }
 
-export default function CalendarioNavegacion({ fecha, estado = "TODOS", barberoId, onSeleccionar }: Props) {
+export default function CalendarioNavegacion({ fecha, estado = "TODOS", barberoId, turnos, cargandoTurnos, onSeleccionar }: Props) {
   const [mesVisible, setMesVisible] = useState<Date>(() => fechaDeInicio(fecha));
-  const [diasConTurnos, setDiasConTurnos] = useState<string[]>([]);
-  const [cargando, setCargando] = useState(false);
-  const solicitudRef = useRef(0);
-
-  useEffect(() => {
-    const id = ++solicitudRef.current;
-    setCargando(true);
-    obtenerDiasConTurnos(mesKey(mesVisible), estado, barberoId || undefined)
-      .then((resultado) => {
-        if (id !== solicitudRef.current) return;
-        setDiasConTurnos(resultado.success && Array.isArray(resultado.data) ? resultado.data : []);
-      })
-      .catch(() => {
-        if (id !== solicitudRef.current) return;
-        setDiasConTurnos([]);
-      })
-      .finally(() => {
-        if (id !== solicitudRef.current) return;
-        setCargando(false);
-      });
-    return () => {
-      solicitudRef.current += 1;
-    };
-  }, [mesVisible, estado, barberoId]);
+  const diasConTurnos = useMemo(() => {
+    const mes = mesKey(mesVisible);
+    return Array.from(new Set(turnos
+      .filter((turno) =>
+        (estado === "TODOS" || turno.estado === estado) &&
+        (!barberoId || turno.barberoId === barberoId),
+      )
+      .map((turno) => obtenerFechaSola(turno.horarioReservado))
+      .filter((dia) => dia.slice(0, 7) === mes)));
+  }, [barberoId, estado, mesVisible, turnos]);
 
   const irAlMesAnterior = useCallback(() => {
     setMesVisible((mes) => new Date(mes.getFullYear(), mes.getMonth() - 1, 1));
@@ -72,7 +61,7 @@ export default function CalendarioNavegacion({ fecha, estado = "TODOS", barberoI
     <CalendarioReserva
       mesVisible={mesVisible}
       diasDisponibles={diasConTurnos}
-      cargandoDias={cargando}
+      cargandoDias={cargandoTurnos}
       fecha={fechaComoDate(fecha)}
       onMesAnterior={irAlMesAnterior}
       onMesSiguiente={irAlMesSiguiente}

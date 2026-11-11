@@ -1,28 +1,20 @@
 "use server";
 
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { MAPA_DIA_SEMANA_DB, REVERSE_MAPA_DIA_SEMANA_DB } from "@/lib/constants";
 import { obtenerDiasLaborales } from "@/lib/consultas/obtener-dias-laborales";
+import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 
-import type { Prisma, dias_laborales } from "../../../generated/prisma/client";
+import type { dias_laborales } from "../../../generated/prisma/client";
 
-type DiaLaboralDb = Prisma.dia_laboralGetPayload<{
-  select: { id: true; dia: true };
-}>;
-
-export async function getDiasLaborales() {
-  try {
+const obtenerDiasLaboralesConfiguracionCacheados = unstable_cache(
+  async () => {
     const diasEnDb = await obtenerDiasLaborales();
 
-    const formatDia = (d: DiaLaboralDb) => ({
-      ...d,
-      dia: REVERSE_MAPA_DIA_SEMANA_DB[d.dia]
-    });
-
-    // Si faltan días, los creamos como activos por defecto
     if (diasEnDb.length < 7) {
-      const idsExistentes = diasEnDb.map((d) => REVERSE_MAPA_DIA_SEMANA_DB[d.dia]);
-      const diasFaltantes = [0, 1, 2, 3, 4, 5, 6].filter((id) => !idsExistentes.includes(id));
+      const idsExistentes = diasEnDb.map((dia) => REVERSE_MAPA_DIA_SEMANA_DB[dia.dia]);
+      const diasFaltantes = [0, 1, 2, 3, 4, 5, 6].filter((dia) => !idsExistentes.includes(dia));
 
       if (diasFaltantes.length > 0) {
         await prisma.dia_laboral.createMany({
@@ -31,15 +23,24 @@ export async function getDiasLaborales() {
             estado: true,
           })),
         });
-
-        // Retornamos la lista completa actualizada
-        const updatedDias = await obtenerDiasLaborales();
-
-        return updatedDias.map(formatDia).sort((a, b) => a.dia - b.dia);
       }
     }
 
-    return diasEnDb.map(formatDia).sort((a, b) => a.dia - b.dia);
+    const diasActualizados = diasEnDb.length < 7
+      ? await obtenerDiasLaborales()
+      : diasEnDb;
+    return diasActualizados
+      .map((dia) => ({ id: dia.id, dia: REVERSE_MAPA_DIA_SEMANA_DB[dia.dia] }))
+      .sort((primero, segundo) => primero.dia - segundo.dia);
+  },
+  ["dias-laborales-configuracion-v1"],
+  { tags: ["dias-laborales"], revalidate: 3600 },
+);
+
+export async function getDiasLaborales() {
+  try {
+    if (!(await requerirPanel())) throw new Error("No autorizado");
+    return await obtenerDiasLaboralesConfiguracionCacheados();
   } catch (error) {
     console.error("Error al obtener días laborales:", error);
     throw new Error("Error al obtener los días laborales");

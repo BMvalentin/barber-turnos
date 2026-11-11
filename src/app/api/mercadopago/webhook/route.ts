@@ -156,7 +156,6 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: mensaje }, { status: 400 });
         }
         if (!resultado.yaConfirmado) {
-          revalidatePath("/turno");
           revalidatePath("/admin");
           revalidatePath("/dashboard");
         }

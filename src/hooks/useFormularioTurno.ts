@@ -2,7 +2,7 @@
 
 import { createTurno } from "@/actions/turnos/crear.actions";
 import { actualizarTurno } from "@/actions/turnos/estado.actions";
-import type { TurnoCreado, TurnoListado } from "@/types/turno";
+import type { TurnoConDetalle, TurnoCreado, TurnoListado } from "@/types/turno";
 import { ActionStateInicial } from "@/types/action-state";
 import { useActionState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -13,14 +13,18 @@ import type { ParametrosDatosTurno } from "./useDatosFormularioTurno";
 import { usePagoTurno } from "./usePagoTurno";
 import { esAdmin, esEmpleado } from "@/lib/seguridad/es-admin";
 import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
+import { actualizarTurnoCacheLocal } from "@/lib/admin/turnos-cache-local";
+import type { ParcheTurnoCache } from "@/lib/admin/turnos-cache-local";
 import type { DatosTransferencia } from "@/types/pago";
 
 export type ParametrosFormularioTurno = ParametrosDatosTurno & {
   whatsappPhone: string;
+  alcanceCacheTurnos?: string;
+  onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
   datosTransferencia?: DatosTransferencia;
   turnoInicial?: TurnoListado | null;
-  /** Callback opcional que se invoca al crear un turno con éxito, para refrescar el listado. */
-  onTurnoCreado?: () => void;
+  /** Callback para agregar el turno recién creado a la colección local. */
+  onTurnoCreado?: (turno: TurnoConDetalle) => void;
 };
 
 const estadoInicial = ActionStateInicial;
@@ -36,6 +40,8 @@ export function useFormularioTurno({
   initialUsuarios,
   initialRelaciones,
   whatsappPhone,
+  alcanceCacheTurnos,
+  onTurnoActualizado,
   turnoInicial,
   onTurnoCreado,
 }: ParametrosFormularioTurno) {
@@ -50,7 +56,7 @@ export function useFormularioTurno({
     initialRelaciones,
     turnoInicial,
   });
-  const pago = usePagoTurno({ whatsappPhone });
+  const pago = usePagoTurno({ whatsappPhone, alcanceCacheTurnos, onTurnoActualizado });
   const {
     servicios,
     barberos,
@@ -77,9 +83,27 @@ export function useFormularioTurno({
     if (!state.success || !state.data) return;
 
     if (esEdicion) {
+      const parche: ParcheTurnoCache = {
+        estado: state.data.estado,
+        estadoPago: state.data.estadoPago,
+        tipoPago: state.data.tipoPago,
+        metodoPago: state.data.metodoPago,
+        horarioReservado: state.data.horarioReservado,
+        barberoId: state.data.barberoId,
+        servicioId: state.data.servicioId,
+        precioCongelado: state.data.precioCongelado,
+        seniaCongelada: state.data.seniaCongelada,
+        barbero: { id: state.data.barbero.id, nombre: state.data.barbero.nombre },
+        servicio: {
+          id: state.data.servicio.id,
+          nombre: state.data.servicio.nombre,
+          duracion: state.data.servicio.duracion,
+        },
+      };
+      if (alcanceCacheTurnos) actualizarTurnoCacheLocal(alcanceCacheTurnos, state.data.id, parche);
+      onTurnoActualizado?.(state.data.id, parche);
       setIsOpen(false);
       toast.success("Turno actualizado correctamente");
-      window.location.reload();
       return;
     }
 
@@ -105,7 +129,7 @@ export function useFormularioTurno({
     setClienteApellido("");
     setEstadoPago(ESTADOS_PAGO[0]);
 
-    onTurnoCreado?.();
+    onTurnoCreado?.(state.data);
 
     if (nuevoTurno.estado === ESTADOS_TURNO[1]) {
       toast.success("Turno confirmado", {
@@ -147,6 +171,8 @@ export function useFormularioTurno({
     session,
     puedeGestionarTurnos,
     onTurnoCreado,
+    onTurnoActualizado,
+    alcanceCacheTurnos,
     router,
   ]);
 

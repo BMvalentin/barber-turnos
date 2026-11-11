@@ -98,7 +98,7 @@ export default function RedireccionWhatsApp({
       {enviado && (
         <div className="flex flex-col gap-3">
           <Link
-            href="/dashboard"
+            href="/dashboard?tab=turnos"
             className="flex items-center justify-center gap-2 w-full bg-[var(--page-primary)] hover:bg-[var(--page-primary-hover)] text-[var(--page-primary-foreground)] font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm"
           >
             <ArrowRight className="w-5 h-5" />

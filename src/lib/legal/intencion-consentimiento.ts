@@ -1,12 +1,11 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { validarVersionesObligatorias, type VersionAceptada } from "@/lib/legal/consentimiento";
 
-/* Intención de aceptación previa al flujo de Google OAuth. Viaja en una cookie
-   firmada, httpOnly y de vida corta. No contiene datos personales: solo las
-   versiones de los documentos aceptados y el momento de emisión. */
+/* Aceptación legal previa al registro. Viaja en una cookie firmada y httpOnly.
+   No contiene datos personales: solo las versiones aceptadas y el momento. */
 export const COOKIE_INTENCION_CONSENTIMIENTO = "consentimiento_legal_intencion";
 
-export const TTL_INTENCION_CONSENTIMIENTO_MS = 10 * 60 * 1000;
+export const TTL_INTENCION_CONSENTIMIENTO_MS = 365 * 24 * 60 * 60 * 1000;
 
 export type IntencionConsentimiento = {
   v: 1;

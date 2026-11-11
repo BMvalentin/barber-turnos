@@ -4,9 +4,11 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { toZonedTime } from "date-fns-tz";
 import TurnoRow from "./TurnoRow";
 import { ZONA_HORARIA } from "@/lib/constants";
+import { formatearHora } from "@/lib/utils/formatear-hora";
 import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
 import type { DatosTransferencia } from "@/types/pago";
+import type { ParcheTurnoCache } from "@/lib/admin/turnos-cache-local";
 
 interface Props {
   turnos: TurnoListado[];
@@ -16,6 +18,9 @@ interface Props {
   onConfirmar: (id: string) => void;
   whatsappPhone?: string;
   datosTransferencia?: DatosTransferencia;
+  alcanceCacheTurnos?: string;
+  onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
+  modoCompacto?: boolean;
 }
 
 type Medidas = { pixelesPorHora: number; ejeX: number; anchoGutter: number };
@@ -138,10 +143,23 @@ export default function LineaTiempoTurnos({
   onConfirmar,
   whatsappPhone = "",
   datosTransferencia,
+  alcanceCacheTurnos = "",
+  onTurnoActualizado,
+  modoCompacto = false,
 }: Props) {
   const medidas = useMedidasLineaTiempo();
   const { pixelesPorHora, ejeX, anchoGutter } = medidas;
   const pxPorMinuto = pixelesPorHora / 60;
+
+  const turnosOrdenados = useMemo(
+    () =>
+      [...turnos].sort(
+        (a, b) =>
+          minutosDeTurno(a) - minutosDeTurno(b) ||
+          new Date(a.horarioReservado).getTime() - new Date(b.horarioReservado).getTime(),
+      ),
+    [turnos],
+  );
 
   const escala = useMemo(() => calcularEscala(turnos), [turnos]);
   const filas = useMemo(() => {
@@ -162,11 +180,58 @@ export default function LineaTiempoTurnos({
   );
 
   useLayoutEffect(() => {
+    if (modoCompacto) return;
     tarjetasRef.current.forEach((tarjeta, id) => {
       if (tarjeta) alturasRef.current.set(id, tarjeta.offsetHeight);
     });
     setLayout(calcularLayout(filas, pxPorMinuto, alturasRef.current));
-  }, [filas, pxPorMinuto]);
+  }, [filas, modoCompacto, pxPorMinuto]);
+
+  if (modoCompacto) {
+    return (
+      <div className="relative">
+        <div
+          aria-hidden="true"
+          className="absolute bottom-3 left-[3.375rem] top-3 w-px bg-[var(--admin-border)]"
+        />
+        <ol className="space-y-2.5">
+          {turnosOrdenados.map((turno) => (
+            <li
+              key={turno.id}
+              className="relative grid grid-cols-[3rem_minmax(0,1fr)] items-start gap-3"
+            >
+              <time className="pt-2 text-right text-xs font-medium tabular-nums text-[var(--admin-texto-muted)]">
+                {formatearHora(turno.horarioReservado)}
+              </time>
+              <div className="relative min-w-0">
+                <span
+                  aria-hidden="true"
+                  className="absolute -left-1.5 top-3 h-px w-1.5 bg-[var(--admin-border)]"
+                />
+                <span
+                  aria-hidden="true"
+                  className="absolute -left-[10px] top-[9px] h-2 w-2 rounded-full border-2 border-[var(--admin-surface)] bg-[var(--page-primary)]"
+                />
+                <TurnoRow
+                  turno={turno}
+                  session={session}
+                  onCancelar={onCancelar}
+                  onCompletar={onCompletar}
+                  onConfirmar={onConfirmar}
+                  whatsappPhone={whatsappPhone}
+                  datosTransferencia={datosTransferencia}
+                  alcanceCacheTurnos={alcanceCacheTurnos}
+                  onTurnoActualizado={onTurnoActualizado}
+                  mostrarHora={false}
+                  compacto
+                />
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    );
+  }
 
   if (!escala) return null;
 
@@ -225,6 +290,8 @@ export default function LineaTiempoTurnos({
                         onConfirmar={onConfirmar}
                         whatsappPhone={whatsappPhone}
                         datosTransferencia={datosTransferencia}
+                        alcanceCacheTurnos={alcanceCacheTurnos}
+                        onTurnoActualizado={onTurnoActualizado}
                       />
                     </div>
                   </div>

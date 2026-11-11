@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button/Button";
+import SelectorDesplegable from "@/components/ui/SelectorDesplegable";
+import type { OpcionDesplegable } from "@/components/ui/SelectorDesplegable";
 import type { BarberoParaHorarios } from "@/types/horarios";
 
 type Props = {
@@ -15,12 +17,27 @@ export default function CopiarHorario({ destinos, pendiente, alCopiar }: Props) 
   const [abierto, setAbierto] = useState(false);
   const [barberoId, setBarberoId] = useState("");
   const contenedorRef = useRef<HTMLDivElement>(null);
+  const opciones = useMemo<OpcionDesplegable<string>[]>(() => [
+    { valor: "", etiqueta: "Seleccionar empleado..." },
+    ...destinos.map((destino) => ({
+      valor: destino.id,
+      etiqueta: destino.nombre ?? "Sin nombre",
+    })),
+  ], [destinos]);
 
   useEffect(() => {
     if (!abierto) return;
 
     const alPresionarFuera = (evento: MouseEvent) => {
-      if (contenedorRef.current && !contenedorRef.current.contains(evento.target as Node)) {
+      const estaEnDesplegable = evento.target instanceof Element && Boolean(
+        evento.target.closest("[data-selector-desplegable-opciones]"),
+      );
+      if (
+        evento.target instanceof Node &&
+        contenedorRef.current &&
+        !contenedorRef.current.contains(evento.target) &&
+        !estaEnDesplegable
+      ) {
         setAbierto(false);
       }
     };
@@ -66,22 +83,14 @@ export default function CopiarHorario({ destinos, pendiente, alCopiar }: Props) 
           className="absolute bottom-full left-0 z-50 mb-2 w-full rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-3 shadow-xl sm:w-80"
         >
           <div className="flex items-center gap-2">
-            <select
-              value={barberoId}
-              onChange={(e) => setBarberoId(e.target.value)}
-              className="min-w-0 flex-1 rounded-lg px-3 py-2 text-sm text-[var(--admin-texto-primario)] focus:outline-none focus:ring-2 focus:ring-[var(--page-focus-ring)]"
-              style={{
-                backgroundColor: "var(--admin-surface)",
-                border: "1px solid var(--admin-border)",
-              }}
-            >
-              <option value="">Seleccionar empleado...</option>
-              {destinos.map((destino) => (
-                <option key={destino.id} value={destino.id}>
-                  {destino.nombre ?? "Sin nombre"}
-                </option>
-              ))}
-            </select>
+            <SelectorDesplegable
+              opciones={opciones}
+              valor={barberoId}
+              onChange={setBarberoId}
+              etiquetaAria="Empleado para copiar el horario"
+              className="min-w-0 flex-1"
+              claseBoton="rounded-lg px-3 py-2"
+            />
             <Button
               type="button"
               size="sm"

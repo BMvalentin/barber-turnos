@@ -15,13 +15,13 @@ interface DesplegableNavegacionProps {
 }
 
 function suscribirseConsultaEscritorio(alCambiar: () => void) {
-  const consulta = window.matchMedia("(min-width: 768px)");
+  const consulta = window.matchMedia("(min-width: 768px) and (hover: hover) and (pointer: fine)");
   consulta.addEventListener("change", alCambiar);
   return () => consulta.removeEventListener("change", alCambiar);
 }
 
 function obtenerConsultaEscritorio() {
-  return window.matchMedia("(min-width: 768px)").matches;
+  return window.matchMedia("(min-width: 768px) and (hover: hover) and (pointer: fine)").matches;
 }
 
 export default function DesplegableNavegacion({
@@ -74,15 +74,15 @@ export default function DesplegableNavegacion({
         className={`
           flex items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-[background-color,color,transform] duration-200 ease-out motion-reduce:transition-none
           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]
-          ${colapsado ? "md:w-full md:justify-center md:px-0 md:hover:scale-105" : "hover:-translate-y-px"}
+          ${colapsado ? "admin-escritorio:w-full admin-escritorio:justify-center admin-escritorio:px-0 admin-escritorio:hover:scale-105" : "hover:-translate-y-px"}
           ${contieneHijoActivo
             ? "bg-[var(--page-primary-15)] text-[var(--admin-texto-primario)]"
             : "text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-border)] hover:text-[var(--admin-texto-primario)]"}
         `}
       >
         <Icono className="h-4 w-4 shrink-0" />
-        <span className={colapsado ? "md:hidden" : ""}>{grupo.titulo}</span>
-        <span className={colapsado ? "md:hidden" : "ml-auto"}>
+        <span className={colapsado ? "admin-escritorio:hidden" : ""}>{grupo.titulo}</span>
+        <span className={colapsado ? "admin-escritorio:hidden" : "ml-auto"}>
           <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--admin-texto-muted)] transition-transform duration-200 ease-out motion-reduce:transition-none ${expandido ? "rotate-180" : ""}`} />
         </span>
       </button>

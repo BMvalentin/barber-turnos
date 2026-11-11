@@ -12,7 +12,7 @@ export default auth((req) => {
   const isAuthRoute = ["/login", "/register"].includes(nextUrl.pathname);
   const isPanelRoute = nextUrl.pathname.startsWith("/admin");
 
-  const isProtectedRoute = ["/dashboard", "/turno", "/admin"].some((route) => 
+  const isProtectedRoute = ["/dashboard", "/admin"].some((route) =>
     nextUrl.pathname.startsWith(route)
   );
 
@@ -51,16 +51,11 @@ export default auth((req) => {
     return NextResponse.redirect(new URL(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`, nextUrl));
   }
 
-  // 4. Requiere teléfono para clientes que sacan turno (los roles de panel gestionan desde /admin/turno)
-  if (nextUrl.pathname.startsWith("/turno") && isLoggedIn && req.auth?.user?.role !== "ADMIN" && req.auth?.user?.role !== "EMPLEADO" && !req.auth?.user?.telefono) {
-    return NextResponse.redirect(new URL("/dashboard", nextUrl));
-  }
-
   return NextResponse.next();
 });
 
 // Alcance del JWT: solo las rutas que este middleware realmente protege.
 // /api/auth y el resto de rutas públicas ya no pasan por el JWT (objetivo Fase 1.5).
 export const config = {
-  matcher: ["/admin/:path*", "/turno/:path*", "/dashboard/:path*", "/login", "/register"],
+  matcher: ["/admin/:path*", "/dashboard/:path*", "/login", "/register"],
 };
