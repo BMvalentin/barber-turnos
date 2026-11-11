@@ -1,7 +1,9 @@
 "use client";
 
-import { ChevronDown, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import type { FilterState } from "@/hooks/useFiltrosServicios";
+import SelectorDesplegable from "@/components/ui/SelectorDesplegable";
+import type { OpcionDesplegable } from "@/components/ui/SelectorDesplegable";
 
 type CamposFiltrosProps = {
   filtros: FilterState;
@@ -15,6 +17,14 @@ export default function CamposFiltros({
   filtros,
   onCambiarFiltro,
 }: CamposFiltrosProps) {
+  const opcionesOrden: OpcionDesplegable<string>[] = [
+    { valor: "reciente", etiqueta: "Más reciente" },
+    { valor: "nombre", etiqueta: "Nombre A→Z" },
+    { valor: "precio_asc", etiqueta: "Precio: menor a mayor" },
+    { valor: "precio_desc", etiqueta: "Precio: mayor a menor" },
+    { valor: "duracion", etiqueta: "Duración" },
+  ];
+
   return (
     <div className="flex-1 overflow-y-auto p-5 space-y-5">
       <div>
@@ -121,23 +131,16 @@ export default function CamposFiltros({
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-[var(--admin-texto-secundario)] mb-2">
+        <label htmlFor="orden-servicios" className="block text-xs font-medium text-[var(--admin-texto-secundario)] mb-2">
           Ordenar Por
         </label>
-        <div className="relative">
-          <select
-            value={filtros.ordenPor}
-            onChange={(e) => onCambiarFiltro("ordenPor", e.target.value)}
-            className="w-full bg-[var(--admin-surface-elevated)] border border-[var(--admin-border)] rounded-lg px-4 py-2.5 text-sm text-[var(--admin-texto-primario)] transition-colors duration-150 appearance-none cursor-pointer focus:outline-none focus:border-[var(--page-primary)]/60 focus:ring-2 focus:ring-[var(--page-focus-ring)]"
-          >
-            <option value="reciente">Más reciente</option>
-            <option value="nombre">Nombre A→Z</option>
-            <option value="precio_asc">Precio: menor a mayor</option>
-            <option value="precio_desc">Precio: mayor a menor</option>
-            <option value="duracion">Duración</option>
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--admin-texto-muted)] pointer-events-none" />
-        </div>
+        <SelectorDesplegable
+          id="orden-servicios"
+          opciones={opcionesOrden}
+          valor={filtros.ordenPor}
+          onChange={(valor) => onCambiarFiltro("ordenPor", valor)}
+          claseBoton="rounded-lg px-4"
+        />
       </div>
     </div>
   );

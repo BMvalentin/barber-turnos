@@ -18,14 +18,12 @@ import type {
   ResumenDiaCalendario,
   ResumenMensualCalendario,
 } from "@/actions/turnos/obtener-resumen-calendario.actions";
-import { ESTADOS_TURNO } from "@/lib/constants";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import type { TurnoListado } from "@/types/turno";
 
 interface Props {
   fecha: string;
   barberoId: string;
-  estadoFiltro: string;
   turnos: TurnoListado[];
   cargandoTurnos: boolean;
   onSeleccionar: (fecha: string) => void;
@@ -112,7 +110,6 @@ function descripcionIndicadores(resumen: ResumenDiaCalendario | undefined): stri
 export default function CalendarioMensualTurnos({
   fecha,
   barberoId,
-  estadoFiltro,
   turnos,
   cargandoTurnos,
   onSeleccionar,
@@ -152,10 +149,6 @@ export default function CalendarioMensualTurnos({
   });
   const fechaSeleccionada = parsearFecha(fecha);
   const fechaHoy = obtenerFechaSola(new Date());
-  const estadoFiltrado = ESTADOS_TURNO.find((estado) => estado === estadoFiltro);
-  const estadosVisibles: readonly EstadoTurnoCalendario[] = estadoFiltrado
-    ? [estadoFiltrado]
-    : ESTADOS_TURNO;
   const tituloMes = capitalizar(format(mesVisible, "MMMM yyyy", { locale: es }));
 
   return (
@@ -202,11 +195,7 @@ export default function CalendarioMensualTurnos({
             const estaEnElMes = isSameMonth(dia, mesVisible);
             const clave = fechaComoClave(dia);
             const resumenDia = resumenMensual[clave];
-            const cantidadDiaFiltrada = estadosVisibles.reduce(
-              (total, estado) => total + (resumenDia?.[estado] ?? 0),
-              0,
-            );
-            const tieneTurnos = cantidadDiaFiltrada > 0;
+            const tieneTurnos = (resumenDia?.total ?? 0) > 0;
             const tieneTurnosConIndicador = ESTADOS_CON_INDICADOR.some(
               (estado) => (resumenDia?.[estado] ?? 0) > 0,
             );

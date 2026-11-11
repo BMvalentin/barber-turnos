@@ -8,6 +8,8 @@ import { actualizarRolUsuario } from "@/actions/usuarios/rol.actions";
 import { solicitarRestablecimiento } from "@/actions/usuarios/restablecer-password.actions";
 import { eliminarUsuario } from "@/actions/usuarios/eliminar.actions";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
+import SelectorDesplegable from "@/components/ui/SelectorDesplegable";
+import type { OpcionDesplegable } from "@/components/ui/SelectorDesplegable";
 import EditarUsuarioModal from "./EditarUsuarioModal";
 import { ETIQUETAS_ROL, ROLES_USUARIO, type RolUsuario } from "@/types/usuario";
 import type { UsuarioAdministrable } from "@/actions/usuarios/listar.actions";
@@ -21,9 +23,10 @@ type Props = {
 
 type ListaActiva = "todos" | "usuarios" | "empleados" | "administradores";
 
-function rolDesdeValor(valor: string): RolUsuario {
-  return ROLES_USUARIO.find((rol) => rol === valor) ?? "USER";
-}
+const OPCIONES_ROL: OpcionDesplegable<RolUsuario>[] = ROLES_USUARIO.map((rol) => ({
+  valor: rol,
+  etiqueta: ETIQUETAS_ROL[rol],
+}));
 
 export default function UsuarioList({ usuarios, empleados, administradores, actorId }: Props) {
   const [listaActiva, setListaActiva] = useState<ListaActiva>("todos");
@@ -169,9 +172,15 @@ function UsuarioFila({ usuario, esActual, puedeRestablecer }: { usuario: Usuario
         {usuario.telefono || <span className="text-[var(--admin-texto-muted)]">Sin celular</span>}
       </td>
       <td className="px-5 py-4">
-        <select value={rol} onChange={(evento) => setRol(rolDesdeValor(evento.target.value))} disabled={esActual || pendiente} aria-label={`Rol de ${usuario.email}`} className="h-9 rounded-lg border bg-[var(--admin-surface-elevated)] px-3 text-sm text-[var(--admin-texto-primario)]" style={{ borderColor: "var(--admin-border)" }}>
-          {ROLES_USUARIO.map((opcion) => <option key={opcion} value={opcion}>{ETIQUETAS_ROL[opcion]}</option>)}
-        </select>
+        <SelectorDesplegable
+          opciones={OPCIONES_ROL}
+          valor={rol}
+          onChange={setRol}
+          deshabilitado={esActual || pendiente}
+          etiquetaAria={`Rol de ${usuario.email}`}
+          className="w-fit min-w-[118px]"
+          claseBoton="h-9 rounded-lg px-3"
+        />
       </td>
       <td className="px-5 py-4">
         {usuario.barbero ? (

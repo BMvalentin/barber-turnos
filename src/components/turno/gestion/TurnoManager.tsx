@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { UserRound, UsersRound } from "lucide-react";
 import { getTodosTurnos } from "@/actions/turnos/listar.actions";
 import CargadorModalGestionTurno from "@/components/turno/reserva/CargadorModalGestionTurno";
 import DatosReservaProveedor from "@/contextos/DatosReservaProveedor";
@@ -14,7 +15,8 @@ import type { DatosTransferencia } from "@/types/pago";
 import type { Session } from "next-auth";
 import CalendarioMensualTurnos from "./CalendarioMensualTurnos";
 import NavegacionFecha from "./NavegacionFecha";
-import SelectorBarberoTurnos from "./SelectorBarberoTurnos";
+import SelectorDesplegable from "@/components/ui/SelectorDesplegable";
+import type { OpcionDesplegable } from "@/components/ui/SelectorDesplegable";
 import TurnoList from "./TurnoList";
 import TurnosFiltros from "./TurnosFiltros";
 
@@ -100,9 +102,29 @@ export default function TurnoManager({
   const [fecha, setFecha] = useState(fechaInicial);
   const [barberoId, setBarberoId] = useState(barberoIdInicial);
   const [turnos, setTurnos] = useState(turnosIniciales);
+  const opcionesFiltroBarbero = useMemo<OpcionDesplegable<string>[]>(() => [
+    {
+      valor: "",
+      etiqueta: "Todos los empleados",
+      icono: <UsersRound className="h-4 w-4 shrink-0 text-[var(--admin-texto-muted)]" aria-hidden="true" />,
+    },
+    ...barberosFiltro.map((barbero) => {
+      const distintivos: string[] = [];
+      if (barbero.estado === false) distintivos.push("Inactivo");
+      if (barbero.id === barberoIdInicial) distintivos.push("Yo");
+      return {
+        valor: barbero.id,
+        etiqueta: barbero.nombre,
+        distintivos,
+        icono: <UserRound className="h-4 w-4 shrink-0 text-[var(--admin-texto-muted)]" aria-hidden="true" />,
+      };
+    }),
+  ], [barberosFiltro, barberoIdInicial]);
   const [paginaActual, setPaginaActual] = useState(1);
   const [cargandoInicial, setCargandoInicial] = useState(cargarTurnosAlMontar);
   const [errorCargaInicial, setErrorCargaInicial] = useState(false);
+  const contenidoListaMovilRef = useRef<HTMLDivElement>(null);
+  const [limitarListaMovil, setLimitarListaMovil] = useState(false);
   const alcanceCacheTurnos = session?.user?.id
     ? `${session.user.id}|${session.user.role ?? "USER"}|${barberoIdInicial}`
     : "";
@@ -206,6 +228,36 @@ export default function TurnoManager({
   const totalPaginas = Math.max(1, Math.ceil(turnosFiltrados.length / TAMANO_PAGINA_LOCAL));
   const turnosVisibles = turnosFiltrados.slice(0, paginaActual * TAMANO_PAGINA_LOCAL);
 
+  useLayoutEffect(() => {
+    if (!vistaAgendaCompleta) return;
+    const contenido = contenidoListaMovilRef.current;
+    if (!contenido) return;
+
+    const escritorio = window.matchMedia("(min-width: 768px)");
+    const actualizarLimiteLista = () => {
+      if (escritorio.matches || cargandoInicial) {
+        setLimitarListaMovil(false);
+        return;
+      }
+      const altoVisible = window.visualViewport?.height || window.innerHeight;
+      setLimitarListaMovil(contenido.scrollHeight > altoVisible * 0.77);
+    };
+
+    actualizarLimiteLista();
+    const observador = typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(actualizarLimiteLista)
+      : null;
+    observador?.observe(contenido);
+    window.addEventListener("resize", actualizarLimiteLista);
+    window.visualViewport?.addEventListener("resize", actualizarLimiteLista);
+
+    return () => {
+      observador?.disconnect();
+      window.removeEventListener("resize", actualizarLimiteLista);
+      window.visualViewport?.removeEventListener("resize", actualizarLimiteLista);
+    };
+  }, [cargandoInicial, turnosVisibles.length, vistaAgendaCompleta]);
+
   const cambiarEstado = (nuevoEstado: string) => {
     if (nuevoEstado === filtroEstado) return;
     setFiltroEstado(nuevoEstado);
@@ -287,7 +339,10 @@ export default function TurnoManager({
       relaciones={initialRelaciones}
       whatsappPhone={whatsappPhone}
     >
-      <div className="flex h-full min-h-0 flex-col gap-3">
+      <div className={vistaAgendaCompleta
+        ? "flex min-h-full flex-col gap-3 md:h-full md:min-h-0"
+        : "flex h-full min-h-0 flex-col gap-3"}
+      >
         <div className="shrink-0 border-b border-[var(--admin-border)] bg-[var(--admin-background)] pb-3">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -315,21 +370,15 @@ export default function TurnoManager({
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             {mostrarFiltroBarbero && (
-              preferenciaBarberoLista ? (
-                <SelectorBarberoTurnos
-                  barberos={barberosFiltro}
-                  barberoIdPropio={barberoIdInicial}
-                  valor={barberoId}
-                  onChange={cambiarBarbero}
-                />
-              ) : (
-                <span
-                  role="status"
-                  className="flex h-9 items-center rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)] px-3 text-sm text-[var(--admin-texto-muted)]"
-                >
-                  Restaurando selección…
-                </span>
-              )
+              <SelectorDesplegable
+                opciones={opcionesFiltroBarbero}
+                valor={barberoId}
+                onChange={cambiarBarbero}
+                deshabilitado={!preferenciaBarberoLista}
+                cargando={!preferenciaBarberoLista}
+                etiquetaAria="Filtrar turnos por empleado"
+                className="max-w-[250px]"
+              />
             )}
             <TurnosFiltros
               estado={filtroEstado}
@@ -359,12 +408,11 @@ export default function TurnoManager({
           </div>
         )}
         {vistaAgendaCompleta ? (
-          <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[auto_minmax(0,1fr)] gap-4 pr-1 lg:grid-cols-[minmax(250px,2fr)_minmax(0,3fr)] lg:grid-rows-1 lg:overflow-hidden">
+          <div className="grid grid-cols-1 grid-rows-[auto_auto] gap-4 pr-1 md:min-h-0 md:flex-1 md:grid-rows-[auto_minmax(0,1fr)] lg:grid-cols-[minmax(250px,2fr)_minmax(0,3fr)] lg:grid-rows-1 lg:overflow-hidden">
             <aside className="min-w-0 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
               <CalendarioMensualTurnos
                 fecha={fecha}
                 barberoId={barberoId}
-                estadoFiltro={filtroEstado}
                 turnos={turnos}
                 cargandoTurnos={cargandoInicial}
                 onSeleccionar={cambiarFecha}
@@ -372,23 +420,28 @@ export default function TurnoManager({
             </aside>
             <section
               aria-label="Turnos del día seleccionado"
-              className="flex min-h-0 min-w-0 flex-col overflow-hidden"
+              className="flex min-w-0 flex-col md:min-h-0 md:overflow-hidden"
             >
-              <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-                <TurnoList
-                  turnos={turnosVisibles}
-                  session={session}
-                  cargandoInicial={cargandoInicial}
-                  tieneMas={paginaActual < totalPaginas}
-                  onCargarMas={cargarMas}
-                  onEstadoActualizado={actualizarEstadoTurno}
-                  whatsappPhone={whatsappPhone}
-                  datosTransferencia={datosTransferencia}
-                  alcanceCacheTurnos={alcanceCacheTurnos}
-                  onTurnoActualizado={actualizarTurnoLocal}
-                  modoCronologicoCompacto
-                  mensajeVacio="No hay turnos para esta fecha y estos filtros."
-                />
+              <div className={`${limitarListaMovil
+                ? "max-h-[77dvh] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                : "overflow-y-visible"} pr-1 md:max-h-none md:min-h-0 md:flex-1 md:overflow-y-auto`}
+              >
+                <div ref={contenidoListaMovilRef}>
+                  <TurnoList
+                    turnos={turnosVisibles}
+                    session={session}
+                    cargandoInicial={cargandoInicial}
+                    tieneMas={paginaActual < totalPaginas}
+                    onCargarMas={cargarMas}
+                    onEstadoActualizado={actualizarEstadoTurno}
+                    whatsappPhone={whatsappPhone}
+                    datosTransferencia={datosTransferencia}
+                    alcanceCacheTurnos={alcanceCacheTurnos}
+                    onTurnoActualizado={actualizarTurnoLocal}
+                    modoCronologicoCompacto
+                    mensajeVacio="No hay turnos para esta fecha y estos filtros."
+                  />
+                </div>
               </div>
             </section>
           </div>

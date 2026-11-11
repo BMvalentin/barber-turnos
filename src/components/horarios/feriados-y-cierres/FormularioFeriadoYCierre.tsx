@@ -1,8 +1,10 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useMemo } from "react";
 import { createExcepcion } from "@/actions/excepciones/crear.actions";
 import BotonSubmitFormStatus from "@/components/ui/boton-submit-form-status";
+import SelectorDesplegable from "@/components/ui/SelectorDesplegable";
+import type { OpcionDesplegable } from "@/components/ui/SelectorDesplegable";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { ActionStateInicialSimple } from "@/types/action-state";
 import type { BarberoParaSelector } from "@/types/barbero";
@@ -13,6 +15,13 @@ type FormularioFeriadoYCierreProps = {
 
 export function FormularioFeriadoYCierre({ barberos }: FormularioFeriadoYCierreProps) {
   const [estado, accionFormulario] = useActionState(createExcepcion, ActionStateInicialSimple);
+  const opcionesBarbero = useMemo<OpcionDesplegable<string>[]>(() => [
+    { valor: "", etiqueta: "Toda la barbería" },
+    ...barberos.map((barbero) => ({
+      valor: barbero.id,
+      etiqueta: barbero.nombre ?? "Profesional sin nombre",
+    })),
+  ], [barberos]);
   const { retroalimentar } = useRetroalimentacionAccion({
     mensajeExito: "Cierre agregado",
     descripcionExito: "El feriado o cierre se guardó correctamente.",
@@ -37,20 +46,15 @@ export function FormularioFeriadoYCierre({ barberos }: FormularioFeriadoYCierreP
           className="h-10 w-full rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-3 text-[var(--admin-texto-primario)] placeholder:text-[var(--admin-texto-muted)] outline-none transition focus:border-[var(--page-primary)] focus:ring-2 focus:ring-[var(--page-focus-ring)]"
         />
       </label>
-      <label className="grid gap-2 text-sm font-medium text-[var(--admin-texto-primario)]">
-        Afecta a
-        <select
+      <div className="grid gap-2 text-sm font-medium text-[var(--admin-texto-primario)]">
+        <label htmlFor="barbero-excepcion">Afecta a</label>
+        <SelectorDesplegable
+          id="barbero-excepcion"
           name="barberoId"
-          className="h-10 w-full rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-3 text-[var(--admin-texto-primario)] outline-none transition focus:border-[var(--page-primary)] focus:ring-2 focus:ring-[var(--page-focus-ring)]"
-        >
-          <option value="">Toda la barbería</option>
-          {barberos.map((barbero) => (
-            <option key={barbero.id} value={barbero.id}>
-              {barbero.nombre ?? "Profesional sin nombre"}
-            </option>
-          ))}
-        </select>
-      </label>
+          opciones={opcionesBarbero}
+          claseBoton="rounded-lg px-3"
+        />
+      </div>
       <label className="grid gap-2 text-sm font-medium text-[var(--admin-texto-primario)]">
         Desde
         <input

@@ -1,6 +1,8 @@
 "use client";
 
 import type { PropsSelectorEstadoTurno } from "@/components/turno/reserva/tipos";
+import SelectorDesplegable from "@/components/ui/SelectorDesplegable";
+import type { OpcionDesplegable } from "@/components/ui/SelectorDesplegable";
 import { ESTADOS_TURNO } from "@/lib/constants";
 
 type EstadoTurno = (typeof ESTADOS_TURNO)[number];
@@ -25,9 +27,12 @@ export default function SelectorEstadoTurno({
   valor,
   onChange,
 }: PropsSelectorEstadoTurno) {
-  const opciones: EstadoTurno[] = esEstadoEditable(valor)
+  const opciones: OpcionDesplegable<EstadoTurno>[] = (esEstadoEditable(valor)
     ? [...ESTADOS_EDITABLES]
-    : [valor, ...ESTADOS_EDITABLES];
+    : [valor, ...ESTADOS_EDITABLES]).map((estado) => ({
+      valor: estado,
+      etiqueta: ETIQUETAS_ESTADOS[estado],
+    }));
 
   return (
     <div className="flex flex-col gap-2">
@@ -37,18 +42,12 @@ export default function SelectorEstadoTurno({
       >
         Estado del turno
       </label>
-      <select
+      <SelectorDesplegable
         id="estado-turno-reserva"
-        value={valor}
-        onChange={(e) => onChange(e.target.value as EstadoTurno)}
-        className="w-full rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)] px-3 py-2.5 text-sm text-[var(--admin-texto-primario)] focus:outline-none focus:ring-2 focus:ring-[var(--page-focus-ring)]"
-      >
-        {opciones.map((estado) => (
-          <option key={estado} value={estado}>
-            {ETIQUETAS_ESTADOS[estado]}
-          </option>
-        ))}
-      </select>
+        opciones={opciones}
+        valor={valor}
+        onChange={onChange}
+      />
     </div>
   );
 }
