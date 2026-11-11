@@ -9,6 +9,7 @@ const ASUNTOS_CLIENTE: Record<DatosEmailTurno["estado"], string> = {
   CONFIRMADO: "Turno Confirmado",
   ACTUALIZADO: "Turno Modificado",
   CANCELADO: "Turno Cancelado",
+  NUEVA_RESERVA: "Nueva reserva registrada",
 };
 
 const ASUNTOS_BARBERO: Record<DatosEmailTurno["estado"], string> = {
@@ -16,15 +17,26 @@ const ASUNTOS_BARBERO: Record<DatosEmailTurno["estado"], string> = {
   CONFIRMADO: "Turno Confirmado",
   ACTUALIZADO: "Turno Modificado",
   CANCELADO: "Turno Cancelado",
+  NUEVA_RESERVA: "Nueva reserva registrada",
+};
+
+const ASUNTOS_ADMINISTRADOR: Record<DatosEmailTurno["estado"], string> = {
+  CREADO: "Turno registrado",
+  CONFIRMADO: "Turno Confirmado",
+  ACTUALIZADO: "Turno Modificado",
+  CANCELADO: "Turno Cancelado",
+  NUEVA_RESERVA: "Nueva reserva registrada",
 };
 
 export async function sendTurnoEmail(
   to: string,
   datos: DatosEmailTurno,
-  destinatario: "cliente" | "barbero" = "cliente",
+  destinatario: "cliente" | "barbero" | "administrador" = "cliente",
 ) {
   return enviarCorreo(to, async ({ barberiaNombre, moneda, colores }) => ({
-    asunto: `${(destinatario === "barbero" ? ASUNTOS_BARBERO : ASUNTOS_CLIENTE)[datos.estado]} - ${barberiaNombre}`,
+    asunto: `${(destinatario === "barbero"
+      ? ASUNTOS_BARBERO
+      : destinatario === "administrador" ? ASUNTOS_ADMINISTRADOR : ASUNTOS_CLIENTE)[datos.estado]} - ${barberiaNombre}`,
     html: await render(
       createElement(EmailTurno, {
         datos,

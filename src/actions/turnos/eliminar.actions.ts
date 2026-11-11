@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
-import { enviarEmailTurnoSeguro } from "@/lib/email/enviar-email-turno-seguro";
+import { enviarEmailCancelacionTurnoSeguro } from "@/lib/email/enviar-email-cancelacion-turno-seguro";
 import { revalidarCacheTurno } from "@/lib/revalidar/revalidar-cache-turno";
 import { obtenerTurnoConDetalle } from "@/lib/consultas/obtener-turno-con-detalle";
 import { ESTADOS_TURNO } from "@/lib/constants";
@@ -26,7 +26,12 @@ export async function deleteTurno(prevState: ActionState, formData: FormData) {
     const fecha = obtenerFechaSola(turnoToDelete.horarioReservado);
     revalidarCacheTurno(turnoToDelete.barberoId, fecha, turnoToDelete.userId);
 
-    enviarEmailTurnoSeguro(turnoToDelete, ESTADOS_TURNO[3]);
+    if (turnoToDelete.estado !== ESTADOS_TURNO[3]) {
+      await enviarEmailCancelacionTurnoSeguro(
+        { ...turnoToDelete, estado: ESTADOS_TURNO[3] },
+        "ADMINISTRADOR",
+      );
+    }
 
     return { success: true };
   } catch (error) {
