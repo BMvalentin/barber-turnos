@@ -7,6 +7,7 @@ import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { enviarEmailTurnoSeguro } from "@/lib/email/enviar-email-turno-seguro";
 import { enviarEmailTurnoBarberoSeguro } from "@/lib/email/enviar-email-turno-barbero-seguro";
+import { enviarEmailNuevaReservaSeguro } from "@/lib/email/enviar-email-nueva-reserva-seguro";
 import { serializarTurnoConDetalle } from "@/lib/serializar-turno-con-detalle";
 import { crearTurnoEnTransaccion } from "@/lib/crear-turno-transaccion";
 import { revalidarDisponibilidadTurno } from "@/lib/turnos/revalidar-disponibilidad-turno";
@@ -110,13 +111,15 @@ export async function createTurno(
     });
     if (!resultado.ok) return { success: false, error: resultado.error };
     const turno = resultado.turno;
-    revalidarDisponibilidadTurno(barberoId, obtenerFechaSola(inicio), turno.userId);
     after(async () => {
       const tareas: Promise<unknown>[] = [
         prisma.slotLock.deleteMany({
           where: { userId: clienteNuevoSolicitado ? session.user.id : turno.userId, barberoId, horarioReservado: inicio },
         }),
       ];
+      if (resultado.creado) {
+        tareas.push(enviarEmailNuevaReservaSeguro(turno));
+      }
       if (resultado.creado && turno.estado === ESTADOS_TURNO[1]) {
         tareas.push(
           enviarEmailTurnoSeguro(turno, "CONFIRMADO"),
@@ -135,6 +138,7 @@ export async function createTurno(
         }
       }
     });
+    revalidarDisponibilidadTurno(barberoId, obtenerFechaSola(inicio), turno.userId);
     return { success: true, data: serializarTurnoConDetalle(turno) };
   } catch (error) {
     console.error("Error al crear turno:", error instanceof Error ? error.name : "desconocido");

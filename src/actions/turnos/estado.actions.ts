@@ -2,6 +2,7 @@
 
 import { enviarEmailTurnoBarberoSeguro } from "@/lib/email/enviar-email-turno-barbero-seguro";
 import { enviarEmailTurnoSeguro } from "@/lib/email/enviar-email-turno-seguro";
+import { enviarEmailCancelacionTurnoSeguro } from "@/lib/email/enviar-email-cancelacion-turno-seguro";
 import { revalidarCacheTurno } from "@/lib/revalidar/revalidar-cache-turno";
 import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { actualizarTurnoEnTransaccion } from "@/lib/turnos/actualizar-turno-en-transaccion";
@@ -112,10 +113,13 @@ export async function actualizarTurno(
       obtenerFechaSola(resultado.turno.horarioReservado),
       resultado.turno.userId,
     );
-    enviarEmailTurnoSeguro(
-      resultado.turno,
-      resultado.turno.estado === ESTADOS_TURNO[3] ? ESTADOS_TURNO[3] : "ACTUALIZADO",
-    );
+    if (resultado.turno.estado === ESTADOS_TURNO[3]) {
+      if (resultado.turnoAnterior.estado !== ESTADOS_TURNO[3]) {
+        await enviarEmailCancelacionTurnoSeguro(resultado.turno, "ADMINISTRADOR");
+      }
+    } else {
+      enviarEmailTurnoSeguro(resultado.turno, "ACTUALIZADO");
+    }
     if (resultado.turno.estado === ESTADOS_TURNO[1] && resultado.turnoAnterior.estado !== ESTADOS_TURNO[1]) {
       enviarEmailTurnoBarberoSeguro(resultado.turno, "CONFIRMADO");
     }
