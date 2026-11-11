@@ -45,11 +45,21 @@ export default async function RootLayout({
       <body className={`${outfit.variable} antialiased`}>
         <Script id="preferencia-sidebar-admin" strategy="beforeInteractive">
           {`try {
-            const colapsado = localStorage.getItem("mayoraz-sidebar-collapsed") ?? localStorage.getItem("admin-sidebar-collapsed");
-            if (colapsado === "1") document.documentElement.dataset.adminSidebarColapsadoInicial = "true";
+            const clave = "mayoraz-sidebar-collapsed";
+            const cookie = document.cookie.split("; ").find((entrada) => entrada.startsWith(clave + "="))?.split("=")[1];
+            const guardado = localStorage.getItem(clave) ?? localStorage.getItem("admin-sidebar-collapsed");
+            if (cookie === "1" || cookie === "0") {
+              if (guardado !== cookie) localStorage.setItem(clave, cookie);
+            } else if (guardado === "1" || guardado === "0") {
+              if (guardado === "1") document.documentElement.dataset.adminSidebarColapsadoInicial = "true";
+              document.cookie = clave + "=" + guardado + "; Path=/; Max-Age=31536000; SameSite=Lax" + (location.protocol === "https:" ? "; Secure" : "");
+            }
           } catch {}`}
         </Script>
-        <LayoutComponent session={session} config={config}>
+        <LayoutComponent
+          session={session}
+          config={{ name: config?.name, logo: config?.logo }}
+        >
           <AppGate
             barberiaNombre={config?.name}
             logoUrl={config?.logo}

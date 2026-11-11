@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { requerirPropietarioOAdmin } from "@/lib/seguridad/requerir-propietario";
-import { INCLUDE_TURNO_CON_DETALLE } from "@/lib/turno-con-detalle";
+import { SELECCION_USUARIO_BASICA } from "@/lib/constants";
 import {
   ESTADOS_PAGO_VISIBLES_USUARIO,
   ESTADOS_TURNO,
@@ -42,7 +42,26 @@ export async function getUserTurnos(
       prisma.turno.findMany({
         where: filtro,
         orderBy: { horarioReservado: "desc" },
-        include: INCLUDE_TURNO_CON_DETALLE,
+        select: {
+          id: true,
+          userId: true,
+          clienteNombre: true,
+          clienteApellido: true,
+          clienteTelefono: true,
+          clienteEmail: true,
+          barberoId: true,
+          servicioId: true,
+          horarioReservado: true,
+          precioCongelado: true,
+          seniaCongelada: true,
+          estado: true,
+          estadoPago: true,
+          tipoPago: true,
+          metodoPago: true,
+          user: { select: SELECCION_USUARIO_BASICA },
+          servicio: { select: { id: true, nombre: true, duracion: true } },
+          barbero: { select: { id: true, nombre: true } },
+        },
         skip: (paginaActual - 1) * TAMANIO_PAGINA,
         take: TAMANIO_PAGINA,
       }),
@@ -53,12 +72,6 @@ export async function getUserTurnos(
       ...t,
       precioCongelado: Number(t.precioCongelado),
       seniaCongelada: Number(t.seniaCongelada),
-      servicio: t.servicio ? {
-        ...t.servicio,
-        precio: Number(t.servicio.precio),
-        senia: Number(t.servicio.senia),
-        descuento: Number(t.servicio.descuento),
-      } : t.servicio,
     }));
 
     return {

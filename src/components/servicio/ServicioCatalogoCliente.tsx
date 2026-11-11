@@ -9,6 +9,7 @@ import {
   guardarServiciosCacheLocal,
   leerServiciosCacheLocal,
 } from "@/lib/admin/servicios-cache-local";
+import { invalidarCacheServiciosPublicos } from "@/lib/admin/invalidar-cache-publica";
 import type { Servicio, ServicioCreado } from "@/types/servicio";
 
 function normalizarServicio(servicio: ServicioCreado): Servicio {
@@ -29,8 +30,10 @@ function normalizarServicio(servicio: ServicioCreado): Servicio {
 
 export default function ServicioCatalogoCliente({
   puedeGestionar,
+  alcanceCache,
 }: {
   puedeGestionar: boolean;
+  alcanceCache: string;
 }) {
   const [servicios, setServicios] = useState<Servicio[] | null>(null);
   const [errorActualizacion, setErrorActualizacion] = useState(false);
@@ -40,8 +43,13 @@ export default function ServicioCatalogoCliente({
   useEffect(() => {
     let cancelado = false;
     const revisionConsulta = revisionRef.current;
-    const cache = leerServiciosCacheLocal();
-    if (cache) setServicios(cache);
+    const cache = leerServiciosCacheLocal(alcanceCache);
+    if (cache) {
+      setServicios(cache);
+      setErrorActualizacion(false);
+      return;
+    }
+    setServicios(null);
 
     void getServicios()
       .then((resultado) => {
@@ -51,7 +59,7 @@ export default function ServicioCatalogoCliente({
           return;
         }
         setServicios(resultado.data);
-        guardarServiciosCacheLocal(resultado.data);
+        guardarServiciosCacheLocal(alcanceCache, resultado.data);
         setErrorActualizacion(false);
       })
       .catch(() => {
@@ -63,15 +71,16 @@ export default function ServicioCatalogoCliente({
     return () => {
       cancelado = true;
     };
-  }, [intento]);
+  }, [alcanceCache, intento]);
 
   const actualizarServicio = useCallback((servicioCreado: ServicioCreado) => {
     revisionRef.current += 1;
     setErrorActualizacion(false);
+    invalidarCacheServiciosPublicos();
     const servicio = normalizarServicio(servicioCreado);
     if (!servicio.estado) {
       setServicios((actuales) => (actuales ?? []).filter((actual) => actual.id !== servicio.id));
-      eliminarServicioCacheLocal(servicio.id);
+      eliminarServicioCacheLocal(alcanceCache, servicio.id);
       return;
     }
 
@@ -81,20 +90,21 @@ export default function ServicioCatalogoCliente({
       const actualizados = existe
         ? actuales.map((actual) => actual.id === servicio.id ? servicio : actual)
         : [servicio, ...actuales];
-      actualizarServicioCacheLocal(servicio);
+      actualizarServicioCacheLocal(alcanceCache, servicio);
       return actualizados;
     });
-  }, []);
+  }, [alcanceCache]);
 
   const eliminarServicio = useCallback((id: string) => {
     revisionRef.current += 1;
     setErrorActualizacion(false);
+    invalidarCacheServiciosPublicos();
     setServicios((actuales) => {
       const actualizados = (actuales ?? []).filter((servicio) => servicio.id !== id);
-      eliminarServicioCacheLocal(id);
+      eliminarServicioCacheLocal(alcanceCache, id);
       return actualizados;
     });
-  }, []);
+  }, [alcanceCache]);
 
   if (!servicios) {
     if (errorActualizacion) {

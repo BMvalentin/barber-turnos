@@ -10,9 +10,18 @@ import type { RolPanel } from "@/types/usuario";
 const CLAVE_ESTADO = "mayoraz-sidebar-collapsed";
 const CLAVE_ANTERIOR = "admin-sidebar-collapsed";
 
-function obtenerColapsadoGuardado() {
-  const valor = window.localStorage.getItem(CLAVE_ESTADO);
-  return (valor ?? window.localStorage.getItem(CLAVE_ANTERIOR)) === "1";
+function obtenerColapsadoGuardado(colapsadoInicial: boolean) {
+  const cookie = document.cookie
+    .split("; ")
+    .find((entrada) => entrada.startsWith(`${CLAVE_ESTADO}=`))
+    ?.split("=")[1];
+  if (cookie === "1" || cookie === "0") return cookie === "1";
+  try {
+    const valor = window.localStorage.getItem(CLAVE_ESTADO);
+    return (valor ?? window.localStorage.getItem(CLAVE_ANTERIOR)) === "1";
+  } catch {
+    return colapsadoInicial;
+  }
 }
 
 function suscribirseColapsado(alEscuchar: () => void) {
@@ -24,13 +33,14 @@ interface AdminShellProps {
   children: React.ReactNode;
   config?: { name?: string | null; logo?: string | null } | null;
   rol: RolPanel;
+  colapsadoInicial: boolean;
 }
 
-export default function AdminShell({ children, config, rol }: AdminShellProps) {
+export default function AdminShell({ children, config, rol, colapsadoInicial }: AdminShellProps) {
   const colapsadoGuardado = useSyncExternalStore(
     suscribirseColapsado,
-    obtenerColapsadoGuardado,
-    () => false,
+    () => obtenerColapsadoGuardado(colapsadoInicial),
+    () => colapsadoInicial,
   );
   const [colapsadoLocal, setColapsadoLocal] = useState<boolean | null>(null);
   const [menuAbierto, setMenuAbierto] = useState(false);
@@ -54,7 +64,12 @@ export default function AdminShell({ children, config, rol }: AdminShellProps) {
 
   const handleToggle = () => {
     const siguiente = !colapsado;
-    window.localStorage.setItem(CLAVE_ESTADO, siguiente ? "1" : "0");
+    document.cookie = `${CLAVE_ESTADO}=${siguiente ? "1" : "0"}; Path=/; Max-Age=31536000; SameSite=Lax${window.location.protocol === "https:" ? "; Secure" : ""}`;
+    try {
+      window.localStorage.setItem(CLAVE_ESTADO, siguiente ? "1" : "0");
+    } catch {
+      // La cookie conserva la preferencia si el almacenamiento local está bloqueado.
+    }
     setColapsadoLocal(siguiente);
   };
 

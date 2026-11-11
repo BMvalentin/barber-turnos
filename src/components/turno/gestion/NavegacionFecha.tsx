@@ -4,12 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import CalendarioNavegacion from "./CalendarioNavegacion";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
+import type { TurnoListado } from "@/types/turno";
 
 interface Props {
   fecha: string;
   onCambiarFecha: (fecha: string) => void;
   estado?: string;
   barberoId?: string;
+  turnos: TurnoListado[];
+  cargandoTurnos: boolean;
 }
 
 const FORMATO_LARGO = new Intl.DateTimeFormat("es-AR", {
@@ -41,7 +44,7 @@ function desplazarDia(fecha: string, cantidad: number): string {
   return formatearInput(nueva);
 }
 
-export default function NavegacionFecha({ fecha, onCambiarFecha, estado, barberoId }: Props) {
+export default function NavegacionFecha({ fecha, onCambiarFecha, estado, barberoId, turnos, cargandoTurnos }: Props) {
   const [abierto, setAbierto] = useState(false);
   const contenedorRef = useRef<HTMLDivElement>(null);
 
@@ -111,6 +114,8 @@ export default function NavegacionFecha({ fecha, onCambiarFecha, estado, barbero
               fecha={fecha}
               estado={estado ?? "TODOS"}
               barberoId={barberoId}
+              turnos={turnos}
+              cargandoTurnos={cargandoTurnos}
               onSeleccionar={(dia) => {
                 onCambiarFecha(dia);
                 setAbierto(false);

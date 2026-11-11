@@ -1,22 +1,22 @@
-// app/pago/pending/page.tsx
+"use client";
+
 import Link from "next/link";
 import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import { Clock, ArrowRight } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-interface SearchParams {
-  turnoId?: string;
-  payment_id?: string;
+export default function PagoPendingPage() {
+  return (
+    <Suspense fallback={<p role="status" className="p-8 text-center">Cargando estado del pago...</p>}>
+      <ContenidoPagoPendiente />
+    </Suspense>
+  );
 }
 
-interface PendingPageProps {
-  searchParams: Promise<SearchParams>;
-}
-
-export default async function PagoPendingPage({
-  searchParams,
-}: PendingPageProps) {
-  const { payment_id } = await searchParams;
-  const paymentId = payment_id;
+function ContenidoPagoPendiente() {
+  const paymentIdRecibido = useSearchParams().get("payment_id");
+  const paymentId = paymentIdRecibido && /^\d{1,32}$/.test(paymentIdRecibido) ? paymentIdRecibido : null;
 
   return (
     <div className="min-h-screen bg-[var(--page-bg)] text-[var(--page-bg-foreground)] flex items-center justify-center px-4">

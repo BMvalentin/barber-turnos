@@ -7,6 +7,7 @@ export default async function ServiciosPage() {
   if (!contexto) redirect("/dashboard");
 
   const puedeGestionar = contexto.rol === "ADMIN";
+  const alcanceCache = `${contexto.session.user.id}|${contexto.rol}`;
 
   return (
     <div className="space-y-8">
@@ -22,7 +23,11 @@ export default async function ServiciosPage() {
 
       {/* Lista de servicios - Abajo */}
       <div>
-        <ServicioCatalogoCliente puedeGestionar={puedeGestionar} />
+        <ServicioCatalogoCliente
+          key={alcanceCache}
+          puedeGestionar={puedeGestionar}
+          alcanceCache={alcanceCache}
+        />
       </div>
     </div>
   );

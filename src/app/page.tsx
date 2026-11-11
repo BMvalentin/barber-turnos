@@ -4,5 +4,16 @@ import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 export default async function Page() {
   const config = await obtenerConfigCacheada();
 
-  return <HomeClient config={config} />;
+  return (
+    <HomeClient
+      config={config ? {
+        slogan: config.slogan,
+        description: config.description,
+        backgroundImage: config.backgroundImage,
+        mapsUrl: config.mapsUrl,
+        address: config.address,
+        whatsapp: config.whatsapp,
+      } : null}
+    />
+  );
 }

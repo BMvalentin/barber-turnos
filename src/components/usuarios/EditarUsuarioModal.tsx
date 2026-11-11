@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import ModalBase from "@/components/ui/ModalBase";
 import { editarDatosUsuario, type DatosEdicionUsuario } from "@/actions/usuarios/editar.actions";
@@ -10,6 +9,7 @@ import type { UsuarioAdministrable } from "@/actions/usuarios/listar.actions";
 type Props = {
   usuario: UsuarioAdministrable;
   onClose: () => void;
+  onGuardado: () => void;
 };
 
 type CampoEditable = keyof DatosEdicionUsuario;
@@ -23,7 +23,7 @@ const CAMPOS: { clave: CampoEditable; etiqueta: string; tipo: string; autoComple
 const CLASES_INPUT =
   "h-10 w-full rounded-lg border bg-[var(--admin-surface)] px-3 text-sm text-[var(--admin-texto-primario)] placeholder:text-[var(--admin-texto-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--page-focus-ring)]";
 
-export default function EditarUsuarioModal({ usuario, onClose }: Props) {
+export default function EditarUsuarioModal({ usuario, onClose, onGuardado }: Props) {
   const [datos, setDatos] = useState<DatosEdicionUsuario>({
     name: usuario.name ?? "",
     email: usuario.email,
@@ -31,7 +31,6 @@ export default function EditarUsuarioModal({ usuario, onClose }: Props) {
   });
   const [errores, setErrores] = useState<Partial<Record<CampoEditable, string>>>({});
   const [pendiente, iniciarTransicion] = useTransition();
-  const router = useRouter();
 
   const guardar = (evento: FormEvent<HTMLFormElement>) => {
     evento.preventDefault();
@@ -40,7 +39,7 @@ export default function EditarUsuarioModal({ usuario, onClose }: Props) {
       const resultado = await editarDatosUsuario(usuario.id, datos);
       if (resultado.success) {
         toast.success("Datos actualizados");
-        router.refresh();
+        onGuardado();
         onClose();
         return;
       }

@@ -391,6 +391,8 @@ export default function TurnoManager({
                 onCambiarFecha={cambiarFecha}
                 estado={filtroEstado}
                 barberoId={barberoId}
+                turnos={turnos}
+                cargandoTurnos={cargandoInicial}
               />
             )}
           </div>

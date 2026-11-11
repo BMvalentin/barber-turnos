@@ -1,10 +1,18 @@
+"use client";
+
 import FormularioRegistro from "@/components/auth/FormularioRegistro";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-type Props = {
-  searchParams: Promise<{ consentimiento?: string }>;
-};
+export default function PaginaRegistro() {
+  return (
+    <Suspense fallback={<p role="status" className="p-8 text-center">Cargando registro...</p>}>
+      <ContenidoRegistro />
+    </Suspense>
+  );
+}
 
-export default async function PaginaRegistro({ searchParams }: Props) {
-  const { consentimiento } = await searchParams;
-  return <FormularioRegistro consentimientoRequerido={consentimiento === "requerido"} />;
+function ContenidoRegistro() {
+  const parametros = useSearchParams();
+  return <FormularioRegistro consentimientoRequerido={parametros.get("consentimiento") === "requerido"} />;
 }
