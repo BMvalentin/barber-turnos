@@ -48,7 +48,7 @@ function ContenidoPagoPendiente() {
         )}
 
         <Link
-          href="/dashboard"
+          href="/dashboard?tab=turnos"
           className={`flex items-center justify-center gap-2 w-full ${CLASES_BOTON_MARCA} font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm`}
         >
           Ver mis turnos

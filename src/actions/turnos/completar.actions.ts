@@ -26,7 +26,8 @@ export async function completedTurno(
     revalidateTag("turnos-global");
     revalidateTag(`turnos-user-${turno.userId}`);
     revalidatePath("/admin");
-    revalidatePath("/turno");
+    revalidatePath("/dashboard");
+    revalidatePath("/admin/turno");
 
     return {
       success: true,

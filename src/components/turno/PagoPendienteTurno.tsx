@@ -27,6 +27,7 @@ const ESTILO_TEMAS = {
 
 function puedeCompletarPago(turno: TurnoListado): boolean {
   return turno.estado === ESTADOS_TURNO[0] &&
+    new Date(turno.horarioReservado).getTime() > Date.now() &&
     (ESTADOS_PAGO_REINTENTABLES as readonly string[]).includes(turno.estadoPago);
 }
 

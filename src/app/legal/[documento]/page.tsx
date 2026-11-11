@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ContenidoDocumentoLegal from "@/components/legal/ContenidoDocumentoLegal";
 import { listarDocumentosLegales, obtenerDocumentoLegalPorSlug } from "@/lib/legal/documentos";
-import { responsableDesdeConfig } from "@/lib/legal/responsable";
-import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 
 type Props = {
   params: Promise<{ documento: string }>;
@@ -29,12 +27,5 @@ export default async function PaginaDocumentoLegal({ params }: Props) {
   const documento = obtenerDocumentoLegalPorSlug(slug);
   if (!documento) notFound();
 
-  const config = await obtenerConfigCacheada();
-
-  return (
-    <ContenidoDocumentoLegal
-      documento={documento}
-      responsable={responsableDesdeConfig(config)}
-    />
-  );
+  return <ContenidoDocumentoLegal documento={documento} />;
 }

@@ -77,7 +77,7 @@ export default function TurnoRow({
       >
         Completar
       </button>
-    ) : esDueno && turnoActivo ? (
+    ) : esDueno && turnoActivo && new Date(turno.horarioReservado).getTime() > Date.now() ? (
       <button
         type="button"
         onClick={() => onCancelar(turno.id)}

@@ -4,5 +4,6 @@ export function revalidarBarberos(): void {
   revalidateTag("barberos");
   revalidatePath("/admin/barbero");
   revalidatePath("/admin/barbero/perfil");
-  revalidatePath("/turno");
+  revalidatePath("/dashboard");
+  revalidatePath("/admin/turno");
 }

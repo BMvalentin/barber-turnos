@@ -83,7 +83,7 @@ export async function cancelTurno(turnoId: string): Promise<ActionState> {
     );
 
     revalidatePath("/dashboard");
-    revalidatePath("/turno");
+    revalidatePath("/admin/turno");
     revalidatePath("/admin");
 
     return { success: true };

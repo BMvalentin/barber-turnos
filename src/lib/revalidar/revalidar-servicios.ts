@@ -7,5 +7,6 @@ export function revalidarServicios(idServicio?: string): void {
   revalidatePath("/");
   revalidatePath("/servicio");
   revalidatePath("/admin/servicio");
-  revalidatePath("/turno");
+  revalidatePath("/dashboard");
+  revalidatePath("/admin/turno");
 }

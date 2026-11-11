@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { registerSchema, aceptacionLegalSchema } from "@/lib/zod";
+import { registerSchema } from "@/lib/zod";
 import bcrypt from "bcryptjs";
 import { crearLimitadorDeIntentos, MENSAJE_BLOQUEO } from "@/lib/seguridad/limitador-intentos";
 import { obtenerIp } from "@/lib/seguridad/obtener-ip";
@@ -10,6 +10,7 @@ import { construirUrlVerificacion } from "@/lib/construir-url-verificacion";
 import { obtenerUrlApp } from "@/lib/obtener-url-app";
 import { sendVerificacionEmail } from "@/lib/email-verificacion";
 import { registrarConsentimientosEnTransaccion } from "@/lib/legal/registrar-consentimiento";
+import { leerIntencionConsentimiento } from "@/lib/legal/intencion-cookies";
 import type { ActionState } from "@/types/action-state";
 
 const MAX_REGISTROS_POR_IP = 5;
@@ -17,11 +18,12 @@ const MAX_REGISTROS_POR_IP = 5;
 const limitadorDeIntentos = crearLimitadorDeIntentos();
 
 export const registerAction = async (prevState: ActionState, formData: FormData): Promise<ActionState> => {
-  const data = Object.fromEntries(formData);
-  const consentimiento = aceptacionLegalSchema.safeParse(data);
-  if (!consentimiento.success) {
-    return { error: "Debés aceptar los Términos y Condiciones y la Política de Privacidad para crear tu cuenta." };
+  const consentimiento = await leerIntencionConsentimiento();
+  if (!consentimiento) {
+    return { error: "Aceptá los Términos y Condiciones y la Política de Privacidad antes de crear tu cuenta." };
   }
+
+  const data = Object.fromEntries(formData);
   const validated = registerSchema.safeParse(data);
   if (!validated.success) return { error: "Datos inválidos. Revisa los campos." };
   const { email, password, name } = validated.data;
@@ -46,6 +48,7 @@ export const registerAction = async (prevState: ActionState, formData: FormData)
       await registrarConsentimientosEnTransaccion(tx, {
         userId: usuario.id,
         metodo: "credentials",
+        aceptadas: consentimiento.aceptadas,
       });
     });
     // Se resuelve antes de generar el token para no crear un token que no

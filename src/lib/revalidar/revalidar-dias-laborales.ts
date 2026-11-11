@@ -7,5 +7,6 @@ export function revalidarDiasLaborales(idBarbero?: string): void {
   revalidatePath("/admin/config/empleados/horarios-laborales");
   revalidatePath("/admin/barbero");
   revalidatePath("/admin/barbero/perfil");
-  revalidatePath("/turno");
+  revalidatePath("/dashboard");
+  revalidatePath("/admin/turno");
 }

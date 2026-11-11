@@ -87,7 +87,7 @@ export async function registrarTransferencia(
       return { success: false, error: "Este turno ya no admite transferencias" };
     }
 
-    revalidatePath("/turno");
+    revalidatePath("/admin/turno");
     revalidatePath("/admin");
     revalidatePath("/dashboard");
 

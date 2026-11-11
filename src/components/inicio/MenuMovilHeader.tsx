@@ -8,11 +8,16 @@ import { esAdmin, esEmpleado } from "@/lib/seguridad/es-admin";
 export function MenuMovilHeader({ sesion, cerrarMenu }: MenuMovilHeaderProps) {
   const claseEnlace = "py-2 text-base text-[var(--admin-texto-secundario)] transition-colors hover:text-[var(--admin-texto-primario)]";
   const esUsuarioEmpleado = esEmpleado(sesion);
+  const destinoTurnos = !sesion
+    ? "/login"
+    : esAdmin(sesion) || esUsuarioEmpleado
+      ? "/admin/turno"
+      : "/dashboard?tab=turnos";
   return (
     <div className="border-t border-[var(--admin-border)] bg-[var(--admin-surface)] md:hidden"><div className="flex flex-col space-y-4 px-6 py-6">
       <Link href="/#servicios" onClick={cerrarMenu} className={claseEnlace}>Servicios</Link><Link href="/#ubicacion" onClick={cerrarMenu} className={claseEnlace}>Ubicación</Link>
       {(esAdmin(sesion) || esUsuarioEmpleado) && <Link href="/admin" onClick={cerrarMenu} className={claseEnlace}>{esUsuarioEmpleado ? "Mi panel" : "Administrador"}</Link>}
-      <div className="pt-2"><Link href={sesion ? "/turno" : "/login"} onClick={cerrarMenu} className="block w-full rounded-lg bg-[var(--page-primary)] px-3.5 py-2 text-center text-sm font-semibold text-[var(--page-primary-foreground)] transition-colors hover:bg-[var(--page-primary-hover)]">Turnos</Link></div>
+      <div className="pt-2"><Link href={destinoTurnos} onClick={cerrarMenu} className="block w-full rounded-lg bg-[var(--page-primary)] px-3.5 py-2 text-center text-sm font-semibold text-[var(--page-primary-foreground)] transition-colors hover:bg-[var(--page-primary-hover)]">Turnos</Link></div>
       <div className="mt-4 border-t border-[var(--admin-border)] pt-6">
         {sesion ? <div className="flex flex-col gap-4">
           <Link href="/dashboard" onClick={cerrarMenu} className="flex items-center gap-3 py-2"><Image src={sesion.user?.image || "/images/avatar-default.svg"} alt="" className="rounded-full" width={40} height={40} /><span className="text-base font-medium text-[var(--admin-texto-primario)]">{sesion.user?.name}</span></Link>

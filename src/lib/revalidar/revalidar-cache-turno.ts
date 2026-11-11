@@ -7,6 +7,7 @@ export function revalidarCacheTurno(barberoId: string, fecha: string, userId?: s
   if (userId) {
     revalidateTag(`turnos-user-${userId}`);
   }
-  revalidatePath("/turno");
+  revalidatePath("/dashboard");
+  revalidatePath("/admin/turno");
   revalidatePath("/admin");
 }

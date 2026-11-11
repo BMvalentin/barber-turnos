@@ -1,10 +1,12 @@
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import DashboardPanel from "@/components/dashboard/DashboardPanel";
 import { obtenerDestinoPostLogin } from "@/lib/seguridad/resolver-destino-post-login";
+import { obtenerDatosReserva } from "@/lib/consultas/obtener-datos-reserva";
+import { serializarServiciosReserva } from "@/lib/serializar-servicios-reserva";
 import { redirect } from "next/navigation";
 
 type PropiedadesPaginaDashboard = {
-  searchParams: Promise<{ redireccion?: string | string[] }>;
+  searchParams: Promise<{ redireccion?: string | string[]; tab?: string | string[] }>;
 };
 
 export default async function DashboardPage({ searchParams }: PropiedadesPaginaDashboard) {
@@ -20,5 +22,18 @@ export default async function DashboardPage({ searchParams }: PropiedadesPaginaD
     if (destino) redirect(destino);
   }
 
-  return <DashboardPanel user={session.user} session={session} />;
+  const { servicios, barberos, relaciones } = await obtenerDatosReserva(false);
+
+  const initialTab = parametros.tab === "turnos" ? "turnos" : "perfil";
+
+  return (
+    <DashboardPanel
+      user={session.user}
+      session={session}
+      initialTab={initialTab}
+      initialServicios={serializarServiciosReserva(servicios)}
+      initialBarberos={barberos}
+      initialRelaciones={relaciones}
+    />
+  );
 }

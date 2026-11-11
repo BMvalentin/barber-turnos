@@ -8,8 +8,8 @@ import {
   type IntencionConsentimiento,
 } from "@/lib/legal/intencion-consentimiento";
 
-/* Emite la intención de consentimiento para el flujo de Google. Debe llamarse
-   solo dentro de un contexto de request (Server Action o Route Handler). */
+/* Emite la aceptación legal para registros nuevos. Debe llamarse solo dentro
+   de un contexto de request (Server Action o Route Handler). */
 export async function emitirIntencionConsentimiento(): Promise<void> {
   const tienda = await cookies();
   tienda.set(

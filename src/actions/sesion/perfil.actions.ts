@@ -13,7 +13,7 @@ type DatosPerfilActualizado = {
 
 const esquemaPerfil = z.object({
   name: z.string().trim().max(100),
-  telefono: z.string().trim().regex(/^\+?[0-9][0-9\s().-]{5,31}$/),
+  telefono: z.string().trim().min(6).max(32).regex(/^\+[0-9]{1,3}(?: [0-9])? [0-9]{1,21}$/),
 });
 
 export async function updateProfile(

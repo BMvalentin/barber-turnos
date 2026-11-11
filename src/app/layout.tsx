@@ -3,10 +3,13 @@ import Script from "next/script";
 import "./globals.css";
 import LayoutComponent from "@/components/comunes/LayoutComponent";
 import AppGate from "@/components/comunes/AppGate";
+import ConsentimientoInicial from "@/components/legal/ConsentimientoInicial";
+import { ProveedorConsentimientoLegal } from "@/contextos/ContextoConsentimientoLegal";
 import { Toaster } from "sonner";
 import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 import { crearVariablesTema } from "@/lib/contraste/crear-variables-tema";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
+import { leerIntencionConsentimiento } from "@/lib/legal/intencion-cookies";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -21,9 +24,10 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [config, session] = await Promise.all([
+  const [config, session, consentimiento] = await Promise.all([
     obtenerConfigCacheada(),
     requerirSesion(),
+    leerIntencionConsentimiento(),
   ]);
 
   const variablesTema = crearVariablesTema({
@@ -72,23 +76,26 @@ export default async function RootLayout({
             direccion={config?.address}
             ciudad={config?.city}
           >
-            {children}
-            <Toaster
-              position="bottom-right"
-              richColors
-              closeButton
-              theme="dark"
-              toastOptions={{ duration: 4000 }}
-              style={
-                {
-                  "--normal-bg": "var(--page-bg)",
-                  "--normal-border":
-                    "color-mix(in srgb, var(--page-bg-foreground) 15%, transparent)",
-                  "--normal-text": "var(--page-bg-foreground)",
-                  "--width": "22rem",
-                } as React.CSSProperties
-              }
-            />
+            <ProveedorConsentimientoLegal aceptadoInicial={Boolean(consentimiento)}>
+              <ConsentimientoInicial />
+              {children}
+              <Toaster
+                position="bottom-right"
+                richColors
+                closeButton
+                theme="dark"
+                toastOptions={{ duration: 4000 }}
+                style={
+                  {
+                    "--normal-bg": "var(--page-bg)",
+                    "--normal-border":
+                      "color-mix(in srgb, var(--page-bg-foreground) 15%, transparent)",
+                    "--normal-text": "var(--page-bg-foreground)",
+                    "--width": "22rem",
+                  } as React.CSSProperties
+                }
+              />
+            </ProveedorConsentimientoLegal>
           </AppGate>
         </LayoutComponent>
       </body>

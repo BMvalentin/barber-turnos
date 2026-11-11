@@ -7,7 +7,7 @@ const RUTA_PANEL = "/admin";
 
 /**
  * Única fuente de verdad sobre qué datos del perfil se exigen. Hoy sólo el
- * teléfono: es lo que el modal de `/dashboard` y el gate de `/turno` aplican,
+ * teléfono: es lo que el modal de `/dashboard` aplica,
  * y `name` no está validado en servidor (el esquema acepta cadena vacía).
  */
 export function tienePerfilCompleto(

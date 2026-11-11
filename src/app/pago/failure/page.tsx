@@ -40,18 +40,18 @@ function ContenidoPagoFallido() {
         <div className="flex flex-col gap-3">
           {turnoId && (
             <Link
-              href={`/turno?retry=${encodeURIComponent(turnoId)}`}
+              href="/dashboard?tab=turnos"
               className={`flex items-center justify-center gap-2 w-full ${CLASES_BOTON_MARCA} font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm`}
             >
               <RefreshCw className="w-5 h-5" />
-              Intentar de nuevo
+              Completar pago desde mis turnos
             </Link>
           )}
           <Link
-            href="/dashboard"
+            href="/"
             className="flex items-center justify-center gap-2 w-full bg-[var(--admin-item)] hover:bg-[var(--admin-item-hover)] text-[var(--admin-texto-primario)] font-medium py-3 rounded-2xl transition-all text-sm"
           >
-            Ver mis turnos
+            Volver al inicio
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
