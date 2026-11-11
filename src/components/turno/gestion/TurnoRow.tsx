@@ -3,6 +3,7 @@
 import { Clock } from "lucide-react";
 import BadgeEstadoTurno from "./BadgeEstadoTurno";
 import BadgeEstadoPago from "./BadgeEstadoPago";
+import SelectorEstadoPagoTurno from "./SelectorEstadoPagoTurno";
 import MenuAccionesTurno from "./MenuAccionesTurno";
 import PagoPendienteTurno from "@/components/turno/PagoPendienteTurno";
 import { esAdmin } from "@/lib/seguridad/es-admin";
@@ -134,7 +135,11 @@ export default function TurnoRow({
         </div>
         <div className="flex max-w-full flex-wrap items-center gap-1.5">
           <BadgeEstadoTurno estado={turno.estado} />
-          <BadgeEstadoPago estado={turno.estadoPago} />
+          {esAdminUsuario ? (
+            <SelectorEstadoPagoTurno turno={turno} onTurnoActualizado={onTurnoActualizado} />
+          ) : (
+            <BadgeEstadoPago estado={turno.estadoPago} />
+          )}
           {turno.metodoPago === "TRANSFERENCIA" && (
             <span className="inline-flex items-center rounded-full border border-sky-400/20 bg-sky-400/10 px-2.5 py-0.5 text-[11px] font-semibold text-sky-400">
               Transferencia
