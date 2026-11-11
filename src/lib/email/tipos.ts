@@ -1,9 +1,14 @@
+import type { EstadoPagoEmail, EstadoTurnoEmail } from "./turno-datos-email";
+
 export type TurnoParaEmail = {
   clienteNombre?: string | null;
   clienteApellido?: string | null;
   clienteTelefono?: string | null;
   clienteEmail?: string | null;
-  estado: string;
+  estado: EstadoTurnoEmail;
+  estadoPago: EstadoPagoEmail;
+  metodoPago: string | null;
+  tipoPago: string | null;
   horarioReservado: Date;
   precioCongelado: number | { toNumber: () => number };
   seniaCongelada: number | { toNumber: () => number };

@@ -27,12 +27,16 @@ type PropsEmailTurno = {
   colores: ColoresEmail;
   barberiaNombre: string;
   moneda: string;
-  destinatario?: "cliente" | "barbero";
+  destinatario?: "cliente" | "barbero" | "administrador";
 };
 
 const INFO_POR_ESTADO: Record<
   TipoEstadoEmail,
-  { cliente: { titulo: string; mensaje: string }; barbero: { titulo: string; mensaje: string } }
+  {
+    cliente: { titulo: string; mensaje: string };
+    barbero: { titulo: string; mensaje: string };
+    administrador: { titulo: string; mensaje: string };
+  }
 > = {
   CREADO: {
     cliente: {
@@ -42,6 +46,10 @@ const INFO_POR_ESTADO: Record<
     barbero: {
       titulo: "Nuevo Turno Reservado",
       mensaje: "Un cliente reservó un turno con vos. Mirá los detalles:",
+    },
+    administrador: {
+      titulo: "Nuevo turno registrado",
+      mensaje: "Se registró una nueva reserva. Revisá sus datos:",
     },
   },
   CONFIRMADO: {
@@ -53,6 +61,10 @@ const INFO_POR_ESTADO: Record<
       titulo: "Turno Confirmado",
       mensaje: "Tenés un turno confirmado. Mirá los detalles:",
     },
+    administrador: {
+      titulo: "Turno confirmado",
+      mensaje: "El turno fue confirmado.",
+    },
   },
   ACTUALIZADO: {
     cliente: {
@@ -63,18 +75,63 @@ const INFO_POR_ESTADO: Record<
       titulo: "Turno Modificado",
       mensaje: "Los detalles de un turno tuyo fueron actualizados.",
     },
+    administrador: {
+      titulo: "Turno modificado",
+      mensaje: "Los detalles del turno fueron actualizados.",
+    },
   },
   CANCELADO: {
     cliente: {
       titulo: "Turno Cancelado",
-      mensaje: "Tu turno fue cancelado. Podés agendar uno nuevo cuando quieras.",
+      mensaje: "El turno fue cancelado.",
     },
     barbero: {
       titulo: "Turno Cancelado",
-      mensaje: "Un turno tuyo fue cancelado.",
+      mensaje: "Un turno de tu agenda fue cancelado.",
+    },
+    administrador: {
+      titulo: "Turno cancelado",
+      mensaje: "El turno fue cancelado.",
+    },
+  },
+  NUEVA_RESERVA: {
+    cliente: {
+      titulo: "Nueva reserva registrada",
+      mensaje: "Tu reserva quedó registrada.",
+    },
+    barbero: {
+      titulo: "Nueva reserva registrada",
+      mensaje: "Se registró una nueva reserva en tu agenda.",
+    },
+    administrador: {
+      titulo: "Nueva reserva registrada",
+      mensaje: "Se registró una nueva reserva. Revisá los datos y el estado del pago:",
     },
   },
 };
+
+const ETIQUETAS_ESTADO_TURNO: Record<DatosEmailTurno["estadoTurno"], string> = {
+  PENDIENTE: "Pendiente",
+  CONFIRMADO: "Confirmado",
+  CANCELADO: "Cancelado",
+  COMPLETADO: "Completado",
+};
+
+const ETIQUETAS_ESTADO_PAGO: Record<DatosEmailTurno["estadoPago"], string> = {
+  PENDIENTE: "Pendiente",
+  SEÑADO: "Señado",
+  PAGADO: "Pagado",
+  APROBADO: "Aprobado",
+  RECHAZADO: "Rechazado",
+  CANCELADO: "Cancelado",
+  EN_ACREDITACION: "En acreditación",
+};
+
+function etiquetaMedioPago(metodoPago: string | null): string {
+  if (metodoPago === "MERCADO_PAGO") return "Mercado Pago";
+  if (metodoPago === "TRANSFERENCIA") return "Transferencia";
+  return metodoPago || "Sin definir";
+}
 
 function formatearMonto(monto: number, moneda: string): string {
   return new Intl.NumberFormat("es-AR", {
@@ -124,12 +181,29 @@ export function EmailTurno({
   moneda,
   destinatario = "cliente",
 }: PropsEmailTurno) {
-  const info = INFO_POR_ESTADO[datos.estado][destinatario];
+  const infoBase = INFO_POR_ESTADO[datos.estado][destinatario];
+  const info = datos.estado === "CANCELADO" && datos.canceladoPor
+    ? {
+        ...infoBase,
+        mensaje: datos.canceladoPor === "CLIENTE"
+          ? destinatario === "cliente"
+            ? "Cancelaste esta reserva."
+            : "El cliente canceló esta reserva."
+          : destinatario === "cliente"
+            ? "El administrador canceló esta reserva."
+            : "El administrador canceló esta reserva.",
+      }
+    : infoBase;
+  const pagoPendiente = datos.estado === "NUEVA_RESERVA" && datos.estadoPago === "PENDIENTE";
+  const titulo = pagoPendiente
+    ? "Nueva reserva registrada \u2014 Pago pendiente"
+    : info.titulo;
+  const interno = destinatario !== "cliente";
 
   return (
     <Html lang="es">
       <Head />
-      <Preview>{info.titulo}</Preview>
+      <Preview>{titulo}</Preview>
       <Body style={estiloBody}>
         <Container style={estiloContenedor}>
           <Section style={estiloTarjeta}>
@@ -143,7 +217,7 @@ export function EmailTurno({
                 {barberiaNombre}
               </Text>
               <Heading style={{ ...estiloTitulo, color: colores.textoPrimario }}>
-                {info.titulo}
+                {titulo}
               </Heading>
               <Text
                 style={{
@@ -166,6 +240,25 @@ export function EmailTurno({
                   {filaDetalle("Barbero", datos.barberoNombre)}
                   {filaDetalle("Servicio", datos.servicioNombre)}
                 </Row>
+                {(datos.estado === "NUEVA_RESERVA" || datos.estado === "CANCELADO") && (
+                  <>
+                    <Row style={{ marginTop: "16px" }}>
+                      {filaDetalle("Estado del turno", ETIQUETAS_ESTADO_TURNO[datos.estadoTurno])}
+                      {filaDetalle("Estado del pago", ETIQUETAS_ESTADO_PAGO[datos.estadoPago])}
+                    </Row>
+                    {datos.estado === "CANCELADO" && datos.canceladoPor && (
+                      <Row style={{ marginTop: "16px" }}>
+                        {filaDetalle("Cancelado por", datos.canceladoPor === "CLIENTE" ? "Cliente" : "Administrador")}
+                      </Row>
+                    )}
+                    {datos.estado === "NUEVA_RESERVA" && (
+                    <Row style={{ marginTop: "16px" }}>
+                      {filaDetalle("Medio de pago", etiquetaMedioPago(datos.metodoPago))}
+                      {filaDetalle("Tipo de pago", datos.tipoPago === "TOTAL" ? "Total" : datos.tipoPago === "SEÑA" ? "Seña" : "Sin definir")}
+                    </Row>
+                    )}
+                  </>
+                )}
               </Section>
 
               <Section
@@ -189,24 +282,31 @@ export function EmailTurno({
                   false,
                 )}
                 {filaPago(
-                  "Seña pagada",
-                  datos.señaPagada > 0
-                    ? formatearMonto(datos.señaPagada, moneda)
-                    : "Sin seña aún",
-                  datos.señaPagada > 0,
+                  "Monto acreditado",
+                  datos.montoPagado > 0
+                    ? formatearMonto(datos.montoPagado, moneda)
+                    : "Ninguno",
+                  datos.montoPagado > 0,
                 )}
                 {filaPago(
                   "Saldo pendiente",
                   datos.saldoPendiente > 0
                     ? formatearMonto(datos.saldoPendiente, moneda)
-                    : "Pago completo",
+                    : "Sin saldo pendiente",
                   datos.saldoPendiente > 0,
+                )}
+                {datos.estado === "NUEVA_RESERVA" && filaPago(
+                  "Seña pendiente",
+                  datos.señaPendiente > 0
+                    ? formatearMonto(datos.señaPendiente, moneda)
+                    : "Sin seña pendiente",
+                  datos.señaPendiente > 0,
                 )}
               </Section>
 
               <Section style={{ marginTop: "24px" }}>
                 <Text style={estiloSubtitulo}>
-                  {destinatario === "barbero" ? "Datos del cliente" : "Tus datos"}
+                  {interno ? "Datos del cliente" : "Tus datos"}
                 </Text>
                 <Row>
                   {filaDetalle("Nombre y apellido", datos.clienteNombre)}
@@ -220,8 +320,11 @@ export function EmailTurno({
 
               <Hr style={estiloSeparador} />
               <Text style={estiloPie}>
-                Gracias por elegirnos. Si tenés dudas, ingresá a tu perfil o
-                contactanos.
+                {interno
+                  ? datos.estado === "CANCELADO"
+                    ? "Este aviso se generó automáticamente al cancelar la reserva. No confirma una devolución de dinero."
+                    : "Este aviso se generó automáticamente al registrar la reserva."
+                  : "Gracias por elegirnos. Si tenés dudas, ingresá a tu perfil o contactanos."}
               </Text>
             </Section>
 
