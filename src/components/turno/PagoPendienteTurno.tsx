@@ -8,11 +8,14 @@ import { usePagoTurno } from "@/hooks/usePagoTurno";
 import { ESTADOS_PAGO_REINTENTABLES, ESTADOS_TURNO } from "@/lib/constants";
 import type { DatosTransferencia } from "@/types/pago";
 import type { TurnoCreado, TurnoListado } from "@/types/turno";
+import type { ParcheTurnoCache } from "@/lib/admin/turnos-cache-local";
 
 type Props = {
   turno: TurnoListado;
   whatsappPhone: string;
   datosTransferencia: DatosTransferencia;
+  alcanceCacheTurnos?: string;
+  onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
 };
 
 const ESTILO_TEMAS = {
@@ -24,6 +27,7 @@ const ESTILO_TEMAS = {
 
 function puedeCompletarPago(turno: TurnoListado): boolean {
   return turno.estado === ESTADOS_TURNO[0] &&
+    new Date(turno.horarioReservado).getTime() > Date.now() &&
     (ESTADOS_PAGO_REINTENTABLES as readonly string[]).includes(turno.estadoPago);
 }
 
@@ -31,6 +35,8 @@ export default function PagoPendienteTurno({
   turno,
   whatsappPhone,
   datosTransferencia,
+  alcanceCacheTurnos = "",
+  onTurnoActualizado,
 }: Props) {
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
@@ -48,14 +54,16 @@ export default function PagoPendienteTurno({
   const pago = usePagoTurno({
     whatsappPhone,
     turnoInicial: turnoCreado,
+    alcanceCacheTurnos,
+    onTurnoActualizado,
   });
 
-  if (!puedeCompletarPago(turno)) return null;
+  if (!puedeCompletarPago(turno) && !abierto) return null;
 
   const cerrar = () => {
     pago.setTransferenciaLista(false);
     setAbierto(false);
-    router.refresh();
+    if (!onTurnoActualizado) router.refresh();
   };
 
   return (

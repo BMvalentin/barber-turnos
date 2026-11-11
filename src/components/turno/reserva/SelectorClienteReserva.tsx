@@ -1,6 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import type { PropsSelectorClienteReserva } from "@/components/turno/reserva/tipos";
+import SelectorDesplegable from "@/components/ui/SelectorDesplegable";
+import type { OpcionDesplegable } from "@/components/ui/SelectorDesplegable";
 
 export default function SelectorClienteReserva({
   usuarios,
@@ -13,6 +16,14 @@ export default function SelectorClienteReserva({
   onCambiarClienteApellido,
 }: PropsSelectorClienteReserva) {
   const claseCampo = "w-full rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)] px-3 py-2.5 text-sm text-[var(--admin-texto-primario)] focus:outline-none focus:ring-2 focus:ring-[var(--page-focus-ring)]";
+  const opciones = useMemo<OpcionDesplegable<string>[]>(() => [
+    { valor: "", etiqueta: "Seleccionar cliente..." },
+    ...(!esEdicion ? [{ valor: "nuevo", etiqueta: "+ Nuevo cliente" }] : []),
+    ...usuarios.map((usuario) => ({
+      valor: usuario.id,
+      etiqueta: `${usuario.name || "Sin nombre"}${(usuario.esInvitado ? usuario.emailContacto : usuario.email) ? ` (${usuario.esInvitado ? usuario.emailContacto : usuario.email})` : ""}`,
+    })),
+  ], [esEdicion, usuarios]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -22,25 +33,15 @@ export default function SelectorClienteReserva({
       >
         Cliente
       </label>
-      <select
+      <SelectorDesplegable
         id="cliente-reserva"
         name="userId"
-        value={selectedUserId}
-        onChange={(e) => onCambiar(e.target.value)}
-        required
-        className={claseCampo}
-      >
-        <option value="">-- Seleccionar Cliente --</option>
-        {!esEdicion && <option value="nuevo">+ Nuevo cliente</option>}
-        {usuarios.map((usuario) => (
-          <option key={usuario.id} value={usuario.id}>
-            {usuario.name || "Sin nombre"}
-            {(usuario.esInvitado ? usuario.emailContacto : usuario.email)
-              ? ` (${usuario.esInvitado ? usuario.emailContacto : usuario.email})`
-              : ""}
-          </option>
-        ))}
-      </select>
+        opciones={opciones}
+        valor={selectedUserId}
+        onChange={onCambiar}
+        obligatorio
+        claseBoton={claseCampo}
+      />
       {!esEdicion && selectedUserId === "nuevo" && (
         <div className="mt-2 grid gap-3">
           <div className="grid gap-3 sm:grid-cols-2">

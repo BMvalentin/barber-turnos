@@ -8,6 +8,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { useImagenesServicio } from "@/hooks/useImagenesServicio";
 import ModalBase from "@/components/ui/ModalBase";
+import SelectorDesplegable from "@/components/ui/SelectorDesplegable";
+import type { OpcionDesplegable } from "@/components/ui/SelectorDesplegable";
 import BotonSubmitPending from "@/components/ui/boton-submit-pending";
 import CampoDescripcionServicio from "./CampoDescripcionServicio";
 import CampoFormulario from "./CampoFormulario";
@@ -15,13 +17,19 @@ import SeccionImagenesServicio from "./SeccionImagenesServicio";
 import SeccionPrecioDetalles from "./SeccionPrecioDetalles";
 
 const initialState: ActionState<ServicioCreado> = ActionStateInicial;
+const OPCIONES_ESTADO_SERVICIO: OpcionDesplegable<string>[] = [
+  { valor: "true", etiqueta: "Activo" },
+  { valor: "false", etiqueta: "Inactivo" },
+];
 
 type CreateServicioFormProps = {
   onClose: () => void;
+  onServicioCreado?: (servicio: ServicioCreado) => void;
 };
 
 export default function CreateServicioForm({
   onClose,
+  onServicioCreado,
 }: CreateServicioFormProps) {
   const [isPending, setIsPending] = useState(false);
   const [state, setState] = useState<ActionState<ServicioCreado>>(initialState);
@@ -41,6 +49,7 @@ export default function CreateServicioForm({
     mensajeExito: "Servicio creado",
     descripcionExito: "El servicio se ha creado correctamente.",
     onExito: () => {
+      if (state.data) onServicioCreado?.(state.data);
       formRef.current?.reset();
       limpiar();
       onClose();
@@ -109,14 +118,14 @@ export default function CreateServicioForm({
                   <span className="text-[10px] text-[var(--admin-texto-secundario)] uppercase font-bold">
                     Estado
                   </span>
-                  <select
+                  <SelectorDesplegable
                     name="estado"
-                    className="bg-[var(--admin-surface-elevated)] border text-[var(--admin-texto-primario)] text-xs rounded px-2 py-1 transition-colors duration-150 focus:outline-none focus:border-[var(--page-primary)]/60 focus:ring-2 focus:ring-[var(--page-focus-ring)]"
-                    style={{ borderColor: "var(--admin-border)" }}
-                  >
-                    <option value="true">Activo</option>
-                    <option value="false">Inactivo</option>
-                  </select>
+                    opciones={OPCIONES_ESTADO_SERVICIO}
+                    valorInicial="true"
+                    etiquetaAria="Estado del servicio"
+                    className="w-auto"
+                    claseBoton="h-8 w-auto rounded px-2 py-1 text-xs"
+                  />
                 </div>
               </div>
 

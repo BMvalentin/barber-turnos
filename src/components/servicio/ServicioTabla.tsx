@@ -4,7 +4,7 @@ import { Scissors } from "lucide-react";
 import Paginacion from "./Paginacion";
 import ServicioRow from "./ServicioRow";
 import EmptyState from "@/components/ui/EmptyState";
-import type { Servicio } from "@/types/servicio";
+import type { Servicio, ServicioCreado } from "@/types/servicio";
 
 type ServicioTablaProps = {
   servicios: Servicio[];
@@ -20,6 +20,7 @@ type ServicioTablaProps = {
   hasta: number;
   totalResultados: number;
   onCambiarPagina: (pagina: number) => void;
+  onServicioActualizado?: (servicio: ServicioCreado) => void;
 };
 
 export default function ServicioTabla({
@@ -36,6 +37,7 @@ export default function ServicioTabla({
   hasta,
   totalResultados,
   onCambiarPagina,
+  onServicioActualizado,
 }: ServicioTablaProps) {
   if (estaVacio) {
     return (
@@ -80,6 +82,7 @@ export default function ServicioTabla({
             servicio={servicio}
             puedeGestionar={puedeGestionar}
             onEliminar={onEliminar}
+            onServicioActualizado={onServicioActualizado}
           />
         ))}
       </div>

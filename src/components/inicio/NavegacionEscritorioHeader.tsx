@@ -8,13 +8,18 @@ import { esAdmin, esEmpleado } from "@/lib/seguridad/es-admin";
 export function NavegacionEscritorioHeader({ sesion, menuSesionAbierto, setMenuSesionAbierto, contenedorSesion }: NavegacionEscritorioHeaderProps) {
   const claseEnlace = "text-sm font-medium text-[var(--admin-texto-secundario)] transition-colors hover:text-[var(--admin-texto-primario)]";
   const esUsuarioEmpleado = esEmpleado(sesion);
+  const destinoTurnos = !sesion
+    ? "/login"
+    : esAdmin(sesion) || esUsuarioEmpleado
+      ? "/admin/turno"
+      : "/dashboard?tab=turnos";
   return (
     <div className="hidden items-center gap-6 md:flex">
       <nav className="flex items-center gap-6">
         <Link href="/#servicios" className={claseEnlace}>Servicios</Link><Link href="/#ubicacion" className={claseEnlace}>Ubicación</Link>
         {(esAdmin(sesion) || esUsuarioEmpleado) && <Link href="/admin" className={claseEnlace}>{esUsuarioEmpleado ? "Mi panel" : "Administrador"}</Link>}
       </nav>
-      <Link href={sesion ? "/turno" : "/login"} className="rounded-lg bg-[var(--page-primary)] px-3.5 py-2 text-sm font-semibold text-[var(--page-primary-foreground)] transition-colors hover:bg-[var(--page-primary-hover)]">Turnos</Link>
+      <Link href={destinoTurnos} className="rounded-lg bg-[var(--page-primary)] px-3.5 py-2 text-sm font-semibold text-[var(--page-primary-foreground)] transition-colors hover:bg-[var(--page-primary-hover)]">Turnos</Link>
       {sesion ? (
         <div ref={contenedorSesion} className="relative">
           <button type="button" className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-[var(--admin-item-hover)]" onClick={() => setMenuSesionAbierto(!menuSesionAbierto)} aria-expanded={menuSesionAbierto} aria-haspopup="menu">

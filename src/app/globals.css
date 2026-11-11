@@ -2,6 +2,16 @@
    (variable --font-outfit) y se aplica en <body> y en los títulos h1-h3. */
 @import "tailwindcss";
 
+@custom-variant admin-escritorio (@media (min-width: 768px) and (hover: hover) and (pointer: fine));
+
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  html[data-admin-sidebar-colapsado-inicial="true"] aside[aria-label="Navegación de administración"] {
+    width: 68px;
+    min-width: 68px;
+    visibility: hidden;
+  }
+}
+
 /* =========================
    CSS VARIABLES BASE
 ========================= */

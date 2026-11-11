@@ -13,6 +13,7 @@ import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
 import type { DatosTransferencia } from "@/types/pago";
+import type { ParcheTurnoCache } from "@/lib/admin/turnos-cache-local";
 
 interface Props {
   turnos: TurnoListado[];
@@ -22,11 +23,15 @@ interface Props {
   tieneMas?: boolean;
   errorCargaMas?: boolean;
   onCargarMas?: () => void;
-  onEstadoActualizado?: (id: string, nuevoEstado: string) => void;
+  onEstadoActualizado?: (id: string, nuevoEstado: TurnoListado["estado"]) => void;
+  onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
+  alcanceCacheTurnos?: string;
   whatsappPhone?: string;
   datosTransferencia?: DatosTransferencia;
   /** Muestra la fecha de cada día aunque todos los turnos sean del mismo día. */
   mostrarFechas?: boolean;
+  modoCronologicoCompacto?: boolean;
+  mensajeVacio?: string;
 }
 
 type GrupoDia = { dia: string; turnos: TurnoListado[] };
@@ -52,9 +57,13 @@ export default function TurnoList({
   errorCargaMas = false,
   onCargarMas = () => {},
   onEstadoActualizado = () => {},
+  onTurnoActualizado,
+  alcanceCacheTurnos = "",
   whatsappPhone = "",
   datosTransferencia,
   mostrarFechas = false,
+  modoCronologicoCompacto = false,
+  mensajeVacio = "No hay turnos para mostrar.",
 }: Props) {
   const gruposPorDia = useMemo(
     () =>
@@ -121,8 +130,8 @@ export default function TurnoList({
     return (
       <EmptyState
         icono={<Calendar className="h-10 w-10" />}
-        mensaje="No hay turnos para mostrar."
-        claseContenedor="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl p-12"
+        mensaje={mensajeVacio}
+        claseContenedor={`bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl ${modoCronologicoCompacto ? "p-6" : "p-12"}`}
         claseIcono="h-10 w-10 text-[var(--admin-texto-muted)] opacity-50"
         claseMensaje="text-[var(--admin-texto-muted)]"
       />
@@ -147,6 +156,9 @@ export default function TurnoList({
               onConfirmar={solicitarConfirmar}
               whatsappPhone={whatsappPhone}
               datosTransferencia={datosTransferencia}
+              alcanceCacheTurnos={alcanceCacheTurnos}
+              onTurnoActualizado={onTurnoActualizado}
+              modoCompacto={modoCronologicoCompacto}
             />
           </section>
         ))}

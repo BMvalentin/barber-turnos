@@ -1,9 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { Footer } from "@/components/inicio/Footer";
-import { esAdmin as esUsuarioAdmin } from "@/lib/seguridad/es-admin";
 
 type AppGateProps = {
   children: React.ReactNode;
@@ -17,7 +15,6 @@ type AppGateProps = {
   email?: string | null;
   direccion?: string | null;
   ciudad?: string | null;
-  isAdmin?: boolean;
 };
 
 export default function AppGate({
@@ -32,16 +29,9 @@ export default function AppGate({
   email,
   direccion,
   ciudad,
-  isAdmin = false
 }: AppGateProps) {
   const pathname = usePathname();
-  const { data: session } = useSession();
-
-  const esAdmin = esUsuarioAdmin(session) || isAdmin;
-
-  const hideFooter =
-    pathname.startsWith("/admin") ||
-    (pathname.startsWith("/turno") && esAdmin);
+  const hideFooter = pathname.startsWith("/admin");
 
   return (
     <>

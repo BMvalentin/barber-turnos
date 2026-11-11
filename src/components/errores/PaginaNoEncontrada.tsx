@@ -64,7 +64,7 @@ export default function PaginaNoEncontrada() {
             Volver al inicio
           </Link>
           <Link
-            href="/turno"
+            href="/dashboard?tab=turnos"
             className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--admin-border-fuerte)] bg-[var(--admin-surface)] px-5 py-3 text-sm font-semibold text-[var(--page-primary-tinta)] transition-colors duration-200 hover:bg-[var(--page-primary-15)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--page-focus-ring)]"
           >
             <CalendarDays className="h-4 w-4" />

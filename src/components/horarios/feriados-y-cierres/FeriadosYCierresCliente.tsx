@@ -2,12 +2,12 @@
 
 import { FormularioFeriadoYCierre } from "./FormularioFeriadoYCierre";
 import { ListaFeriadosYCierres } from "./ListaFeriadosYCierres";
-import type { Barbero } from "@/types/barbero";
+import type { BarberoParaSelector } from "@/types/barbero";
 import type { ExcepcionLaboral } from "@/types/excepcion";
 
 type FeriadosYCierresClienteProps = {
   excepciones: ExcepcionLaboral[];
-  barberos: Barbero[];
+  barberos: BarberoParaSelector[];
 };
 
 export function FeriadosYCierresCliente({

@@ -1,3 +1,4 @@
+import { revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { ID_CONFIGURACION_MP } from "./constantes";
 import type { RespuestaTokenMP, OpcionesGuardarMP } from "./tipos";
@@ -42,4 +43,5 @@ export async function guardarConfiguracionMP(
       bloqueado: bloquearDespuesDeGuardar,
     },
   });
+  revalidateTag("mercadopago-config");
 }

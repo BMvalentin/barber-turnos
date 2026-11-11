@@ -92,10 +92,25 @@ export type TurnoResumen = Omit<
   "precioCongelado" | "seniaCongelada"
 > & { precioCongelado: number; seniaCongelada: number };
 
-/* Turno listado (getTurnos del admin/dashboard), con selecciones mínimas. */
+/* Turno listado (getTurnos del admin/dashboard), sin claves ni referencias de pago. */
 export type TurnoListado = Omit<
   Prisma.turnoGetPayload<{
-    include: {
+    select: {
+      id: true;
+      userId: true;
+      clienteNombre: true;
+      clienteApellido: true;
+      clienteTelefono: true;
+      clienteEmail: true;
+      barberoId: true;
+      servicioId: true;
+      horarioReservado: true;
+      precioCongelado: true;
+      seniaCongelada: true;
+      estado: true;
+      estadoPago: true;
+      tipoPago: true;
+      metodoPago: true;
       user: { select: typeof SELECCION_USUARIO_BASICA };
       servicio: { select: { id: true; nombre: true; duracion: true } };
       barbero: { select: { id: true; nombre: true } };

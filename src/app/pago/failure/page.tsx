@@ -1,23 +1,22 @@
-// ============================================================
-// app/pago/failure/page.tsx
-// ============================================================
+"use client";
+
 import Link from "next/link";
 import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import { XCircle, RefreshCw, ArrowRight } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-interface SearchParams {
-  turnoId?: string;
-  payment_id?: string;
+export default function PagoFailurePage() {
+  return (
+    <Suspense fallback={<p role="status" className="p-8 text-center">Cargando estado del pago...</p>}>
+      <ContenidoPagoFallido />
+    </Suspense>
+  );
 }
 
-interface FailurePageProps {
-  searchParams: Promise<SearchParams>;
-}
-
-export default async function PagoFailurePage({
-  searchParams,
-}: FailurePageProps) {
-  const { turnoId } = await searchParams;
+function ContenidoPagoFallido() {
+  const valorTurnoId = useSearchParams().get("turnoId");
+  const turnoId = valorTurnoId && /^[\w-]{1,191}$/.test(valorTurnoId) ? valorTurnoId : null;
 
   return (
     <div className="min-h-screen bg-[var(--page-bg)] text-[var(--page-bg-foreground)] flex items-center justify-center px-4">
@@ -41,18 +40,18 @@ export default async function PagoFailurePage({
         <div className="flex flex-col gap-3">
           {turnoId && (
             <Link
-              href={`/turno?retry=${turnoId}`}
-className={`flex items-center justify-center gap-2 w-full ${CLASES_BOTON_MARCA} font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm`}
+              href="/dashboard?tab=turnos"
+              className={`flex items-center justify-center gap-2 w-full ${CLASES_BOTON_MARCA} font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm`}
             >
               <RefreshCw className="w-5 h-5" />
-              Intentar de nuevo
+              Completar pago desde mis turnos
             </Link>
           )}
           <Link
-            href="/dashboard"
+            href="/"
             className="flex items-center justify-center gap-2 w-full bg-[var(--admin-item)] hover:bg-[var(--admin-item-hover)] text-[var(--admin-texto-primario)] font-medium py-3 rounded-2xl transition-all text-sm"
           >
-            Ver mis turnos
+            Volver al inicio
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

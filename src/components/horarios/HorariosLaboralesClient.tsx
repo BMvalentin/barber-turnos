@@ -15,6 +15,7 @@ import { guardarHorariosBarbero } from "@/actions/horarios/guardar-horarios-barb
 import { removerHorarioDeBarbero } from "@/actions/barberos/remover-horario.actions";
 import { ActionStateInicialSimple } from "@/types/action-state";
 import { DIAS_SEMANA } from "@/lib/constants";
+import { invalidarCacheHorariosPublicos } from "@/lib/admin/invalidar-cache-publica";
 import type { BarberoParaHorarios, DiaLaboral, HorarioDiaBarbero } from "@/types/horarios";
 
 type Props = {
@@ -119,7 +120,10 @@ export function HorariosLaboralesClient({ diasLaborales, barberos, barberoIdInic
         diasGuardadosRef.current,
       );
       await retroalimentarGuardado(resultado);
-      if (resultado.success && resultado.data?.actualizado) router.refresh();
+      if (resultado.success && resultado.data?.actualizado) {
+        invalidarCacheHorariosPublicos();
+        router.refresh();
+      }
     });
   };
 
@@ -148,7 +152,10 @@ export function HorariosLaboralesClient({ diasLaborales, barberos, barberoIdInic
         diasGuardadosRef.current,
       );
       await retroalimentarGuardado(resultado);
-      if (resultado.success && resultado.data?.actualizado) router.refresh();
+      if (resultado.success && resultado.data?.actualizado) {
+        invalidarCacheHorariosPublicos();
+        router.refresh();
+      }
     });
   };
 

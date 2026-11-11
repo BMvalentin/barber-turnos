@@ -1,29 +1,17 @@
-import { getBarberos } from "@/actions/barberos/listar.actions";
 import { FeriadosYCierresCliente } from "@/components/horarios/feriados-y-cierres/FeriadosYCierresCliente";
 import { Breadcrumb } from "@/components/ui/breadcrumb/Breadcrumb";
-import { prisma } from "@/lib/prisma";
+import { obtenerBarberosParaSelector } from "@/lib/consultas/obtener-barberos-para-selector";
+import { obtenerExcepcionesActivas } from "@/lib/consultas/obtener-excepciones-activas";
 import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { redirect } from "next/navigation";
 
 export default async function FeriadosYCierresPage() {
   if (!(await requerirAdmin())) redirect("/admin");
 
-  const [excepciones, respuestaBarberos] = await Promise.all([
-    prisma.excepcion_laboral.findMany({
-      where: { estado: true },
-      include: {
-        barbero: {
-          select: {
-            id: true,
-            nombre: true,
-          },
-        },
-      },
-      orderBy: { desde: "desc" },
-    }),
-    getBarberos(),
+  const [excepciones, barberos] = await Promise.all([
+    obtenerExcepcionesActivas(),
+    obtenerBarberosParaSelector(),
   ]);
-  const barberos = respuestaBarberos.success ? (respuestaBarberos.data ?? []) : [];
 
   return (
     <div className="space-y-8">

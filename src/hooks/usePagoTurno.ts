@@ -3,6 +3,9 @@
 import { crearPreferenciaPago } from "@/actions/mercadopago/crear-preferencia.actions";
 import { registrarTransferencia } from "@/actions/turnos/registrar-transferencia.actions";
 import { useState } from "react";
+import { actualizarTurnoCacheLocal } from "@/lib/admin/turnos-cache-local";
+import type { ParcheTurnoCache } from "@/lib/admin/turnos-cache-local";
+import { ESTADOS_PAGO } from "@/lib/constants";
 import type { TurnoCreado } from "@/types/turno";
 import type { TipoPago } from "@/types/mercadopago";
 import type { MetodoPago } from "@/types/pago";
@@ -10,9 +13,16 @@ import type { MetodoPago } from "@/types/pago";
 export type ParametrosPagoTurno = {
   whatsappPhone: string;
   turnoInicial?: TurnoCreado | null;
+  alcanceCacheTurnos?: string;
+  onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
 };
 
-export function usePagoTurno({ whatsappPhone, turnoInicial = null }: ParametrosPagoTurno) {
+export function usePagoTurno({
+  whatsappPhone,
+  turnoInicial = null,
+  alcanceCacheTurnos = "",
+  onTurnoActualizado,
+}: ParametrosPagoTurno) {
   // El envío de WhatsApp al barbero ocurre en /pago/success (RedireccionWhatsApp).
   // Se conserva el parámetro por compatibilidad con la cadena de Props existente.
   void whatsappPhone;
@@ -35,6 +45,13 @@ export function usePagoTurno({ whatsappPhone, turnoInicial = null }: ParametrosP
           setCargandoPago(false);
           return;
         }
+        const parche: ParcheTurnoCache = {
+          estadoPago: ESTADOS_PAGO[6],
+          metodoPago: "TRANSFERENCIA",
+          tipoPago,
+        };
+        if (alcanceCacheTurnos) actualizarTurnoCacheLocal(alcanceCacheTurnos, turnoCreado.id, parche);
+        onTurnoActualizado?.(turnoCreado.id, parche);
         setTransferenciaLista(true);
         setCargandoPago(false);
         return;

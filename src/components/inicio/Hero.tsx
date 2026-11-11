@@ -80,7 +80,7 @@ style={ESTILO_FONDO_MARCA}
           transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
           className="w-full flex justify-center"
         >
-          <Link href="/turno" className="group inline-flex">
+          <Link href="/dashboard?tab=turnos" className="group inline-flex">
             <button
               type="button"
               className="relative inline-flex items-center justify-center gap-3 overflow-hidden text-[var(--page-primary-foreground)] font-black uppercase tracking-widest text-base md:text-lg px-10 md:px-14 py-5 rounded-sm transition-all active:scale-95 shadow-lg"

@@ -7,17 +7,22 @@ import { esAdmin } from "@/lib/seguridad/es-admin";
 import { ESTADOS_TURNO } from "@/lib/constants";
 import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
+import type { ParcheTurnoCache } from "@/lib/admin/turnos-cache-local";
 
 interface Props {
   turno: TurnoListado;
   session: Session | null;
   onCancelar: (id: string) => void;
+  alcanceCacheTurnos?: string;
+  onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
 }
 
 export default function MenuAccionesTurno({
   turno,
   session,
   onCancelar,
+  alcanceCacheTurnos = "",
+  onTurnoActualizado,
 }: Props) {
   const [abierto, setAbierto] = useState(false);
   const contenedorRef = useRef<HTMLDivElement>(null);
@@ -81,6 +86,8 @@ export default function MenuAccionesTurno({
             session={session}
             turnoInicial={turno}
             whatsappPhone=""
+            alcanceCacheTurnos={alcanceCacheTurnos}
+            onTurnoActualizado={onTurnoActualizado}
             claseTrigger="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[var(--admin-texto-primario)] hover:bg-[var(--admin-item-hover)] transition-colors"
             contenidoTrigger={
               <>

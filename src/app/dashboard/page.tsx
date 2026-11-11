@@ -1,14 +1,12 @@
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import DashboardPanel from "@/components/dashboard/DashboardPanel";
-import { getUserTurnos } from "@/actions/sesion/listar-turnos-usuario.actions";
-import { prisma } from "@/lib/prisma";
-import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
-import { obtenerDatosTransferencia } from "@/lib/pagos/obtener-datos-transferencia";
 import { obtenerDestinoPostLogin } from "@/lib/seguridad/resolver-destino-post-login";
+import { obtenerDatosReserva } from "@/lib/consultas/obtener-datos-reserva";
+import { serializarServiciosReserva } from "@/lib/serializar-servicios-reserva";
 import { redirect } from "next/navigation";
 
 type PropiedadesPaginaDashboard = {
-  searchParams: Promise<{ redireccion?: string | string[] }>;
+  searchParams: Promise<{ redireccion?: string | string[]; tab?: string | string[] }>;
 };
 
 export default async function DashboardPage({ searchParams }: PropiedadesPaginaDashboard) {
@@ -24,24 +22,18 @@ export default async function DashboardPage({ searchParams }: PropiedadesPaginaD
     if (destino) redirect(destino);
   }
 
-  const [dbUser, resultadoTurnos, config] = await Promise.all([
-    prisma.user.findUnique({ where: { id: session.user.id } }),
-    getUserTurnos(session.user.id),
-    obtenerConfigCacheada(),
-  ]);
-  const paginaTurnos = resultadoTurnos.data;
+  const { servicios, barberos, relaciones } = await obtenerDatosReserva(false);
+
+  const initialTab = parametros.tab === "turnos" ? "turnos" : "perfil";
 
   return (
-    <>
-      <DashboardPanel
-        user={dbUser || session.user}
-        turnos={paginaTurnos?.turnos ?? []}
-        paginaTurnosInicial={paginaTurnos?.paginaActual ?? 1}
-        totalPaginasTurnos={paginaTurnos?.totalPaginas ?? 1}
-        session={session}
-        whatsappPhone={config?.whatsapp || ""}
-        datosTransferencia={obtenerDatosTransferencia(config)}
-      />
-    </>
+    <DashboardPanel
+      user={session.user}
+      session={session}
+      initialTab={initialTab}
+      initialServicios={serializarServiciosReserva(servicios)}
+      initialBarberos={barberos}
+      initialRelaciones={relaciones}
+    />
   );
 }

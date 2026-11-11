@@ -86,7 +86,6 @@ export async function confirmarPagoTurno(
 
     if (!resultado.yaConfirmado) {
       revalidatePath("/dashboard");
-      revalidatePath("/turno");
       revalidatePath("/admin");
     }
 

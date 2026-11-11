@@ -42,6 +42,7 @@ export default function ModalGestionTurno({
   contenidoTrigger,
   onTriggerClick,
   onTurnoCreado,
+  alcanceCacheTurnos,
   abrirAlMontar = false,
 }: PropsModalGestionTurno) {
   const {
@@ -85,6 +86,7 @@ export default function ModalGestionTurno({
     initialUsuarios,
     initialRelaciones,
     whatsappPhone,
+    alcanceCacheTurnos,
     datosTransferencia,
     turnoInicial,
     onTurnoCreado,

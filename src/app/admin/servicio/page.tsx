@@ -1,5 +1,4 @@
-import { getServicios } from "@/actions/servicios/listar.actions";
-import ServicioList from "@/components/servicio/ServicioList";
+import ServicioCatalogoCliente from "@/components/servicio/ServicioCatalogoCliente";
 import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { redirect } from "next/navigation";
 
@@ -7,9 +6,8 @@ export default async function ServiciosPage() {
   const contexto = await requerirPanel();
   if (!contexto) redirect("/dashboard");
 
-  const resultServicios = await getServicios();
-
-  const servicios = resultServicios.success ? resultServicios.data ?? [] : [];
+  const puedeGestionar = contexto.rol === "ADMIN";
+  const alcanceCache = `${contexto.session.user.id}|${contexto.rol}`;
 
   return (
     <div className="space-y-8">
@@ -25,7 +23,11 @@ export default async function ServiciosPage() {
 
       {/* Lista de servicios - Abajo */}
       <div>
-        <ServicioList servicios={servicios} puedeGestionar={contexto.rol === "ADMIN"} />
+        <ServicioCatalogoCliente
+          key={alcanceCache}
+          puedeGestionar={puedeGestionar}
+          alcanceCache={alcanceCache}
+        />
       </div>
     </div>
   );

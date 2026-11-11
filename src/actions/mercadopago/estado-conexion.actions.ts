@@ -31,7 +31,7 @@ export async function obtenerEstadoConexionMP(): Promise<EstadoConexionMP> {
     };
   }
 
-  const nombreCuenta = await obtenerNombreCuentaMP();
+  const nombreCuenta = await obtenerNombreCuentaMP(configuracion);
 
   return {
     conectada: configuracion.conectado,

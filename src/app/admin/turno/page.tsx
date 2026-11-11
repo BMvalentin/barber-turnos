@@ -1,11 +1,11 @@
 // app/admin/turno/page.tsx
-import { getTurnos } from "@/actions/turnos/listar.actions";
 import TurnoManager from "@/components/turno/gestion/TurnoManager";
 import { obtenerDatosReserva } from "@/lib/consultas/obtener-datos-reserva";
-import { prisma } from "@/lib/prisma";
+import { obtenerBarberosFiltroTurnos } from "@/lib/consultas/obtener-barberos-filtro-turnos";
 import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { serializarServiciosReserva } from "@/lib/serializar-servicios-reserva";
 import { obtenerDatosTransferencia } from "@/lib/pagos/obtener-datos-transferencia";
+import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import { redirect } from "next/navigation";
 
 async function getTurnoData(barberoId: string | null, incluirUsuarios: boolean) {
@@ -16,13 +16,8 @@ async function getTurnoData(barberoId: string | null, incluirUsuarios: boolean) 
   const serviciosVisibles = barberoId
     ? servicios.filter((servicio) => relaciones.some((relacion) => relacion.servicioId === servicio.id))
     : servicios;
-  const barberosFiltro = incluirUsuarios
-    // Los perfiles sin cuenta y sin turnos son restos de cambios de rol: no aportan al filtro.
-    ? await prisma.barbero.findMany({
-        where: { OR: [{ usuarioId: { not: null } }, { turnos: { some: {} } }] },
-        select: { id: true, nombre: true, srcImage: true, estado: true },
-        orderBy: [{ estado: "desc" }, { nombre: "asc" }],
-      })
+  const barberosFiltro = !barberoId
+    ? await obtenerBarberosFiltroTurnos()
     : barberos;
 
   return { servicios: serializarServiciosReserva(serviciosVisibles), barberos, barberosFiltro, usuarios, relaciones, config };
@@ -34,20 +29,15 @@ export default async function AdminTurnoPage() {
   const session = contexto.session;
   const esEmpleado = contexto.rol === "EMPLEADO";
   const barberoIdInicial = contexto.barberoId ?? "";
-  const [datosTurno, result] = await Promise.all([
-    getTurnoData(esEmpleado ? contexto.barberoId : null, true),
-    getTurnos(1, "CONFIRMADO", undefined, barberoIdInicial || undefined),
-  ]);
+  const fechaInicial = obtenerFechaSola(new Date());
+  const datosTurno = await getTurnoData(esEmpleado ? contexto.barberoId : null, false);
   const { servicios, barberos, barberosFiltro, usuarios, relaciones, config } = datosTurno;
-
-  const turnosData = (result.success && result.data) ? result.data : [];
-  const totalPaginasInicial = result.success && result.totalPages ? result.totalPages : 1;
 
   return (
     <div className="h-full min-h-0">
       <TurnoManager
-        turnosIniciales={turnosData}
-        totalPaginasInicial={totalPaginasInicial}
+        turnosIniciales={[]}
+        cargarTurnosAlMontar
         session={session}
         initialServicios={servicios}
         initialBarberos={barberos}
@@ -56,6 +46,8 @@ export default async function AdminTurnoPage() {
         initialRelaciones={relaciones}
         mostrarFiltroBarbero={!esEmpleado}
         barberoIdInicial={barberoIdInicial}
+        fechaInicial={fechaInicial}
+        vistaAgendaCompleta
         whatsappPhone={config?.whatsapp || ""}
         datosTransferencia={obtenerDatosTransferencia(config)}
       />
