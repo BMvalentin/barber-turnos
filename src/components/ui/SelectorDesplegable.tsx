@@ -36,6 +36,7 @@ type Props<T extends string> = {
   obligatorio?: boolean;
   className?: string;
   claseBoton?: string;
+  buscable?: boolean;
 };
 
 function normalizarBusqueda(texto: string): string {
@@ -56,12 +57,14 @@ export default function SelectorDesplegable<T extends string>({
   obligatorio = false,
   className,
   claseBoton,
+  buscable = false,
 }: Props<T>) {
   const [abierto, setAbierto] = useState(false);
+  const [busqueda, setBusqueda] = useState("");
   const [valorInterno, setValorInterno] = useState<T | undefined>(valorInicial);
   const [posicionLista, setPosicionLista] = useState<PosicionLista | null>(null);
   const contenedorRef = useRef<HTMLDivElement>(null);
-  const botonRef = useRef<HTMLButtonElement>(null);
+  const botonRef = useRef<HTMLElement>(null);
   const listaRef = useRef<HTMLUListElement>(null);
   const opcionesRef = useRef<Array<HTMLButtonElement | null>>([]);
   const busquedaRef = useRef("");
@@ -79,6 +82,9 @@ export default function SelectorDesplegable<T extends string>({
     ? indiceSeleccionado
     : opciones.findIndex((opcion) => !opcion.deshabilitado);
   const listaPosicionada = posicionLista !== null;
+  const opcionesFiltradas = buscable && busqueda.trim()
+    ? opciones.filter((opcion) => normalizarBusqueda(opcion.etiqueta).includes(normalizarBusqueda(busqueda.trim())))
+    : opciones;
 
   useEffect(() => {
     if (!abierto || deshabilitado) return;
@@ -100,10 +106,11 @@ export default function SelectorDesplegable<T extends string>({
   }, [abierto, deshabilitado]);
 
   useEffect(() => {
-    if (abierto && !deshabilitado && listaPosicionada && indiceInicial >= 0) {
+    if (!abierto || deshabilitado || !listaPosicionada) return;
+    if (!buscable && indiceInicial >= 0) {
       opcionesRef.current[indiceInicial]?.focus();
     }
-  }, [abierto, deshabilitado, indiceInicial, listaPosicionada]);
+  }, [abierto, buscable, deshabilitado, indiceInicial, listaPosicionada]);
 
   useEffect(() => {
     if (!abierto || deshabilitado || opciones.length === 0) return;
@@ -113,7 +120,7 @@ export default function SelectorDesplegable<T extends string>({
       if (!rectangulo) return;
 
       const margen = 8;
-      const altoDeseado = Math.min(288, opciones.length * 42 + 12);
+      const altoDeseado = Math.min(288, opciones.length * 42 + (buscable ? 64 : 12));
       const espacioAbajo = Math.max(0, window.innerHeight - rectangulo.bottom - margen);
       const espacioArriba = Math.max(0, rectangulo.top - margen);
       const abrirArriba = espacioAbajo < altoDeseado && espacioArriba > espacioAbajo;
@@ -150,7 +157,7 @@ export default function SelectorDesplegable<T extends string>({
       window.removeEventListener("resize", recalcularPosicion);
       window.removeEventListener("scroll", recalcularPosicion, true);
     };
-  }, [abierto, deshabilitado, opciones.length]);
+  }, [abierto, buscable, busqueda, deshabilitado, opciones.length]);
 
   useEffect(() => {
     if (valorControlado !== undefined) return;
@@ -168,6 +175,7 @@ export default function SelectorDesplegable<T extends string>({
 
   const limpiarBusqueda = () => {
     busquedaRef.current = "";
+    setBusqueda("");
     if (temporizadorBusquedaRef.current) {
       clearTimeout(temporizadorBusquedaRef.current);
       temporizadorBusquedaRef.current = null;
@@ -181,7 +189,7 @@ export default function SelectorDesplegable<T extends string>({
     limpiarBusqueda();
     setAbierto(false);
     setPosicionLista(null);
-    botonRef.current?.focus();
+    if (!buscable) botonRef.current?.focus();
   };
 
   const manejarTecladoLista = (evento: KeyboardEvent<HTMLUListElement>) => {
@@ -191,18 +199,18 @@ export default function SelectorDesplegable<T extends string>({
     if (evento.key === "ArrowDown" || evento.key === "ArrowUp") {
       const direccion = evento.key === "ArrowDown" ? 1 : -1;
       let indice = focoActual;
-      for (let intento = 0; intento < opciones.length; intento += 1) {
-        indice = (indice + direccion + opciones.length) % opciones.length;
-        if (!opciones[indice]?.deshabilitado) {
+      for (let intento = 0; intento < opcionesFiltradas.length; intento += 1) {
+        indice = (indice + direccion + opcionesFiltradas.length) % opcionesFiltradas.length;
+        if (!opcionesFiltradas[indice]?.deshabilitado) {
           siguienteIndice = indice;
           break;
         }
       }
     } else if (evento.key === "Home") {
-      siguienteIndice = opciones.findIndex((opcion) => !opcion.deshabilitado);
+      siguienteIndice = opcionesFiltradas.findIndex((opcion) => !opcion.deshabilitado);
     } else if (evento.key === "End") {
-      for (let indice = opciones.length - 1; indice >= 0; indice -= 1) {
-        if (!opciones[indice]?.deshabilitado) {
+      for (let indice = opcionesFiltradas.length - 1; indice >= 0; indice -= 1) {
+        if (!opcionesFiltradas[indice]?.deshabilitado) {
           siguienteIndice = indice;
           break;
         }
@@ -215,9 +223,9 @@ export default function SelectorDesplegable<T extends string>({
       }, 500);
 
       const inicio = Math.max(focoActual, -1);
-      for (let paso = 1; paso <= opciones.length; paso += 1) {
-        const indice = (inicio + paso) % opciones.length;
-        const opcion = opciones[indice];
+      for (let paso = 1; paso <= opcionesFiltradas.length; paso += 1) {
+        const indice = (inicio + paso) % opcionesFiltradas.length;
+        const opcion = opcionesFiltradas[indice];
         if (
           opcion &&
           !opcion.deshabilitado &&
@@ -256,10 +264,19 @@ export default function SelectorDesplegable<T extends string>({
     }
   };
 
-  const alPresionarTeclaBoton = (evento: KeyboardEvent<HTMLButtonElement>) => {
-    if ((evento.key === "ArrowDown" || evento.key === "ArrowUp") && !deshabilitado && !abierto) {
+  const alPresionarTeclaBoton = (evento: KeyboardEvent<HTMLElement>) => {
+    if ((evento.key === "ArrowDown" || evento.key === "ArrowUp") && !deshabilitado) {
       evento.preventDefault();
       setAbierto(true);
+      if (posicionLista) {
+        const indice = opcionesFiltradas.findIndex((opcion) => !opcion.deshabilitado);
+        if (indice >= 0) opcionesRef.current[indice]?.focus();
+      }
+    } else if (evento.key === "Escape" && abierto) {
+      evento.preventDefault();
+      limpiarBusqueda();
+      setAbierto(false);
+      setPosicionLista(null);
     }
   };
 
@@ -270,42 +287,94 @@ export default function SelectorDesplegable<T extends string>({
   return (
     <div className={twMerge("relative w-full", className)} ref={contenedorRef}>
       {name && <input type="hidden" name={name} value={valorActual} disabled={deshabilitado} />}
-      <button
-        ref={botonRef}
-        id={id}
-        type="button"
-        disabled={deshabilitado}
-        onClick={alternarLista}
-        onKeyDown={alPresionarTeclaBoton}
-        role="combobox"
-        aria-label={etiquetaAria ? `${etiquetaAria}: ${etiquetaSeleccionada}` : undefined}
-        aria-haspopup="listbox"
-        aria-expanded={abierto && !deshabilitado}
-        aria-busy={cargando || undefined}
-        aria-required={obligatorio || undefined}
-        aria-controls={idLista}
-        className={twMerge(
-          "flex h-10 w-full items-center justify-between gap-3 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-3 text-left text-sm text-[var(--admin-texto-primario)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] disabled:cursor-not-allowed disabled:opacity-60",
-          deshabilitado && cargando && "cursor-wait",
-          !deshabilitado && "hover:bg-[var(--admin-item-hover)]",
-          claseBoton,
-        )}
-      >
-        <span className="flex min-w-0 items-center gap-2.5">
-          {opcionSeleccionada?.icono}
-          <span className="truncate font-medium">{etiquetaSeleccionada}</span>
-        </span>
-        {cargando ? (
-          <LoaderCircle className="h-4 w-4 shrink-0 animate-spin text-[var(--admin-texto-muted)]" aria-hidden="true" />
-        ) : (
-          <ChevronDown
-            className={`h-4 w-4 shrink-0 text-[var(--admin-texto-muted)] transition-transform duration-200 ${abierto ? "rotate-180" : ""}`}
-            aria-hidden="true"
+      {buscable ? (
+        <div className="relative">
+          <input
+            ref={(elemento) => { botonRef.current = elemento; }}
+            id={id}
+            type="text"
+            disabled={deshabilitado}
+            value={abierto ? busqueda : etiquetaSeleccionada}
+            placeholder={placeholder}
+            onFocus={() => {
+              if (!abierto) {
+                setBusqueda("");
+                setAbierto(true);
+              }
+            }}
+            onClick={() => {
+              if (!abierto) {
+                setBusqueda("");
+                setAbierto(true);
+              }
+            }}
+            onChange={(evento) => {
+              setBusqueda(evento.target.value);
+              setAbierto(true);
+            }}
+            onKeyDown={alPresionarTeclaBoton}
+            role="combobox"
+            aria-label={etiquetaAria ?? "Buscar cliente"}
+            aria-haspopup="listbox"
+            aria-expanded={abierto && !deshabilitado}
+            aria-busy={cargando || undefined}
+            aria-required={obligatorio || undefined}
+            aria-controls={idLista}
+            autoComplete="off"
+            className={twMerge(
+              "h-10 w-full rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-3 pr-10 text-left text-sm text-[var(--admin-texto-primario)] transition-colors placeholder:text-[var(--admin-texto-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] disabled:cursor-not-allowed disabled:opacity-60",
+              deshabilitado && cargando && "cursor-wait",
+              !deshabilitado && "hover:bg-[var(--admin-item-hover)]",
+              claseBoton,
+            )}
           />
-        )}
-      </button>
+          {cargando ? (
+            <LoaderCircle className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-[var(--admin-texto-muted)]" aria-hidden="true" />
+          ) : (
+            <ChevronDown
+              className={`pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--admin-texto-muted)] transition-transform duration-200 ${abierto ? "rotate-180" : ""}`}
+              aria-hidden="true"
+            />
+          )}
+        </div>
+      ) : (
+        <button
+          ref={(elemento) => { botonRef.current = elemento; }}
+          id={id}
+          type="button"
+          disabled={deshabilitado}
+          onClick={alternarLista}
+          onKeyDown={alPresionarTeclaBoton}
+          role="combobox"
+          aria-label={etiquetaAria ? `${etiquetaAria}: ${etiquetaSeleccionada}` : undefined}
+          aria-haspopup="listbox"
+          aria-expanded={abierto && !deshabilitado}
+          aria-busy={cargando || undefined}
+          aria-required={obligatorio || undefined}
+          aria-controls={idLista}
+          className={twMerge(
+            "flex h-10 w-full items-center justify-between gap-3 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-3 text-left text-sm text-[var(--admin-texto-primario)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] disabled:cursor-not-allowed disabled:opacity-60",
+            deshabilitado && cargando && "cursor-wait",
+            !deshabilitado && "hover:bg-[var(--admin-item-hover)]",
+            claseBoton,
+          )}
+        >
+          <span className="flex min-w-0 items-center gap-2.5">
+            {opcionSeleccionada?.icono}
+            <span className="truncate font-medium">{etiquetaSeleccionada}</span>
+          </span>
+          {cargando ? (
+            <LoaderCircle className="h-4 w-4 shrink-0 animate-spin text-[var(--admin-texto-muted)]" aria-hidden="true" />
+          ) : (
+            <ChevronDown
+              className={`h-4 w-4 shrink-0 text-[var(--admin-texto-muted)] transition-transform duration-200 ${abierto ? "rotate-180" : ""}`}
+              aria-hidden="true"
+            />
+          )}
+        </button>
+      )}
 
-      {abierto && !deshabilitado && posicionLista && opciones.length > 0 && typeof document !== "undefined" && createPortal((
+      {abierto && !deshabilitado && posicionLista && typeof document !== "undefined" && createPortal((
         <ul
           ref={listaRef}
           data-selector-desplegable-opciones="true"
@@ -323,7 +392,11 @@ export default function SelectorDesplegable<T extends string>({
             maxHeight: posicionLista.altoMaximo,
           }}
         >
-          {opciones.map((opcion, indice) => {
+          {opcionesFiltradas.length === 0 ? (
+            <li role="presentation" className="px-3 py-2.5 text-sm text-[var(--admin-texto-muted)]">
+              No se encontraron resultados.
+            </li>
+          ) : opcionesFiltradas.map((opcion, indice) => {
             const seleccionada = opcion.valor === valorActual;
             return (
               <li key={opcion.valor} role="presentation">
