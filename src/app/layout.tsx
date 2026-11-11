@@ -1,4 +1,5 @@
 import { Outfit } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import LayoutComponent from "@/components/comunes/LayoutComponent";
 import AppGate from "@/components/comunes/AppGate";
@@ -34,6 +35,7 @@ export default async function RootLayout({
   return (
     <html
       lang="es"
+      suppressHydrationWarning
       style={
         {
           ...variablesTema,
@@ -41,6 +43,12 @@ export default async function RootLayout({
       }
     >
       <body className={`${outfit.variable} antialiased`}>
+        <Script id="preferencia-sidebar-admin" strategy="beforeInteractive">
+          {`try {
+            const colapsado = localStorage.getItem("mayoraz-sidebar-collapsed") ?? localStorage.getItem("admin-sidebar-collapsed");
+            if (colapsado === "1") document.documentElement.dataset.adminSidebarColapsadoInicial = "true";
+          } catch {}`}
+        </Script>
         <LayoutComponent session={session} config={config}>
           <AppGate
             barberiaNombre={config?.name}

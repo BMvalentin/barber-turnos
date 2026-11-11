@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useSyncExternalStore, useState } from "react";
+import { useEffect, useLayoutEffect, useSyncExternalStore, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Menu, Scissors } from "lucide-react";
@@ -46,6 +46,12 @@ export default function AdminShell({ children, config, rol }: AdminShellProps) {
   const colapsado = colapsadoLocal ?? colapsadoGuardado;
   const marca = config?.name || "Mayoraz";
 
+  useLayoutEffect(() => {
+    if (colapsado) {
+      delete document.documentElement.dataset.adminSidebarColapsadoInicial;
+    }
+  }, [colapsado]);
+
   const handleToggle = () => {
     const siguiente = !colapsado;
     window.localStorage.setItem(CLAVE_ESTADO, siguiente ? "1" : "0");
@@ -72,7 +78,7 @@ export default function AdminShell({ children, config, rol }: AdminShellProps) {
         rol={rol}
       />
       <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
-        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-[var(--admin-border)] bg-[var(--admin-surface)] px-4 md:hidden">
+        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-[var(--admin-border)] bg-[var(--admin-surface)] px-4 admin-escritorio:hidden">
           <button
             type="button"
             onClick={() => setMenuAbierto(true)}

@@ -40,6 +40,12 @@ const ETIQUETAS_ESTADO: Record<EstadoTurnoCalendario, string> = {
   CANCELADO: "Cancelado",
 };
 
+const ESTADOS_CON_INDICADOR: readonly EstadoTurnoCalendario[] = [
+  "PENDIENTE",
+  "CONFIRMADO",
+  "CANCELADO",
+];
+
 const CLASES_PUNTO_ESTADO: Record<EstadoTurnoCalendario, string> = {
   PENDIENTE: "bg-amber-400",
   CONFIRMADO: "bg-emerald-400",
@@ -93,15 +99,14 @@ function capitalizar(texto: string): string {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
-function descripcionIndicadores(
-  resumen: ResumenDiaCalendario | undefined,
-  estados: readonly EstadoTurnoCalendario[] = ESTADOS_TURNO,
-): string {
-  if (!resumen) return "Sin turnos";
-  const descripciones = estados
+function descripcionIndicadores(resumen: ResumenDiaCalendario | undefined): string {
+  if (!resumen) return "Sin turnos pendientes, confirmados o cancelados";
+  const descripciones = ESTADOS_CON_INDICADOR
     .filter((estado) => resumen[estado] > 0)
     .map((estado) => `${resumen[estado]} ${ETIQUETAS_ESTADO[estado].toLowerCase()}${resumen[estado] === 1 ? "" : "s"}`);
-  return descripciones.length > 0 ? descripciones.join(", ") : "Sin turnos";
+  return descripciones.length > 0
+    ? descripciones.join(", ")
+    : "Sin turnos pendientes, confirmados o cancelados";
 }
 
 export default function CalendarioMensualTurnos({
@@ -202,13 +207,16 @@ export default function CalendarioMensualTurnos({
               0,
             );
             const tieneTurnos = cantidadDiaFiltrada > 0;
+            const tieneTurnosConIndicador = ESTADOS_CON_INDICADOR.some(
+              (estado) => (resumenDia?.[estado] ?? 0) > 0,
+            );
             const seleccionado = fechaSeleccionada ? isSameDay(dia, fechaSeleccionada) : false;
             const esHoy = clave === fechaHoy;
             const deshabilitado =
               !estaEnElMes || cargandoTurnos || !tieneTurnos;
             const descripcionDia = cargandoTurnos
               ? "Cargando turnos"
-              : descripcionIndicadores(resumenDia, estadosVisibles);
+              : descripcionIndicadores(resumenDia);
             const etiqueta = `${capitalizar(FORMATO_FECHA_LARGA.format(dia))}. ${descripcionDia}.`;
 
             return (
@@ -221,17 +229,19 @@ export default function CalendarioMensualTurnos({
                 onClick={() => onSeleccionar(clave)}
                 className={`flex h-10 w-full flex-col items-center justify-center rounded-lg border border-transparent text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] sm:h-11 sm:text-sm ${
                   seleccionado
-                      ? tieneTurnos && !cargandoTurnos
-                      ? "bg-[var(--page-primary)] font-bold text-[var(--page-primary-foreground)] ring-1 ring-[var(--admin-border-fuerte)]"
+                    ? tieneTurnos && !cargandoTurnos
+                      ? "bg-[var(--page-primary-20)] font-bold text-[var(--admin-texto-primario)] ring-1 ring-[var(--admin-border-fuerte)]"
                       : "bg-[var(--admin-surface)] font-semibold text-[var(--admin-texto-secundario)] ring-1 ring-[var(--admin-border-fuerte)]"
                     : estaEnElMes && tieneTurnos && !cargandoTurnos
                       ? "text-[var(--admin-texto-primario)] hover:bg-[var(--page-primary-20)]"
-                      : "cursor-default text-[var(--admin-texto-muted)] opacity-30"
+                      : estaEnElMes && tieneTurnosConIndicador && !cargandoTurnos
+                        ? "text-[var(--admin-texto-muted)]"
+                        : "cursor-default text-[var(--admin-texto-muted)] opacity-30"
                 } ${esHoy && !seleccionado ? "ring-1 ring-inset ring-[var(--admin-border-fuerte)]" : ""}`}
               >
                 <span>{format(dia, "d")}</span>
                 <span className="mt-0.5 flex h-1 items-center justify-center gap-0.5" aria-hidden="true">
-                  {estaEnElMes && estadosVisibles.filter((estado) => (resumenDia?.[estado] ?? 0) > 0).map((estado) => (
+                  {estaEnElMes && ESTADOS_CON_INDICADOR.filter((estado) => (resumenDia?.[estado] ?? 0) > 0).map((estado) => (
                     <span
                       key={estado}
                       className={`h-1 w-1 rounded-full ${CLASES_PUNTO_ESTADO[estado]}`}

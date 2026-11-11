@@ -109,6 +109,9 @@ export default function TurnoManager({
   const clavePreferenciaBarbero = mostrarFiltroBarbero && session?.user?.id
     ? `mayoraz-admin-turno-barbero-v1:${session.user.id}`
     : null;
+  const [preferenciaBarberoLista, setPreferenciaBarberoLista] = useState(
+    !clavePreferenciaBarbero,
+  );
 
   const turnosRef = useRef(turnosIniciales);
   const cambiosDuranteCargaRef = useRef(new Map<string, TurnoListado>());
@@ -174,19 +177,21 @@ export default function TurnoManager({
 
     try {
       const barberoGuardado = window.localStorage.getItem(clavePreferenciaBarbero);
-      if (barberoGuardado === null) return;
-
-      const esBarberoDisponible = barberosFiltro.some(
-        (barbero) => barbero.id === barberoGuardado,
-      );
-      if (barberoGuardado === "" || esBarberoDisponible) {
-        setBarberoId(barberoGuardado);
-        setPaginaActual(1);
-      } else {
-        window.localStorage.removeItem(clavePreferenciaBarbero);
+      if (barberoGuardado !== null) {
+        const esBarberoDisponible = barberosFiltro.some(
+          (barbero) => barbero.id === barberoGuardado,
+        );
+        if (barberoGuardado === "" || esBarberoDisponible) {
+          setBarberoId(barberoGuardado);
+          setPaginaActual(1);
+        } else {
+          window.localStorage.removeItem(clavePreferenciaBarbero);
+        }
       }
     } catch {
       // El filtro sigue funcionando en memoria si el navegador bloquea localStorage.
+    } finally {
+      setPreferenciaBarberoLista(true);
     }
   }, [barberosFiltro, clavePreferenciaBarbero]);
 
@@ -310,12 +315,21 @@ export default function TurnoManager({
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             {mostrarFiltroBarbero && (
-              <SelectorBarberoTurnos
-                barberos={barberosFiltro}
-                barberoIdPropio={barberoIdInicial}
-                valor={barberoId}
-                onChange={cambiarBarbero}
-              />
+              preferenciaBarberoLista ? (
+                <SelectorBarberoTurnos
+                  barberos={barberosFiltro}
+                  barberoIdPropio={barberoIdInicial}
+                  valor={barberoId}
+                  onChange={cambiarBarbero}
+                />
+              ) : (
+                <span
+                  role="status"
+                  className="flex h-9 items-center rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)] px-3 text-sm text-[var(--admin-texto-muted)]"
+                >
+                  Restaurando selección…
+                </span>
+              )
             )}
             <TurnosFiltros
               estado={filtroEstado}
@@ -345,40 +359,38 @@ export default function TurnoManager({
           </div>
         )}
         {vistaAgendaCompleta ? (
-          <div className="min-h-0 flex-1 overflow-y-auto pr-1 md:overflow-hidden">
-            <div className="grid grid-cols-1 gap-4 md:h-full md:grid-cols-[minmax(250px,2fr)_minmax(0,3fr)]">
-              <aside className="min-w-0 md:min-h-0 md:overflow-y-auto md:pr-1">
-                <CalendarioMensualTurnos
-                  fecha={fecha}
-                  barberoId={barberoId}
-                  estadoFiltro={filtroEstado}
-                  turnos={turnos}
-                  cargandoTurnos={cargandoInicial}
-                  onSeleccionar={cambiarFecha}
+          <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[auto_minmax(0,1fr)] gap-4 pr-1 lg:grid-cols-[minmax(250px,2fr)_minmax(0,3fr)] lg:grid-rows-1 lg:overflow-hidden">
+            <aside className="min-w-0 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
+              <CalendarioMensualTurnos
+                fecha={fecha}
+                barberoId={barberoId}
+                estadoFiltro={filtroEstado}
+                turnos={turnos}
+                cargandoTurnos={cargandoInicial}
+                onSeleccionar={cambiarFecha}
+              />
+            </aside>
+            <section
+              aria-label="Turnos del día seleccionado"
+              className="flex min-h-0 min-w-0 flex-col overflow-hidden"
+            >
+              <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+                <TurnoList
+                  turnos={turnosVisibles}
+                  session={session}
+                  cargandoInicial={cargandoInicial}
+                  tieneMas={paginaActual < totalPaginas}
+                  onCargarMas={cargarMas}
+                  onEstadoActualizado={actualizarEstadoTurno}
+                  whatsappPhone={whatsappPhone}
+                  datosTransferencia={datosTransferencia}
+                  alcanceCacheTurnos={alcanceCacheTurnos}
+                  onTurnoActualizado={actualizarTurnoLocal}
+                  modoCronologicoCompacto
+                  mensajeVacio="No hay turnos para esta fecha y estos filtros."
                 />
-              </aside>
-              <section
-                aria-label="Turnos del día seleccionado"
-                className="flex min-w-0 flex-col md:min-h-0 md:overflow-hidden"
-              >
-                <div className="md:min-h-0 md:flex-1 md:overflow-y-auto md:pr-1">
-                  <TurnoList
-                    turnos={turnosVisibles}
-                    session={session}
-                    cargandoInicial={cargandoInicial}
-                    tieneMas={paginaActual < totalPaginas}
-                    onCargarMas={cargarMas}
-                    onEstadoActualizado={actualizarEstadoTurno}
-                    whatsappPhone={whatsappPhone}
-                    datosTransferencia={datosTransferencia}
-                    alcanceCacheTurnos={alcanceCacheTurnos}
-                    onTurnoActualizado={actualizarTurnoLocal}
-                    modoCronologicoCompacto
-                    mensajeVacio="No hay turnos para esta fecha y estos filtros."
-                  />
-                </div>
-              </section>
-            </div>
+              </div>
+            </section>
           </div>
         ) : (
           <div className="min-h-0 flex-1 overflow-y-auto pr-1">
