@@ -40,6 +40,8 @@ export default function SelectorClienteReserva({
         valor={selectedUserId}
         onChange={onCambiar}
         obligatorio
+        buscable
+        placeholder="Seleccionar cliente..."
         claseBoton={claseCampo}
       />
       {!esEdicion && selectedUserId === "nuevo" && (
