@@ -37,7 +37,6 @@ export default async function AdminTurnoPage() {
     <div className="h-full min-h-0">
       <TurnoManager
         turnosIniciales={[]}
-        totalPaginasInicial={1}
         cargarTurnosAlMontar
         session={session}
         initialServicios={servicios}

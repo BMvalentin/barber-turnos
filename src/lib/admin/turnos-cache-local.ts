@@ -4,10 +4,12 @@ import { z } from "zod";
 import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
 import type { TurnoListado } from "@/types/turno";
 
-const PREFIJO_CACHE = "mayoraz-admin-turnos-v1:";
-const CLAVE_ALCANCE_ACTIVO = "mayoraz-admin-turnos-alcance-v1";
-const VIGENCIA_CACHE_MS = 2 * 60 * 1000;
-const MAX_CONSULTAS_CACHEADAS = 40;
+const PREFIJO_CACHE = "mayoraz-admin-turnos-v2:";
+const PREFIJO_CACHE_ANTERIOR = "mayoraz-admin-turnos-v1:";
+const CLAVE_ALCANCE_ACTIVO = "mayoraz-admin-turnos-alcance-v2";
+const CLAVE_ALCANCE_ANTERIOR = "mayoraz-admin-turnos-alcance-v1";
+const VIGENCIA_CACHE_MS = 10 * 60 * 1000;
+const MAX_TURNOS_CACHEADOS = 25000;
 
 const esquemaUsuario = z.object({
   id: z.string(),
@@ -39,30 +41,15 @@ const esquemaTurno = z.object({
   barbero: z.object({ id: z.string(), nombre: z.string() }),
 });
 
-const esquemaConsulta = z.object({
-  clave: z.string(),
-  guardadaEn: z.number().finite(),
-  totalPaginas: z.number().int().positive(),
-  pagina: z.number().int().positive(),
-  turnos: z.array(esquemaTurno).max(100),
-});
-
 const esquemaCache = z.object({
-  version: z.literal(1),
+  version: z.literal(2),
   alcance: z.string(),
-  consultas: z.array(esquemaConsulta).max(MAX_CONSULTAS_CACHEADAS),
+  guardadaEn: z.number().finite(),
+  turnos: z.array(esquemaTurno).max(MAX_TURNOS_CACHEADOS),
 });
 
-type ConsultaCacheada = z.infer<typeof esquemaConsulta>;
 type CacheTurnos = z.infer<typeof esquemaCache>;
 type TurnoCacheado = z.infer<typeof esquemaTurno>;
-
-export type FiltrosCacheTurnos = {
-  pagina: number;
-  estado: string;
-  fecha: string;
-  barberoId: string;
-};
 
 export type ParcheTurnoCache = Partial<Pick<TurnoListado,
   | "estado"
@@ -80,51 +67,49 @@ export type ParcheTurnoCache = Partial<Pick<TurnoListado,
 
 export type ResultadoCacheTurnos = {
   turnos: TurnoListado[];
-  totalPaginas: number;
-  pagina: number;
+  vigente: boolean;
 };
-
-function claveConsulta(filtros: FiltrosCacheTurnos): string {
-  return JSON.stringify([
-    filtros.pagina,
-    filtros.estado,
-    filtros.fecha,
-    filtros.barberoId,
-  ]);
-}
 
 function claveAlcance(alcance: string): string {
   return `${PREFIJO_CACHE}${encodeURIComponent(alcance)}`;
 }
 
 function prepararAlcance(alcance: string): void {
-  const alcanceAnterior = window.localStorage.getItem(CLAVE_ALCANCE_ACTIVO);
+  const almacenamiento = window.localStorage;
+  const alcanceAnterior = almacenamiento.getItem(CLAVE_ALCANCE_ACTIVO);
   if (alcanceAnterior === alcance) return;
 
-  for (let indice = window.localStorage.length - 1; indice >= 0; indice -= 1) {
-    const clave = window.localStorage.key(indice);
-    if (clave?.startsWith(PREFIJO_CACHE)) window.localStorage.removeItem(clave);
+  for (let indice = almacenamiento.length - 1; indice >= 0; indice -= 1) {
+    const clave = almacenamiento.key(indice);
+    if (
+      clave?.startsWith(PREFIJO_CACHE) ||
+      clave?.startsWith(PREFIJO_CACHE_ANTERIOR)
+    ) {
+      almacenamiento.removeItem(clave);
+    }
   }
-  window.localStorage.setItem(CLAVE_ALCANCE_ACTIVO, alcance);
+  almacenamiento.removeItem(CLAVE_ALCANCE_ANTERIOR);
+  almacenamiento.setItem(CLAVE_ALCANCE_ACTIVO, alcance);
 }
 
 function leerCache(alcance: string): CacheTurnos | null {
   try {
     prepararAlcance(alcance);
-    const texto = window.localStorage.getItem(claveAlcance(alcance));
+    const clave = claveAlcance(alcance);
+    const texto = window.localStorage.getItem(clave);
     if (!texto) return null;
 
     let valor: unknown;
     try {
       valor = JSON.parse(texto);
     } catch {
-      window.localStorage.removeItem(claveAlcance(alcance));
+      window.localStorage.removeItem(clave);
       return null;
     }
 
     const resultado = esquemaCache.safeParse(valor);
     if (!resultado.success || resultado.data.alcance !== alcance) {
-      window.localStorage.removeItem(claveAlcance(alcance));
+      window.localStorage.removeItem(clave);
       return null;
     }
     return resultado.data;
@@ -138,15 +123,12 @@ function guardarCache(alcance: string, cache: CacheTurnos): void {
     prepararAlcance(alcance);
     window.localStorage.setItem(claveAlcance(alcance), JSON.stringify(cache));
   } catch {
-    // El listado sigue funcionando si el navegador bloquea o llena localStorage.
+    // La vista funciona en memoria si el navegador bloquea o llena localStorage.
   }
 }
 
 function convertirTurno(turno: TurnoCacheado): TurnoListado {
-  return {
-    ...turno,
-    horarioReservado: new Date(turno.horarioReservado),
-  };
+  return { ...turno, horarioReservado: new Date(turno.horarioReservado) };
 }
 
 function serializarTurno(turno: TurnoListado): TurnoCacheado {
@@ -158,43 +140,31 @@ function serializarTurno(turno: TurnoListado): TurnoCacheado {
   };
 }
 
-export function leerConsultaTurnosCacheLocal(
-  alcance: string,
-  filtros: FiltrosCacheTurnos,
-): ResultadoCacheTurnos | null {
+function ordenarTurnosCacheados(turnos: TurnoCacheado[]): TurnoCacheado[] {
+  return [...turnos].sort(
+    (primero, segundo) =>
+      new Date(segundo.horarioReservado).getTime() - new Date(primero.horarioReservado).getTime(),
+  );
+}
+
+export function leerTurnosCacheLocal(alcance: string): ResultadoCacheTurnos | null {
   const cache = leerCache(alcance);
-  const consulta = cache?.consultas.find((entrada) => entrada.clave === claveConsulta(filtros));
-  if (!consulta || Date.now() - consulta.guardadaEn > VIGENCIA_CACHE_MS) return null;
+  if (!cache) return null;
 
   return {
-    turnos: consulta.turnos.map(convertirTurno),
-    totalPaginas: consulta.totalPaginas,
-    pagina: consulta.pagina,
+    turnos: cache.turnos.map(convertirTurno),
+    vigente: Date.now() - cache.guardadaEn <= VIGENCIA_CACHE_MS,
   };
 }
 
-export function guardarConsultaTurnosCacheLocal(
-  alcance: string,
-  filtros: FiltrosCacheTurnos,
-  resultado: ResultadoCacheTurnos,
-): void {
-  const clave = claveConsulta(filtros);
-  const consulta = esquemaConsulta.safeParse({
-    clave,
+export function guardarTurnosCacheLocal(alcance: string, turnos: TurnoListado[]): void {
+  const resultado = esquemaCache.safeParse({
+    version: 2,
+    alcance,
     guardadaEn: Date.now(),
-    totalPaginas: Math.max(1, resultado.totalPaginas),
-    pagina: resultado.pagina,
-    turnos: resultado.turnos.map(serializarTurno),
+    turnos: ordenarTurnosCacheados(turnos.map(serializarTurno)),
   });
-  if (!consulta.success) return;
-
-  const cacheActual = leerCache(alcance);
-  const consultas: ConsultaCacheada[] = [
-    consulta.data,
-    ...(cacheActual?.consultas.filter((entrada) => entrada.clave !== clave) ?? []),
-  ].slice(0, MAX_CONSULTAS_CACHEADAS);
-
-  guardarCache(alcance, { version: 1, alcance, consultas });
+  if (resultado.success) guardarCache(alcance, resultado.data);
 }
 
 export function actualizarTurnoCacheLocal(
@@ -205,36 +175,60 @@ export function actualizarTurnoCacheLocal(
   const cache = leerCache(alcance);
   if (!cache) return;
 
-  const consultas = cache.consultas.map((consulta) => {
-    let cambio = false;
-    const turnos = consulta.turnos.map((turno) => {
-      if (turno.id !== id) return turno;
-      cambio = true;
-      return esquemaTurno.parse({
-        ...turno,
-        ...parche,
-        ...(parche.horarioReservado !== undefined
-          ? { horarioReservado: new Date(parche.horarioReservado).toISOString() }
-          : {}),
-        ...(parche.precioCongelado !== undefined
-          ? { precioCongelado: Number(parche.precioCongelado) }
-          : {}),
-        ...(parche.seniaCongelada !== undefined
-          ? { seniaCongelada: Number(parche.seniaCongelada) }
-          : {}),
-      });
+  let encontrado = false;
+  const turnos = cache.turnos.map((turno) => {
+    if (turno.id !== id) return turno;
+    encontrado = true;
+    return esquemaTurno.parse({
+      ...turno,
+      ...parche,
+      ...(parche.horarioReservado !== undefined
+        ? { horarioReservado: new Date(parche.horarioReservado).toISOString() }
+        : {}),
+      ...(parche.precioCongelado !== undefined
+        ? { precioCongelado: Number(parche.precioCongelado) }
+        : {}),
+      ...(parche.seniaCongelada !== undefined
+        ? { seniaCongelada: Number(parche.seniaCongelada) }
+        : {}),
     });
-    return cambio ? { ...consulta, guardadaEn: Date.now(), turnos } : consulta;
   });
 
-  guardarCache(alcance, { ...cache, consultas });
+  if (encontrado) {
+    guardarCache(alcance, {
+      ...cache,
+      guardadaEn: Date.now(),
+      turnos: ordenarTurnosCacheados(turnos),
+    });
+  }
+}
+
+export function insertarTurnoCacheLocal(alcance: string, turno: TurnoListado): void {
+  const cache = leerCache(alcance);
+  if (!cache) return;
+
+  const turnos = ordenarTurnosCacheados([
+    serializarTurno(turno),
+    ...cache.turnos.filter((actual) => actual.id !== turno.id),
+  ]);
+  const resultado = esquemaCache.safeParse({
+    ...cache,
+    guardadaEn: Date.now(),
+    turnos,
+  });
+  if (resultado.success) guardarCache(alcance, resultado.data);
 }
 
 export function limpiarCacheTurnosLocal(): void {
   try {
     for (let indice = window.localStorage.length - 1; indice >= 0; indice -= 1) {
       const clave = window.localStorage.key(indice);
-      if (clave?.startsWith(PREFIJO_CACHE) || clave === CLAVE_ALCANCE_ACTIVO) {
+      if (
+        clave?.startsWith(PREFIJO_CACHE) ||
+        clave?.startsWith(PREFIJO_CACHE_ANTERIOR) ||
+        clave === CLAVE_ALCANCE_ACTIVO ||
+        clave === CLAVE_ALCANCE_ANTERIOR
+      ) {
         window.localStorage.removeItem(clave);
       }
     }

@@ -25,7 +25,6 @@ export default async function TurnoPage() {
       <div className="container mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col">
         <TurnoManager
           turnosIniciales={[]}
-          totalPaginasInicial={1}
           cargarTurnosAlMontar
           session={session}
           initialServicios={servicios}

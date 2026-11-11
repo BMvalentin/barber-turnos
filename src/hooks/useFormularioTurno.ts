@@ -2,7 +2,7 @@
 
 import { createTurno } from "@/actions/turnos/crear.actions";
 import { actualizarTurno } from "@/actions/turnos/estado.actions";
-import type { TurnoCreado, TurnoListado } from "@/types/turno";
+import type { TurnoConDetalle, TurnoCreado, TurnoListado } from "@/types/turno";
 import { ActionStateInicial } from "@/types/action-state";
 import { useActionState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -23,8 +23,8 @@ export type ParametrosFormularioTurno = ParametrosDatosTurno & {
   onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
   datosTransferencia?: DatosTransferencia;
   turnoInicial?: TurnoListado | null;
-  /** Callback opcional que se invoca al crear un turno con éxito, para refrescar el listado. */
-  onTurnoCreado?: () => void;
+  /** Callback para agregar el turno recién creado a la colección local. */
+  onTurnoCreado?: (turno: TurnoConDetalle) => void;
 };
 
 const estadoInicial = ActionStateInicial;
@@ -129,7 +129,7 @@ export function useFormularioTurno({
     setClienteApellido("");
     setEstadoPago(ESTADOS_PAGO[0]);
 
-    onTurnoCreado?.();
+    onTurnoCreado?.(state.data);
 
     if (nuevoTurno.estado === ESTADOS_TURNO[1]) {
       toast.success("Turno confirmado", {

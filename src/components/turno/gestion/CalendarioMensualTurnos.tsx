@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   eachDayOfInterval,
   endOfMonth,
@@ -13,7 +13,6 @@ import {
 } from "date-fns";
 import { es } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { obtenerResumenCalendario } from "@/actions/turnos/obtener-resumen-calendario.actions";
 import type {
   EstadoTurnoCalendario,
   ResumenDiaCalendario,
@@ -21,12 +20,14 @@ import type {
 } from "@/actions/turnos/obtener-resumen-calendario.actions";
 import { ESTADOS_TURNO } from "@/lib/constants";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
+import type { TurnoListado } from "@/types/turno";
 
 interface Props {
   fecha: string;
   barberoId: string;
   estadoFiltro: string;
-  versionActualizacion: number;
+  turnos: TurnoListado[];
+  cargandoTurnos: boolean;
   onSeleccionar: (fecha: string) => void;
 }
 
@@ -52,6 +53,16 @@ const FORMATO_FECHA_LARGA = new Intl.DateTimeFormat("es-AR", {
   month: "long",
   year: "numeric",
 });
+
+function crearResumenDia(): ResumenDiaCalendario {
+  return {
+    total: 0,
+    PENDIENTE: 0,
+    CONFIRMADO: 0,
+    COMPLETADO: 0,
+    CANCELADO: 0,
+  };
+}
 
 function parsearFecha(fecha: string): Date | undefined {
   const coincidencia = /^(\d{4})-(\d{2})-(\d{2})$/.exec(fecha);
@@ -97,17 +108,30 @@ export default function CalendarioMensualTurnos({
   fecha,
   barberoId,
   estadoFiltro,
-  versionActualizacion,
+  turnos,
+  cargandoTurnos,
   onSeleccionar,
 }: Props) {
   const [mesVisible, setMesVisible] = useState<Date>(() => {
     const fechaInicial = parsearFecha(fecha);
     return fechaInicial ? startOfMonth(fechaInicial) : startOfMonth(new Date());
   });
-  const [resumenMensual, setResumenMensual] = useState<ResumenMensualCalendario>({});
-  const [cargando, setCargando] = useState(true);
-  const [errorCarga, setErrorCarga] = useState(false);
-  const solicitudRef = useRef(0);
+  const resumenMensual = useMemo(() => {
+    const resumen: ResumenMensualCalendario = {};
+    const claveMesVisible = mesComoClave(mesVisible);
+
+    for (const turno of turnos) {
+      if (barberoId && turno.barberoId !== barberoId) continue;
+      const dia = obtenerFechaSola(turno.horarioReservado);
+      if (dia.slice(0, 7) !== claveMesVisible) continue;
+
+      const resumenDia = resumen[dia] ?? crearResumenDia();
+      resumenDia.total += 1;
+      resumenDia[turno.estado] += 1;
+      resumen[dia] = resumenDia;
+    }
+    return resumen;
+  }, [barberoId, mesVisible, turnos]);
 
   useEffect(() => {
     const fechaSeleccionada = parsearFecha(fecha);
@@ -116,34 +140,6 @@ export default function CalendarioMensualTurnos({
       isSameMonth(mesActual, fechaSeleccionada) ? mesActual : startOfMonth(fechaSeleccionada),
     );
   }, [fecha]);
-
-  useEffect(() => {
-    const id = ++solicitudRef.current;
-    setCargando(true);
-    setErrorCarga(false);
-    obtenerResumenCalendario(mesComoClave(mesVisible), barberoId || undefined)
-      .then((resultado) => {
-        if (id !== solicitudRef.current) return;
-        if (resultado.success && resultado.data) {
-          setResumenMensual(resultado.data);
-          return;
-        }
-        setResumenMensual({});
-        setErrorCarga(true);
-      })
-      .catch(() => {
-        if (id !== solicitudRef.current) return;
-        setResumenMensual({});
-        setErrorCarga(true);
-      })
-      .finally(() => {
-        if (id === solicitudRef.current) setCargando(false);
-      });
-
-    return () => {
-      solicitudRef.current += 1;
-    };
-  }, [barberoId, mesVisible, versionActualizacion]);
 
   const dias = eachDayOfInterval({
     start: startOfWeek(startOfMonth(mesVisible), { weekStartsOn: 0 }),
@@ -161,7 +157,7 @@ export default function CalendarioMensualTurnos({
     <div className="space-y-3">
       <section
         aria-label="Calendario mensual de turnos"
-        aria-busy={cargando}
+        aria-busy={cargandoTurnos}
         className="rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-3.5 sm:p-4"
       >
         <div className="flex items-center justify-between gap-2">
@@ -209,12 +205,10 @@ export default function CalendarioMensualTurnos({
             const seleccionado = fechaSeleccionada ? isSameDay(dia, fechaSeleccionada) : false;
             const esHoy = clave === fechaHoy;
             const deshabilitado =
-              !estaEnElMes || cargando || errorCarga || !tieneTurnos;
-            const descripcionDia = cargando
+              !estaEnElMes || cargandoTurnos || !tieneTurnos;
+            const descripcionDia = cargandoTurnos
               ? "Cargando turnos"
-              : errorCarga
-                ? "No se pudieron cargar los turnos"
-                : descripcionIndicadores(resumenDia, estadosVisibles);
+              : descripcionIndicadores(resumenDia, estadosVisibles);
             const etiqueta = `${capitalizar(FORMATO_FECHA_LARGA.format(dia))}. ${descripcionDia}.`;
 
             return (
@@ -227,10 +221,10 @@ export default function CalendarioMensualTurnos({
                 onClick={() => onSeleccionar(clave)}
                 className={`flex h-10 w-full flex-col items-center justify-center rounded-lg border border-transparent text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] sm:h-11 sm:text-sm ${
                   seleccionado
-                    ? tieneTurnos && !cargando && !errorCarga
+                      ? tieneTurnos && !cargandoTurnos
                       ? "bg-[var(--page-primary)] font-bold text-[var(--page-primary-foreground)] ring-1 ring-[var(--admin-border-fuerte)]"
                       : "bg-[var(--admin-surface)] font-semibold text-[var(--admin-texto-secundario)] ring-1 ring-[var(--admin-border-fuerte)]"
-                    : estaEnElMes && tieneTurnos && !cargando && !errorCarga
+                    : estaEnElMes && tieneTurnos && !cargandoTurnos
                       ? "text-[var(--admin-texto-primario)] hover:bg-[var(--page-primary-20)]"
                       : "cursor-default text-[var(--admin-texto-muted)] opacity-30"
                 } ${esHoy && !seleccionado ? "ring-1 ring-inset ring-[var(--admin-border-fuerte)]" : ""}`}
@@ -249,11 +243,6 @@ export default function CalendarioMensualTurnos({
           })}
         </div>
 
-        {errorCarga && (
-          <p role="status" className="mt-2 text-xs text-[var(--admin-texto-muted)]">
-            No se pudo cargar la información del calendario.
-          </p>
-        )}
       </section>
 
     </div>
