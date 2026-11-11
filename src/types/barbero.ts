@@ -16,6 +16,8 @@ export type Barbero = {
   estado: boolean;
 };
 
+export type BarberoParaSelector = Pick<Barbero, "id" | "nombre">;
+
 /* Barbero listado en la grilla del admin, con sus servicios y horarios
    (datos de admin/barbero/page.tsx: `dia` seleccionado mínimo). */
 export type BarberoListado = {

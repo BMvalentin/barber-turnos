@@ -13,6 +13,7 @@ import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
 import type { DatosTransferencia } from "@/types/pago";
+import type { ParcheTurnoCache } from "@/lib/admin/turnos-cache-local";
 
 interface Props {
   turnos: TurnoListado[];
@@ -22,7 +23,9 @@ interface Props {
   tieneMas?: boolean;
   errorCargaMas?: boolean;
   onCargarMas?: () => void;
-  onEstadoActualizado?: (id: string, nuevoEstado: string) => void;
+  onEstadoActualizado?: (id: string, nuevoEstado: TurnoListado["estado"]) => void;
+  onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
+  alcanceCacheTurnos?: string;
   whatsappPhone?: string;
   datosTransferencia?: DatosTransferencia;
   /** Muestra la fecha de cada día aunque todos los turnos sean del mismo día. */
@@ -54,6 +57,8 @@ export default function TurnoList({
   errorCargaMas = false,
   onCargarMas = () => {},
   onEstadoActualizado = () => {},
+  onTurnoActualizado,
+  alcanceCacheTurnos = "",
   whatsappPhone = "",
   datosTransferencia,
   mostrarFechas = false,
@@ -151,6 +156,8 @@ export default function TurnoList({
               onConfirmar={solicitarConfirmar}
               whatsappPhone={whatsappPhone}
               datosTransferencia={datosTransferencia}
+              alcanceCacheTurnos={alcanceCacheTurnos}
+              onTurnoActualizado={onTurnoActualizado}
               modoCompacto={modoCronologicoCompacto}
             />
           </section>

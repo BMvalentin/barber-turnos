@@ -18,11 +18,13 @@ const initialState: ActionState<ServicioCreado> = ActionStateInicial;
 interface EditServicioModalProps {
   servicio: Servicio;
   onClose: () => void;
+  onServicioActualizado?: (servicio: ServicioCreado) => void;
 }
 
 export default function EditServicioModal({
   servicio,
   onClose,
+  onServicioActualizado,
 }: EditServicioModalProps) {
   // Estado para la acción del servidor
   const [state, formAction, isPending] = useActionState(
@@ -34,7 +36,10 @@ export default function EditServicioModal({
   const { retroalimentar } = useRetroalimentacionAccion({
     mensajeExito: "Servicio actualizado",
     descripcionExito: "El servicio se ha actualizado correctamente.",
-    onExito: onClose,
+    onExito: () => {
+      if (state.data) onServicioActualizado?.(state.data);
+      onClose();
+    },
   });
 
   // Estados locales para controlar los inputs (opcional, pero útil para validaciones inmediatas si las tuvieras)

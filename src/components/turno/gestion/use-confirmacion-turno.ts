@@ -6,12 +6,13 @@ import { completedTurno } from "@/actions/turnos/completar.actions";
 import { confirmarTurno } from "@/actions/turnos/confirmar.actions";
 import { ESTADOS_TURNO } from "@/lib/constants";
 import type { ActionState } from "@/types/action-state";
+import type { TurnoListado } from "@/types/turno";
 
 type AccionConfirmacion = "cancelar" | "completar" | "confirmar";
 
 type Parametros = {
   alRetroalimentar: (estado: ActionState, titulo?: string, descripcion?: string) => Promise<ActionState>;
-  alActualizarEstado: (id: string, nuevoEstado: string) => void;
+  alActualizarEstado: (id: string, nuevoEstado: TurnoListado["estado"]) => void;
 };
 
 export function useConfirmacionTurno({

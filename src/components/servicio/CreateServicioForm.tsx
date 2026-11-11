@@ -18,10 +18,12 @@ const initialState: ActionState<ServicioCreado> = ActionStateInicial;
 
 type CreateServicioFormProps = {
   onClose: () => void;
+  onServicioCreado?: (servicio: ServicioCreado) => void;
 };
 
 export default function CreateServicioForm({
   onClose,
+  onServicioCreado,
 }: CreateServicioFormProps) {
   const [isPending, setIsPending] = useState(false);
   const [state, setState] = useState<ActionState<ServicioCreado>>(initialState);
@@ -41,6 +43,7 @@ export default function CreateServicioForm({
     mensajeExito: "Servicio creado",
     descripcionExito: "El servicio se ha creado correctamente.",
     onExito: () => {
+      if (state.data) onServicioCreado?.(state.data);
       formRef.current?.reset();
       limpiar();
       onClose();

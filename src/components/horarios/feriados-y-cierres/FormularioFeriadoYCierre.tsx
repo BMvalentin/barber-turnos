@@ -5,10 +5,10 @@ import { createExcepcion } from "@/actions/excepciones/crear.actions";
 import BotonSubmitFormStatus from "@/components/ui/boton-submit-form-status";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { ActionStateInicialSimple } from "@/types/action-state";
-import type { Barbero } from "@/types/barbero";
+import type { BarberoParaSelector } from "@/types/barbero";
 
 type FormularioFeriadoYCierreProps = {
-  barberos: Barbero[];
+  barberos: BarberoParaSelector[];
 };
 
 export function FormularioFeriadoYCierre({ barberos }: FormularioFeriadoYCierreProps) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getTurnos } from "@/actions/turnos/listar.actions";
 import CargadorModalGestionTurno from "@/components/turno/reserva/CargadorModalGestionTurno";
 import DatosReservaProveedor from "@/contextos/DatosReservaProveedor";
@@ -11,6 +11,13 @@ import NavegacionFecha from "./NavegacionFecha";
 import SelectorBarberoTurnos from "./SelectorBarberoTurnos";
 import { esAdmin } from "@/lib/seguridad/es-admin";
 import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
+import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
+import {
+  actualizarTurnoCacheLocal,
+  guardarConsultaTurnosCacheLocal,
+  leerConsultaTurnosCacheLocal,
+} from "@/lib/admin/turnos-cache-local";
+import type { ParcheTurnoCache } from "@/lib/admin/turnos-cache-local";
 import type {
   BarberoData,
   RelacionData,
@@ -47,8 +54,45 @@ function deduplicarTurnos(lista: TurnoListado[]): TurnoListado[] {
   return Array.from(porId.values());
 }
 
-function buscarPagina(pagina: number, estado: string, fecha: string, barberoId: string) {
-  return getTurnos(pagina, estado === "TODOS" ? undefined : estado, fecha || undefined, barberoId || undefined);
+async function buscarPagina(
+  pagina: number,
+  estado: string,
+  fecha: string,
+  barberoId: string,
+  alcanceCache: string,
+) {
+  const filtrosCache = { pagina, estado, fecha, barberoId };
+  const cache = alcanceCache
+    ? leerConsultaTurnosCacheLocal(alcanceCache, filtrosCache)
+    : null;
+
+  if (cache) {
+    return {
+      success: true as const,
+      data: cache.turnos.filter((turno) =>
+        (estado === "TODOS" || turno.estado === estado) &&
+        (!fecha || obtenerFechaSola(turno.horarioReservado) === fecha) &&
+        (!barberoId || turno.barberoId === barberoId),
+      ),
+      totalPages: cache.totalPaginas,
+      currentPage: cache.pagina,
+    };
+  }
+
+  const resultado = await getTurnos(
+    pagina,
+    estado === "TODOS" ? undefined : estado,
+    fecha || undefined,
+    barberoId || undefined,
+  );
+  if (alcanceCache && resultado.success && resultado.data) {
+    guardarConsultaTurnosCacheLocal(alcanceCache, filtrosCache, {
+      turnos: resultado.data,
+      totalPaginas: resultado.totalPages ?? 1,
+      pagina: resultado.currentPage ?? pagina,
+    });
+  }
+  return resultado;
 }
 
 export default function TurnoManager({
@@ -80,6 +124,9 @@ export default function TurnoManager({
   const [cargandoInicial, setCargandoInicial] = useState(cargarTurnosAlMontar);
   const [cargandoMas, setCargandoMas] = useState(false);
   const [errorCargaMas, setErrorCargaMas] = useState(false);
+  const alcanceCacheTurnos = session?.user?.id
+    ? `${session.user.id}|${session.user.role ?? "USER"}|${barberoIdInicial}`
+    : "";
 
   const solicitudRef = useRef(0);
   const cargaInicialSolicitadaRef = useRef(false);
@@ -92,7 +139,7 @@ export default function TurnoManager({
     setCargandoInicial(true);
     setErrorCargaMas(false);
 
-    void buscarPagina(1, filtroInicial, "", barberoId)
+    void buscarPagina(1, filtroInicial, fecha, barberoId, alcanceCacheTurnos)
       .then((resultado) => {
         if (id !== solicitudRef.current) return;
         if (resultado.success && resultado.data) {
@@ -114,13 +161,13 @@ export default function TurnoManager({
       .finally(() => {
         if (id === solicitudRef.current) setCargandoInicial(false);
       });
-  }, [barberoId, cargarTurnosAlMontar, filtroInicial]);
+  }, [alcanceCacheTurnos, barberoId, cargarTurnosAlMontar, fecha, filtroInicial]);
 
   const reiniciarBusqueda = async (nuevoEstado: string, nuevaFecha: string, nuevoBarberoId = barberoId) => {
     const id = ++solicitudRef.current;
     setCargandoInicial(true);
     setErrorCargaMas(false);
-    const resultado = await buscarPagina(1, nuevoEstado, nuevaFecha, nuevoBarberoId);
+    const resultado = await buscarPagina(1, nuevoEstado, nuevaFecha, nuevoBarberoId, alcanceCacheTurnos);
     if (id !== solicitudRef.current) return;
     setCargandoInicial(false);
     if (resultado.success && resultado.data) {
@@ -134,8 +181,8 @@ export default function TurnoManager({
     }
   };
 
-  // Cambiar el filtro reinicia la consulta: se descarta la lista anterior para
-  // no mostrar turnos de la fecha/estado previos mientras llega la respuesta.
+  // Se oculta la lista anterior mientras se muestra el resultado del nuevo filtro;
+  // cada combinación consultada permanece guardada para reutilizarla al volver.
   const cambiarEstado = (nuevoEstado: string) => {
     if (nuevoEstado === filtroEstado) return;
     setFiltroEstado(nuevoEstado);
@@ -162,7 +209,7 @@ export default function TurnoManager({
     const id = ++solicitudRef.current;
     setCargandoMas(true);
     setErrorCargaMas(false);
-    const resultado = await buscarPagina(paginaActual + 1, filtroEstado, fecha, barberoId);
+    const resultado = await buscarPagina(paginaActual + 1, filtroEstado, fecha, barberoId, alcanceCacheTurnos);
     if (id !== solicitudRef.current) return;
     setCargandoMas(false);
     if (resultado.success && resultado.data) {
@@ -174,24 +221,32 @@ export default function TurnoManager({
     }
   };
 
-  const actualizarEstadoTurno = (idTurno: string, nuevoEstado: string) => {
+  const actualizarTurnoLocal = useCallback((idTurno: string, parche: ParcheTurnoCache) => {
+    actualizarTurnoCacheLocal(alcanceCacheTurnos, idTurno, parche);
     setTurnos((prev) =>
       prev
-        .map((turno) =>
-          turno.id === idTurno
-            ? {
-                ...turno,
-                estado: nuevoEstado as TurnoListado["estado"],
-                ...(nuevoEstado === ESTADOS_TURNO[3]
-                  ? { estadoPago: ESTADOS_PAGO[4] }
-                  : {}),
-              }
-            : turno,
-        )
-        .filter((turno) => filtroEstado === "TODOS" || turno.estado === filtroEstado),
+        .map((turno) => turno.id === idTurno ? { ...turno, ...parche } : turno)
+        .filter((turno) =>
+          (filtroEstado === "TODOS" || turno.estado === filtroEstado) &&
+          (!fecha || obtenerFechaSola(turno.horarioReservado) === fecha) &&
+          (!barberoId || turno.barberoId === barberoId),
+        ),
     );
+  }, [alcanceCacheTurnos, barberoId, fecha, filtroEstado]);
+
+  const actualizarEstadoTurno = useCallback((idTurno: string, nuevoEstado: TurnoListado["estado"]) => {
+    const turnoActual = turnos.find((turno) => turno.id === idTurno);
+    const nuevoEstadoPago = nuevoEstado === ESTADOS_TURNO[3]
+      ? ESTADOS_PAGO[4]
+      : nuevoEstado === ESTADOS_TURNO[1]
+        ? turnoActual?.tipoPago === "TOTAL" ? ESTADOS_PAGO[2] : ESTADOS_PAGO[1]
+        : undefined;
+    actualizarTurnoLocal(idTurno, {
+      estado: nuevoEstado,
+      ...(nuevoEstadoPago ? { estadoPago: nuevoEstadoPago } : {}),
+    });
     if (vistaAgendaCompleta) setVersionCalendario((version) => version + 1);
-  };
+  }, [actualizarTurnoLocal, turnos, vistaAgendaCompleta]);
 
   const crearTurno = () => {
     if (vistaAgendaCompleta) setVersionCalendario((version) => version + 1);
@@ -225,6 +280,8 @@ export default function TurnoManager({
             initialBarberos={initialBarberos}
             initialUsuarios={initialUsuarios}
             initialRelaciones={initialRelaciones}
+            alcanceCacheTurnos={alcanceCacheTurnos}
+            onTurnoActualizado={actualizarTurnoLocal}
             whatsappPhone={whatsappPhone}
             datosTransferencia={datosTransferencia}
             onTurnoCreado={crearTurno}
@@ -279,6 +336,8 @@ export default function TurnoManager({
                   onEstadoActualizado={actualizarEstadoTurno}
                   whatsappPhone={whatsappPhone}
                   datosTransferencia={datosTransferencia}
+                  alcanceCacheTurnos={alcanceCacheTurnos}
+                  onTurnoActualizado={actualizarTurnoLocal}
                   modoCronologicoCompacto
                   mensajeVacio="No hay turnos para esta fecha y estos filtros."
                 />
@@ -302,6 +361,8 @@ export default function TurnoManager({
             onEstadoActualizado={actualizarEstadoTurno}
             whatsappPhone={whatsappPhone}
             datosTransferencia={datosTransferencia}
+            alcanceCacheTurnos={alcanceCacheTurnos}
+            onTurnoActualizado={actualizarTurnoLocal}
             mostrarFechas
           />
         </div>

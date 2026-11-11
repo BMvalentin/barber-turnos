@@ -2,23 +2,17 @@
 
 import { obtenerServiciosConBarberos } from "@/lib/consultas/obtener-servicios-con-barberos";
 import type { ActionState } from "@/types/action-state";
-import type { ServicioConBarberos } from "@/types/servicio";
+import type { Servicio } from "@/types/servicio";
+import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 
-export async function getServicios(): Promise<ActionState<ServicioConBarberos[]>> {
+export async function getServicios(): Promise<ActionState<Servicio[]>> {
   try {
+    if (!(await requerirPanel())) return { success: false, error: "No autorizado" };
     const servicios = await obtenerServiciosConBarberos();
-
-    // 💡 SOLUCIÓN: Convertimos todos los Decimal a Number nativo
-    const serviciosPlanos = servicios.map((servicio) => ({
-      ...servicio,
-      precio: Number(servicio.precio),
-      descuento: Number(servicio.descuento),
-      senia: Number(servicio.senia),
-    }));
 
     return {
       success: true,
-      data: serviciosPlanos,
+      data: servicios,
     };
   } catch (error) {
     console.error("Error al obtener servicios:", error instanceof Error ? error.message : String(error));

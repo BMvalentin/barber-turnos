@@ -12,6 +12,7 @@ import { ESTADOS_TURNO } from "@/lib/constants";
 import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
 import type { DatosTransferencia } from "@/types/pago";
+import type { ParcheTurnoCache } from "@/lib/admin/turnos-cache-local";
 
 interface Props {
   turno: TurnoListado;
@@ -21,6 +22,8 @@ interface Props {
   onConfirmar: (id: string) => void;
   whatsappPhone?: string;
   datosTransferencia?: DatosTransferencia;
+  alcanceCacheTurnos?: string;
+  onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
   mostrarHora?: boolean;
   compacto?: boolean;
 }
@@ -33,6 +36,8 @@ export default function TurnoRow({
   onConfirmar,
   whatsappPhone = "",
   datosTransferencia,
+  alcanceCacheTurnos = "",
+  onTurnoActualizado,
   mostrarHora = true,
   compacto = false,
 }: Props) {
@@ -177,6 +182,8 @@ export default function TurnoRow({
               turno={turno}
               whatsappPhone={whatsappPhone}
               datosTransferencia={datosTransferencia}
+              alcanceCacheTurnos={alcanceCacheTurnos}
+              onTurnoActualizado={onTurnoActualizado}
             />
           )}
           {ctaPrincipal}
@@ -185,6 +192,8 @@ export default function TurnoRow({
               turno={turno}
               session={session}
               onCancelar={onCancelar}
+              alcanceCacheTurnos={alcanceCacheTurnos}
+              onTurnoActualizado={onTurnoActualizado}
             />
           )}
         </div>

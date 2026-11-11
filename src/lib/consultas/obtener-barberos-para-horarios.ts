@@ -1,9 +1,10 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
 import type { BarberoParaHorarios } from "@/types/horarios";
 
-export async function obtenerBarberosParaHorarios(barberoId?: string, soloPersonal = false): Promise<BarberoParaHorarios[]> {
-  return prisma.barbero.findMany({
+const obtenerBarberosParaHorariosCacheados = unstable_cache(
+  async (barberoId: string | null, soloPersonal: boolean): Promise<BarberoParaHorarios[]> => prisma.barbero.findMany({
     where: barberoId
       ? { id: barberoId }
       : soloPersonal
@@ -24,5 +25,11 @@ export async function obtenerBarberosParaHorarios(barberoId?: string, soloPerson
       },
     },
     orderBy: { nombre: "asc" },
-  });
+  }),
+  ["barberos-para-horarios-v1"],
+  { tags: ["barberos", "dias-laborales"], revalidate: 180 },
+);
+
+export async function obtenerBarberosParaHorarios(barberoId?: string, soloPersonal = false): Promise<BarberoParaHorarios[]> {
+  return obtenerBarberosParaHorariosCacheados(barberoId ?? null, soloPersonal);
 }

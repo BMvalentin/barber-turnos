@@ -8,6 +8,7 @@ import { formatearHora } from "@/lib/utils/formatear-hora";
 import type { TurnoListado } from "@/types/turno";
 import type { Session } from "next-auth";
 import type { DatosTransferencia } from "@/types/pago";
+import type { ParcheTurnoCache } from "@/lib/admin/turnos-cache-local";
 
 interface Props {
   turnos: TurnoListado[];
@@ -17,6 +18,8 @@ interface Props {
   onConfirmar: (id: string) => void;
   whatsappPhone?: string;
   datosTransferencia?: DatosTransferencia;
+  alcanceCacheTurnos?: string;
+  onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
   modoCompacto?: boolean;
 }
 
@@ -140,6 +143,8 @@ export default function LineaTiempoTurnos({
   onConfirmar,
   whatsappPhone = "",
   datosTransferencia,
+  alcanceCacheTurnos = "",
+  onTurnoActualizado,
   modoCompacto = false,
 }: Props) {
   const medidas = useMedidasLineaTiempo();
@@ -215,6 +220,8 @@ export default function LineaTiempoTurnos({
                   onConfirmar={onConfirmar}
                   whatsappPhone={whatsappPhone}
                   datosTransferencia={datosTransferencia}
+                  alcanceCacheTurnos={alcanceCacheTurnos}
+                  onTurnoActualizado={onTurnoActualizado}
                   mostrarHora={false}
                   compacto
                 />
@@ -283,6 +290,8 @@ export default function LineaTiempoTurnos({
                         onConfirmar={onConfirmar}
                         whatsappPhone={whatsappPhone}
                         datosTransferencia={datosTransferencia}
+                        alcanceCacheTurnos={alcanceCacheTurnos}
+                        onTurnoActualizado={onTurnoActualizado}
                       />
                     </div>
                   </div>
