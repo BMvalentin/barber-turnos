@@ -23,6 +23,7 @@ interface Props {
   onConfirmar: (id: string) => void;
   whatsappPhone?: string;
   datosTransferencia?: DatosTransferencia;
+  mostrarAvisoSeniaPendiente?: boolean;
   alcanceCacheTurnos?: string;
   onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
   mostrarHora?: boolean;
@@ -37,6 +38,7 @@ export default function TurnoRow({
   onConfirmar,
   whatsappPhone = "",
   datosTransferencia,
+  mostrarAvisoSeniaPendiente = true,
   alcanceCacheTurnos = "",
   onTurnoActualizado,
   mostrarHora = true,
@@ -187,6 +189,7 @@ export default function TurnoRow({
               turno={turno}
               whatsappPhone={whatsappPhone}
               datosTransferencia={datosTransferencia}
+              mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
               alcanceCacheTurnos={alcanceCacheTurnos}
               onTurnoActualizado={onTurnoActualizado}
             />

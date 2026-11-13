@@ -9,6 +9,7 @@ import { esColorHexValido } from "@/lib/contraste/es-color-hex-valido";
 import { comprimirImagenConfiguracion } from "@/lib/imagenes/comprimir-imagen-configuracion";
 import SeccionIdentidad from "@/components/admin/config/SeccionIdentidad";
 import SeccionContacto from "@/components/admin/config/SeccionContacto";
+import SeccionAjustesPago from "@/components/admin/config/SeccionAjustesPago";
 import SeccionMediosPago from "@/components/admin/config/SeccionMediosPago";
 import SeccionApariencia from "@/components/admin/config/SeccionApariencia";
 import SeccionImagenes from "@/components/admin/config/SeccionImagenes";
@@ -29,6 +30,7 @@ interface GeneralConfigFormProps {
 }
 
 export default function GeneralConfigForm({ initialData, seccionInicial }: GeneralConfigFormProps) {
+  const esAjustesPago = seccionInicial === "ajustes-pago";
   const [isPending, startTransition] = useTransition();
   const [uploadingField, setUploadingField] = useState<NombreCampoImagen | null>(null);
 
@@ -51,6 +53,7 @@ export default function GeneralConfigForm({ initialData, seccionInicial }: Gener
     transferenciaCbu: initialData?.transferenciaCbu || "",
     transferenciaBanco: initialData?.transferenciaBanco || "",
     transferenciaActiva: initialData?.transferenciaActiva ?? true,
+    mostrarAvisoSeniaPendiente: initialData?.mostrarAvisoSeniaPendiente ?? true,
   });
 
   const primaryColor = formData.primaryColor || COLORES_TEMA_POR_DEFECTO.primario;
@@ -134,9 +137,9 @@ export default function GeneralConfigForm({ initialData, seccionInicial }: Gener
         e.preventDefault();
         guardarModuloActivo();
       }}
-      className="mt-8 space-y-10"
+      className={esAjustesPago ? "mt-0" : "mt-8 space-y-10"}
     >
-      <div className="space-y-10">
+      <div className={esAjustesPago ? "space-y-12" : "space-y-10"}>
         {seccionInicial === "informacion-general" && (
           <SeccionIdentidad
             nombre={formData.name}
@@ -152,6 +155,15 @@ export default function GeneralConfigForm({ initialData, seccionInicial }: Gener
             mapsUrl={formData.mapsUrl}
             direccion={formData.address}
             manejarCambio={manejarCambio}
+          />
+        )}
+
+        {seccionInicial === "ajustes-pago" && (
+          <SeccionAjustesPago
+            mostrarAvisoSeniaPendiente={formData.mostrarAvisoSeniaPendiente}
+            manejarCambio={(activo) =>
+              setFormData((prev) => ({ ...prev, mostrarAvisoSeniaPendiente: activo }))
+            }
           />
         )}
 

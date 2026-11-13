@@ -32,6 +32,7 @@ type DatosTurnosPanel = {
   proximos: TurnoListado[];
   whatsappPhone: string;
   datosTransferencia: DatosTransferencia;
+  mostrarAvisoSeniaPendiente: boolean;
 };
 
 function CargadorTurnosUsuario() {
@@ -124,6 +125,7 @@ export default function DashboardPanel({
             proximos: cache.proximos,
             whatsappPhone: resultadoPago.data.whatsappPhone,
             datosTransferencia: resultadoPago.data.datosTransferencia,
+            mostrarAvisoSeniaPendiente: resultadoPago.data.mostrarAvisoSeniaPendiente,
           });
         } else {
           setErrorTurnos(true);
@@ -147,6 +149,7 @@ export default function DashboardPanel({
           proximos: datosCache.proximos,
           whatsappPhone: resultadoPago.data.whatsappPhone,
           datosTransferencia: resultadoPago.data.datosTransferencia,
+          mostrarAvisoSeniaPendiente: resultadoPago.data.mostrarAvisoSeniaPendiente,
         });
       } else {
         setErrorTurnos(true);
@@ -220,6 +223,7 @@ export default function DashboardPanel({
                   initialRelaciones={initialRelaciones}
                   whatsappPhone={datosTurnos.whatsappPhone}
                   datosTransferencia={datosTurnos.datosTransferencia}
+                  mostrarAvisoSeniaPendiente={datosTurnos.mostrarAvisoSeniaPendiente}
                 />
               ) : (
                 errorTurnos ? (

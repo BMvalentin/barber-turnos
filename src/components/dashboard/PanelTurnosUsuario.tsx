@@ -29,6 +29,7 @@ type Propiedades = {
   initialRelaciones: RelacionData[];
   whatsappPhone: string;
   datosTransferencia: DatosTransferencia;
+  mostrarAvisoSeniaPendiente: boolean;
 };
 
 export default function PanelTurnosUsuario({
@@ -42,6 +43,7 @@ export default function PanelTurnosUsuario({
   initialRelaciones,
   whatsappPhone,
   datosTransferencia,
+  mostrarAvisoSeniaPendiente,
 }: Propiedades) {
   const [apartado, establecerApartado] = useState<"proximos" | "historial">("proximos");
   const [turnosProximos, establecerTurnosProximos] = useState(turnosProximosIniciales);
@@ -220,6 +222,7 @@ export default function PanelTurnosUsuario({
             initialRelaciones={initialRelaciones}
             whatsappPhone={whatsappPhone}
             datosTransferencia={datosTransferencia}
+            mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
             onTurnoCreado={actualizarTurnosTrasCrear}
             claseTrigger="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--page-primary)] px-4 py-2 text-sm font-semibold text-[var(--page-primary-foreground)] transition-colors hover:bg-[var(--page-primary-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
             contenidoTrigger={<><CalendarPlus className="h-4 w-4" aria-hidden="true" />Pedir un turno</>}
@@ -249,6 +252,7 @@ export default function PanelTurnosUsuario({
                 onTurnoActualizado={actualizarTurno}
                 whatsappPhone={whatsappPhone}
                 datosTransferencia={datosTransferencia}
+                mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
                 modoCronologicoCompacto
                 mensajeVacio={turnosProximos.length === 0 ? "No tenés próximos turnos." : "No hay turnos para este día."}
               />
@@ -267,6 +271,7 @@ export default function PanelTurnosUsuario({
             onCargarMas={cargarMas}
             whatsappPhone={whatsappPhone}
             datosTransferencia={datosTransferencia}
+            mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
             mostrarFechas
             mensajeVacio="Todavía no tenés turnos en tu historial."
           />

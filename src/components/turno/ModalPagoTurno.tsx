@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, CreditCard, Loader2, Scissors, Wallet } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CreditCard, Loader2, Scissors, Wallet } from "lucide-react";
 import type { TurnoCreado } from "@/types/turno";
 import type { TipoPago } from "@/types/mercadopago";
 import type { DatosTransferencia, MetodoPago } from "@/types/pago";
+import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
 import { formatearMoneda } from "@/lib/utils/formatear-moneda";
 import { esTransferenciaConfigurada } from "@/lib/pagos/es-transferencia-configurada";
 import ModalBase from "@/components/ui/ModalBase";
@@ -18,6 +19,7 @@ type Props = {
   errorPago: string | null;
   transferenciaLista: boolean;
   datosTransferencia: DatosTransferencia;
+  mostrarAvisoSeniaPendiente?: boolean;
   whatsappPhone: string;
   onPagar: (tipoPago: TipoPago, metodoPago: MetodoPago) => void;
   onVolverTransferencia: () => void;
@@ -30,6 +32,7 @@ export default function ModalPagoTurno({
   errorPago,
   transferenciaLista,
   datosTransferencia,
+  mostrarAvisoSeniaPendiente = true,
   whatsappPhone,
   onPagar,
   onVolverTransferencia,
@@ -46,16 +49,21 @@ export default function ModalPagoTurno({
   const senia = turnoCreado.seniaCongelada;
   const saldo = Math.max(total - senia, 0);
   const transferenciaDisponible = esTransferenciaConfigurada(datosTransferencia);
+  const requiereSeniaPendiente =
+    mostrarAvisoSeniaPendiente &&
+    turnoCreado.estado === ESTADOS_TURNO[0] &&
+    turnoCreado.estadoPago === ESTADOS_PAGO[0] &&
+    senia > 0;
 
   return (
     <ModalBase
       maxWidth="max-w-md"
       overlayClase="bg-black/80 backdrop-blur-md p-4"
-      contenedorClase="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-2xl overflow-hidden"
+      contenedorClase="flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)]"
       onClose={onClose}
       header={
         <div
-          className="flex items-center justify-between gap-3 border-b border-[var(--admin-border)] p-6"
+          className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--admin-border)] p-6"
           style={{ backgroundColor: "color-mix(in srgb, var(--primary) 12%, transparent)" }}
         >
           <div className="flex items-center gap-3">
@@ -82,7 +90,7 @@ export default function ModalPagoTurno({
         </div>
       }
     >
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 overflow-y-auto p-6">
         {transferenciaLista ? (
           <PanelTransferencia
             turnoCreado={turnoCreado}
@@ -93,6 +101,15 @@ export default function ModalPagoTurno({
           />
         ) : (
           <>
+            {requiereSeniaPendiente && (
+              <div role="note" className="flex items-start gap-3 rounded-xl border border-red-500 bg-red-950 p-4 text-red-100">
+                <AlertTriangle aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-red-300" />
+                <div className="space-y-1 text-sm">
+                  <p className="font-semibold text-red-200">El turno no se confirma hasta que abones la seña.</p>
+                  <p>Realizá el pago de la seña para asegurar tu reserva.</p>
+                </div>
+              </div>
+            )}
             <div className="space-y-3 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-4">
               <div className="mb-1 flex items-center gap-2">
                 <Scissors className="h-4 w-4" style={{ color: "var(--primary-tinta)" }} />

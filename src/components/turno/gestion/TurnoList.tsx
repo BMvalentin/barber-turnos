@@ -28,6 +28,7 @@ interface Props {
   alcanceCacheTurnos?: string;
   whatsappPhone?: string;
   datosTransferencia?: DatosTransferencia;
+  mostrarAvisoSeniaPendiente?: boolean;
   /** Muestra la fecha de cada día aunque todos los turnos sean del mismo día. */
   mostrarFechas?: boolean;
   modoCronologicoCompacto?: boolean;
@@ -61,6 +62,7 @@ export default function TurnoList({
   alcanceCacheTurnos = "",
   whatsappPhone = "",
   datosTransferencia,
+  mostrarAvisoSeniaPendiente = true,
   mostrarFechas = false,
   modoCronologicoCompacto = false,
   mensajeVacio = "No hay turnos para mostrar.",
@@ -156,6 +158,7 @@ export default function TurnoList({
               onConfirmar={solicitarConfirmar}
               whatsappPhone={whatsappPhone}
               datosTransferencia={datosTransferencia}
+              mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
               alcanceCacheTurnos={alcanceCacheTurnos}
               onTurnoActualizado={onTurnoActualizado}
               modoCompacto={modoCronologicoCompacto}
