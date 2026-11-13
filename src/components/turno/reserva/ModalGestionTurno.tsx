@@ -37,6 +37,7 @@ export default function ModalGestionTurno({
   initialRelaciones,
   whatsappPhone,
   datosTransferencia = DATOS_TRANSFERENCIA_VACIOS,
+  mostrarAvisoSeniaPendiente = true,
   turnoInicial,
   claseTrigger,
   contenidoTrigger,
@@ -196,6 +197,7 @@ export default function ModalGestionTurno({
               errorPago={errorPago}
               transferenciaLista={transferenciaLista}
               datosTransferencia={datosTransferencia}
+              mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
               whatsappPhone={whatsappPhone}
               onPagar={handlePagar}
               onVolverTransferencia={() => setTransferenciaLista(false)}

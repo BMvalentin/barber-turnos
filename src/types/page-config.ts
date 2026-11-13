@@ -23,6 +23,7 @@ export type DatosConfiguracion = {
   transferenciaCbu: string;
   transferenciaBanco: string;
   transferenciaActiva: boolean;
+  mostrarAvisoSeniaPendiente: boolean;
 };
 
 /* Payload parcial para la server action de actualización (config-general.actions). */

@@ -9,6 +9,7 @@ import type { DatosTransferencia } from "@/types/pago";
 type DatosPagoPanel = {
   whatsappPhone: string;
   datosTransferencia: DatosTransferencia;
+  mostrarAvisoSeniaPendiente: boolean;
 };
 
 export async function obtenerDatosPagoPanel(): Promise<ActionState<DatosPagoPanel>> {
@@ -21,6 +22,7 @@ export async function obtenerDatosPagoPanel(): Promise<ActionState<DatosPagoPane
       data: {
         whatsappPhone: config?.whatsapp ?? "",
         datosTransferencia: obtenerDatosTransferencia(config),
+        mostrarAvisoSeniaPendiente: config?.mostrarAvisoSeniaPendiente ?? true,
       },
     };
   } catch {

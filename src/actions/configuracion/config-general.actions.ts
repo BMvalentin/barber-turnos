@@ -24,6 +24,8 @@ async function updatePageConfigBase(
       return { success: false, error: "Formato de color inválido. Usá #RRGGBB (ej.: #d97706)." };
     if (data.transferenciaActiva !== undefined && typeof data.transferenciaActiva !== "boolean")
       return { success: false, error: "El estado de la transferencia no es válido." };
+    if (data.mostrarAvisoSeniaPendiente !== undefined && typeof data.mostrarAvisoSeniaPendiente !== "boolean")
+      return { success: false, error: "El estado del aviso de seña pendiente no es válido." };
 
     const cleanWhatsapp = data.whatsapp ? data.whatsapp.replace(/\D/g, "") : undefined;
     await prisma.pageConfig.upsert({
@@ -59,6 +61,9 @@ async function updatePageConfigBase(
         ...(data.transferenciaActiva !== undefined && {
           transferenciaActiva: data.transferenciaActiva,
         }),
+        ...(data.mostrarAvisoSeniaPendiente !== undefined && {
+          mostrarAvisoSeniaPendiente: data.mostrarAvisoSeniaPendiente,
+        }),
       },
       create: {
         id: 1,
@@ -80,6 +85,7 @@ async function updatePageConfigBase(
         transferenciaCbu: data.transferenciaCbu || "",
         transferenciaBanco: data.transferenciaBanco || "",
         transferenciaActiva: data.transferenciaActiva ?? true,
+        mostrarAvisoSeniaPendiente: data.mostrarAvisoSeniaPendiente ?? true,
       },
     });
 

@@ -18,6 +18,7 @@ interface Props {
   onConfirmar: (id: string) => void;
   whatsappPhone?: string;
   datosTransferencia?: DatosTransferencia;
+  mostrarAvisoSeniaPendiente?: boolean;
   alcanceCacheTurnos?: string;
   onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
   modoCompacto?: boolean;
@@ -143,6 +144,7 @@ export default function LineaTiempoTurnos({
   onConfirmar,
   whatsappPhone = "",
   datosTransferencia,
+  mostrarAvisoSeniaPendiente = true,
   alcanceCacheTurnos = "",
   onTurnoActualizado,
   modoCompacto = false,
@@ -220,6 +222,7 @@ export default function LineaTiempoTurnos({
                   onConfirmar={onConfirmar}
                   whatsappPhone={whatsappPhone}
                   datosTransferencia={datosTransferencia}
+                  mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
                   alcanceCacheTurnos={alcanceCacheTurnos}
                   onTurnoActualizado={onTurnoActualizado}
                   mostrarHora={false}
@@ -290,6 +293,7 @@ export default function LineaTiempoTurnos({
                         onConfirmar={onConfirmar}
                         whatsappPhone={whatsappPhone}
                         datosTransferencia={datosTransferencia}
+                        mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
                         alcanceCacheTurnos={alcanceCacheTurnos}
                         onTurnoActualizado={onTurnoActualizado}
                       />

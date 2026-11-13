@@ -1,0 +1,35 @@
+-- Reconstruye la configuración base que existía antes de la migración de transferencia.
+-- La tabla no estaba incluida en la migración inicial, aunque ya formaba parte del esquema.
+CREATE TABLE `PageConfig` (
+    `id` INTEGER NOT NULL DEFAULT 1,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+    `description` TEXT NULL,
+    `slogan` VARCHAR(191) NULL,
+    `logo` TEXT NULL,
+    `favicon` TEXT NULL,
+    `primaryColor` VARCHAR(191) NULL DEFAULT '#d97706',
+    `secondaryColor` VARCHAR(191) NULL DEFAULT '#78350f',
+    `address` VARCHAR(191) NULL,
+    `city` VARCHAR(191) NULL,
+    `province` VARCHAR(191) NULL,
+    `country` VARCHAR(191) NULL,
+    `postalCode` VARCHAR(191) NULL,
+    `mapsUrl` TEXT NULL,
+    `currency` VARCHAR(191) NOT NULL DEFAULT 'ARS',
+    `language` VARCHAR(191) NOT NULL DEFAULT 'es',
+    `maintenanceMode` BOOLEAN NOT NULL DEFAULT false,
+    `metaTitle` VARCHAR(191) NULL,
+    `metaDescription` TEXT NULL,
+    `termsAndConditions` TEXT NULL,
+    `privacyPolicy` TEXT NULL,
+    `email` VARCHAR(191) NULL,
+    `instagram` TEXT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `phone` VARCHAR(191) NULL,
+    `whatsapp` VARCHAR(191) NULL,
+    `backgroundImage` TEXT NULL,
+    `bgColor` VARCHAR(191) NULL DEFAULT '#09090b',
+
+    PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */
+) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
