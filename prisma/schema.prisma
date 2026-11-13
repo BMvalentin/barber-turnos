@@ -294,6 +294,7 @@ model PageConfig {
   transferenciaCbu     String?
   transferenciaBanco   String?
   transferenciaActiva  Boolean  @default(true)
+  mostrarAvisoSeniaPendiente Boolean @default(true)
   backgroundImage    String?  @db.Text
 }
 

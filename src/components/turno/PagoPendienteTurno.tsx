@@ -14,6 +14,7 @@ type Props = {
   turno: TurnoListado;
   whatsappPhone: string;
   datosTransferencia: DatosTransferencia;
+  mostrarAvisoSeniaPendiente?: boolean;
   alcanceCacheTurnos?: string;
   onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
 };
@@ -35,6 +36,7 @@ export default function PagoPendienteTurno({
   turno,
   whatsappPhone,
   datosTransferencia,
+  mostrarAvisoSeniaPendiente = true,
   alcanceCacheTurnos = "",
   onTurnoActualizado,
 }: Props) {
@@ -85,6 +87,7 @@ export default function PagoPendienteTurno({
             errorPago={pago.errorPago}
             transferenciaLista={pago.transferenciaLista}
             datosTransferencia={datosTransferencia}
+            mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
             whatsappPhone={whatsappPhone}
             onPagar={pago.handlePagar}
             onVolverTransferencia={() => pago.setTransferenciaLista(false)}

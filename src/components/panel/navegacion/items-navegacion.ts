@@ -99,7 +99,7 @@ export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
             icono: MapPin,
             roles: ["ADMIN"],
           },
-          { titulo: "Medios de pago", href: "/admin/config/medios-pago", icono: Landmark, roles: ["ADMIN"] },
+          { titulo: "Configuración de pagos", href: "/admin/config/medios-pago", icono: Landmark, roles: ["ADMIN"] },
           { titulo: "Apariencia", href: "/admin/config/apariencia", icono: Palette, roles: ["ADMIN"] },
           { titulo: "Imágenes", href: "/admin/config/imagenes", icono: ImageIcon, roles: ["ADMIN"] },
           {
