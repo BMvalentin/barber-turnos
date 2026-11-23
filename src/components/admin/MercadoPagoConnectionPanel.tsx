@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   CheckCircle2,
-  XCircle,
+  CircleDashed,
   Link2,
   Unlink,
   Loader2,
@@ -97,43 +97,43 @@ export default function MercadoPagoConnectionPanel({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-[var(--admin-surface)] rounded-xl border border-[var(--admin-border)] p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+    <>
+      <div className="admin-card">
+        <div className="flex items-start gap-3 p-4 sm:p-6">
+          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--admin-surface-elevated)] text-[var(--admin-texto-secundario)]">
             {estado.conectada ? (
-              <CheckCircle2 className="h-6 w-6 text-green-500" />
+              <CheckCircle2 className="size-5 text-[var(--admin-exito)]" aria-hidden="true" />
             ) : (
-              <XCircle className="h-6 w-6 text-red-500" />
+              <CircleDashed className="size-5" aria-hidden="true" />
             )}
-            <div>
-              <p className="font-semibold text-[var(--admin-texto-primario)]">
-                {estado.conectada ? "Cuenta conectada" : "Sin conectar"}
-              </p>
-              <p className="text-xs text-[var(--admin-texto-secundario)]">
-                {estado.conectada
-                  ? "Las señas de los turnos se acreditan en esta cuenta"
-                  : "Conectá una cuenta para poder cobrar señas online"}
-              </p>
-            </div>
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-[var(--admin-texto-primario)]">
+              {estado.conectada ? "Cuenta conectada" : "Cuenta sin conectar"}
+            </h2>
+            <p className="mt-1 text-sm text-[var(--admin-texto-secundario)]">
+              {estado.conectada
+                ? "Las señas de los turnos se acreditan en esta cuenta."
+                : "Conectá una cuenta para cobrar señas online."}
+            </p>
           </div>
         </div>
 
         {estado.conectada && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm border-t border-[var(--admin-border)] pt-4">
+          <dl className="grid grid-cols-1 gap-4 border-t border-[var(--admin-border)] p-4 text-sm sm:grid-cols-2 sm:px-6">
             <div>
-              <p className="text-[var(--admin-texto-muted)] text-xs uppercase tracking-wider mb-1">
+              <dt className="mb-1 text-xs text-[var(--admin-texto-muted)]">
                 Cuenta que recibe los cobros
-              </p>
-              <p className="text-[var(--admin-texto-primario)]">
+              </dt>
+              <dd className="break-words text-[var(--admin-texto-primario)]">
                 {estado.nombreCuenta ?? "Cuenta de Mercado Pago conectada"}
-              </p>
+              </dd>
             </div>
             <div>
-              <p className="text-[var(--admin-texto-muted)] text-xs uppercase tracking-wider mb-1">
+              <dt className="mb-1 text-xs text-[var(--admin-texto-muted)]">
                 Última actualización
-              </p>
-              <p className="text-[var(--admin-texto-primario)]">
+              </dt>
+              <dd className="text-[var(--admin-texto-primario)]">
                 {estado.actualizadaEn
                   ? new Date(estado.actualizadaEn).toLocaleString("es-AR", {
                     timeZone: ZONA_HORARIA,
@@ -144,41 +144,36 @@ export default function MercadoPagoConnectionPanel({
                     hour: "2-digit",
                     minute: "2-digit",
                   })
-                  : "-"}
-              </p>
+                  : "Sin registrar"}
+              </dd>
             </div>
-          </div>
+          </dl>
         )}
 
-        <div className="pt-4 border-t border-[var(--admin-border)]">
+        <div className="flex justify-end border-t border-[var(--admin-border)] p-4 sm:px-6">
           {estado.conectada ? (
             <button
+              type="button"
               onClick={manejarDesconexion}
               disabled={pendiente}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-colors duration-150 text-sm font-semibold disabled:opacity-50"
+              className="admin-control flex w-full items-center justify-center gap-2 sm:w-auto"
             >
               {pendiente ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Unlink className="h-4 w-4" />
               )}
-              Desconectar cuenta
+              {pendiente ? "Desconectando…" : "Desconectar cuenta"}
             </button>
           ) : (
-            <div>
-              <a
-                href="/api/mercadopago/oauth/start"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-white text-sm font-bold transition-colors duration-150 bg-[#009EE3] hover:bg-[#0088CC] cursor-pointer"
-              >
-                <Link2 className="h-4 w-4" />
-                Conectar con Mercado Pago
-              </a>
-            </div>
+            <a href="/api/mercadopago/oauth/start" className="admin-accion inline-flex w-full items-center justify-center gap-2 sm:w-auto">
+              <Link2 className="size-4" aria-hidden="true" />
+              Conectar con Mercado Pago
+            </a>
           )}
         </div>
       </div>
 
-      {/* Modal de confirmación - usando ConfirmDialog correctamente */}
       {showConfirmModal && (
         <ConfirmDialog
           title="Desconectar cuenta de Mercado Pago"
@@ -187,6 +182,6 @@ export default function MercadoPagoConnectionPanel({
           onCancel={() => setShowConfirmModal(false)}
         />
       )}
-    </div>
+    </>
   );
 }

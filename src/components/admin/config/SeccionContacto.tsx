@@ -24,21 +24,23 @@ export default function SeccionContacto({
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4 text-[var(--admin-texto-muted)]" />
           <h2 className="text-lg font-semibold tracking-tight text-[var(--admin-texto-primario)]">
-            Ubicación y contacto
+            Datos de contacto
           </h2>
         </div>
         <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-          Datos de contacto y ubicación que ven tus clientes.
+          Estos datos se muestran en el sitio de reservas.
         </p>
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-[var(--admin-texto-secundario)]">
-            WhatsApp de Contacto
+          <label htmlFor="config-whatsapp" className="mb-1.5 block text-sm font-medium text-[var(--admin-texto-secundario)]">
+            WhatsApp
           </label>
           <input
             type="text"
+            id="config-whatsapp"
+            inputMode="tel"
             name="whatsapp"
             value={whatsapp}
             onChange={manejarCambio}
@@ -47,11 +49,12 @@ export default function SeccionContacto({
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-[var(--admin-texto-secundario)]">
-            URL de Google Maps (Iframe Src)
+          <label htmlFor="config-mapa" className="mb-1.5 block text-sm font-medium text-[var(--admin-texto-secundario)]">
+            URL del mapa insertado
           </label>
           <input
             type="text"
+            id="config-mapa"
             name="mapsUrl"
             value={mapsUrl}
             onChange={manejarCambio}
@@ -60,11 +63,12 @@ export default function SeccionContacto({
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="mb-1.5 block text-sm font-medium text-[var(--admin-texto-secundario)]">
-            Dirección del Local
+          <label htmlFor="config-direccion" className="mb-1.5 block text-sm font-medium text-[var(--admin-texto-secundario)]">
+            Dirección del local
           </label>
           <input
             type="text"
+            id="config-direccion"
             name="address"
             value={direccion}
             onChange={manejarCambio}

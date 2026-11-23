@@ -5,6 +5,7 @@ import BadgeEstadoTurno from "./BadgeEstadoTurno";
 import BadgeEstadoPago from "./BadgeEstadoPago";
 import SelectorEstadoPagoTurno from "./SelectorEstadoPagoTurno";
 import MenuAccionesTurno from "./MenuAccionesTurno";
+import FilaAgendaTurno from "./FilaAgendaTurno";
 import PagoPendienteTurno from "@/components/turno/PagoPendienteTurno";
 import { esAdmin } from "@/lib/seguridad/es-admin";
 import { formatearHora } from "@/lib/utils/formatear-hora";
@@ -28,6 +29,7 @@ interface Props {
   onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
   mostrarHora?: boolean;
   compacto?: boolean;
+  vistaAdministrativa?: boolean;
 }
 
 export default function TurnoRow({
@@ -43,6 +45,7 @@ export default function TurnoRow({
   onTurnoActualizado,
   mostrarHora = true,
   compacto = false,
+  vistaAdministrativa = false,
 }: Props) {
   const esAdminUsuario = esAdmin(session);
   const esEmpleado = session?.user?.role === "EMPLEADO";
@@ -67,7 +70,9 @@ export default function TurnoRow({
       <button
         type="button"
         onClick={() => onConfirmar(turno.id)}
-        className="rounded-lg bg-[var(--page-primary)] px-3 py-1.5 text-xs font-semibold text-[var(--page-primary-foreground)] transition-colors hover:bg-[var(--page-primary-80)]"
+        className={vistaAdministrativa
+          ? "admin-accion"
+          : "rounded-lg bg-[var(--page-primary)] px-3 py-1.5 text-xs font-semibold text-[var(--page-primary-foreground)] transition-colors hover:bg-[var(--page-primary-80)]"}
       >
         Confirmar
       </button>
@@ -75,7 +80,9 @@ export default function TurnoRow({
       <button
         type="button"
         onClick={() => onCompletar(turno.id)}
-        className="rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 transition-colors hover:bg-emerald-400/20"
+        className={vistaAdministrativa
+          ? "admin-control"
+          : "rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 transition-colors hover:bg-emerald-400/20"}
       >
         Completar
       </button>
@@ -83,7 +90,9 @@ export default function TurnoRow({
       <button
         type="button"
         onClick={() => onCancelar(turno.id)}
-        className="rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-1.5 text-xs font-semibold text-red-400 transition-colors hover:bg-red-400/20"
+        className={vistaAdministrativa
+          ? "admin-control text-[var(--admin-error)]"
+          : "rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-1.5 text-xs font-semibold text-red-400 transition-colors hover:bg-red-400/20"}
       >
         Cancelar
       </button>
@@ -105,6 +114,81 @@ export default function TurnoRow({
     <p className="text-xs text-[var(--admin-texto-muted)]">Sin teléfono</p>
   );
 
+  const contacto = (
+    <>
+      {correoCliente && (
+        <a
+          href={`mailto:${correoCliente}`}
+          className="block max-w-full break-words text-xs text-[var(--admin-texto-muted)] transition-colors [overflow-wrap:anywhere] hover:text-[var(--page-primary-tinta)]"
+        >
+          {correoCliente}
+        </a>
+      )}
+      {telefonoCliente}
+    </>
+  );
+  const estadoPago = esAdminUsuario
+    ? <SelectorEstadoPagoTurno turno={turno} onTurnoActualizado={onTurnoActualizado} vistaAdministrativa={vistaAdministrativa} />
+    : <BadgeEstadoPago estado={turno.estadoPago} vistaAdministrativa={vistaAdministrativa} />;
+  const formaDePago = turno.metodoPago === "TRANSFERENCIA" && (
+    <span className={vistaAdministrativa
+      ? "text-xs text-[var(--admin-texto-secundario)]"
+      : "inline-flex items-center rounded-full border border-sky-400/20 bg-sky-400/10 px-2.5 py-0.5 text-[11px] font-semibold text-sky-400"}>
+      Transferencia
+    </span>
+  );
+  const importe = (
+    <>
+      <p className="text-sm font-semibold tabular-nums text-[var(--admin-texto-primario)]">
+        ${formatearMoneda(turno.precioCongelado)}
+      </p>
+      {turno.seniaCongelada > 0 && (
+        <p className="text-xs text-[var(--admin-texto-muted)]">
+          Seña {formatearMoneda(turno.seniaCongelada)}
+        </p>
+      )}
+    </>
+  );
+  const acciones = (
+    <>
+      {esDueno && datosTransferencia && (
+        <PagoPendienteTurno
+          turno={turno}
+          whatsappPhone={whatsappPhone}
+          datosTransferencia={datosTransferencia}
+          mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
+          alcanceCacheTurnos={alcanceCacheTurnos}
+          onTurnoActualizado={onTurnoActualizado}
+        />
+      )}
+      {ctaPrincipal}
+      {esAdminUsuario && (
+        <MenuAccionesTurno
+          turno={turno}
+          session={session}
+          onCancelar={onCancelar}
+          alcanceCacheTurnos={alcanceCacheTurnos}
+          onTurnoActualizado={onTurnoActualizado}
+          vistaAdministrativa={vistaAdministrativa}
+        />
+      )}
+    </>
+  );
+
+  if (vistaAdministrativa) {
+    return (
+      <FilaAgendaTurno
+        turno={turno}
+        nombreCliente={nombreCliente}
+        contacto={contacto}
+        importe={importe}
+        estadoPago={estadoPago}
+        formaDePago={formaDePago}
+        acciones={acciones}
+      />
+    );
+  }
+
   const inicialBarbero = turno.barbero?.nombre?.charAt(0) || "B";
 
   return (
@@ -124,29 +208,13 @@ export default function TurnoRow({
             </p>
           </div>
           <div className="mt-1 min-w-0 space-y-0.5">
-            {correoCliente && (
-              <a
-                href={`mailto:${correoCliente}`}
-                className="block max-w-full break-words text-xs text-[var(--admin-texto-muted)] transition-colors [overflow-wrap:anywhere] hover:text-[var(--page-primary-tinta)]"
-              >
-                {correoCliente}
-              </a>
-            )}
-            {telefonoCliente}
+            {contacto}
           </div>
         </div>
         <div className="flex max-w-full flex-wrap items-center gap-1.5">
           <BadgeEstadoTurno estado={turno.estado} />
-          {esAdminUsuario ? (
-            <SelectorEstadoPagoTurno turno={turno} onTurnoActualizado={onTurnoActualizado} />
-          ) : (
-            <BadgeEstadoPago estado={turno.estadoPago} />
-          )}
-          {turno.metodoPago === "TRANSFERENCIA" && (
-            <span className="inline-flex items-center rounded-full border border-sky-400/20 bg-sky-400/10 px-2.5 py-0.5 text-[11px] font-semibold text-sky-400">
-              Transferencia
-            </span>
-          )}
+          {estadoPago}
+          {formaDePago}
         </div>
       </div>
 
@@ -174,36 +242,10 @@ export default function TurnoRow({
         className={`${compacto ? "mt-2" : "mt-2.5"} flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-3`}
       >
         <div className="flex flex-wrap items-baseline gap-x-2">
-          <p className="text-sm font-semibold text-[var(--admin-texto-primario)]">
-            ${formatearMoneda(turno.precioCongelado)}
-          </p>
-          {turno.seniaCongelada > 0 && (
-            <p className="text-xs text-[var(--admin-texto-muted)]">
-              Seña {formatearMoneda(turno.seniaCongelada)}
-            </p>
-          )}
+          {importe}
         </div>
         <div className="flex min-w-0 items-center justify-between gap-2 sm:justify-end">
-          {esDueno && datosTransferencia && (
-            <PagoPendienteTurno
-              turno={turno}
-              whatsappPhone={whatsappPhone}
-              datosTransferencia={datosTransferencia}
-              mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
-              alcanceCacheTurnos={alcanceCacheTurnos}
-              onTurnoActualizado={onTurnoActualizado}
-            />
-          )}
-          {ctaPrincipal}
-          {esAdminUsuario && (
-            <MenuAccionesTurno
-              turno={turno}
-              session={session}
-              onCancelar={onCancelar}
-              alcanceCacheTurnos={alcanceCacheTurnos}
-              onTurnoActualizado={onTurnoActualizado}
-            />
-          )}
+          {acciones}
         </div>
       </div>
     </div>

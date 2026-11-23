@@ -49,14 +49,17 @@ export default function SelectorEmpleado({ barberos, valor, alCambiar }: Props) 
   );
 
   return (
-    <SelectorDesplegable
-      opciones={opciones}
-      valor={valor}
-      onChange={alCambiar}
-      etiquetaAria="Seleccionar empleado"
-      placeholder={barberos.length === 0 ? "Sin perfiles" : "Seleccionar perfil..."}
-      deshabilitado={barberos.length === 0}
-      className="sm:w-80"
-    />
+    <div className="grid gap-2 sm:w-80">
+      <label htmlFor="horario-empleado" className="text-sm font-semibold text-[var(--admin-texto-primario)]">Integrante del equipo</label>
+      <SelectorDesplegable
+        id="horario-empleado"
+        opciones={opciones}
+        valor={valor}
+        onChange={alCambiar}
+        placeholder={barberos.length === 0 ? "Sin perfiles" : "Seleccionar perfil…"}
+        deshabilitado={barberos.length === 0}
+        claseBoton="min-h-11"
+      />
+    </div>
   );
 }

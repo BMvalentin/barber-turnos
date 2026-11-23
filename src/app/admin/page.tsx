@@ -1,12 +1,10 @@
-// app/admin/page.tsx
-import { Users, Scissors, Calendar, DollarSign } from "lucide-react";
-import { formatearHora } from "@/lib/utils/formatear-hora";
+import { CalendarDays, ChartNoAxesColumnIncreasing, Clock3, Scissors, UsersRound } from "lucide-react";
 import { formatearMoneda } from "@/lib/utils/formatear-moneda";
 import { StatCard } from "@/components/panel/StatCard";
 import { DetailCard } from "@/components/panel/DetailCard";
 import { ItemLista } from "@/components/panel/ItemLista";
+import { AgendaResumen } from "@/components/panel/AgendaResumen";
 import PanelResumenEmpleado from "@/components/panel/PanelResumenEmpleado";
-import { ESTADOS_TURNO } from "@/lib/constants";
 import { obtenerEstadisticasPanel } from "@/lib/consultas/obtener-estadisticas-panel";
 import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { redirect } from "next/navigation";
@@ -24,104 +22,39 @@ export default async function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-8">
-      {/* ENCABEZADO */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight md:text-[28px] text-[var(--admin-texto-primario)]">
-          Dashboard
-        </h1>
-        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-          Resumen general de tu barbería.
-        </p>
+    <div className="admin-pagina">
+      <header className="admin-encabezado">
+        <div>
+          <h1>Resumen</h1>
+          <p>Consultá los turnos y la actividad de tu barbería.</p>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+        <StatCard title="Empleados activos" value={stats.totalBarberos} icon={UsersRound} href="/admin/barbero" />
+        <StatCard title="Servicios activos" value={stats.totalServicios} icon={Scissors} href="/admin/servicio" />
+        <StatCard title="Turnos registrados" value={stats.totalTurnos} icon={CalendarDays} href="/admin/turno" />
+        <StatCard title="Turnos activos" value={stats.turnosPendientes} icon={Clock3} href="/admin/turno?filtro=activos" />
       </div>
 
-      {/* STATS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Barberos"
-          value={stats.totalBarberos}
-          icon={Users}
-          href="/admin/barbero"
-        />
-        <StatCard
-          title="Servicios"
-          value={stats.totalServicios}
-          icon={Scissors}
-          href="/admin/servicio"
-        />
-        <StatCard
-          title="Total Turnos"
-          value={stats.totalTurnos}
-          icon={Calendar}
-          href="/admin/turno"
-        />
-        <StatCard
-          title="Turnos activos"
-          value={stats.turnosPendientes}
-          icon={DollarSign}
-          href="/admin/turno?filtro=activos"
-        />
-      </div>
-
-      {/* DETALLE */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <DetailCard title="Barberos" icon={Users}>
-          {stats.barberos.length === 0 ? (
-            <Empty text="No hay barberos" />
-          ) : (
-            stats.barberos.map((b) => (
-              <ItemLista key={b.id}>
-                <p className="text-sm text-[var(--admin-texto-primario)]">
-                  {b.nombre}
-                </p>
-                <p className="text-xs text-[var(--admin-texto-muted)]">
-                  {b._count.turnos} activos
-                </p>
-              </ItemLista>
-            ))
-          )}
-        </DetailCard>
-
-        <DetailCard title="Servicios" icon={Scissors}>
-          {stats.serviciosPopulares.length === 0 ? (
-            <Empty text="No hay servicios" />
-          ) : (
-            stats.serviciosPopulares.map((s) => (
-              <ItemLista key={s.id}>
-                <p className="text-sm text-[var(--admin-texto-primario)]">
-                  {s.nombre}
-                </p>
-                <p className="text-xs text-[var(--admin-texto-muted)]">
-                  {s._count.turnos} usos
-                </p>
-              </ItemLista>
-            ))
-          )}
-        </DetailCard>
-
-        <DetailCard title="Rendimiento Hoy" icon={DollarSign}>
+      <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+        <AgendaResumen grupos={stats.turnosHoyPorBarbero.filter((barbero) => barbero.turnos.length > 0)} />
+        <DetailCard title="Rendimiento de hoy" icon={ChartNoAxesColumnIncreasing}>
           {stats.rendimientoHoyPorBarbero.length === 0 ? (
-            <Empty text="No hay barberos" />
+            <VacioResumen>No hay empleados activos.</VacioResumen>
           ) : (
-            stats.rendimientoHoyPorBarbero.map((b) => (
-              <ItemLista key={b.id}>
-                <div>
-                  <p className="text-sm text-[var(--admin-texto-primario)]">
-                    {b.nombre}
-                  </p>
+            stats.rendimientoHoyPorBarbero.map((barbero) => (
+              <ItemLista key={barbero.id}>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium [overflow-wrap:anywhere]">{barbero.nombre}</p>
                   <p className="text-xs text-[var(--admin-texto-muted)]">
-                    {b.completados}{" "}
-                    {b.completados === 1
-                      ? "corte completado"
-                      : "cortes completados"}
+                    {barbero.completados} {barbero.completados === 1 ? "corte completado" : "cortes completados"}
                   </p>
                 </div>
-                {b.completados > 0 && (
-                  <div className="mt-1 pt-1 border-t border-[var(--admin-border)] flex flex-col items-end text-right">
-                    <span className="text-green-500/80 text-xs">
-                      ${formatearMoneda(b.ganancia)}
-                    </span>
-                  </div>
+                {barbero.completados > 0 && (
+                  <span className="shrink-0 text-sm font-medium text-[var(--admin-exito)] tabular-nums">
+                    ${formatearMoneda(barbero.ganancia)}
+                  </span>
                 )}
               </ItemLista>
             ))
@@ -129,67 +62,40 @@ export default async function AdminDashboard() {
         </DetailCard>
       </div>
 
-      {/* AGENDA */}
-      <div className="space-y-6">
-        <h2 className="text-lg font-semibold tracking-tight text-[var(--admin-texto-primario)]">
-          Agenda de Hoy
-        </h2>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {stats.turnosHoyPorBarbero
-            .filter((b) => b.turnos.length > 0)
-            .map((b) => (
-              <div
-                key={b.id}
-                className="rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5"
-              >
-                <h3 className="text-sm font-semibold text-[var(--admin-texto-primario)] mb-3">
-                  {b.nombre}
-                </h3>
-
-                <div className="space-y-2 max-h-72 overflow-y-auto">
-                  {b.turnos.map((t) => (
-                    <div
-                      key={t.id}
-                      className="rounded-lg bg-[var(--admin-surface-elevated)] p-3 flex justify-between items-center"
-                    >
-                      <div>
-                        <p className="text-sm text-[var(--admin-texto-primario)]">
-                          {t.clienteNombre
-                            ? [t.clienteNombre, t.clienteApellido].filter(Boolean).join(" ")
-                            : t.user?.name || t.user?.email || "Usuario eliminado"}
-                        </p>
-                        <p className="text-xs text-[var(--admin-texto-muted)]">
-                          {t.servicio?.nombre || "Servicio eliminado"}
-                        </p>
-                        <p className="text-xs text-[var(--admin-texto-muted)]">
-                          {formatearHora(t.horarioReservado)}
-                        </p>
-                      </div>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          t.estado === ESTADOS_TURNO[1]
-                            ? "bg-green-500/20 text-green-500 border border-green-500/30"
-                            : "bg-[var(--page-primary-soft)] text-[var(--page-primary-tinta)]"
-                        }`}
-                      >
-                        {t.estado}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-        </div>
+      <div className="grid items-start gap-3 md:grid-cols-2">
+        <DetailCard title="Empleados" icon={UsersRound}>
+          {stats.barberos.length === 0 ? (
+            <VacioResumen>No hay empleados activos.</VacioResumen>
+          ) : (
+            stats.barberos.map((barbero) => (
+              <ItemLista key={barbero.id}>
+                <p className="text-sm [overflow-wrap:anywhere]">{barbero.nombre}</p>
+                <p className="shrink-0 text-xs text-[var(--admin-texto-muted)] tabular-nums">
+                  {barbero._count.turnos} {barbero._count.turnos === 1 ? "turno activo" : "turnos activos"}
+                </p>
+              </ItemLista>
+            ))
+          )}
+        </DetailCard>
+        <DetailCard title="Servicios más reservados" icon={Scissors}>
+          {stats.serviciosPopulares.length === 0 ? (
+            <VacioResumen>No hay reservas por servicio.</VacioResumen>
+          ) : (
+            stats.serviciosPopulares.map((servicio) => (
+              <ItemLista key={servicio.id}>
+                <p className="text-sm [overflow-wrap:anywhere]">{servicio.nombre}</p>
+                <p className="shrink-0 text-xs text-[var(--admin-texto-muted)] tabular-nums">
+                  {servicio._count.turnos} {servicio._count.turnos === 1 ? "reserva" : "reservas"}
+                </p>
+              </ItemLista>
+            ))
+          )}
+        </DetailCard>
       </div>
     </div>
   );
 }
 
-function Empty({ text }: { text: string }) {
-  return (
-    <p className="text-center text-[var(--admin-texto-muted)] py-6 text-sm">
-      {text}
-    </p>
-  );
+function VacioResumen({ children }: { children: string }) {
+  return <p className="py-5 text-sm text-[var(--admin-texto-muted)]">{children}</p>;
 }

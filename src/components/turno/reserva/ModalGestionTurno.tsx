@@ -45,6 +45,7 @@ export default function ModalGestionTurno({
   onTurnoCreado,
   alcanceCacheTurnos,
   abrirAlMontar = false,
+  vistaAdministrativa = false,
 }: PropsModalGestionTurno) {
   const {
     esEdicion,
@@ -129,27 +130,28 @@ export default function ModalGestionTurno({
           <div style={ESTILO_TEMAS}>
             <ModalBase
               maxWidth="max-w-6xl"
-              overlayClase="bg-black/80 backdrop-blur-md p-2 sm:p-4"
+              overlayClase={vistaAdministrativa
+                ? "bg-black/45 backdrop-blur-[2px] p-2 sm:p-4"
+                : "bg-black/80 backdrop-blur-md p-2 sm:p-4"}
               contenedorClase="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-2xl max-h-[92dvh] overflow-hidden flex flex-col"
               onClose={() => setIsOpen(false)}
               header={
-                <div className="flex items-center justify-between border-b border-[var(--admin-border)] p-5 sm:p-6">
+                <div className={`flex items-center justify-between gap-3 border-b border-[var(--admin-border)] ${vistaAdministrativa ? "px-4 py-3 sm:px-6 sm:py-4" : "p-5 sm:p-6"}`}>
                   <div>
-                    <h2 className="text-2xl font-bold text-[var(--admin-texto-primario)]">
-                      {esEdicion && turnoInicial
-                        ? "Gestionar Turno"
-                        : "Reservar turno"}
+                    <h2 className={`text-[var(--admin-texto-primario)] ${vistaAdministrativa ? "text-xl font-semibold" : "text-2xl font-bold"}`}>
+                      {esEdicion ? "Gestionar turno" : vistaAdministrativa ? "Nuevo turno" : "Reservar turno"}
                     </h2>
                     {esEdicion && turnoInicial && (
                       <div className="mt-2">
-                        <BadgeEstadoTurno estado={turnoInicial.estado} />
+                        <BadgeEstadoTurno estado={turnoInicial.estado} vistaAdministrativa={vistaAdministrativa} />
                       </div>
                     )}
                   </div>
                   <button
                     type="button"
                     onClick={() => setIsOpen(false)}
-                    className={CLASES_BOTON_CERRAR}
+                    aria-label="Cerrar"
+                    className={vistaAdministrativa ? "admin-control size-11 shrink-0 px-0" : CLASES_BOTON_CERRAR}
                   >
                     <X className="h-5 w-5" />
                   </button>

@@ -83,8 +83,8 @@ export default function ModalBase({
               {subtitulo && <p className={subtituloClase}>{subtitulo}</p>}
             </div>
             {onClose && (
-              <button type="button" onClick={onClose} className={CLASES_BOTON_CERRAR}>
-                <X className="h-4 w-4" />
+              <button type="button" onClick={onClose} aria-label="Cerrar" className={CLASES_BOTON_CERRAR}>
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             )}
           </div>

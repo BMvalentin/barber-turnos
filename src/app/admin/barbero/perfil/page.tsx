@@ -32,15 +32,13 @@ export default async function PerfilBarberoPage() {
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-[var(--admin-texto-primario)] md:text-[28px]">
-          Mi perfil profesional
-        </h1>
-        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-          Consultá y actualizá la información de tu perfil de barbero.
-        </p>
-      </div>
+    <div className="admin-pagina">
+      <header className="admin-encabezado">
+        <div>
+          <h1>Mi perfil profesional</h1>
+          <p>Consultá y actualizá tu información de barbero.</p>
+        </div>
+      </header>
       <PerfilBarbero
         barbero={perfilSerializado}
         servicios={servicios.map((servicio) => ({ id: servicio.id, nombre: servicio.nombre }))}

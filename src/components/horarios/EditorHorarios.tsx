@@ -50,28 +50,21 @@ export function EditorHorarios({
   alGuardar,
 }: Props) {
   return (
-    <section
-      ref={tarjetaRef}
-      className="rounded-xl bg-[var(--admin-surface)] p-6"
-      style={{ border: "1px solid var(--admin-border)" }}
-    >
-      <h2 className="text-lg font-semibold text-[var(--admin-texto-primario)]">
-        {esEmpleado ? "Mi disponibilidad" : "Registrar / Editar horario"}
-      </h2>
-      <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-        {esEmpleado
-          ? "Definí tus días y rangos de atención."
-          : "Seleccioná un perfil del equipo y configurá sus días de trabajo."}
-      </p>
-
+    <div className="grid min-w-0 gap-4">
       {!esEmpleado && (
-        <div className="mt-5">
+        <section className="admin-card p-4 sm:p-6" aria-label="Seleccionar un integrante del equipo">
           <SelectorEmpleado barberos={barberos} valor={barberoId} alCambiar={alCambiarBarbero} />
-        </div>
+        </section>
       )}
-
-      <div className="mt-5">
+      <section ref={tarjetaRef} className="admin-card min-w-0 scroll-mt-24" aria-labelledby="titulo-semana-laboral">
+        <header className="px-4 pt-4 pb-3 sm:px-6 sm:pt-5 sm:pb-4">
+          <h2 id="titulo-semana-laboral" className="text-base font-semibold text-[var(--admin-texto-primario)]">
+            {esEmpleado ? "Mi disponibilidad semanal" : "Disponibilidad semanal"}
+          </h2>
+          <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">Podés definir más de un horario por día.</p>
+        </header>
         <TablaDiasBarbero
+          key={barberoId}
           dias={dias}
           valores={valores}
           alCambiar={alCambiar}
@@ -80,17 +73,16 @@ export function EditorHorarios({
           alQuitarRango={alQuitarRango}
           alEliminarDia={alEliminarDia}
         />
-      </div>
-
-      <AccionesHorarios
-        destinos={destinos}
-        mostrarCopia={!esEmpleado}
-        pendiente={pendiente}
-        hayEmpleadoSeleccionado={Boolean(barberoId)}
-        alCopiar={alCopiar}
-        alCancelar={alCancelar}
-        alGuardar={alGuardar}
-      />
-    </section>
+        <AccionesHorarios
+          destinos={destinos}
+          mostrarCopia={!esEmpleado}
+          pendiente={pendiente}
+          hayEmpleadoSeleccionado={Boolean(barberoId)}
+          alCopiar={alCopiar}
+          alCancelar={alCancelar}
+          alGuardar={alGuardar}
+        />
+      </section>
+    </div>
   );
 }

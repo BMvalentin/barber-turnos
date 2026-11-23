@@ -167,22 +167,27 @@ export function HorariosLaboralesClient({ diasLaborales, barberos, barberoIdInic
     if (!objetivo) return;
     alCambiarBarbero(objetivo.id);
     requestAnimationFrame(() =>
-      tarjetaRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+      tarjetaRef.current?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+        block: "start",
+      }),
     );
   };
 
   return (
-    <div className="space-y-8">
+    <div className="grid min-w-0 gap-5 lg:gap-6">
       <EncabezadoHorarios esEmpleado={esEmpleado} hayPerfiles={barberos.length > 0} alNuevoHorario={alNuevoHorario} />
 
       {barberos.length === 0 ? (
-        <EmptyState
-          icono={<Clock className="h-10 w-10" />}
-          titulo={esEmpleado ? "No encontramos tu perfil profesional" : "No hay empleados configurados"}
-          mensaje={esEmpleado
-            ? "Tu cuenta todavía no tiene un perfil de barbero asociado."
-            : "Creá un barbero en el panel para poder asignarle horarios."}
-        />
+        <div className="admin-card p-4">
+          <EmptyState
+            icono={<Clock className="size-8" />}
+            titulo={esEmpleado ? "No encontramos tu perfil profesional" : "No hay empleados configurados"}
+            mensaje={esEmpleado
+              ? "Tu cuenta todavía no tiene un perfil de barbero asociado."
+              : "Creá un barbero en el panel para poder asignarle horarios."}
+          />
+        </div>
       ) : (
         <EditorHorarios
           tarjetaRef={tarjetaRef}

@@ -43,22 +43,20 @@ export default async function BarberosPage() {
   );
 
   return (
-    <div className="space-y-8">
-      {/* HEADER */}
-      <div className="flex items-start justify-between gap-4">
+    <div className="admin-pagina">
+      <header className="admin-encabezado">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight md:text-[28px] text-[var(--admin-texto-primario)]">
+          <h1>
             {esEmpleado ? "Mi perfil profesional" : "Empleados"}
           </h1>
-          <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
+          <p>
             {esEmpleado
               ? "Consultá y actualizá la información de tu perfil."
               : "Administrá los perfiles de tus empleados y sus horarios."}
           </p>
         </div>
-      </div>
+      </header>
 
-      {/* LISTA */}
       <BarberoList
         barberos={barberos}
         servicios={servicios}

@@ -15,6 +15,7 @@ interface Props {
   onCancelar: (id: string) => void;
   alcanceCacheTurnos?: string;
   onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
+  vistaAdministrativa?: boolean;
 }
 
 export default function MenuAccionesTurno({
@@ -23,6 +24,7 @@ export default function MenuAccionesTurno({
   onCancelar,
   alcanceCacheTurnos = "",
   onTurnoActualizado,
+  vistaAdministrativa = false,
 }: Props) {
   const [abierto, setAbierto] = useState(false);
   const contenedorRef = useRef<HTMLDivElement>(null);
@@ -69,7 +71,9 @@ export default function MenuAccionesTurno({
         aria-label="Más acciones"
         aria-expanded={abierto}
         onClick={() => setAbierto((prev) => !prev)}
-        className={`h-8 w-8 rounded-lg flex items-center justify-center text-[var(--admin-texto-muted)] hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)] transition-colors ${
+        className={vistaAdministrativa
+          ? "admin-control size-11 p-0"
+          : `h-8 w-8 rounded-lg flex items-center justify-center text-[var(--admin-texto-muted)] hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)] transition-colors ${
           abierto ? "bg-white/5 text-[var(--admin-texto-primario)]" : ""
         }`}
       >
@@ -77,12 +81,13 @@ export default function MenuAccionesTurno({
       </button>
 
       <div
-        className={`absolute right-0 top-full z-30 mt-1 w-48 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-1 shadow-2xl shadow-black/40 ${
+        className={`absolute right-0 top-full z-30 mt-1 w-48 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-1 ${vistaAdministrativa ? "shadow-xl" : "shadow-2xl shadow-black/40"} ${
           abierto ? "" : "pointer-events-none invisible"
         }`}
       >
         {puedeEditar && (
           <CargadorModalGestionTurno
+            vistaAdministrativa={vistaAdministrativa}
             session={session}
             turnoInicial={turno}
             whatsappPhone=""
@@ -105,7 +110,9 @@ export default function MenuAccionesTurno({
               cerrarMenu();
               onCancelar(turno.id);
             }}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors text-red-400 hover:bg-red-500/10"
+            className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${vistaAdministrativa
+              ? "text-[var(--admin-error)] hover:bg-[var(--admin-error-suave)]"
+              : "text-red-400 hover:bg-red-500/10"}`}
           >
             <Ban className="h-4 w-4" />
             Cancelar turno

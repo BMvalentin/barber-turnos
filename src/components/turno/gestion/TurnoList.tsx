@@ -32,6 +32,7 @@ interface Props {
   /** Muestra la fecha de cada día aunque todos los turnos sean del mismo día. */
   mostrarFechas?: boolean;
   modoCronologicoCompacto?: boolean;
+  vistaAdministrativa?: boolean;
   mensajeVacio?: string;
 }
 
@@ -65,6 +66,7 @@ export default function TurnoList({
   mostrarAvisoSeniaPendiente = true,
   mostrarFechas = false,
   modoCronologicoCompacto = false,
+  vistaAdministrativa = false,
   mensajeVacio = "No hay turnos para mostrar.",
 }: Props) {
   const gruposPorDia = useMemo(
@@ -118,10 +120,10 @@ export default function TurnoList({
   // perder la posición de scroll.
   if (cargandoInicial && turnos.length === 0) {
     return (
-      <div className="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl p-4">
-        <div className="space-y-3">
-          {Array.from({ length: 8 }).map((_, indice) => (
-            <Skeleton key={indice} className="h-16 w-full rounded-xl bg-white/5" />
+      <div className={vistaAdministrativa ? "p-4 sm:p-5" : "bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl p-4"}>
+        <div className="space-y-3" aria-hidden="true">
+          {Array.from({ length: vistaAdministrativa ? 3 : 8 }).map((_, indice) => (
+            <Skeleton key={indice} className={`h-16 w-full rounded-xl ${vistaAdministrativa ? "bg-[var(--admin-item)] motion-reduce:animate-none" : "bg-white/5"}`} />
           ))}
         </div>
       </div>
@@ -131,10 +133,14 @@ export default function TurnoList({
   if (turnos.length === 0) {
     return (
       <EmptyState
-        icono={<Calendar className="h-10 w-10" />}
+        icono={<Calendar className={vistaAdministrativa ? "size-6" : "h-10 w-10"} aria-hidden="true" />}
         mensaje={mensajeVacio}
-        claseContenedor={`bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl ${modoCronologicoCompacto ? "p-6" : "p-12"}`}
-        claseIcono="h-10 w-10 text-[var(--admin-texto-muted)] opacity-50"
+        claseContenedor={vistaAdministrativa
+          ? "px-4 py-10"
+          : `bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl ${modoCronologicoCompacto ? "p-6" : "p-12"}`}
+        claseIcono={vistaAdministrativa
+          ? "grid size-11 place-items-center rounded-xl bg-[var(--admin-item)]"
+          : "h-10 w-10 text-[var(--admin-texto-muted)] opacity-50"}
         claseMensaje="text-[var(--admin-texto-muted)]"
       />
     );
@@ -162,6 +168,7 @@ export default function TurnoList({
               alcanceCacheTurnos={alcanceCacheTurnos}
               onTurnoActualizado={onTurnoActualizado}
               modoCompacto={modoCronologicoCompacto}
+              vistaAdministrativa={vistaAdministrativa}
             />
           </section>
         ))}
@@ -188,7 +195,7 @@ export default function TurnoList({
         </div>
       )}
 
-      {!tieneMas && turnos.length > 0 && (
+      {!vistaAdministrativa && !tieneMas && turnos.length > 0 && (
         <p className="py-3 text-center text-xs text-[var(--admin-texto-muted)]">
           No hay más turnos.
         </p>

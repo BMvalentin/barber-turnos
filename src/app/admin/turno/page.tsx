@@ -34,23 +34,21 @@ export default async function AdminTurnoPage() {
   const { servicios, barberos, barberosFiltro, usuarios, relaciones, config } = datosTurno;
 
   return (
-    <div className="h-full min-h-0">
-      <TurnoManager
-        turnosIniciales={[]}
-        cargarTurnosAlMontar
-        session={session}
-        initialServicios={servicios}
-        initialBarberos={barberos}
-        barberosFiltro={barberosFiltro}
-        initialUsuarios={usuarios}
-        initialRelaciones={relaciones}
-        mostrarFiltroBarbero={!esEmpleado}
-        barberoIdInicial={barberoIdInicial}
-        fechaInicial={fechaInicial}
-        vistaAgendaCompleta
-        whatsappPhone={config?.whatsapp || ""}
-        datosTransferencia={obtenerDatosTransferencia(config)}
-      />
-    </div>
+    <TurnoManager
+      turnosIniciales={[]}
+      cargarTurnosAlMontar
+      session={session}
+      initialServicios={servicios}
+      initialBarberos={barberos}
+      barberosFiltro={barberosFiltro}
+      initialUsuarios={usuarios}
+      initialRelaciones={relaciones}
+      mostrarFiltroBarbero={!esEmpleado}
+      barberoIdInicial={barberoIdInicial}
+      fechaInicial={fechaInicial}
+      vistaAgendaCompleta
+      whatsappPhone={config?.whatsapp || ""}
+      datosTransferencia={obtenerDatosTransferencia(config)}
+    />
   );
 }

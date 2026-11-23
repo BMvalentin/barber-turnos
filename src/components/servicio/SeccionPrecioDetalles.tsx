@@ -11,30 +11,22 @@ export default function SeccionPrecioDetalles({
   errors,
 }: SeccionPrecioDetallesProps) {
   return (
-    <div 
-      className="bg-[var(--admin-surface-elevated)] border rounded-xl p-6"
-      style={{ borderColor: "var(--admin-border)" }}
-    >
-      <h3 
-        className="text-xs font-bold uppercase tracking-wider mb-6"
-        style={{ color: "var(--page-primary-tinta)" }}
-      >
-        Precio & Detalles
-      </h3>
+    <section className="space-y-3 border-t border-[var(--admin-border)] pt-4">
+      <h3 className="text-base font-semibold">Precios y duración</h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <CampoFormulario
-          label="Duración Estimada"
+          label="Duración estimada"
           name="duracion"
           type="number"
           defaultValue="30"
-          unit="MIN"
+          unit="min"
           errors={errors?.duracion}
           required
         />
 
         <CampoFormulario
-          label="Precio Base"
+          label="Precio base"
           name="precio"
           type="number"
           step="0.01"
@@ -61,6 +53,6 @@ export default function SeccionPrecioDetalles({
           errors={errors?.senia}
         />
       </div>
-    </div>
+    </section>
   );
 }

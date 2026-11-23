@@ -5,6 +5,13 @@ import { redirect } from "next/navigation";
 import AdminShell from "@/components/panel/navegacion/AdminShell";
 import { obtenerMarcaAdminCacheada } from "@/lib/obtener-config-cacheada";
 import { cookies } from "next/headers";
+import type { Viewport } from "next";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export default async function AdminLayout({
   children,
@@ -26,11 +33,14 @@ export default async function AdminLayout({
     redirect("/dashboard");
   }
 
+  const temaGuardado = almacen.get("mayoraz-admin-tema")?.value;
+
   return (
     <AdminShell
       config={config}
       rol={contexto.rol}
       colapsadoInicial={almacen.get("mayoraz-sidebar-collapsed")?.value === "1"}
+      temaInicial={temaGuardado === "claro" || temaGuardado === "oscuro" ? temaGuardado : "sistema"}
     >
       {children}
     </AdminShell>

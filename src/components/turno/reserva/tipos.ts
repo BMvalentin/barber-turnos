@@ -172,6 +172,7 @@ export type PropsFormularioReservaTurno = {
 };
 
 export type PropsModalGestionTurno = ParametrosFormularioTurno & {
+  vistaAdministrativa?: boolean;
   mostrarAvisoSeniaPendiente?: boolean;
   claseTrigger?: string;
   contenidoTrigger?: ReactNode;

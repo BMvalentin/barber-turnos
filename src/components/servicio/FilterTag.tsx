@@ -9,21 +9,14 @@ type FilterTagProps = {
 
 export default function FilterTag({ label, onRemove }: FilterTagProps) {
   return (
-    <span
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 border text-[10px] font-bold uppercase tracking-wider rounded"
-      style={{
-        backgroundColor: "var(--page-primary-15)",
-        borderColor: "var(--page-primary-40)",
-        color: "var(--admin-texto-primario)",
-      }}
+    <button
+      type="button"
+      aria-label={`Quitar filtro ${label}`}
+      onClick={onRemove}
+      className="inline-flex min-h-9 max-w-full items-center gap-2 rounded-lg bg-[var(--page-primary-soft)] px-3 text-sm font-medium text-[var(--admin-acento-suave-texto)] hover:bg-[var(--admin-item)]"
     >
-      {label}
-      <button
-        onClick={onRemove}
-        className="hover:text-[var(--admin-texto-primario)] transition-colors duration-150 leading-none"
-      >
-        <X className="w-3 h-3" />
-      </button>
-    </span>
+      <span className="truncate">{label}</span>
+      <X aria-hidden="true" className="size-3.5 shrink-0" />
+    </button>
   );
 }

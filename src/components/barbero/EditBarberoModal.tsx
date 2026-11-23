@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button/Button";
 import { toast } from "sonner";
 import { useState, useTransition } from "react";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
@@ -166,12 +165,11 @@ export default function EditBarberoModal({
   return (
     <ModalBase
       onClose={onClose}
-      titulo={perfilPropio ? "Editar mi perfil profesional" : "Editar Barbero"}
+      titulo={perfilPropio ? "Editar mi perfil profesional" : "Editar barbero"}
       maxWidth="max-w-2xl"
-      overlayClase="bg-black/80 backdrop-blur-md p-4"
-      contenedorClase="max-h-[90vh] overflow-y-auto bg-[var(--admin-surface)] rounded-xl p-6 space-y-6 border"
-      headerClase="flex justify-between items-center border-b pb-4"
-      tituloClase="text-2xl font-semibold text-[var(--admin-texto-primario)]"
+      contenedorClase="admin-card max-h-[calc(100dvh-2rem)] space-y-4 overflow-y-auto p-4 sm:p-6"
+      headerClase="flex items-center justify-between gap-3 border-b pb-4"
+      tituloClase="text-xl font-semibold tracking-tight text-[var(--admin-texto-primario)]"
       estiloHeader={{ borderColor: "var(--admin-border)" }}
       animado
     >
@@ -183,7 +181,7 @@ export default function EditBarberoModal({
           />
           <div className="rounded-lg border bg-[var(--admin-item)] px-3 py-2.5 text-sm" style={{ borderColor: "var(--admin-border)" }}>
             <p className="font-semibold text-[var(--page-primary-tinta)]">Correo de la cuenta asociada</p>
-            <p className="mt-1 text-[var(--admin-texto-muted)]">{barbero.usuario?.email ?? "Sin cuenta asociada"}</p>
+            <p className="mt-1 text-[var(--admin-texto-muted)] [overflow-wrap:anywhere]">{barbero.usuario?.email ?? "Sin cuenta asociada"}</p>
           </div>
           {soloEdicionPropia ? (
             <div className="rounded-lg border bg-[var(--admin-item)] px-3 py-2.5 text-sm" style={{ borderColor: "var(--admin-border)" }}>
@@ -245,26 +243,20 @@ export default function EditBarberoModal({
             <span aria-hidden="true" className="relative h-6 w-11 shrink-0 rounded-full border border-[var(--admin-border-fuerte)] bg-[var(--admin-item)] transition-colors duration-300 ease-in-out after:absolute after:left-1 after:top-1 after:h-4 after:w-4 after:rounded-full after:bg-[var(--admin-texto-primario)] after:transition-[transform,background-color] after:duration-300 after:ease-in-out peer-checked:border-[var(--page-primary)] peer-checked:bg-[var(--page-primary)] peer-checked:after:translate-x-5 peer-checked:after:bg-[var(--page-primary-foreground)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--page-focus-ring)]" />
           </label>
         </div>
-        <div className="flex justify-end gap-3 pt-4 border-t" style={{ borderColor: "var(--admin-border)" }}>
-          <Button
+        <div className="flex flex-wrap justify-end gap-2 border-t border-[var(--admin-border)] pt-4">
+          <button
             type="button"
-            variant="outline"
             onClick={onClose}
-            className="bg-transparent text-[var(--admin-texto-primario)] hover:bg-[var(--admin-item)]"
-            style={{
-              borderColor: "var(--admin-border-fuerte)",
-              borderWidth: "1px",
-              borderStyle: "solid",
-            }}
+            className="admin-control"
           >
             Cancelar
-          </Button>
+          </button>
           <BotonSubmitPending
             pendiente={isPending}
             tipo="button"
-            texto={perfilPropio ? "Guardar perfil" : "Guardar Cambios"}
+            texto={perfilPropio ? "Guardar perfil" : "Guardar cambios"}
             onClic={handleSubmit}
-            claseAdicional="hover:opacity-90"
+            claseAdicional="admin-accion h-auto"
           />
         </div>
     </ModalBase>

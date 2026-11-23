@@ -22,6 +22,7 @@ interface Props {
   alcanceCacheTurnos?: string;
   onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
   modoCompacto?: boolean;
+  vistaAdministrativa?: boolean;
 }
 
 type Medidas = { pixelesPorHora: number; ejeX: number; anchoGutter: number };
@@ -138,16 +139,9 @@ function calcularLayout(
 
 export default function LineaTiempoTurnos({
   turnos,
-  session,
-  onCancelar,
-  onCompletar,
-  onConfirmar,
-  whatsappPhone = "",
-  datosTransferencia,
-  mostrarAvisoSeniaPendiente = true,
-  alcanceCacheTurnos = "",
-  onTurnoActualizado,
   modoCompacto = false,
+  vistaAdministrativa = false,
+  ...propsTurno
 }: Props) {
   const medidas = useMedidasLineaTiempo();
   const { pixelesPorHora, ejeX, anchoGutter } = medidas;
@@ -163,7 +157,10 @@ export default function LineaTiempoTurnos({
     [turnos],
   );
 
-  const escala = useMemo(() => calcularEscala(turnos), [turnos]);
+  const escala = useMemo(
+    () => modoCompacto || vistaAdministrativa ? null : calcularEscala(turnos),
+    [modoCompacto, turnos, vistaAdministrativa],
+  );
   const filas = useMemo(() => {
     if (!escala) return [];
     const porHora = agruparTurnosPorHora(turnos);
@@ -182,12 +179,24 @@ export default function LineaTiempoTurnos({
   );
 
   useLayoutEffect(() => {
-    if (modoCompacto) return;
+    if (modoCompacto || vistaAdministrativa) return;
     tarjetasRef.current.forEach((tarjeta, id) => {
       if (tarjeta) alturasRef.current.set(id, tarjeta.offsetHeight);
     });
     setLayout(calcularLayout(filas, pxPorMinuto, alturasRef.current));
-  }, [filas, modoCompacto, pxPorMinuto]);
+  }, [filas, modoCompacto, pxPorMinuto, vistaAdministrativa]);
+
+  if (vistaAdministrativa) {
+    return (
+      <ol className="divide-y divide-[var(--admin-border)]">
+        {turnosOrdenados.map((turno) => (
+          <li key={turno.id}>
+            <TurnoRow {...propsTurno} turno={turno} vistaAdministrativa />
+          </li>
+        ))}
+      </ol>
+    );
+  }
 
   if (modoCompacto) {
     return (
@@ -214,20 +223,7 @@ export default function LineaTiempoTurnos({
                   aria-hidden="true"
                   className="absolute -left-[10px] top-[9px] h-2 w-2 rounded-full border-2 border-[var(--admin-surface)] bg-[var(--page-primary)]"
                 />
-                <TurnoRow
-                  turno={turno}
-                  session={session}
-                  onCancelar={onCancelar}
-                  onCompletar={onCompletar}
-                  onConfirmar={onConfirmar}
-                  whatsappPhone={whatsappPhone}
-                  datosTransferencia={datosTransferencia}
-                  mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
-                  alcanceCacheTurnos={alcanceCacheTurnos}
-                  onTurnoActualizado={onTurnoActualizado}
-                  mostrarHora={false}
-                  compacto
-                />
+                <TurnoRow {...propsTurno} turno={turno} mostrarHora={false} compacto />
               </div>
             </li>
           ))}
@@ -285,18 +281,7 @@ export default function LineaTiempoTurnos({
                         tarjetasRef.current.set(turno.id, tarjeta);
                       }}
                     >
-                      <TurnoRow
-                        turno={turno}
-                        session={session}
-                        onCancelar={onCancelar}
-                        onCompletar={onCompletar}
-                        onConfirmar={onConfirmar}
-                        whatsappPhone={whatsappPhone}
-                        datosTransferencia={datosTransferencia}
-                        mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
-                        alcanceCacheTurnos={alcanceCacheTurnos}
-                        onTurnoActualizado={onTurnoActualizado}
-                      />
+                      <TurnoRow {...propsTurno} turno={turno} />
                     </div>
                   </div>
                 </div>

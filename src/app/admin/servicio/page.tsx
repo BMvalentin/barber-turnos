@@ -10,25 +10,23 @@ export default async function ServiciosPage() {
   const alcanceCache = `${contexto.session.user.id}|${contexto.rol}`;
 
   return (
-    <div className="space-y-8">
-      {/* HEADER */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight md:text-[28px] text-[var(--admin-texto-primario)]">
-          Gestión de Servicios
-        </h1>
-        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-          Creá, editá y organizá los servicios de tu barbería.
-        </p>
-      </div>
+    <div className="admin-pagina">
+      <header className="admin-encabezado">
+        <div>
+          <h1>Servicios</h1>
+          <p>
+            {puedeGestionar
+              ? "Organizá el catálogo, los precios y la duración de cada servicio."
+              : "Consultá el catálogo, los precios y la duración de cada servicio."}
+          </p>
+        </div>
+      </header>
 
-      {/* Lista de servicios - Abajo */}
-      <div>
-        <ServicioCatalogoCliente
-          key={alcanceCache}
-          puedeGestionar={puedeGestionar}
-          alcanceCache={alcanceCache}
-        />
-      </div>
+      <ServicioCatalogoCliente
+        key={alcanceCache}
+        puedeGestionar={puedeGestionar}
+        alcanceCache={alcanceCache}
+      />
     </div>
   );
 }

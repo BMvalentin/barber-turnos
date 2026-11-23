@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 type Props = {
   valor: string;
   error: string | null;
@@ -13,25 +15,29 @@ export default function CampoNombreBarbero({
   requerido = false,
   onCambio,
 }: Props) {
+  const idCampo = useId();
   return (
-    <div className="space-y-2">
-      <label className="text-sm font-semibold" style={{ color: `var(--page-primary-tinta)` }}>
+    <div className="space-y-1.5">
+      <label htmlFor={idCampo} className="block text-sm font-medium text-[var(--admin-texto-secundario)]">
         Nombre {requerido && <span style={{ color: "var(--page-primary-tinta)" }}>*</span>}
       </label>
 
       <input
         type="text"
+        id={idCampo}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? `${idCampo}-error` : undefined}
         value={valor}
         onChange={(e) => onCambio(e.target.value)}
-        className="w-full rounded-lg bg-[var(--admin-surface-elevated)] px-3 py-2.5 text-sm text-[var(--admin-texto-primario)] placeholder:text-[var(--admin-texto-muted)] transition-colors duration-150 border focus:outline-none focus:border-[var(--page-primary)]/60 focus:ring-2 focus:ring-[var(--page-focus-ring)]"
+        className="min-h-11 w-full rounded-xl border bg-[var(--admin-surface-elevated)] px-3 text-base text-[var(--admin-texto-primario)] placeholder:text-[var(--admin-texto-muted)] sm:text-sm"
         style={{
-          borderColor: "var(--admin-border)",
+          borderColor: error ? "var(--admin-error)" : "var(--admin-border-fuerte)",
         }}
-        placeholder="Ingrese el nombre del barbero"
+        placeholder="Ingresá el nombre del barbero"
       />
 
       {error && (
-        <p className="text-red-400 text-sm">{error}</p>
+        <p id={`${idCampo}-error`} className="text-sm text-[var(--admin-error)]">{error}</p>
       )}
     </div>
   );

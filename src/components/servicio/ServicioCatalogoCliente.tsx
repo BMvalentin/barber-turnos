@@ -109,12 +109,12 @@ export default function ServicioCatalogoCliente({
   if (!servicios) {
     if (errorActualizacion) {
       return (
-        <div className="rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 text-sm text-[var(--admin-texto-muted)]">
+        <div role="alert" className="admin-card space-y-3 p-4 text-sm text-[var(--admin-texto-muted)]">
           <p>No se pudo cargar el catálogo de servicios.</p>
           <button
             type="button"
             onClick={() => setIntento((actual) => actual + 1)}
-            className="mt-3 font-medium text-[var(--page-primary-tinta)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
+            className="admin-control"
           >
             Reintentar
           </button>
@@ -124,8 +124,8 @@ export default function ServicioCatalogoCliente({
     return (
       <div className="space-y-4" role="status" aria-live="polite">
         <span className="sr-only">Cargando catálogo de servicios</span>
-        <div className="h-24 animate-pulse rounded-xl bg-[var(--admin-surface)]" />
-        <div className="h-72 animate-pulse rounded-xl bg-[var(--admin-surface)]" />
+        <div aria-hidden="true" className="admin-card h-20 motion-safe:animate-pulse" />
+        <div aria-hidden="true" className="admin-card h-64 motion-safe:animate-pulse" />
       </div>
     );
   }
@@ -133,12 +133,12 @@ export default function ServicioCatalogoCliente({
   return (
     <>
       {errorActualizacion && (
-        <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)] px-4 py-3 text-sm text-[var(--admin-texto-muted)]">
-          <span>Se muestra el último catálogo guardado; no se pudo actualizar ahora.</span>
+        <div role="alert" className="admin-card flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm text-[var(--admin-texto-muted)]">
+          <span>No se pudo actualizar el catálogo. Se muestra la última versión guardada.</span>
           <button
             type="button"
             onClick={() => setIntento((actual) => actual + 1)}
-            className="font-medium text-[var(--page-primary-tinta)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
+            className="admin-control"
           >
             Reintentar
           </button>

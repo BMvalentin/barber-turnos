@@ -3,10 +3,8 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { deleteservicio } from "@/actions/servicios/eliminar.actions";
-import { ESTILO_FONDO_MARCA } from "@/lib/constants";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { useFiltrosServicios } from "@/hooks/useFiltrosServicios";
-import { Button } from "@/components/ui/button/Button";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
 import ServicioStats from "./ServicioStats";
 import PanelFiltros from "./PanelFiltros";
@@ -76,72 +74,60 @@ export default function ServicioList({
   };
 
   return (
-    <div className="space-y-8">
+    <>
       <ServicioStats
         serviciosActivos={activeServicesCount}
         precioPromedio={avgPrice}
         tiempoPromedio={avgTime}
       />
 
-      <div>
-        <div className="flex flex-col sm:flex-row justify-between items-start mb-4">
-          <div>
-            <p
-              className="text-[10px] font-bold uppercase tracking-wider mb-1"
-              style={{ color: "var(--page-primary-tinta)" }}
-            >
-              Catálogo
-            </p>
-            <h2 className="text-2xl font-bold text-[var(--admin-texto-primario)]">
-              Menú de Barbería
-            </h2>
+      <section aria-labelledby="catalogo-servicios" className="min-w-0 space-y-3">
+        <div className="admin-card space-y-4 p-3 sm:p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 id="catalogo-servicios" className="text-lg font-semibold tracking-tight">Catálogo</h2>
+              <p className="mt-0.5 text-sm text-[var(--admin-texto-muted)]">
+                {serviciosFiltrados.length} {serviciosFiltrados.length === 1 ? "servicio" : "servicios"}
+              </p>
+            </div>
+            {puedeGestionar && (
+              <button type="button" className="admin-accion" onClick={() => setShowCreateModal(true)}>
+                <Plus aria-hidden="true" className="size-4" /> Nuevo servicio
+              </button>
+            )}
           </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mt-3 sm:mt-0">
-            <PanelFiltros
-              filtros={filters}
-              onCambiarFiltro={updateFilter}
-              onLimpiarFiltros={resetFilters}
-              filtrosActivos={activeFilterCount}
-              totalResultados={serviciosFiltrados.length}
-              totalServicios={servicios.length}
-            />
-
-            <Button
-              className="flex items-center gap-2 px-4 py-2 text-[var(--page-primary-foreground)] hover:opacity-90"
-              style={ESTILO_FONDO_MARCA}
-              onClick={() => setShowCreateModal(true)}
-            >
-              <Plus className="w-4 h-4" /> Nuevo Servicio
-            </Button>
-          </div>
+          <PanelFiltros
+            filtros={filters}
+            onCambiarFiltro={updateFilter}
+            filtrosActivos={activeFilterCount}
+          />
+          {activeFilterCount > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {filters.search && (
+                <FilterTag label={`"${filters.search}"`} onRemove={() => updateFilter("search", "")} />
+              )}
+              {filters.estado !== "" && (
+                <FilterTag label={filters.estado === "true" ? "Activos" : "Inactivos"} onRemove={() => updateFilter("estado", "")} />
+              )}
+              {filters.precioMin && (
+                <FilterTag label={`Precio ≥ $${filters.precioMin}`} onRemove={() => updateFilter("precioMin", "")} />
+              )}
+              {filters.precioMax && (
+                <FilterTag label={`Precio ≤ $${filters.precioMax}`} onRemove={() => updateFilter("precioMax", "")} />
+              )}
+              {filters.duracionMax && (
+                <FilterTag label={`≤ ${filters.duracionMax} min`} onRemove={() => updateFilter("duracionMax", "")} />
+              )}
+              <button
+                onClick={resetFilters}
+                type="button"
+                className="min-h-9 rounded-lg px-2 text-sm font-medium text-[var(--admin-acento-suave-texto)] hover:bg-[var(--admin-item)]"
+              >
+                Limpiar todo
+              </button>
+            </div>
+          )}
         </div>
-
-        {activeFilterCount > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {filters.search && (
-              <FilterTag label={`"${filters.search}"`} onRemove={() => updateFilter("search", "")} />
-            )}
-            {filters.estado !== "" && (
-              <FilterTag label={filters.estado === "true" ? "Activos" : "Inactivos"} onRemove={() => updateFilter("estado", "")} />
-            )}
-            {filters.precioMin && (
-              <FilterTag label={`Precio ≥ $${filters.precioMin}`} onRemove={() => updateFilter("precioMin", "")} />
-            )}
-            {filters.precioMax && (
-              <FilterTag label={`Precio ≤ $${filters.precioMax}`} onRemove={() => updateFilter("precioMax", "")} />
-            )}
-            {filters.duracionMax && (
-              <FilterTag label={`≤ ${filters.duracionMax} min`} onRemove={() => updateFilter("duracionMax", "")} />
-            )}
-            <button
-              onClick={resetFilters}
-              className="text-[10px] font-bold text-[var(--admin-texto-muted)] hover:text-red-400 uppercase tracking-wider transition-colors duration-150 px-1"
-            >
-              Limpiar todo
-            </button>
-          </div>
-        )}
 
         <ServicioTabla
           servicios={paginatedServicios}
@@ -159,7 +145,7 @@ export default function ServicioList({
           onCambiarPagina={setCurrentPage}
           onServicioActualizado={onServicioActualizado}
         />
-      </div>
+      </section>
 
       {mostrarConfirmacion && (
         <ConfirmDialog
@@ -170,12 +156,12 @@ export default function ServicioList({
         />
       )}
 
-      {showCreateModal && (
+      {puedeGestionar && showCreateModal && (
         <CreateServicioForm
           onClose={() => setShowCreateModal(false)}
           onServicioCreado={onServicioActualizado}
         />
       )}
-    </div>
+    </>
   );
 }

@@ -28,16 +28,13 @@ export default function SeccionApariencia({
         <div className="flex items-center gap-2">
           <Palette className="h-4 w-4 text-[var(--admin-texto-muted)]" />
           <h2 className="text-lg font-semibold tracking-tight text-[var(--admin-texto-primario)]">
-            Apariencia
+            Colores del sitio
           </h2>
         </div>
-        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-          Elegí una plantilla o personalizá los tres colores de tu marca.
-        </p>
       </div>
 
       <div className="mt-6 space-y-8">
-        <div>
+        <div className="min-w-0">
           <h3 className="text-sm font-semibold text-[var(--admin-texto-primario)]">
             Plantillas de colores
           </h3>
@@ -55,7 +52,7 @@ export default function SeccionApariencia({
           </div>
         </div>
 
-        <div>
+        <div className="min-w-0 border-t border-[var(--admin-border)] pt-6">
           <h3 className="text-sm font-semibold text-[var(--admin-texto-primario)]">
             Colores personalizados
           </h3>

@@ -1,17 +1,8 @@
-// src/components/panel/ItemLista.tsx
-
 import type { ReactNode } from "react";
 
-type ItemListaProps = {
-  children: ReactNode;
-};
-
-export function ItemLista({ children }: ItemListaProps) {
+export function ItemLista({ children }: { children: ReactNode }) {
   return (
-    <div
-      className="flex items-center justify-between gap-3 py-2 border-b last:border-b-0"
-      style={{ borderColor: "var(--admin-border)" }}
-    >
+    <div className="flex min-h-12 min-w-0 items-center justify-between gap-3 border-b border-[var(--admin-border)] py-2.5 last:border-b-0">
       {children}
     </div>
   );
