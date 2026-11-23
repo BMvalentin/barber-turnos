@@ -1,3 +1,7 @@
+body:has(.admin-shell) {
+  --admin-espacio-barra-movil: calc(5.25rem + env(safe-area-inset-bottom));
+}
+
 body:has(.admin-shell) :is(h1, h2, h3) {
   font-family: inherit;
 }
@@ -40,7 +44,7 @@ body:has(.admin-shell) [data-sonner-toaster] [data-description] {
 
 @media (hover: none), (pointer: coarse), (width < 768px) {
   body:has(.admin-shell) [data-sonner-toaster][data-y-position="bottom"] {
-    bottom: calc(4.625rem + env(safe-area-inset-bottom));
+    bottom: var(--admin-espacio-barra-movil);
   }
 
   body:has(.admin-shell) :where(
@@ -146,6 +150,38 @@ body:has(.admin-shell) [data-sonner-toaster] [data-description] {
   }
 }
 
+.admin-barra-movil {
+  bottom: calc(0.625rem + env(safe-area-inset-bottom));
+  background: var(--admin-surface);
+}
+
+[data-tono-estado="aviso"] { --admin-color-estado: var(--admin-indicador-aviso); }
+[data-tono-estado="exito"] { --admin-color-estado: var(--admin-indicador-exito); }
+[data-tono-estado="error"] { --admin-color-estado: var(--admin-indicador-error); }
+[data-tono-estado="info"] { --admin-color-estado: var(--admin-indicador-info); }
+
+.admin-estado {
+  background: color-mix(in srgb, var(--admin-color-estado, var(--admin-indicador-neutro)) 10%, var(--admin-surface));
+  color: var(--admin-texto-primario);
+}
+
+.admin-estado::before {
+  width: 0.375rem;
+  height: 0.375rem;
+  flex: none;
+  border-radius: 50%;
+  background: var(--admin-color-estado, var(--admin-indicador-neutro));
+  content: "";
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .admin-barra-movil {
+    background: color-mix(in srgb, var(--admin-surface) 88%, transparent);
+    -webkit-backdrop-filter: blur(16px) saturate(130%);
+    backdrop-filter: blur(16px) saturate(130%);
+  }
+}
+
 .admin-menu-panel {
   animation: admin-menu-entrada 260ms var(--admin-ease-drawer) both;
 }
@@ -163,8 +199,9 @@ body:has(.admin-shell) [data-sonner-toaster] [data-description] {
   animation-name: admin-menu-desvelar;
 }
 
-@keyframes admin-menu-entrada { from { transform: translateY(100%); } }
-@keyframes admin-menu-salida { to { transform: translateY(100%); } }
+/* La traslación de entrada/salida se combina con el arrastre de Motion. */
+@keyframes admin-menu-entrada { from { translate: 0 100%; } }
+@keyframes admin-menu-salida { to { translate: 0 100%; } }
 @keyframes admin-menu-velar { from { opacity: 0; } }
 @keyframes admin-menu-desvelar { to { opacity: 0; } }
 

@@ -53,10 +53,10 @@ const CLASES_PUNTO_ESTADO: Record<EstadoTurnoCalendario, string> = {
 };
 
 const CLASES_PUNTO_ADMIN: Record<(typeof ESTADOS_CON_INDICADOR)[number], string> = {
-  PENDIENTE: "bg-[var(--admin-aviso)]",
-  CONFIRMADO: "bg-[var(--admin-exito)]",
-  COMPLETADO: "bg-[var(--admin-exito)]",
-  CANCELADO: "bg-[var(--admin-error)]",
+  PENDIENTE: "bg-[var(--admin-indicador-aviso)]",
+  CONFIRMADO: "bg-[var(--admin-indicador-exito)]",
+  COMPLETADO: "bg-[var(--admin-indicador-neutro)]",
+  CANCELADO: "bg-[var(--admin-indicador-error)]",
 };
 
 const FORMATO_FECHA_LARGA = new Intl.DateTimeFormat("es-AR", {
@@ -249,7 +249,7 @@ export default function CalendarioMensualTurnos({
                         : "bg-[var(--page-primary-soft)] font-bold text-[var(--page-primary-tinta)] ring-1 ring-inset ring-[var(--page-primary-tinta)]"
                       : deshabilitado
                         ? "text-[var(--admin-texto-muted)]"
-                        : "bg-[var(--page-primary-soft)] font-semibold text-[var(--admin-texto-primario)] hover:bg-[var(--page-primary-20)]"
+                        : "bg-[var(--page-primary-soft)] font-semibold text-[var(--admin-texto-primario)] hover:bg-[var(--admin-item)]"
                   } ${esHoy && !seleccionado ? "ring-1 ring-inset ring-[var(--admin-border-fuerte)]" : ""} ${!estaEnElMes ? "opacity-40" : deshabilitado && !seleccionado ? "opacity-80" : ""}`
                   : `flex h-10 w-full flex-col items-center justify-center rounded-lg border border-transparent text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] sm:h-11 sm:text-sm ${
                   seleccionado

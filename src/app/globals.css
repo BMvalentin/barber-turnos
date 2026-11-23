@@ -225,6 +225,11 @@ body:has(.admin-shell) {
   --admin-exito: #206345;
   --admin-aviso: #805007;
   --admin-info: #285c99;
+  --admin-indicador-aviso: #b77916;
+  --admin-indicador-exito: #22865f;
+  --admin-indicador-error: #ce5363;
+  --admin-indicador-info: #4381c0;
+  --admin-indicador-neutro: #787885;
   --admin-acento: #c4490d;
   --admin-acento-hover: #a93b0a;
   --admin-acento-sobre: #fff;

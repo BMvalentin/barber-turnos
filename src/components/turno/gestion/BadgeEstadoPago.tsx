@@ -39,27 +39,27 @@ const ESTADO_FALLBACK = {
   clases: "text-zinc-400 bg-zinc-400/10 border-zinc-400/20",
 };
 
-const CLASES_ESTADO_ADMIN: Record<string, string> = {
-  PENDIENTE: "bg-[var(--admin-aviso-suave)] text-[var(--admin-aviso)]",
-  SEÑADO: "bg-[var(--admin-info-suave)] text-[var(--admin-info)]",
-  PAGADO: "bg-[var(--admin-exito-suave)] text-[var(--admin-exito)]",
-  APROBADO: "bg-[var(--admin-exito-suave)] text-[var(--admin-exito)]",
-  RECHAZADO: "bg-[var(--admin-error-suave)] text-[var(--admin-error)]",
-  CANCELADO: "bg-[var(--admin-item)] text-[var(--admin-texto-secundario)]",
-  EN_ACREDITACION: "bg-[var(--admin-aviso-suave)] text-[var(--admin-aviso)]",
+const TONOS_ESTADO_ADMIN: Record<string, string> = {
+  PENDIENTE: "aviso",
+  SEÑADO: "info",
+  PAGADO: "exito",
+  APROBADO: "exito",
+  RECHAZADO: "error",
+  EN_ACREDITACION: "aviso",
 };
 
 export default function BadgeEstadoPago({ estado, vistaAdministrativa = false }: Props) {
   const config = MAPA_ESTADOS[estado] ?? ESTADO_FALLBACK;
   const clases = vistaAdministrativa
-    ? CLASES_ESTADO_ADMIN[estado] ?? CLASES_ESTADO_ADMIN.CANCELADO
+    ? "admin-estado"
     : `border ${config.clases}`;
 
   return (
     <span
+      data-tono-estado={vistaAdministrativa ? TONOS_ESTADO_ADMIN[estado] : undefined}
       className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${clases}`}
     >
-      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+      {!vistaAdministrativa && <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />}
       Pago: {config.etiqueta}
     </span>
   );

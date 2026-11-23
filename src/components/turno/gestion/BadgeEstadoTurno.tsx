@@ -27,24 +27,24 @@ const ESTADO_FALLBACK = {
   clases: "text-zinc-400 bg-zinc-400/10 border-zinc-400/20",
 };
 
-const CLASES_ESTADO_ADMIN: Record<string, string> = {
-  PENDIENTE: "bg-[var(--admin-aviso-suave)] text-[var(--admin-aviso)]",
-  CONFIRMADO: "bg-[var(--admin-exito-suave)] text-[var(--admin-exito)]",
-  COMPLETADO: "bg-[var(--admin-item)] text-[var(--admin-texto-secundario)]",
-  CANCELADO: "bg-[var(--admin-error-suave)] text-[var(--admin-error)]",
+const TONOS_ESTADO_ADMIN: Record<string, string> = {
+  PENDIENTE: "aviso",
+  CONFIRMADO: "exito",
+  CANCELADO: "error",
 };
 
 export default function BadgeEstadoTurno({ estado, vistaAdministrativa = false }: Props) {
   const config = MAPA_ESTADOS[estado] ?? ESTADO_FALLBACK;
   const clases = vistaAdministrativa
-    ? CLASES_ESTADO_ADMIN[estado] ?? CLASES_ESTADO_ADMIN.COMPLETADO
+    ? "admin-estado"
     : `border ${config.clases}`;
 
   return (
     <span
+      data-tono-estado={vistaAdministrativa ? TONOS_ESTADO_ADMIN[estado] : undefined}
       className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${clases}`}
     >
-      {!vistaAdministrativa && <span className="h-1.5 w-1.5 rounded-full bg-current" />}
+      {!vistaAdministrativa && <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />}
       <span>
         <span className={vistaAdministrativa ? "sr-only" : undefined}>Turno: </span>
         {config.etiqueta}
