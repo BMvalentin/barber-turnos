@@ -105,14 +105,22 @@ function capitalizar(texto: string): string {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
-function descripcionIndicadores(resumen: ResumenDiaCalendario | undefined): string {
-  if (!resumen) return "Sin turnos pendientes, confirmados o cancelados";
-  const descripciones = ESTADOS_CON_INDICADOR
+function descripcionIndicadores(
+  resumen: ResumenDiaCalendario | undefined,
+  vistaAdministrativa: boolean,
+): string {
+  const sinTurnos = vistaAdministrativa
+    ? "Sin turnos"
+    : "Sin turnos pendientes, confirmados o cancelados";
+  if (!resumen) return sinTurnos;
+
+  const estados: readonly EstadoTurnoCalendario[] = vistaAdministrativa
+    ? [...ESTADOS_CON_INDICADOR, "COMPLETADO"]
+    : ESTADOS_CON_INDICADOR;
+  const descripciones = estados
     .filter((estado) => resumen[estado] > 0)
     .map((estado) => `${resumen[estado]} ${ETIQUETAS_ESTADO[estado].toLowerCase()}${resumen[estado] === 1 ? "" : "s"}`);
-  return descripciones.length > 0
-    ? descripciones.join(", ")
-    : "Sin turnos pendientes, confirmados o cancelados";
+  return descripciones.join(", ") || sinTurnos;
 }
 
 export default function CalendarioMensualTurnos({
@@ -221,7 +229,7 @@ export default function CalendarioMensualTurnos({
               !estaEnElMes || cargandoTurnos || !tieneTurnos;
             const descripcionDia = cargandoTurnos
               ? "Cargando turnos"
-              : descripcionIndicadores(resumenDia);
+              : descripcionIndicadores(resumenDia, vistaAdministrativa);
             const etiqueta = `${capitalizar(FORMATO_FECHA_LARGA.format(dia))}. ${descripcionDia}.`;
 
             return (
@@ -236,11 +244,13 @@ export default function CalendarioMensualTurnos({
                 className={vistaAdministrativa
                   ? `flex h-9 w-full flex-col items-center justify-center gap-1 rounded-lg text-sm tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-[var(--page-focus-ring)] sm:h-11 ${
                     seleccionado
-                      ? "bg-[var(--page-primary-soft)] font-semibold text-[var(--page-primary-tinta)]"
+                      ? deshabilitado
+                        ? "bg-[var(--admin-item)] font-semibold text-[var(--admin-texto-primario)] ring-1 ring-inset ring-[var(--page-primary-tinta)]"
+                        : "bg-[var(--page-primary-soft)] font-bold text-[var(--page-primary-tinta)] ring-1 ring-inset ring-[var(--page-primary-tinta)]"
                       : deshabilitado
                         ? "text-[var(--admin-texto-muted)]"
-                        : "font-medium hover:bg-[var(--admin-item)]"
-                  } ${esHoy && !seleccionado ? "ring-1 ring-inset ring-[var(--admin-border-fuerte)]" : ""} ${estaEnElMes ? "" : "opacity-45"}`
+                        : "bg-[var(--page-primary-soft)] font-semibold text-[var(--admin-texto-primario)] hover:bg-[var(--page-primary-20)]"
+                  } ${esHoy && !seleccionado ? "ring-1 ring-inset ring-[var(--admin-border-fuerte)]" : ""} ${!estaEnElMes ? "opacity-40" : deshabilitado && !seleccionado ? "opacity-80" : ""}`
                   : `flex h-10 w-full flex-col items-center justify-center rounded-lg border border-transparent text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] sm:h-11 sm:text-sm ${
                   seleccionado
                     ? tieneTurnos && !cargandoTurnos
@@ -254,11 +264,11 @@ export default function CalendarioMensualTurnos({
                 } ${esHoy && !seleccionado ? "ring-1 ring-inset ring-[var(--admin-border-fuerte)]" : ""}`}
               >
                 <span>{format(dia, "d")}</span>
-                <span className={`flex h-1 items-center justify-center gap-0.5 ${vistaAdministrativa ? "" : "mt-0.5"}`} aria-hidden="true">
+                <span className={`flex items-center justify-center gap-0.5 ${vistaAdministrativa ? "h-1.5" : "mt-0.5 h-1"}`} aria-hidden="true">
                   {estaEnElMes && ESTADOS_CON_INDICADOR.filter((estado) => (resumenDia?.[estado] ?? 0) > 0).map((estado) => (
                     <span
                       key={estado}
-                      className={`h-1 w-1 rounded-full ${clasesPunto[estado]}`}
+                      className={`rounded-full ${vistaAdministrativa ? "size-1.5" : "size-1"} ${clasesPunto[estado]}`}
                     />
                   ))}
                 </span>
