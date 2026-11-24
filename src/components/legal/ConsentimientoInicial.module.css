@@ -9,6 +9,39 @@
   transition: opacity 200ms var(--salida);
 }
 
+.encabezado {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    "icono titulo"
+    "icono descripcion"
+    "expansor expansor";
+  column-gap: 0.75rem;
+}
+
+.encabezado[data-expandido="true"] {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "icono titulo expansor"
+    "icono descripcion descripcion";
+}
+
+.icono { grid-area: icono; }
+.titulo { grid-area: titulo; }
+.descripcion { grid-area: descripcion; }
+.expansor { grid-area: expansor; }
+
+@media (width < 40rem) and (height <= 43.75rem), (height <= 28rem) {
+  .encabezado[data-expandido="false"] {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "titulo expansor";
+  }
+
+  .encabezado[data-expandido="false"] :is(.icono, .descripcion) { display: none; }
+  .encabezado[data-expandido="false"] .titulo { font-size: 1rem; }
+  .encabezado[data-expandido="false"] .expansor { margin-top: 0; padding-inline: 0.75rem; }
+}
+
 @media (min-width: 28rem) {
   .panel {
     left: auto;
