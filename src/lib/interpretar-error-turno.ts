@@ -4,6 +4,10 @@ const MENSAJE_LOCKED =
 const MENSAJE_CERRADO = "El negocio está cerrado ese día";
 const MENSAJE_FUERA_DE_RANGO = "Horario fuera del rango laboral";
 
+export function esConflictoHorario(mensaje: string): boolean {
+  return mensaje === MENSAJE_OCUPADO || mensaje === MENSAJE_LOCKED;
+}
+
 function esErrorPrismaConCodigo(error: unknown): error is { code: string } {
   return (
     typeof error === "object" &&

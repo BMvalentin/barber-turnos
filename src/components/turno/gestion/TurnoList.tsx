@@ -25,7 +25,6 @@ interface Props {
   onCargarMas?: () => void;
   onEstadoActualizado?: (id: string, nuevoEstado: TurnoListado["estado"]) => void;
   onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
-  alcanceCacheTurnos?: string;
   whatsappPhone?: string;
   datosTransferencia?: DatosTransferencia;
   mostrarAvisoSeniaPendiente?: boolean;
@@ -60,7 +59,6 @@ export default function TurnoList({
   onCargarMas = () => {},
   onEstadoActualizado = () => {},
   onTurnoActualizado,
-  alcanceCacheTurnos = "",
   whatsappPhone = "",
   datosTransferencia,
   mostrarAvisoSeniaPendiente = true,
@@ -165,7 +163,6 @@ export default function TurnoList({
               whatsappPhone={whatsappPhone}
               datosTransferencia={datosTransferencia}
               mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
-              alcanceCacheTurnos={alcanceCacheTurnos}
               onTurnoActualizado={onTurnoActualizado}
               modoCompacto={modoCronologicoCompacto}
               vistaAdministrativa={vistaAdministrativa}

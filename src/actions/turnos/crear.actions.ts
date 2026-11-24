@@ -13,8 +13,8 @@ import { crearTurnoEnTransaccion } from "@/lib/crear-turno-transaccion";
 import { revalidarDisponibilidadTurno } from "@/lib/turnos/revalidar-disponibilidad-turno";
 import { MINIMO_ANTICIPACION_MS, ESTADOS_TURNO, ESTADOS_PAGO, ESTADOS_PAGO_MANUALES } from "@/lib/constants";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
-import type { ActionState } from "@/types/action-state";
-import type { TurnoConDetalle } from "@/types/turno";
+import { esConflictoHorario } from "@/lib/interpretar-error-turno";
+import type { EstadoFormularioTurno } from "@/types/turno";
 import { z } from "zod";
 
 const esquemaClienteNuevo = z.object({
@@ -27,9 +27,9 @@ const esquemaClienteNuevo = z.object({
 });
 
 export async function createTurno(
-  prevState: ActionState<TurnoConDetalle>,
+  prevState: EstadoFormularioTurno,
   formData: FormData,
-): Promise<ActionState<TurnoConDetalle>> {
+): Promise<EstadoFormularioTurno> {
   try {
     const session = await requerirSesion();
     if (!session?.user) return { success: false, error: "Iniciá sesión para reservar un turno" };
@@ -109,7 +109,13 @@ export async function createTurno(
       estadoFinal,
       confirmarSinSeña: !puedeGestionarTurnos,
     });
-    if (!resultado.ok) return { success: false, error: resultado.error };
+    if (!resultado.ok) {
+      return {
+        success: false,
+        error: resultado.error,
+        ...(esConflictoHorario(resultado.error) && { horarioNoDisponible: { barberoId, horario: inicio.toISOString() } }),
+      };
+    }
     const turno = resultado.turno;
     after(async () => {
       const tareas: Promise<unknown>[] = [

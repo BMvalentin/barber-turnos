@@ -11,6 +11,9 @@ import { Loader2, Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button/Button";
 import { listarUsuariosParaReserva } from "@/actions/turnos/listar-usuarios-reserva.actions";
 import { toast } from "sonner";
+import { useDatosReserva } from "@/hooks/useDatosReserva";
+import { consultarDisponibilidadMensual, precargarDisponibilidadInicial } from "@/lib/turnos/disponibilidad-cliente";
+import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import type { UsuarioData } from "@/types/turno";
 import type { PropsModalGestionTurno } from "@/components/turno/reserva/tipos";
 
@@ -38,13 +41,20 @@ function cargarModuloModal() {
 }
 
 export default function CargadorModalGestionTurno(
-  props: PropsModalGestionTurno,
+  { precargarEdicion = false, ...props }: PropsModalGestionTurno & { precargarEdicion?: boolean },
 ) {
   const [Modal, setModal] = useState<ComponenteModal | null>(null);
   const [usuarios, setUsuarios] = useState<UsuarioData[]>(props.initialUsuarios ?? []);
   const [cargando, setCargando] = useState(false);
   const montadoRef = useRef(true);
-  const esEdicion = Boolean(props.turnoInicial);
+  const { turnoInicial } = props;
+  const esEdicion = Boolean(turnoInicial);
+  const datosReserva = useDatosReserva();
+  const barberos = props.initialBarberos ?? datosReserva.barberos;
+  const usuarioId = props.session?.user?.id;
+  const barberoInicialId = turnoInicial?.barberoId;
+  const turnoId = turnoInicial?.id;
+  const mesInicial = turnoInicial && obtenerFechaSola(turnoInicial.horarioReservado).slice(0, 7);
 
   useEffect(() => {
     montadoRef.current = true;
@@ -53,11 +63,28 @@ export default function CargadorModalGestionTurno(
     };
   }, []);
 
+  useEffect(() => {
+    if (!usuarioId) return;
+    if (!esEdicion) {
+      precargarDisponibilidadInicial(barberos.map(({ id }) => id));
+      void cargarModuloModal().catch(() => {});
+    } else if (precargarEdicion && barberoInicialId && turnoId && mesInicial) {
+      void consultarDisponibilidadMensual(mesInicial, barberoInicialId, { turnoId, usuarioId });
+      void cargarModuloModal().catch(() => {});
+    }
+  }, [barberoInicialId, barberos, esEdicion, mesInicial, precargarEdicion, turnoId, usuarioId]);
+
   const precargar = () => {
     void cargarModuloModal().catch(() => {});
+    if (usuarioId && barberoInicialId && turnoId && mesInicial) {
+      void consultarDisponibilidadMensual(mesInicial, barberoInicialId, { turnoId, usuarioId });
+    } else if (usuarioId && !esEdicion) {
+      precargarDisponibilidadInicial(barberos.map(({ id }) => id));
+    }
   };
 
   const abrir = async () => {
+    precargar();
     props.onTriggerClick?.();
     setCargando(true);
     try {

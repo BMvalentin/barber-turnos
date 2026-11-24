@@ -19,7 +19,6 @@ interface Props {
   whatsappPhone?: string;
   datosTransferencia?: DatosTransferencia;
   mostrarAvisoSeniaPendiente?: boolean;
-  alcanceCacheTurnos?: string;
   onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
   modoCompacto?: boolean;
   vistaAdministrativa?: boolean;

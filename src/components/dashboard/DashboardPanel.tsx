@@ -5,35 +5,19 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { updateProfile } from "@/actions/sesion/perfil.actions";
-import { getUserTurnos, getUserTurnosProximos } from "@/actions/sesion/listar-turnos-usuario.actions";
-import { obtenerDatosPagoPanel } from "@/actions/sesion/datos-panel-usuario.actions";
+import { getResumenTurnosUsuario } from "@/actions/sesion/listar-turnos-usuario.actions";
 import EncabezadoPanelUsuario from "@/components/dashboard/EncabezadoPanelUsuario";
 import FormularioPerfilUsuario from "@/components/dashboard/FormularioPerfilUsuario";
 import ModalTelefonoObligatorio from "@/components/dashboard/ModalTelefonoObligatorio";
 import PanelTurnosUsuario from "@/components/dashboard/PanelTurnosUsuario";
 import { Skeleton } from "@/components/ui/skeleton";
+import { precargarDisponibilidadInicial } from "@/lib/turnos/disponibilidad-cliente";
 import {
   guardarTurnosUsuarioCacheLocal,
   leerTurnosUsuarioCacheLocal,
 } from "@/components/dashboard/turnos-usuario-cache-local";
 import type { DatosUsuarioPanel, PestanaPanel, PropiedadesPanelUsuario } from "@/components/dashboard/tipos-panel-usuario";
 import type { DatosTurnosUsuarioCache } from "@/components/dashboard/turnos-usuario-cache-local";
-import type { TurnoListado } from "@/types/turno";
-import type { DatosTransferencia } from "@/types/pago";
-
-type PaginaTurnos = {
-  turnos: TurnoListado[];
-  paginaActual: number;
-  totalPaginas: number;
-};
-
-type DatosTurnosPanel = {
-  pagina: PaginaTurnos;
-  proximos: TurnoListado[];
-  whatsappPhone: string;
-  datosTransferencia: DatosTransferencia;
-  mostrarAvisoSeniaPendiente: boolean;
-};
 
 function CargadorTurnosUsuario() {
   return (
@@ -97,12 +81,13 @@ export default function DashboardPanel({
   initialServicios,
   initialBarberos,
   initialRelaciones,
+  datosPago,
 }: PropiedadesPanelUsuario) {
   const { update } = useSession();
   const [guardando, iniciarTransicion] = useTransition();
   const [pestana, setPestana] = useState<PestanaPanel>(initialTab);
   const [usuario, setUsuario] = useState<DatosUsuarioPanel>(user);
-  const [datosTurnos, setDatosTurnos] = useState<DatosTurnosPanel | null>(null);
+  const [datosTurnos, setDatosTurnos] = useState<DatosTurnosUsuarioCache | null>(null);
   const [errorTurnos, setErrorTurnos] = useState(false);
   const cargaTurnosEnCurso = useRef(false);
   const [tieneTelefono, setTieneTelefono] = useState(Boolean(usuario.telefono));
@@ -111,46 +96,21 @@ export default function DashboardPanel({
   const telefonoInicial = coincidencia?.[2].trim() || usuario.telefono || "";
 
   const cargarTurnos = useCallback(async () => {
-    if (cargaTurnosEnCurso.current || datosTurnos) return;
+    if (cargaTurnosEnCurso.current) return;
     cargaTurnosEnCurso.current = true;
-    setDatosTurnos(null);
     setErrorTurnos(false);
     try {
       const cache = leerTurnosUsuarioCacheLocal(usuario.id);
       if (cache) {
-        const resultadoPago = await obtenerDatosPagoPanel();
-        if (resultadoPago.success && resultadoPago.data) {
-          setDatosTurnos({
-            pagina: cache.historial,
-            proximos: cache.proximos,
-            whatsappPhone: resultadoPago.data.whatsappPhone,
-            datosTransferencia: resultadoPago.data.datosTransferencia,
-            mostrarAvisoSeniaPendiente: resultadoPago.data.mostrarAvisoSeniaPendiente,
-          });
-        } else {
-          setErrorTurnos(true);
-        }
+        setDatosTurnos(cache);
         return;
       }
 
-      const [resultadoTurnos, resultadoProximos, resultadoPago] = await Promise.all([
-        getUserTurnos(usuario.id),
-        getUserTurnosProximos(usuario.id),
-        obtenerDatosPagoPanel(),
-      ]);
-      if (resultadoTurnos.success && resultadoTurnos.data && resultadoProximos.success && resultadoProximos.data && resultadoPago.success && resultadoPago.data) {
-        const datosCache: DatosTurnosUsuarioCache = {
-          historial: resultadoTurnos.data,
-          proximos: resultadoProximos.data,
-        };
-        guardarTurnosUsuarioCacheLocal(usuario.id, datosCache);
-        setDatosTurnos({
-          pagina: datosCache.historial,
-          proximos: datosCache.proximos,
-          whatsappPhone: resultadoPago.data.whatsappPhone,
-          datosTransferencia: resultadoPago.data.datosTransferencia,
-          mostrarAvisoSeniaPendiente: resultadoPago.data.mostrarAvisoSeniaPendiente,
-        });
+      const resultado = await getResumenTurnosUsuario(usuario.id);
+      if (resultado.success && resultado.data) {
+        const datosActualizados = leerTurnosUsuarioCacheLocal(usuario.id);
+        if (!datosActualizados) guardarTurnosUsuarioCacheLocal(usuario.id, resultado.data);
+        setDatosTurnos(datosActualizados ?? resultado.data);
       } else {
         setErrorTurnos(true);
       }
@@ -159,17 +119,19 @@ export default function DashboardPanel({
     } finally {
       cargaTurnosEnCurso.current = false;
     }
-  }, [datosTurnos, usuario.id]);
+  }, [usuario.id]);
 
   useEffect(() => {
     setPestana(initialTab);
-  }, [initialTab]);
+    void cargarTurnos();
+  }, [cargarTurnos, initialTab]);
 
   useEffect(() => {
-    if (pestana === "turnos") void cargarTurnos();
-  }, [cargarTurnos, pestana]);
+    precargarDisponibilidadInicial(initialBarberos.map(({ id }) => id));
+  }, [initialBarberos]);
 
   const cambiarPestana = (siguiente: PestanaPanel) => {
+    if (siguiente === "turnos" && pestana !== siguiente) void cargarTurnos();
     setPestana(siguiente);
     const url = new URL(window.location.href);
     url.searchParams.set("tab", siguiente);
@@ -214,16 +176,14 @@ export default function DashboardPanel({
               datosTurnos ? (
                 <PanelTurnosUsuario
                   turnosProximosIniciales={datosTurnos.proximos}
-                  turnosHistorialIniciales={datosTurnos.pagina.turnos}
-                  paginaInicial={datosTurnos.pagina.paginaActual}
-                  totalPaginasInicial={datosTurnos.pagina.totalPaginas}
+                  turnosHistorialIniciales={datosTurnos.historial.turnos}
+                  paginaInicial={datosTurnos.historial.paginaActual}
+                  totalPaginasInicial={datosTurnos.historial.totalPaginas}
                   session={session}
                   initialServicios={initialServicios}
                   initialBarberos={initialBarberos}
                   initialRelaciones={initialRelaciones}
-                  whatsappPhone={datosTurnos.whatsappPhone}
-                  datosTransferencia={datosTurnos.datosTransferencia}
-                  mostrarAvisoSeniaPendiente={datosTurnos.mostrarAvisoSeniaPendiente}
+                  {...datosPago}
                 />
               ) : (
                 errorTurnos ? (

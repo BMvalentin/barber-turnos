@@ -14,10 +14,10 @@ import { formatearFecha } from "@/lib/utils/formatear-fecha";
 export default async function AdminDashboard({ searchParams }: {
   searchParams: Promise<{ periodo?: string | string[] }>;
 }) {
-  const contexto = await requerirPanel();
+  const [contexto, { periodo: periodoSolicitado }] = await Promise.all([requerirPanel(), searchParams]);
   if (!contexto) redirect("/dashboard");
 
-  const periodo = leerPeriodoVentas((await searchParams).periodo);
+  const periodo = leerPeriodoVentas(periodoSolicitado);
   const ahora = new Date();
   const stats = await obtenerEstadisticasPanel(contexto, periodo, ahora);
   if (!stats) redirect("/dashboard");

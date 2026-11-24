@@ -9,34 +9,50 @@ import type { ContextoPanel } from "@/lib/seguridad/requerir-admin";
 
 const LIMITE_AGENDA = 4;
 
+function obtenerPerfilPanel(barberoId: string) {
+  return getCachedData(
+    ["admin-dashboard-perfil", barberoId],
+    ["barberos", "servicios"],
+    async () => {
+      const perfil = await prisma.barbero.findUnique({
+        where: { id: barberoId },
+        select: {
+          id: true,
+          estado: true,
+          porcentajeGanancia: true,
+          servicios: {
+            where: { servicio: { estado: true } },
+            select: { servicioId: true },
+            take: 1,
+          },
+        },
+      });
+      return perfil ? {
+        id: perfil.id,
+        estado: perfil.estado,
+        porcentajeGanancia: Number(perfil.porcentajeGanancia),
+        tieneServicioActivo: perfil.servicios.length > 0,
+      } : null;
+    },
+  );
+}
+
 export async function obtenerEstadisticasPanel(
   { rol, barberoId }: Pick<ContextoPanel, "rol" | "barberoId">,
   periodo: PeriodoVentas,
   ahora: Date,
 ) {
   const esEmpleado = rol === "EMPLEADO";
-  const perfil = barberoId ? await prisma.barbero.findUnique({
-    where: { id: barberoId },
-    select: {
-      id: true,
-      estado: true,
-      porcentajeGanancia: true,
-      servicios: {
-        where: { servicio: { estado: true } },
-        select: { servicioId: true },
-        take: 1,
-      },
-    },
-  }) : null;
+  const perfil = barberoId ? await obtenerPerfilPanel(barberoId) : null;
 
   if (esEmpleado && !perfil) return null;
 
   // Un perfil se crea al entrar al panel. Para ofrecer turnos necesita un servicio activo.
-  const perfilPropio = perfil && (esEmpleado || (perfil.estado && perfil.servicios.length > 0)) ? perfil : null;
+  const perfilPropio = perfil && (esEmpleado || (perfil.estado && perfil.tieneServicioActivo)) ? perfil : null;
   const alcancePersonal = perfilPropio?.id;
   const alcanceVentas = esEmpleado ? alcancePersonal : undefined;
   const { hoy, inicio, inicioHoy, finExclusivo } = obtenerPeriodoVentas(periodo, ahora);
-  const [ventasPorBarbero, agenda, serviciosPopulares] = await Promise.all([
+  const [ventasPorBarbero, agenda, serviciosPopulares, empleados] = await Promise.all([
     getCachedData(
       ["admin-dashboard-ventas", periodo, hoy, alcanceVentas ?? "todos"],
       ["admin-dashboard", "turnos-global"],
@@ -75,10 +91,15 @@ export async function obtenerEstadisticasPanel(
       30,
     ),
     getCachedData(
-      ["admin-dashboard-servicios-populares-v2", alcancePersonal ?? "todos"],
-      ["admin-dashboard", "servicios", "turnos-global"],
+      ["admin-dashboard-servicios-populares-v3", alcancePersonal ?? "todos"],
+      ["servicios"],
       () => obtenerServiciosPopulares(alcancePersonal),
-      30,
+      300,
+    ),
+    esEmpleado ? [] : getCachedData(
+      ["admin-dashboard-nombres"],
+      ["barberos"],
+      () => prisma.barbero.findMany({ select: { id: true, nombre: true } }),
     ),
   ]);
 
@@ -86,7 +107,7 @@ export async function obtenerEstadisticasPanel(
   const ventasEquipo = ventasPorBarbero.filter(({ id }) => id !== alcancePersonal);
   const equipo = esEmpleado ? null : {
     ventas: sumarVentas(ventasEquipo),
-    empleados: await obtenerDetalleEquipo(ventasEquipo),
+    empleados: obtenerDetalleEquipo(ventasEquipo, empleados),
   };
 
   return {
@@ -95,18 +116,15 @@ export async function obtenerEstadisticasPanel(
     equipo,
     propio: perfilPropio ? {
       ventas: ventasPropias,
-      ganancia: calcularGananciaEmpleado(ventasPropias.importeCompletado, Number(perfilPropio.porcentajeGanancia)),
+      ganancia: calcularGananciaEmpleado(ventasPropias.importeCompletado, perfilPropio.porcentajeGanancia),
     } : null,
   };
 }
 
-async function obtenerDetalleEquipo(ventas: Awaited<ReturnType<typeof obtenerVentasPorBarbero>>) {
-  if (ventas.length === 0) return [];
-
-  const empleados = await prisma.barbero.findMany({
-    where: { id: { in: ventas.map(({ id }) => id) } },
-    select: { id: true, nombre: true },
-  });
+function obtenerDetalleEquipo(
+  ventas: Awaited<ReturnType<typeof obtenerVentasPorBarbero>>,
+  empleados: { id: string; nombre: string }[],
+) {
   const nombres = new Map(empleados.map(({ id, nombre }) => [id, nombre]));
 
   return ventas.map(({ id, cobrado, completados }) => ({

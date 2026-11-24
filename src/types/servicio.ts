@@ -51,13 +51,12 @@ export type ServicioConBarberos = Omit<
   "precio" | "descuento" | "senia"
 > & { precio: number; descuento: number; senia: number; imagenes: string[] };
 
-/* Servicio del carrusel público (getServiciosCarrusel), con montos convertidos a Number. */
+/* Servicio del carrusel público con montos convertidos a Number. */
 export type ServicioCarrusel = Omit<
   Prisma.servicioGetPayload<{
     select: {
       id: true;
       nombre: true;
-      descripcion: true;
       srcImage: true;
       precio: true;
       descuento: true;

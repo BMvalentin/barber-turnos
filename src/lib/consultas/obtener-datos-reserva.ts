@@ -1,44 +1,37 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { obtenerServiciosActivos } from "@/lib/consultas/obtener-servicios-activos";
-import { obtenerBarberosActivos } from "@/lib/consultas/obtener-barberos-activos";
-import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 
-const obtenerCatalogoReserva = unstable_cache(
+export const obtenerDatosReserva = unstable_cache(
   async () => {
-    const [servicios, barberos, relaciones] = await Promise.all([
-      obtenerServiciosActivos(),
-      obtenerBarberosActivos(),
+    const barberoActivo = { estado: true, usuarioId: { not: null } };
+    const [registrosServicios, barberos, relaciones] = await Promise.all([
+      prisma.servicio.findMany({
+        where: { estado: true },
+        select: {
+          id: true, nombre: true, descripcion: true, precio: true,
+          duracion: true, descuento: true, senia: true,
+        },
+        orderBy: { nombre: "asc" },
+      }),
+      prisma.barbero.findMany({
+        where: barberoActivo,
+        select: { id: true, nombre: true, srcImage: true, estado: true },
+        orderBy: { nombre: "asc" },
+      }),
       prisma.servicioxbarbero.findMany({
+        where: { barbero: barberoActivo, servicio: { estado: true } },
         select: { barberoId: true, servicioId: true },
       }),
     ]);
 
+    const servicios = registrosServicios.map((servicio) => ({
+      ...servicio,
+      precio: Number(servicio.precio),
+      descuento: Number(servicio.descuento),
+      senia: Number(servicio.senia),
+    }));
     return { servicios, barberos, relaciones };
   },
-  ["catalogo-reserva"],
+  ["catalogo-reserva-v2"],
   { tags: ["servicios", "barberos"], revalidate: 300 },
 );
-
-export async function obtenerDatosReserva(incluirUsuarios: boolean) {
-  const [catalogo, usuarios, config] = await Promise.all([
-    obtenerCatalogoReserva(),
-    incluirUsuarios
-      ? prisma.user.findMany({
-          where: { OR: [{ esInvitado: false }, { turno: { some: {} } }] },
-          select: { id: true, name: true, email: true, esInvitado: true, emailContacto: true },
-          orderBy: { name: "asc" },
-        })
-      : [],
-    obtenerConfigCacheada(),
-  ]);
-
-  return {
-    ...catalogo,
-    usuarios: usuarios.map((usuario) => ({
-      ...usuario,
-      email: usuario.esInvitado ? null : usuario.email,
-    })),
-    config,
-  };
-}

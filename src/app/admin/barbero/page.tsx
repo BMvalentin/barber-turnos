@@ -27,7 +27,7 @@ async function getData(barberoId?: string, soloEmpleados = false) {
   }));
 
   return {
-    servicios: servicios.map((s) => ({ id: s.id, nombre: s.nombre })),
+    servicios,
     diasLaborales,
     barberos: serializedBarberos,
   };

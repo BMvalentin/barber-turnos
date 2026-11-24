@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
-import { MAPA_DIA_SEMANA_DB, ESTADOS_TURNO_ACTIVOS, MINIMO_ANTICIPACION_MS, ZONA_HORARIA } from "@/lib/constants";
+import { MAPA_DIA_SEMANA_DB, ESTADOS_TURNO_ACTIVOS, ZONA_HORARIA } from "@/lib/constants";
 import { obtenerRangoDelDia } from "@/lib/utils/obtener-rango-del-dia";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
+import { filtrarHorariosPorDuracion, type CapacidadHoraria } from "@/lib/turnos/capacidad-horaria";
 
 const GRANULARIDAD_MINUTOS = 15;
+const MS_POR_MINUTO = 60_000;
 
 function minutosDeHora(hora: string): number {
   const [horas, minutos] = hora.split(":").map(Number);
@@ -12,6 +14,26 @@ function minutosDeHora(hora: string): number {
 }
 
 export async function obtenerDisponibilidad(servicioId: string, barberoId: string, fechaInicio: string, fechaFin: string, turnoIdAExcluir?: string): Promise<Record<string, string[]>> {
+  const [servicio, asignacion] = await Promise.all([
+    prisma.servicio.findUnique({ where: { id: servicioId }, select: { duracion: true, estado: true } }),
+    prisma.servicioxbarbero.findUnique({
+      where: { barbero_servicio_unique: { barberoId, servicioId } },
+      select: { id: true },
+    }),
+  ]);
+  if (!servicio?.duracion) throw new Error("Servicio no encontrado");
+  if (!servicio.estado || !asignacion) return {};
+
+  const capacidad = await obtenerCapacidadHoraria(barberoId, fechaInicio, fechaFin, turnoIdAExcluir);
+  return filtrarHorariosPorDuracion(capacidad, servicio.duracion);
+}
+
+export async function obtenerCapacidadHoraria(
+  barberoId: string,
+  fechaInicio: string,
+  fechaFin: string,
+  turnoIdAExcluir?: string,
+): Promise<CapacidadHoraria> {
   const { inicio: inicioRango } = obtenerRangoDelDia(fechaInicio);
   const { fin: finRango } = obtenerRangoDelDia(fechaFin);
   const ahoraConsulta = new Date();
@@ -19,15 +41,8 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
   const { inicio: inicioHoy } = obtenerRangoDelDia(obtenerFechaSola(ahoraConsulta));
   const inicioConsulta = inicioRango < inicioHoy ? inicioHoy : inicioRango;
 
-  const [servicio, barbero, horariosBarbero, turnosRango, excepciones] = await Promise.all([
-    prisma.servicio.findUnique({ where: { id: servicioId }, select: { duracion: true, estado: true } }),
-    prisma.barbero.findUnique({
-      where: { id: barberoId },
-      select: {
-        estado: true,
-        servicios: { where: { servicioId }, select: { id: true }, take: 1 },
-      },
-    }),
+  const [barbero, horariosBarbero, turnosRango, excepciones] = await Promise.all([
+    prisma.barbero.findUnique({ where: { id: barberoId }, select: { estado: true } }),
     prisma.margen_laboral_barbero.findMany({
       where: { barberoId, estado: true },
       select: {
@@ -64,8 +79,7 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
     }),
   ]);
 
-  if (!servicio?.duracion) throw new Error("Servicio no encontrado");
-  if (!servicio.estado || !barbero?.estado || barbero.servicios.length === 0) return {};
+  if (!barbero?.estado) return {};
 
   const horariosPorDia = new Map<string, typeof horariosBarbero>();
   for (const horario of horariosBarbero) {
@@ -75,25 +89,17 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
     horarios.push(horario);
     horariosPorDia.set(dia, horarios);
   }
-  for (const horarios of horariosPorDia.values()) {
-    horarios.sort(
-      (primero, segundo) =>
-        minutosDeHora(primero.margenLaboral.desde) -
-        minutosDeHora(segundo.margenLaboral.desde),
-    );
-  }
-
   const turnosPorFecha = new Map<string, Array<{ inicio: number; fin: number }>>();
   for (const turno of turnosRango) {
     const fecha = obtenerFechaSola(turno.horarioReservado);
     const turnos = turnosPorFecha.get(fecha) ?? [];
     const inicio = turno.horarioReservado.getTime();
-    turnos.push({ inicio, fin: inicio + turno.servicio.duracion * 60_000 });
+    turnos.push({ inicio, fin: inicio + turno.servicio.duracion * MS_POR_MINUTO });
     turnosPorFecha.set(fecha, turnos);
   }
 
-  const resultado: Record<string, string[]> = {};
-  const ahora = new Date();
+  const cierres = excepciones.map(({ desde, hasta }) => ({ inicio: desde.getTime(), fin: hasta.getTime() }));
+  const resultado: CapacidadHoraria = {};
   let [anio, mes, dia] = fechaInicio.split("-").map(Number);
   const [anioFin, mesFin, diaFin] = fechaFin.split("-").map(Number);
   const tope = anioFin * 10000 + mesFin * 100 + diaFin;
@@ -108,35 +114,43 @@ export async function obtenerDisponibilidad(servicioId: string, barberoId: strin
       [anio, mes, dia] = [siguienteDia.getUTCFullYear(), siguienteDia.getUTCMonth() + 1, siguienteDia.getUTCDate()];
     };
 
-    if (finDia.getTime() < ahora.getTime()) {
+    if (finDia < ahoraConsulta) {
       avanzarDia();
       continue;
     }
     const diaEnum = MAPA_DIA_SEMANA_DB[toZonedTime(inicioDia, ZONA_HORARIA).getDay()];
     const horariosDia = horariosPorDia.get(diaEnum) ?? [];
     const turnosDia = turnosPorFecha.get(fechaStr) ?? [];
+    const cierresDelDia = cierres.filter(({ inicio, fin }) => inicio <= finDia.getTime() && fin >= inicioDia.getTime());
 
-    const slots: string[] = [];
+    const capacidadPorInicio = new Map<number, number>();
     for (const horario of horariosDia) {
-      let actualMinutos = minutosDeHora(horario.margenLaboral.desde);
       const limiteMinutos = minutosDeHora(horario.margenLaboral.hasta);
+      const inicioMargen = minutosDeHora(horario.margenLaboral.desde);
 
-      while (actualMinutos + servicio.duracion <= limiteMinutos) {
-        const slotUTC = fromZonedTime(fechaStr + "T" + `${String(Math.floor(actualMinutos / 60)).padStart(2, "0")}:${String(actualMinutos % 60).padStart(2, "0")}:00`, ZONA_HORARIA);
-        const inicioSlot = slotUTC.getTime();
-        const finSlot = inicioSlot + servicio.duracion * 60_000;
+      for (let minuto = inicioMargen; minuto < limiteMinutos; minuto += GRANULARIDAD_MINUTOS) {
+        const hora = String(Math.floor(minuto / 60)).padStart(2, "0");
+        const minutoHora = String(minuto % 60).padStart(2, "0");
+        const inicioSlot = fromZonedTime(`${fechaStr}T${hora}:${minutoHora}:00`, ZONA_HORARIA).getTime();
+        if (inicioSlot <= ahoraConsulta.getTime()) continue;
 
-        if (!excepciones.some((ex) => ex.desde.getTime() <= finSlot && ex.hasta.getTime() >= inicioSlot)
-          && !turnosDia.some((turno) => inicioSlot < turno.fin && finSlot > turno.inicio)
-          && inicioSlot > ahora.getTime() + MINIMO_ANTICIPACION_MS) {
-          slots.push(slotUTC.toISOString());
+        let minutosDisponibles = limiteMinutos - minuto;
+        for (const turno of turnosDia) {
+          if (inicioSlot >= turno.fin) continue;
+          minutosDisponibles = Math.min(minutosDisponibles, Math.floor((turno.inicio - inicioSlot) / MS_POR_MINUTO));
         }
-        actualMinutos += GRANULARIDAD_MINUTOS;
+        for (const cierre of cierresDelDia) {
+          if (inicioSlot > cierre.fin) continue;
+          // A diferencia de un turno, un cierre incluye sus dos extremos.
+          minutosDisponibles = Math.min(minutosDisponibles, Math.ceil((cierre.inicio - inicioSlot) / MS_POR_MINUTO) - 1);
+        }
+        if (minutosDisponibles > (capacidadPorInicio.get(inicioSlot) ?? 0)) {
+          capacidadPorInicio.set(inicioSlot, minutosDisponibles);
+        }
       }
     }
 
-    resultado[fechaStr] = [...new Set(slots)].sort();
-
+    resultado[fechaStr] = [...capacidadPorInicio].sort(([a], [b]) => a - b);
     avanzarDia();
   }
 

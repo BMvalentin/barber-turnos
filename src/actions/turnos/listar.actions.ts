@@ -31,6 +31,8 @@ const SELECT_TURNO_LISTADO = {
   barbero: { select: { id: true, nombre: true } },
 } satisfies Prisma.turnoSelect;
 
+const ESQUEMA_MES_AGENDA = z.string().length(7).regex(/^[1-9]\d{3}-(0[1-9]|1[0-2])$/);
+
 function esEstadoTurno(valor: string): valor is turno_estado {
   return ESTADOS_TURNO.some((estado) => estado === valor);
 }
@@ -105,22 +107,28 @@ export async function getTurnos(page: number = 1, estadoFiltro?: string, fechaFi
   }
 }
 
-/** Obtiene una sola colección completa para filtrar y paginar en el cliente. */
-export async function getTodosTurnos(): Promise<ActionState<TurnoListado[]>> {
+/** Devuelve los turnos de un mes para la agenda del panel. */
+export async function obtenerTurnosDelMes(mes: string): Promise<ActionState<TurnoListado[]>> {
   try {
-    const session = await requerirSesion();
-    if (!session?.user) return { success: false, error: "No autorizado" };
-
-    const contextoPanel = await requerirPanel();
-    const where: Prisma.turnoWhereInput = {};
-    if (contextoPanel?.rol === "EMPLEADO") {
-      where.barberoId = contextoPanel.barberoId ?? "";
-    } else if (contextoPanel?.rol !== "ADMIN") {
-      where.userId = session.user.id;
+    if (!ESQUEMA_MES_AGENDA.safeParse(mes).success) {
+      return { success: false, error: "Mes inválido" };
     }
 
+    const contextoPanel = await requerirPanel();
+    if (!contextoPanel || (contextoPanel.rol === "EMPLEADO" && !contextoPanel.barberoId)) {
+      return { success: false, error: "No autorizado" };
+    }
+
+    const [anio, numeroMes] = mes.split("-").map(Number);
+    const [primerDiaMesSiguiente] = new Date(Date.UTC(anio, numeroMes, 1)).toISOString().split("T");
     const turnos = await prisma.turno.findMany({
-      where,
+      where: {
+        ...(contextoPanel.rol === "EMPLEADO" ? { barberoId: contextoPanel.barberoId ?? "" } : {}),
+        horarioReservado: {
+          gte: obtenerRangoDelDia(`${mes}-01`).inicio,
+          lt: obtenerRangoDelDia(primerDiaMesSiguiente).inicio,
+        },
+      },
       select: SELECT_TURNO_LISTADO,
       orderBy: [{ horarioReservado: "desc" }, { id: "desc" }],
     });

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { obtenerEstadoConexionMP } from "@/actions/mercadopago/estado-conexion.actions";
-import { getPageConfig } from "@/actions/configuracion/leer-config.actions";
+import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 import MercadoPagoConnectionPanel from "@/components/admin/MercadoPagoConnectionPanel";
 import GeneralConfigForm from "@/components/admin/config/GeneralConfigForm";
 import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
@@ -39,7 +39,7 @@ export default async function MediosPagoConfigPage({ searchParams }: MediosPagoC
   const parametros = await searchParams;
   const pestañaActiva = obtenerPestañaActiva(parametros.tab);
   const [configuracion, estadoConexion] = await Promise.all([
-    pestañaActiva !== "mercado-pago" ? getPageConfig() : Promise.resolve(null),
+    pestañaActiva !== "mercado-pago" ? obtenerConfigCacheada() : Promise.resolve(null),
     pestañaActiva === "mercado-pago" ? obtenerEstadoConexionMP() : Promise.resolve(null),
   ]);
 

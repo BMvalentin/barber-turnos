@@ -41,7 +41,7 @@ export default async function PerfilBarberoPage() {
       </header>
       <PerfilBarbero
         barbero={perfilSerializado}
-        servicios={servicios.map((servicio) => ({ id: servicio.id, nombre: servicio.nombre }))}
+        servicios={servicios}
         diasLaborales={diasLaborales}
         esEmpleado={contexto.rol === "EMPLEADO"}
         perfilPropio

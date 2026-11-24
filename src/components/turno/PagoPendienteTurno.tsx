@@ -15,7 +15,6 @@ type Props = {
   whatsappPhone: string;
   datosTransferencia: DatosTransferencia;
   mostrarAvisoSeniaPendiente?: boolean;
-  alcanceCacheTurnos?: string;
   onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
 };
 
@@ -37,7 +36,6 @@ export default function PagoPendienteTurno({
   whatsappPhone,
   datosTransferencia,
   mostrarAvisoSeniaPendiente = true,
-  alcanceCacheTurnos = "",
   onTurnoActualizado,
 }: Props) {
   const router = useRouter();
@@ -56,7 +54,6 @@ export default function PagoPendienteTurno({
   const pago = usePagoTurno({
     whatsappPhone,
     turnoInicial: turnoCreado,
-    alcanceCacheTurnos,
     onTurnoActualizado,
   });
 

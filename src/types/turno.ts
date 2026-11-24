@@ -6,6 +6,12 @@ import {
   SELECCION_BARBERO_PUBLICA,
   SELECCION_USUARIO_BASICA,
 } from "@/lib/constants";
+import type { ActionState } from "@/types/action-state";
+
+export type HorarioNoDisponible = { barberoId: string; horario: string };
+export type EstadoFormularioTurno = ActionState<TurnoConDetalle> & {
+  horarioNoDisponible?: HorarioNoDisponible;
+};
 
 export type ServicioData = {
   id: string;

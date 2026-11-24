@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, type FormEvent } from "react";
 import { toast } from "sonner";
 import type { PropsFormularioReservaTurno } from "@/components/turno/reserva/tipos";
 import { useDisponibilidadHorarios } from "@/hooks/useDisponibilidadHorarios";
@@ -36,23 +36,37 @@ export default function FormularioReservaTurno({
   estadoTurno,
   setEstadoTurno,
 }: PropsFormularioReservaTurno) {
+  const servicio = servicios.find((s) => s.id === selectedServicioId) ?? null;
+  const barbero = barberos.find((b) => b.id === selectedBarberoId) ?? null;
+  const servicioAsignado = serviciosFiltrados.find((opcion) => opcion.id === selectedServicioId);
+  const barberoIds = useMemo(() => barberos.map((opcion) => opcion.id), [barberos]);
   const disponibilidad = useDisponibilidadHorarios({
-    servicioId: selectedServicioId,
+    duracion: servicioAsignado?.duracion,
     barberoId: selectedBarberoId,
+    barberos: barberoIds,
     sessionId,
     userId: selectedUserId,
-    turnoIdAExcluir: turnoInicial?.id,
+    turnoInicial,
+    usuarioId: session?.user?.id,
     defaultValue: turnoInicial?.horarioReservado.toISOString(),
   });
 
+  const { actualizarTrasConflicto } = disponibilidad;
+  const estadoRecibido = useRef(state);
   useEffect(() => {
+    if (estadoRecibido.current === state) return;
+    estadoRecibido.current = state;
+    if (state.horarioNoDisponible) actualizarTrasConflicto(state.horarioNoDisponible);
     if (state.error) {
       toast.error("Error", { description: state.error });
     }
-  }, [state]);
+  }, [actualizarTrasConflicto, state]);
 
-  const servicio = servicios.find((s) => s.id === selectedServicioId) ?? null;
-  const barbero = barberos.find((b) => b.id === selectedBarberoId) ?? null;
+  const seleccionarServicio = (id: string) => {
+    if (id === selectedServicioId) return;
+    disponibilidad.validarHorarioParaServicio(serviciosFiltrados.find((opcion) => opcion.id === id)?.duracion);
+    handleServicioChange(id);
+  };
 
   const esUsuarioNormal = session?.user?.role === "USER";
   const puedeGestionarTurnos = esAdmin(session) || esEmpleado(session);
@@ -127,7 +141,7 @@ export default function FormularioReservaTurno({
             onSeleccionarBarbero={handleBarberoChange}
             serviciosFiltrados={serviciosFiltrados}
             selectedServicioId={selectedServicioId}
-            onSeleccionarServicio={handleServicioChange}
+            onSeleccionarServicio={seleccionarServicio}
           />
         </div>
 

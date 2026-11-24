@@ -22,6 +22,8 @@ export default function PanelFechaHorario({
     irAlMesSiguiente,
     manejarSeleccionFecha,
     manejarSeleccionSlot,
+    errorConsulta,
+    reintentarConsulta,
   } = disponibilidad;
 
   return (
@@ -40,16 +42,25 @@ export default function PanelFechaHorario({
         onSeleccionarDia={manejarSeleccionFecha}
       />
 
-      <ListaHorariosReserva
-        slots={slots}
-        cargando={cargando}
-        fecha={fecha}
-        servicioId={servicioId}
-        barberoId={barberoId}
-        slotSeleccionado={slotSeleccionado}
-        isSlotBloqueado={isSlotBloqueado}
-        onSeleccionarSlot={manejarSeleccionSlot}
-      />
+      {errorConsulta ? (
+        <div role="status" className="text-sm text-[var(--admin-texto-secundario)]">
+          No se pudieron cargar los horarios. {" "}
+          <button type="button" onClick={reintentarConsulta} className="font-semibold text-[var(--page-primary-tinta)] underline">
+            Reintentar
+          </button>
+        </div>
+      ) : (
+        <ListaHorariosReserva
+          slots={slots}
+          cargando={cargando}
+          fecha={fecha}
+          servicioId={servicioId}
+          barberoId={barberoId}
+          slotSeleccionado={slotSeleccionado}
+          isSlotBloqueado={isSlotBloqueado}
+          onSeleccionarSlot={manejarSeleccionSlot}
+        />
+      )}
     </section>
   );
 }

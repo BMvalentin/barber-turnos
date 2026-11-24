@@ -11,18 +11,14 @@ import PanelFiltros from "./PanelFiltros";
 import FilterTag from "./FilterTag";
 import ServicioTabla from "./ServicioTabla";
 import CreateServicioForm from "./CreateServicioForm";
-import type { Servicio, ServicioCreado } from "@/types/servicio";
+import type { Servicio } from "@/types/servicio";
 
 export default function ServicioList({
   servicios,
   puedeGestionar = true,
-  onServicioActualizado,
-  onServicioEliminado,
 }: {
   servicios: Servicio[];
   puedeGestionar?: boolean;
-  onServicioActualizado?: (servicio: ServicioCreado) => void;
-  onServicioEliminado?: (id: string) => void;
 }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
@@ -58,11 +54,6 @@ export default function ServicioList({
 
     try {
       const result = await deleteservicio(formData);
-      if (!result.success) {
-        await retroalimentar(result);
-        return;
-      }
-      onServicioEliminado?.(idAEliminar);
       await retroalimentar(result);
     } catch (error) {
       console.error(error);
@@ -143,7 +134,6 @@ export default function ServicioList({
           hasta={startIndex + displayCount}
           totalResultados={serviciosFiltrados.length}
           onCambiarPagina={setCurrentPage}
-          onServicioActualizado={onServicioActualizado}
         />
       </section>
 
@@ -159,7 +149,6 @@ export default function ServicioList({
       {puedeGestionar && showCreateModal && (
         <CreateServicioForm
           onClose={() => setShowCreateModal(false)}
-          onServicioCreado={onServicioActualizado}
         />
       )}
     </>

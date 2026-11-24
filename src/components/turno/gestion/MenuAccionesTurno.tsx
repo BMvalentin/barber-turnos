@@ -13,7 +13,6 @@ interface Props {
   turno: TurnoListado;
   session: Session | null;
   onCancelar: (id: string) => void;
-  alcanceCacheTurnos?: string;
   onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
   vistaAdministrativa?: boolean;
 }
@@ -22,7 +21,6 @@ export default function MenuAccionesTurno({
   turno,
   session,
   onCancelar,
-  alcanceCacheTurnos = "",
   onTurnoActualizado,
   vistaAdministrativa = false,
 }: Props) {
@@ -88,10 +86,10 @@ export default function MenuAccionesTurno({
         {puedeEditar && (
           <CargadorModalGestionTurno
             vistaAdministrativa={vistaAdministrativa}
+            precargarEdicion={abierto}
             session={session}
             turnoInicial={turno}
             whatsappPhone=""
-            alcanceCacheTurnos={alcanceCacheTurnos}
             onTurnoActualizado={onTurnoActualizado}
             claseTrigger="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[var(--admin-texto-primario)] hover:bg-[var(--admin-item-hover)] transition-colors"
             contenidoTrigger={

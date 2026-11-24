@@ -3,7 +3,7 @@ import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { redirect } from "next/navigation";
 import AdminShell from "@/components/panel/navegacion/AdminShell";
-import { obtenerMarcaAdminCacheada } from "@/lib/obtener-config-cacheada";
+import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 import { cookies } from "next/headers";
 import type { Viewport } from "next";
 
@@ -21,7 +21,7 @@ export default async function AdminLayout({
   const [session, contexto, config, almacen] = await Promise.all([
     requerirSesion(),
     requerirPanel(),
-    obtenerMarcaAdminCacheada(),
+    obtenerConfigCacheada(),
     cookies(),
   ]);
 
@@ -37,7 +37,7 @@ export default async function AdminLayout({
 
   return (
     <AdminShell
-      config={config}
+      config={config ? { name: config.name, logo: config.logo } : null}
       rol={contexto.rol}
       colapsadoInicial={almacen.get("mayoraz-sidebar-collapsed")?.value === "1"}
       temaInicial={temaGuardado === "claro" || temaGuardado === "oscuro" ? temaGuardado : "sistema"}

@@ -2,18 +2,10 @@
 "use client";
 import { motion } from "framer-motion";
 import { MapPin, Phone, Clock, Scissors } from "lucide-react";
-import { useEffect, useState } from "react";
-import { getHorariosCompactos } from "@/actions/horarios/horarios-compactos.actions";
-import { guardarCachePublica, leerCachePublica } from "@/components/inicio/cache-contenido-publico";
-
-const CLAVE_CACHE = "barber-horarios-compactos-v1";
-const DURACION_CACHE_MS = 60_000;
-
-function sonHorarios(valor: unknown): valor is string[] {
-  return Array.isArray(valor) && valor.length <= 20 && valor.every((item) => typeof item === "string" && item.length <= 200);
-}
+import type { ReactNode } from "react";
 
 interface LocationSectionProps {
+  children: ReactNode;
   config?: {
     mapsUrl?: string | null;
     address?: string | null;
@@ -21,58 +13,11 @@ interface LocationSectionProps {
   } | null;
 }
 
-export function LocationSection({ config }: LocationSectionProps) {
-  const [cargando, setCargando] = useState(true);
-  const [horarios, setHorarios] = useState(["Cargando..."]);
-
+export function LocationSection({ config, children }: LocationSectionProps) {
   // Valores configurables desde /admin/config/ubicacion-contacto
   const mapsUrl = config?.mapsUrl;
   const addressText = config?.address;
   const whatsapp = config?.whatsapp;
-
-  useEffect(() => {
-    let vigente = true;
-    let solicitudActual = 0;
-
-    const cargarHorarios = async () => {
-      const solicitud = ++solicitudActual;
-      const cache = leerCachePublica(CLAVE_CACHE, sonHorarios);
-      if (cache) {
-        setHorarios(cache);
-        setCargando(false);
-        return;
-      }
-
-      try {
-        const res = await getHorariosCompactos();
-        if (!vigente || solicitud !== solicitudActual) return;
-        if (sonHorarios(res) && res.length > 0) {
-          setHorarios(res);
-          if (!res.some((horario) => horario.startsWith("Error"))) {
-            guardarCachePublica(CLAVE_CACHE, res, DURACION_CACHE_MS);
-          }
-        } else {
-          setHorarios(["Cerrado"]);
-        }
-      } catch {
-        if (vigente && solicitud === solicitudActual) setHorarios(["Error al cargar horarios"]);
-      } finally {
-        if (vigente && solicitud === solicitudActual) setCargando(false);
-      }
-    };
-
-    const alCambiarCache = (evento: StorageEvent) => {
-      if (evento.key === CLAVE_CACHE) void cargarHorarios();
-    };
-
-    void cargarHorarios();
-    window.addEventListener("storage", alCambiarCache);
-
-    return () => {
-      vigente = false;
-      window.removeEventListener("storage", alCambiarCache);
-    };
-  }, []);
 
   return (
     <section id="ubicacion" className="py-20 md:py-32 bg-linear-to-b from-[var(--page-bg)]/90 to-[var(--page-bg)] justify-center items-center mx-auto">
@@ -152,15 +97,7 @@ export function LocationSection({ config }: LocationSectionProps) {
               </div>
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: "var(--page-primary-tinta)" }}>Horarios</h3>
-                {cargando ? (
-                  <p className="text-[var(--page-bg-foreground)]/80">Cargando horarios...</p>
-                ) : (
-                  horarios.map((horario, index) => (
-                    <p key={index} className="text-[var(--page-bg-foreground)]/80">
-                      {horario}
-                    </p>
-                  ))
-                )}
+                <div className="text-[var(--page-bg-foreground)]/80">{children}</div>
               </div>
             </div>
           </motion.div>

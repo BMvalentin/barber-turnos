@@ -4,6 +4,7 @@ export function revalidarDiasLaborales(idBarbero?: string): void {
   revalidateTag("dias-laborales");
   revalidateTag("barberos");
   if (idBarbero) revalidateTag(`margenes-${idBarbero}`);
+  revalidatePath("/");
   revalidatePath("/admin/config/empleados/horarios-laborales");
   revalidatePath("/admin/barbero");
   revalidatePath("/admin/barbero/perfil");

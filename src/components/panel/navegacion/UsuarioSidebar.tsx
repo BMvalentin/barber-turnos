@@ -7,8 +7,6 @@ import { useEffect, useId, useRef, useState } from "react";
 import { ChevronDown, LogOut, User } from "lucide-react";
 import useSugerenciaLateral from "@/components/panel/navegacion/useSugerenciaLateral";
 import type { RolPanel } from "@/types/usuario";
-import { limpiarCacheTurnosLocal } from "@/lib/admin/turnos-cache-local";
-import { limpiarCacheServiciosLocal } from "@/lib/admin/servicios-cache-local";
 
 interface UsuarioSidebarProps { colapsado: boolean; alCerrar: () => void; rol: RolPanel; }
 
@@ -24,8 +22,6 @@ export default function UsuarioSidebar({ colapsado, alCerrar, rol }: UsuarioSide
   const cerrarSesion = () => {
     setAbierto(false);
     alCerrar();
-    limpiarCacheTurnosLocal();
-    limpiarCacheServiciosLocal();
     void signOut({ redirectTo: "/" });
   };
 

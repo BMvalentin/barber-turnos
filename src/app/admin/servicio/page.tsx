@@ -1,4 +1,5 @@
 import ServicioCatalogoCliente from "@/components/servicio/ServicioCatalogoCliente";
+import { obtenerServiciosConBarberos } from "@/lib/consultas/obtener-servicios-con-barberos";
 import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { redirect } from "next/navigation";
 
@@ -7,7 +8,7 @@ export default async function ServiciosPage() {
   if (!contexto) redirect("/dashboard");
 
   const puedeGestionar = contexto.rol === "ADMIN";
-  const alcanceCache = `${contexto.session.user.id}|${contexto.rol}`;
+  const servicios = await obtenerServiciosConBarberos().catch(() => null);
 
   return (
     <div className="admin-pagina">
@@ -23,9 +24,9 @@ export default async function ServiciosPage() {
       </header>
 
       <ServicioCatalogoCliente
-        key={alcanceCache}
+        key={`${contexto.session.user.id}|${contexto.rol}`}
         puedeGestionar={puedeGestionar}
-        alcanceCache={alcanceCache}
+        servicios={servicios}
       />
     </div>
   );

@@ -13,13 +13,13 @@ import type { ParametrosDatosTurno } from "./useDatosFormularioTurno";
 import { usePagoTurno } from "./usePagoTurno";
 import { esAdmin, esEmpleado } from "@/lib/seguridad/es-admin";
 import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
-import { actualizarTurnoCacheLocal } from "@/lib/admin/turnos-cache-local";
 import type { ParcheTurnoCache } from "@/lib/admin/turnos-cache-local";
 import type { DatosTransferencia } from "@/types/pago";
+import { invalidarDisponibilidadLocal } from "@/lib/turnos/disponibilidad-cliente";
+import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 
 export type ParametrosFormularioTurno = ParametrosDatosTurno & {
   whatsappPhone: string;
-  alcanceCacheTurnos?: string;
   onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
   datosTransferencia?: DatosTransferencia;
   turnoInicial?: TurnoListado | null;
@@ -40,7 +40,6 @@ export function useFormularioTurno({
   initialUsuarios,
   initialRelaciones,
   whatsappPhone,
-  alcanceCacheTurnos,
   onTurnoActualizado,
   turnoInicial,
   onTurnoCreado,
@@ -56,7 +55,7 @@ export function useFormularioTurno({
     initialRelaciones,
     turnoInicial,
   });
-  const pago = usePagoTurno({ whatsappPhone, alcanceCacheTurnos, onTurnoActualizado });
+  const pago = usePagoTurno({ whatsappPhone, onTurnoActualizado });
   const {
     servicios,
     barberos,
@@ -74,6 +73,7 @@ export function useFormularioTurno({
 
   const accion = esEdicion ? actualizarTurno : createTurno;
   const [state, formAction] = useActionState(accion, estadoInicial);
+  const estadoEdicionProcesado = useRef(state);
   const formRef = useRef<HTMLFormElement>(null);
   const sessionId = useSessionId();
   const turnoProcesadoRef = useRef<string | null>(null);
@@ -83,6 +83,10 @@ export function useFormularioTurno({
     if (!state.success || !state.data) return;
 
     if (esEdicion) {
+      if (estadoEdicionProcesado.current === state) return;
+      estadoEdicionProcesado.current = state;
+      if (turnoInicial) invalidarDisponibilidadLocal(turnoInicial.barberoId, obtenerFechaSola(turnoInicial.horarioReservado));
+      invalidarDisponibilidadLocal(state.data.barberoId, obtenerFechaSola(state.data.horarioReservado));
       const parche: ParcheTurnoCache = {
         estado: state.data.estado,
         estadoPago: state.data.estadoPago,
@@ -100,7 +104,6 @@ export function useFormularioTurno({
           duracion: state.data.servicio.duracion,
         },
       };
-      if (alcanceCacheTurnos) actualizarTurnoCacheLocal(alcanceCacheTurnos, state.data.id, parche);
       onTurnoActualizado?.(state.data.id, parche);
       setIsOpen(false);
       toast.success("Turno actualizado correctamente");
@@ -109,6 +112,7 @@ export function useFormularioTurno({
 
     if (turnoProcesadoRef.current === state.data.id) return;
     turnoProcesadoRef.current = state.data.id;
+    invalidarDisponibilidadLocal(state.data.barberoId, obtenerFechaSola(state.data.horarioReservado));
     const nombreServicio =
       servicios.find((s) => s.id === selectedServicioId)?.nombre || "N/A";
     const nombreBarbero =
@@ -151,9 +155,9 @@ export function useFormularioTurno({
       setShowPagoModal(true);
     }
   }, [
-    state.success,
-    state.data,
+    state,
     esEdicion,
+    turnoInicial,
     servicios,
     barberos,
     selectedServicioId,
@@ -172,7 +176,6 @@ export function useFormularioTurno({
     puedeGestionarTurnos,
     onTurnoCreado,
     onTurnoActualizado,
-    alcanceCacheTurnos,
     router,
   ]);
 

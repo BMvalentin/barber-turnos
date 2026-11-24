@@ -95,4 +95,19 @@ describe("actualizarTurno: cancelación administrativa", () => {
     expect(resultado.success).toBe(false);
     expect(mocks.enviarCancelacion).not.toHaveBeenCalled();
   });
+
+  it("identifica la agenda que debe refrescarse si al reprogramar se ocupó el horario", async () => {
+    const horario = "2099-12-15T15:30:00.000Z";
+    const formulario = new FormData();
+    formulario.set("id", "turno-1");
+    formulario.set("barberoId", "barbero-2");
+    formulario.set("horarioReservado", horario);
+    mocks.actualizarEnTransaccion.mockResolvedValue({ ok: false, error: "Horario ocupado" });
+
+    expect(await actualizarTurno({}, formulario)).toEqual({
+      success: false,
+      error: "Horario ocupado",
+      horarioNoDisponible: { barberoId: "barbero-2", horario },
+    });
+  });
 });

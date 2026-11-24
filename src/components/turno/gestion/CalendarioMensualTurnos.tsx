@@ -27,6 +27,8 @@ interface Props {
   turnos: TurnoListado[];
   cargandoTurnos: boolean;
   onSeleccionar: (fecha: string) => void;
+  mesVisible?: string;
+  onCambiarMes?: (mes: string) => void;
   vistaAdministrativa?: boolean;
 }
 
@@ -129,15 +131,18 @@ export default function CalendarioMensualTurnos({
   turnos,
   cargandoTurnos,
   onSeleccionar,
+  mesVisible: mesControlado,
+  onCambiarMes,
   vistaAdministrativa = false,
 }: Props) {
-  const [mesVisible, setMesVisible] = useState<Date>(() => {
+  const [mesInterno, setMesInterno] = useState<Date>(() => {
     const fechaInicial = parsearFecha(fecha);
     return fechaInicial ? startOfMonth(fechaInicial) : startOfMonth(new Date());
   });
+  const mesVisible = (mesControlado ? parsearFecha(`${mesControlado}-01`) : undefined) ?? mesInterno;
+  const claveMesVisible = mesComoClave(mesVisible);
   const resumenMensual = useMemo(() => {
     const resumen: ResumenMensualCalendario = {};
-    const claveMesVisible = mesComoClave(mesVisible);
 
     for (const turno of turnos) {
       if (barberoId && turno.barberoId !== barberoId) continue;
@@ -150,15 +155,22 @@ export default function CalendarioMensualTurnos({
       resumen[dia] = resumenDia;
     }
     return resumen;
-  }, [barberoId, mesVisible, turnos]);
+  }, [barberoId, claveMesVisible, turnos]);
 
   useEffect(() => {
+    if (mesControlado) return;
     const fechaSeleccionada = parsearFecha(fecha);
     if (!fechaSeleccionada) return;
-    setMesVisible((mesActual) =>
+    setMesInterno((mesActual) =>
       isSameMonth(mesActual, fechaSeleccionada) ? mesActual : startOfMonth(fechaSeleccionada),
     );
-  }, [fecha]);
+  }, [fecha, mesControlado]);
+
+  const desplazarMes = (cantidad: number) => {
+    const siguiente = new Date(mesVisible.getFullYear(), mesVisible.getMonth() + cantidad, 1);
+    if (onCambiarMes) onCambiarMes(mesComoClave(siguiente));
+    else setMesInterno(siguiente);
+  };
 
   const dias = eachDayOfInterval({
     start: startOfWeek(startOfMonth(mesVisible), { weekStartsOn: 0 }),
@@ -190,7 +202,7 @@ export default function CalendarioMensualTurnos({
             <button
               type="button"
               aria-label="Mes anterior"
-              onClick={() => setMesVisible((mes) => new Date(mes.getFullYear(), mes.getMonth() - 1, 1))}
+              onClick={() => desplazarMes(-1)}
               className={claseNavegacion}
             >
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -198,7 +210,7 @@ export default function CalendarioMensualTurnos({
             <button
               type="button"
               aria-label="Mes siguiente"
-              onClick={() => setMesVisible((mes) => new Date(mes.getFullYear(), mes.getMonth() + 1, 1))}
+              onClick={() => desplazarMes(1)}
               className={claseNavegacion}
             >
               <ChevronRight className="h-4 w-4" aria-hidden="true" />

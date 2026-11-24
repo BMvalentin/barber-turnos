@@ -25,7 +25,6 @@ interface Props {
   whatsappPhone?: string;
   datosTransferencia?: DatosTransferencia;
   mostrarAvisoSeniaPendiente?: boolean;
-  alcanceCacheTurnos?: string;
   onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
   mostrarHora?: boolean;
   compacto?: boolean;
@@ -41,7 +40,6 @@ export default function TurnoRow({
   whatsappPhone = "",
   datosTransferencia,
   mostrarAvisoSeniaPendiente = true,
-  alcanceCacheTurnos = "",
   onTurnoActualizado,
   mostrarHora = true,
   compacto = false,
@@ -157,7 +155,6 @@ export default function TurnoRow({
           whatsappPhone={whatsappPhone}
           datosTransferencia={datosTransferencia}
           mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
-          alcanceCacheTurnos={alcanceCacheTurnos}
           onTurnoActualizado={onTurnoActualizado}
         />
       )}
@@ -167,7 +164,6 @@ export default function TurnoRow({
           turno={turno}
           session={session}
           onCancelar={onCancelar}
-          alcanceCacheTurnos={alcanceCacheTurnos}
           onTurnoActualizado={onTurnoActualizado}
           vistaAdministrativa={vistaAdministrativa}
         />

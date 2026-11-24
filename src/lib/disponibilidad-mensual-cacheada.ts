@@ -1,33 +1,35 @@
 import { getCachedData } from "@/lib/cache";
-import { obtenerDisponibilidad } from "@/lib/disponibilidad";
+import { obtenerCapacidadHoraria } from "@/lib/disponibilidad";
 
-/** Conserva el cálculo del mes para los días y horarios del calendario. */
-export function obtenerDisponibilidadMensualCacheada(
-  mes: string,
-  servicioId: string,
-  barberoId: string,
-  turnoIdAExcluir?: string,
-): Promise<Record<string, string[]>> {
+export function calcularCapacidadMensual(mes: string, barberoId: string, turnoIdAExcluir?: string) {
   const [anio, numeroMes] = mes.split("-").map(Number);
   const ultimoDia = new Date(anio, numeroMes, 0).getDate();
+  return obtenerCapacidadHoraria(
+    barberoId,
+    `${mes}-01`,
+    `${mes}-${String(ultimoDia).padStart(2, "0")}`,
+    turnoIdAExcluir,
+  );
+}
 
+/** Reutiliza la agenda del barbero para todas las duraciones de servicio. */
+export function obtenerCapacidadMensualCacheada(
+  mes: string,
+  barberoId: string,
+  turnoIdAExcluir?: string,
+) {
   return getCachedData(
-    ["disponibilidad-mensual", mes, servicioId, barberoId, turnoIdAExcluir ?? "none"],
+    ["capacidad-mensual-v1", mes, barberoId, turnoIdAExcluir ?? ""],
     [
       `turnos-mes-${barberoId}-${mes}`,
-      `servicio-${servicioId}`,
       `margenes-${barberoId}`,
       `excepciones-${barberoId}`,
       "excepciones-globales",
+      "barberos",
+      "servicios",
       "turnos-global",
     ],
-    () => obtenerDisponibilidad(
-      servicioId,
-      barberoId,
-      `${mes}-01`,
-      `${mes}-${String(ultimoDia).padStart(2, "0")}`,
-      turnoIdAExcluir,
-    ),
+    () => calcularCapacidadMensual(mes, barberoId, turnoIdAExcluir),
     120,
   );
 }
