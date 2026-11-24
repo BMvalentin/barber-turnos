@@ -11,27 +11,27 @@ type Props = {
 
 export default function EncabezadoHorarios({ esEmpleado, hayPerfiles, alNuevoHorario }: Props) {
   return (
-    <div className="flex items-start justify-between gap-4">
+    <header className="admin-encabezado">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-[var(--admin-texto-primario)] md:text-[28px]">
+        <h1>
           {esEmpleado ? "Mis horarios" : "Horarios laborales"}
         </h1>
-        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
+        <p>
           {esEmpleado
             ? "Configurá tus días y horarios de atención."
-            : "Gestioná los horarios de tu perfil y los del resto del equipo."}
+            : "Configurá los días de atención y los horarios del equipo."}
         </p>
       </div>
       {hayPerfiles && (
         <Button
           type="button"
           onClick={alNuevoHorario}
-          className="bg-[var(--page-primary)] font-semibold text-[var(--page-primary-foreground)] shadow-sm hover:-translate-y-0.5 hover:bg-[var(--page-primary-hover)] hover:shadow-md active:translate-y-0"
+          className="admin-accion w-full sm:w-auto"
         >
           <Plus className="h-4 w-4" />
           {esEmpleado ? "Configurar horario" : "Nuevo horario"}
         </Button>
       )}
-    </div>
+    </header>
   );
 }

@@ -1,14 +1,15 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { filtroBarberoParaAgenda } from "@/lib/barberos/filtros-perfiles";
 
 const obtenerBarberosFiltroTurnosCacheados = unstable_cache(
   async () => prisma.barbero.findMany({
-    where: { OR: [{ usuarioId: { not: null } }, { turnos: { some: {} } }] },
+    where: filtroBarberoParaAgenda,
     select: { id: true, nombre: true, srcImage: true, estado: true },
-    orderBy: [{ estado: "desc" }, { nombre: "asc" }],
+    orderBy: { nombre: "asc" },
   }),
-  ["barberos-filtro-turnos-v1"],
-  { tags: ["barberos", "turnos-global"], revalidate: 60 },
+  ["barberos-filtro-turnos-v3"],
+  { tags: ["barberos", "servicios"], revalidate: 60 },
 );
 
 export async function obtenerBarberosFiltroTurnos() {

@@ -8,11 +8,10 @@ type Props = {
 
 export default function CampoPorcentajeGanancia({ valor, error, onCambio }: Props) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       <label
         htmlFor="porcentaje-ganancia"
-        className="text-sm font-semibold"
-        style={{ color: `var(--page-primary-tinta)` }}
+        className="block text-sm font-medium text-[var(--admin-texto-secundario)]"
       >
         Porcentaje de ganancia por corte
       </label>
@@ -28,10 +27,10 @@ export default function CampoPorcentajeGanancia({ valor, error, onCambio }: Prop
           value={valor}
           onChange={(e) => onCambio(e.target.value)}
           aria-invalid={error ? true : undefined}
-          aria-describedby="porcentaje-ganancia-ayuda"
-          className="w-full rounded-lg bg-[var(--admin-surface-elevated)] px-3 py-2.5 pr-9 text-sm text-[var(--admin-texto-primario)] placeholder:text-[var(--admin-texto-muted)] transition-colors duration-150 border focus:outline-none focus:border-[var(--page-primary)]/60 focus:ring-2 focus:ring-[var(--page-focus-ring)]"
+          aria-describedby={error ? "porcentaje-ganancia-ayuda porcentaje-ganancia-error" : "porcentaje-ganancia-ayuda"}
+          className="min-h-11 w-full rounded-xl border bg-[var(--admin-surface-elevated)] px-3 pr-9 text-base text-[var(--admin-texto-primario)] placeholder:text-[var(--admin-texto-muted)] sm:text-sm"
           style={{
-            borderColor: "var(--admin-border)",
+            borderColor: error ? "var(--admin-error)" : "var(--admin-border-fuerte)",
           }}
           placeholder="0"
         />
@@ -48,7 +47,7 @@ export default function CampoPorcentajeGanancia({ valor, error, onCambio }: Prop
       </p>
 
       {error && (
-        <p className="text-red-400 text-sm">{error}</p>
+        <p id="porcentaje-ganancia-error" className="text-sm text-[var(--admin-error)]">{error}</p>
       )}
     </div>
   );

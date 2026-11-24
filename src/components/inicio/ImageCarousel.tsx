@@ -1,109 +1,78 @@
 "use client";
-import { motion } from "framer-motion";
-import Autoplay from "embla-carousel-autoplay"
+
+import Image from "next/image";
 import { Carousel } from "@/components/ui/carousel/Carousel";
 import { CarouselContent } from "@/components/ui/carousel/CarouselContent";
 import { CarouselItem } from "@/components/ui/carousel/CarouselItem";
 import { CarouselNext } from "@/components/ui/carousel/CarouselNext";
 import { CarouselPrevious } from "@/components/ui/carousel/CarouselPrevious";
-import Image from "next/image";
 import type { ServicioSlide } from "@/lib/servicio-imagenes/construir-slides";
+import { formatearMoneda } from "@/lib/utils/formatear-moneda";
 
-interface ImageCarouselProps {
-  slides: ServicioSlide[];
-}
+const CLASE_FLECHA = "control-publico static size-11 translate-y-0 rounded-md border-[var(--admin-border-fuerte)] bg-[var(--admin-surface)] text-[var(--admin-texto-primario)] transition-colors hover:bg-[var(--admin-item)] hover:text-[var(--admin-texto-primario)]";
 
-/* El carrusel recibe slides ya construidos (1 imagen = 1 item).
-   Cada slide muestra UNA imagen + la info del servicio correspondiente.
-   No se agrupan varias imágenes del mismo servicio en una misma tarjeta. */
-export function ImageCarousel({ slides }: ImageCarouselProps) {
-  if (!slides || slides.length === 0) return null;
+export function ImageCarousel({ slides }: { slides: ServicioSlide[] }) {
+  if (slides.length === 0) return null;
 
   return (
-    <section id="servicios" className="py-12 bg-[var(--page-bg)]">
-      <div className="container px-4 max-w-6xl mx-auto">
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-8"
+    <section id="servicios" aria-labelledby="titulo-servicios" className="scroll-mt-16 bg-[var(--page-bg)] py-12 sm:py-16">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <h2 id="titulo-servicios" className="mb-8 text-center text-3xl font-black tracking-[-0.04em] uppercase sm:text-4xl">
+          Nuestros <span className="text-[var(--page-primary-tinta)] italic">Servicios</span>
+        </h2>
+        <Carousel
+          opts={{ align: "start", containScroll: "trimSnaps", breakpoints: { "(prefers-reduced-motion: reduce)": { duration: 0 } } }}
+          aria-label="Galería de servicios"
+          aria-roledescription="carrusel"
+          className="mx-auto w-full max-w-4xl"
         >
-          <h2 className="text-3xl font-black text-[var(--page-bg-foreground)] uppercase tracking-tighter">
-            Nuestros <span className="italic" style={{ color: "var(--page-primary-tinta)" }}>Servicios</span>
-          </h2>
-        </motion.div>
+          <CarouselContent className="-ml-3">
+            {slides.map(({ servicio, imagen }, indice) => {
+              const precioFinal = servicio.descuento > 0
+                ? Math.round(servicio.precio * (1 - servicio.descuento / 100))
+                : servicio.precio;
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <Carousel
-            opts={{ align: "start", loop: true }}
-            plugins={[Autoplay({ delay: 3000, stopOnInteraction: true })]}
-            className="w-full max-w-4xl mx-auto relative"
-          >
-            <CarouselContent className="-ml-2">
-              {slides.map(({ servicio, imagen }, indice) => (
-                <CarouselItem key={`${servicio.id}-${indice}`} className="pl-2 basis-1/2 md:basis-1/3 lg:basis-1/3">
-
-                  <div className="group relative overflow-hidden rounded-2xl aspect-square bg-[var(--admin-surface)] shadow-lg border border-[var(--page-bg-foreground)]/5">
+              return (
+                <CarouselItem key={`${servicio.id}-${indice}`} className="basis-[80%] pl-3 min-[400px]:basis-1/2 md:basis-1/3">
+                  <article className="relative isolate flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-xl bg-zinc-950 sm:aspect-square">
                     <Image
                       src={imagen ?? servicio.srcImage ?? "/images/avatar-default.svg"}
-                      alt={servicio.nombre}
+                      alt=""
                       fill
-                      sizes="(max-width: 768px) 50vw, 25vw"
-                      className="object-cover object-center transition-transform duration-500 group-hover:scale-105" />
-
-                    <div className="absolute inset-0 bg-gradient-to-t from-black to-black/20 transition-opacity" />
-
-                    <div className="absolute bottom-0 left-0 right-0 p-3">
-                      <h3 className="text-sm font-bold text-white uppercase tracking-tight truncate">
+                      sizes="(max-width: 399px) 80vw, (max-width: 767px) 50vw, (max-width: 900px) 33vw, 300px"
+                      className="-z-10 object-cover"
+                    />
+                    <div className="bg-zinc-950/90 p-3 sm:p-4">
+                      <h3 className="text-sm leading-snug font-bold text-white [overflow-wrap:anywhere] sm:text-base">
                         {servicio.nombre}
                       </h3>
-                      <div className="flex items-end gap-2">
-                        {servicio.descuento > 0 ? (
+                      <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1 tabular-nums">
+                        <span className="text-lg leading-tight font-bold text-[var(--page-primary-sobre-oscuro)]">
+                          <span className="sr-only">Precio actual </span>${formatearMoneda(precioFinal)}
+                        </span>
+                        {servicio.descuento > 0 && (
                           <>
-                            <span className="text-sm text-gray-400 line-through">
-                              ${servicio.precio}
-                            </span>
-
-                            <h2 className="text-xl font-bold leading-none" style={{ color: "var(--page-primary-sobre-oscuro)" }}>
-                              $
-                              {Math.round(
-                                servicio.precio - (servicio.precio * servicio.descuento) / 100
-                              )}
-                            </h2>
-
-                            <span
-                              className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full mb-0.5"
-                              style={{ backgroundColor: "var(--page-primary)", color: "var(--page-primary-foreground)" }}
-                            >
-                              {servicio.descuento}% OFF
+                            <s className="text-sm text-zinc-300"><span className="sr-only">Precio anterior </span>${formatearMoneda(servicio.precio)}</s>
+                            <span className="rounded px-1.5 py-0.5 text-xs font-semibold text-white ring-1 ring-inset ring-white/45">
+                              <span aria-hidden="true">−{servicio.descuento}%</span>
+                              <span className="sr-only">{servicio.descuento}% de descuento</span>
                             </span>
                           </>
-                        ) : (
-                          <h2 className="text-lg font-bold" style={{ color: "var(--page-primary-sobre-oscuro)" }}>
-                            ${servicio.precio}
-                          </h2>
                         )}
                       </div>
                     </div>
-                  </div>
+                  </article>
                 </CarouselItem>
-              ))}
-            </CarouselContent>
-
-            {/* Flechas con hover dinámico usando el color primario */}
-            <CarouselPrevious
-              className="absolute left-2 z-50 h-8 w-8 bg-[var(--admin-surface)] text-[var(--page-bg-foreground)] border-[var(--page-bg-foreground)]/10 hover:text-[var(--page-bg-foreground)]"
-            />
-            <CarouselNext
-              className="absolute right-2 z-50 h-8 w-8 bg-[var(--admin-surface)] text-[var(--page-bg-foreground)] border-[var(--page-bg-foreground)]/10 hover:text-[var(--page-bg-foreground)]"
-            />
-          </Carousel>
-        </motion.div>
+              );
+            })}
+          </CarouselContent>
+          {slides.length > 1 && (
+            <div className="mt-4 flex justify-end gap-2">
+              <CarouselPrevious className={CLASE_FLECHA} aria-label="Servicio anterior" />
+              <CarouselNext className={CLASE_FLECHA} aria-label="Servicio siguiente" />
+            </div>
+          )}
+        </Carousel>
       </div>
     </section>
   );

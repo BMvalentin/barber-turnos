@@ -6,9 +6,8 @@ import { Suspense, useActionState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import AuthLayout from "@/components/auth/AuthLayout";
-import { CLASES_BOTON_MARCA } from "@/lib/constants";
+import { CLASE_CAMPO, CLASE_ENLACE, CLASE_ENVIO, CLASE_ERROR, CLASE_ETIQUETA, CLASE_ICONO_CAMPO } from "@/components/auth/estilos-formulario";
 import { Mail, Lock, ChevronRight, Scissors } from "lucide-react";
-import { toast } from "sonner";
 
 export default function LoginPage() {
   return (
@@ -36,158 +35,105 @@ function LoginPageContenido() {
     });
   }, [state, update, router]);
 
-  useEffect(() => {
-    if (verificado) {
-      toast.success("¡Cuenta activada!", { description: "Ya podés iniciar sesión." });
-    }
-  }, [verificado]);
-
-  useEffect(() => {
-    if (state.error) toast.error("Error", { description: state.error });
-  }, [state]);
-
   return (
-    <AuthLayout>
-      {/* CONTENEDOR PRINCIPAL - Ocupa toda la pantalla */}
-      <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-[var(--page-bg)] text-[var(--page-bg-foreground)]">
-        
-        {/* ===================*/}
-        {/*   IMAGEN DE FONDO  */}
-        {/* Esta es provisional*/}
-        {/* ===================*/}
-        <div 
-          className="absolute inset-0 z-0 opacity-30 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=2070&auto=format&fit=crop')" }}
-        />
-        {/* Overlay para oscurecer el fondo */}
-        <div className="absolute inset-0 z-0 bg-gradient-to-b from-zinc-950/80 via-zinc-950/90 to-zinc-950" />
-        {/* Luces de neón de fondo (Efecto velocidad)*/}
-        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-[var(--page-primary)]/20 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-red-600/10 rounded-full blur-[120px]" />
-        
-        {/*Líneas abstractas*/} 
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute top-1/2 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[var(--page-primary)] to-transparent" />
+    <AuthLayout imagenFondo="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=2070&auto=format&fit=crop">
+      <div className="flex w-full max-w-md overflow-hidden rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)] lg:max-w-5xl">
+        <div className="relative hidden bg-[#09090b] lg:block lg:w-1/2">
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=2074&auto=format&fit=crop')" }}
+          />
+          <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-[#09090b] from-30% via-[#09090b]/55 to-transparent" />
+
+          <div className="absolute inset-x-10 bottom-10 text-white">
+            <p className="mb-2 text-4xl font-black uppercase tracking-tight">
+              Domina tu <span className="text-[var(--page-primary-sobre-oscuro)]">Estilo</span>
+            </p>
+            <p className="font-medium">El corte perfecto es solo el principio. Bienvenido al club.</p>
+          </div>
         </div>
 
-        {/* TARJETA DE LOGIN (SPLIT DESIGN) */}
-        <div className="relative z-10 w-full max-w-5xl flex rounded- overflow-hidden shadow- border border-[var(--admin-border)] bg-[var(--admin-surface)]/60 backdrop-blur-xl">
-          {/* LADO IZQUIERDO - IMAGEN (Solo Desktop) */}
-          <div className="hidden lg:block lg:w-1/2 relative">
-            {/* =======*/}
-            {/* IMAGEN */}
-            {/* =======*/}
-            <div 
-              className="absolute inset-0 bg-cover bg-center grayscale- contrast-125"
-              style={{ backgroundImage: "url('https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=2074&auto=format&fit=crop')" }}
-            />
-            {/* Capas de degradado para fusionar la imagen con el formulario */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-zinc-950/40 to-zinc-950" />
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-80" />
-            
-            <div className="absolute bottom-12 left-12 right-12 text-left">
-              <h2 className="text-4xl font-black text-[var(--page-bg-foreground)] uppercase tracking-tighter mb-2">
-                Domina tu <span className="text-[var(--page-primary-tinta)]">Estilo</span>
-              </h2>
-              <p className="text-[var(--admin-texto-secundario)] font-medium">El corte perfecto es solo el principio. Bienvenido al club.</p>
+        <div className="min-w-0 flex-1 px-5 py-6 sm:p-8 lg:p-10">
+          <div className="mb-6 text-center lg:text-left">
+            <div className="mb-4 inline-flex size-12 items-center justify-center rounded-xl bg-[var(--admin-surface-elevated)] lg:hidden">
+              <Scissors aria-hidden="true" className="size-6 text-[var(--admin-texto-primario)]" />
             </div>
+            <h1 className="text-balance text-3xl font-black uppercase tracking-tight text-[var(--admin-texto-primario)] sm:text-4xl">
+              MAYORAZ <span className="text-[var(--page-primary-tinta)]">Barber</span>
+            </h1>
+            <p className="mt-2 text-sm font-medium text-[var(--admin-texto-secundario)]">Ingresá a tu cuenta</p>
           </div>
 
-          {/* LADO DERECHO - FORMULARIO (100% en móvil, 50% en Desktop) */}
-          <div className="w-full lg:w-1/2 p-8 sm:p-12 md:p-16 relative">
-            {/* Brillo sutil superior */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[var(--page-primary)]/50 to-transparent" />
-
-            <div className="text-center lg:text-left mb-10">
-              <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] lg:hidden">
-                <Scissors className="w-8 h-8 text-[var(--page-primary-tinta)]" />
-              </div>
-              <h1 className="text-3xl sm:text-4xl font-black text-[var(--page-bg-foreground)] tracking-tighter uppercase">
-                MAYORAZ <span className="text-[var(--page-primary-tinta)]">Barber</span>
-              </h1>
-              <p className="mt-2 text-sm font-medium tracking-wide text-[var(--admin-texto-secundario)]">INGRESA A TU CUENTA</p>
-            </div>
-
-            <div className="space-y-4 mb-8">
-              <GoogleButton />
-            </div>
-
-            <div className="relative mb-8">
-              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-[var(--admin-border)]" /></div>
-              <div className="relative flex justify-center lg:justify-start text-xs uppercase tracking-widest font-bold">
-                <span className="bg-[var(--admin-surface)] px-4 text-[var(--admin-texto-muted)]">O ingresa con Email</span>
-              </div>
-            </div>
-
-            <form action={action} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text- font-black text-[var(--page-primary-tinta)] uppercase tracking- ml-1">Email</label>
-                <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--admin-texto-muted)] group-focus-within:text-[var(--page-primary-tinta)] transition-colors" />
-                  <input 
-                    name="email" 
-                    type="email" 
-                    placeholder="cliente@correo.com"
-                    required 
-                    className="w-full bg-[var(--admin-surface-elevated)] border border-[var(--admin-border)] rounded-xl py-4 pl-12 pr-4 text-[var(--admin-texto-primario)] outline-none focus:border-[var(--admin-border-fuerte)] focus:bg-[var(--admin-item)] focus:ring-1 focus:ring-[var(--page-focus-ring)] transition-all placeholder:text-[var(--admin-texto-muted)] font-medium"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text- font-black text-[var(--page-primary-tinta)] uppercase tracking- ml-1">Contraseña</label>
-                <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--admin-texto-muted)] group-focus-within:text-[var(--page-primary-tinta)] transition-colors" />
-                  <input 
-                    name="password" 
-                    type="password" 
-                    placeholder="••••••••"
-                    required 
-                    className="w-full bg-[var(--admin-surface-elevated)] border border-[var(--admin-border)] rounded-xl py-4 pl-12 pr-4 text-[var(--admin-texto-primario)] outline-none focus:border-[var(--admin-border-fuerte)] focus:bg-[var(--admin-item)] focus:ring-1 focus:ring-[var(--page-focus-ring)] transition-all placeholder:text-[var(--admin-texto-muted)] font-medium"
-                  />
-                </div>
-              </div>
-
-              <button 
-                type="submit" 
-                disabled={isPending}
-                className={`w-full group relative ${CLASES_BOTON_MARCA} font-black py-4 rounded-xl transition-all overflow-hidden active:scale- disabled:opacity-50 shadow- hover:shadow-`}
-              >
-                <div className="relative z-10 flex items-center justify-center gap-2 uppercase tracking-widest text-sm sm:text-base">
-                  {isPending ? "INGRESANDO..." : "INICIAR SESIÓN"}
-                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </div>
-                {/* Brillo dinámico en hover */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-" />
-              </button>
-            </form>
-
-            <p className="mt-6 text-center text-sm font-medium text-[var(--admin-texto-muted)] lg:text-left">
-              ¿Olvidaste tu contraseña?{" "}
-              <Link href="/recuperar-password" className="text-[var(--page-primary-tinta)] hover:text-[var(--page-primary-tinta)] font-bold underline-offset-4 hover:underline transition-colors">
-                Recuperala aquí
-              </Link>
+          {verificado && (
+            <p role="status" className="mb-4 rounded-lg bg-[var(--admin-surface-elevated)] px-3 py-2 text-sm font-medium">
+              Cuenta activada. Ya podés iniciar sesión.
             </p>
+          )}
 
-            <p className="mt-8 text-center text-sm font-medium text-[var(--admin-texto-muted)] lg:text-left">
-              ¿No eres miembro aún?{" "}
-              <Link href="/register" className="text-[var(--page-primary-tinta)] font-bold hover:text-[var(--page-primary-tinta)] underline-offset-4 hover:underline transition-colors">
-                Regístrate aquí
-              </Link>
-            </p>
+          <GoogleButton />
 
-            <p className="mt-4 text-center text-xs leading-relaxed text-[var(--admin-texto-muted)] lg:text-left">
-              Consultá los{" "}
-              <Link href="/legal/terminos" className="text-[var(--page-primary-tinta)] font-semibold hover:underline underline-offset-4 transition-colors">
-                Términos y Condiciones
-              </Link>{" "}
-              y la{" "}
-              <Link href="/legal/privacidad" className="text-[var(--page-primary-tinta)] font-semibold hover:underline underline-offset-4 transition-colors">
-                Política de Privacidad
-              </Link>
-              .
-            </p>
+          <div className="my-5 flex items-center gap-3 text-xs font-semibold text-[var(--admin-texto-secundario)] before:h-px before:flex-1 before:bg-[var(--admin-border)] after:h-px after:flex-1 after:bg-[var(--admin-border)]">
+            O ingresá con tu correo
           </div>
+
+          <form action={action} className="space-y-4">
+            <div className="space-y-1.5">
+              <label htmlFor="email" className={CLASE_ETIQUETA}>Correo electrónico</label>
+              <div className="relative">
+                <Mail aria-hidden="true" className={CLASE_ICONO_CAMPO} />
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="username"
+                  placeholder="cliente@correo.com"
+                  required
+                  className={`${CLASE_CAMPO} pr-4`}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="password" className={CLASE_ETIQUETA}>Contraseña</label>
+              <div className="relative">
+                <Lock aria-hidden="true" className={CLASE_ICONO_CAMPO} />
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  className={`${CLASE_CAMPO} pr-4`}
+                />
+              </div>
+            </div>
+
+            {state.error && <p role="alert" className={CLASE_ERROR}>{state.error}</p>}
+
+            <button type="submit" disabled={isPending || state.success} className={CLASE_ENVIO}>
+              {isPending || state.success ? "Ingresando..." : "Iniciar sesión"}
+              <ChevronRight className="size-4 shrink-0" aria-hidden="true" />
+            </button>
+          </form>
+
+          <p className="mt-4 text-center text-sm leading-relaxed text-[var(--admin-texto-secundario)] lg:text-left">
+            <Link href="/recuperar-password" className={CLASE_ENLACE}>
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </p>
+
+          <p className="mt-3 text-center text-sm leading-relaxed text-[var(--admin-texto-secundario)] lg:text-left">
+            ¿Todavía no tenés cuenta?{" "}
+            <Link href="/register" className={CLASE_ENLACE}>Registrate</Link>
+          </p>
+
+          <p className="mt-4 text-center text-xs leading-relaxed text-[var(--admin-texto-secundario)] lg:text-left">
+            Consultá los{" "}
+            <Link href="/legal/terminos" className={CLASE_ENLACE}>Términos y Condiciones</Link>
+            {" "}y la{" "}
+            <Link href="/legal/privacidad" className={CLASE_ENLACE}>Política de Privacidad</Link>.
+          </p>
         </div>
       </div>
     </AuthLayout>

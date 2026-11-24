@@ -1,9 +1,9 @@
 import type { ReactNode, RefObject } from "react";
 import type { Session } from "next-auth";
 import type { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
-import type { ActionState } from "@/types/action-state";
 import type {
   BarberoData,
+  EstadoFormularioTurno,
   ServicioData,
   TurnoListado,
   UsuarioData,
@@ -24,6 +24,8 @@ export type DatosDisponibilidadHorarios = {
   irAlMesSiguiente: () => void;
   manejarSeleccionFecha: (dia: Date) => void;
   manejarSeleccionSlot: (slot: string) => void;
+  errorConsulta: boolean;
+  reintentarConsulta: () => void;
 };
 
 export type PropsPanelFechaHorario = {
@@ -108,6 +110,7 @@ export type PropsTarjetaServicioReserva = {
 };
 
 export type PropsResumenReserva = {
+  error?: string;
   servicio: ServicioData | null;
   barbero: BarberoData | null;
   fecha: Date | undefined;
@@ -144,9 +147,11 @@ export type PropsSelectorClienteReserva = {
 };
 
 export type PropsFormularioReservaTurno = {
+  vistaAdministrativa: boolean;
+  puedeGestionarTurnos: boolean;
   session: Session | null;
   formRef: RefObject<HTMLFormElement | null>;
-  state: ActionState;
+  state: EstadoFormularioTurno;
   formAction: (formData: FormData) => void;
   sessionId: string;
   servicios: ServicioData[];

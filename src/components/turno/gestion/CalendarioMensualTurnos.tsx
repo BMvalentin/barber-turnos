@@ -12,7 +12,7 @@ import {
   startOfWeek,
 } from "date-fns";
 import { es } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import type {
   EstadoTurnoCalendario,
   ResumenDiaCalendario,
@@ -27,6 +27,9 @@ interface Props {
   turnos: TurnoListado[];
   cargandoTurnos: boolean;
   onSeleccionar: (fecha: string) => void;
+  mesVisible?: string;
+  onCambiarMes?: (mes: string) => void;
+  vistaAdministrativa?: boolean;
 }
 
 const DIAS_SEMANA = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
@@ -49,6 +52,13 @@ const CLASES_PUNTO_ESTADO: Record<EstadoTurnoCalendario, string> = {
   CONFIRMADO: "bg-emerald-400",
   COMPLETADO: "bg-emerald-400/70",
   CANCELADO: "bg-red-400/80",
+};
+
+const CLASES_PUNTO_ADMIN: Record<(typeof ESTADOS_CON_INDICADOR)[number], string> = {
+  PENDIENTE: "bg-[var(--admin-indicador-aviso)]",
+  CONFIRMADO: "bg-[var(--admin-indicador-exito)]",
+  COMPLETADO: "bg-[var(--admin-indicador-neutro)]",
+  CANCELADO: "bg-[var(--admin-indicador-error)]",
 };
 
 const FORMATO_FECHA_LARGA = new Intl.DateTimeFormat("es-AR", {
@@ -97,14 +107,22 @@ function capitalizar(texto: string): string {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
-function descripcionIndicadores(resumen: ResumenDiaCalendario | undefined): string {
-  if (!resumen) return "Sin turnos pendientes, confirmados o cancelados";
-  const descripciones = ESTADOS_CON_INDICADOR
+function descripcionIndicadores(
+  resumen: ResumenDiaCalendario | undefined,
+  vistaAdministrativa: boolean,
+): string {
+  const sinTurnos = vistaAdministrativa
+    ? "Sin turnos"
+    : "Sin turnos pendientes, confirmados o cancelados";
+  if (!resumen) return sinTurnos;
+
+  const estados: readonly EstadoTurnoCalendario[] = vistaAdministrativa
+    ? [...ESTADOS_CON_INDICADOR, "COMPLETADO"]
+    : ESTADOS_CON_INDICADOR;
+  const descripciones = estados
     .filter((estado) => resumen[estado] > 0)
     .map((estado) => `${resumen[estado]} ${ETIQUETAS_ESTADO[estado].toLowerCase()}${resumen[estado] === 1 ? "" : "s"}`);
-  return descripciones.length > 0
-    ? descripciones.join(", ")
-    : "Sin turnos pendientes, confirmados o cancelados";
+  return descripciones.join(", ") || sinTurnos;
 }
 
 export default function CalendarioMensualTurnos({
@@ -113,14 +131,18 @@ export default function CalendarioMensualTurnos({
   turnos,
   cargandoTurnos,
   onSeleccionar,
+  mesVisible: mesControlado,
+  onCambiarMes,
+  vistaAdministrativa = false,
 }: Props) {
-  const [mesVisible, setMesVisible] = useState<Date>(() => {
+  const [mesInterno, setMesInterno] = useState<Date>(() => {
     const fechaInicial = parsearFecha(fecha);
     return fechaInicial ? startOfMonth(fechaInicial) : startOfMonth(new Date());
   });
+  const mesVisible = (mesControlado ? parsearFecha(`${mesControlado}-01`) : undefined) ?? mesInterno;
+  const claveMesVisible = mesComoClave(mesVisible);
   const resumenMensual = useMemo(() => {
     const resumen: ResumenMensualCalendario = {};
-    const claveMesVisible = mesComoClave(mesVisible);
 
     for (const turno of turnos) {
       if (barberoId && turno.barberoId !== barberoId) continue;
@@ -133,15 +155,22 @@ export default function CalendarioMensualTurnos({
       resumen[dia] = resumenDia;
     }
     return resumen;
-  }, [barberoId, mesVisible, turnos]);
+  }, [barberoId, claveMesVisible, turnos]);
 
   useEffect(() => {
+    if (mesControlado) return;
     const fechaSeleccionada = parsearFecha(fecha);
     if (!fechaSeleccionada) return;
-    setMesVisible((mesActual) =>
+    setMesInterno((mesActual) =>
       isSameMonth(mesActual, fechaSeleccionada) ? mesActual : startOfMonth(fechaSeleccionada),
     );
-  }, [fecha]);
+  }, [fecha, mesControlado]);
+
+  const desplazarMes = (cantidad: number) => {
+    const siguiente = new Date(mesVisible.getFullYear(), mesVisible.getMonth() + cantidad, 1);
+    if (onCambiarMes) onCambiarMes(mesComoClave(siguiente));
+    else setMesInterno(siguiente);
+  };
 
   const dias = eachDayOfInterval({
     start: startOfWeek(startOfMonth(mesVisible), { weekStartsOn: 0 }),
@@ -150,32 +179,39 @@ export default function CalendarioMensualTurnos({
   const fechaSeleccionada = parsearFecha(fecha);
   const fechaHoy = obtenerFechaSola(new Date());
   const tituloMes = capitalizar(format(mesVisible, "MMMM yyyy", { locale: es }));
+  const clasesPunto = vistaAdministrativa ? CLASES_PUNTO_ADMIN : CLASES_PUNTO_ESTADO;
+  const claseNavegacion = vistaAdministrativa
+    ? "admin-control size-11 p-0"
+    : "rounded-lg p-1.5 text-[var(--admin-texto-secundario)] transition-colors hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]";
 
   return (
-    <div className="space-y-3">
+    <div className={vistaAdministrativa ? "min-w-0 lg:sticky lg:top-4" : "space-y-3"}>
       <section
         aria-label="Calendario mensual de turnos"
         aria-busy={cargandoTurnos}
-        className="rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-3.5 sm:p-4"
+        className={vistaAdministrativa
+          ? "admin-card p-3 sm:p-4"
+          : "rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-3.5 sm:p-4"}
       >
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold capitalize text-[var(--admin-texto-primario)]">
+          <h2 className="flex items-center gap-2 text-sm font-semibold capitalize text-[var(--admin-texto-primario)]" aria-live={vistaAdministrativa ? "polite" : undefined}>
+            {vistaAdministrativa && <CalendarDays size={17} className="shrink-0 text-[var(--page-primary-tinta)]" aria-hidden="true" />}
             {tituloMes}
           </h2>
           <div className="flex items-center gap-1">
             <button
               type="button"
               aria-label="Mes anterior"
-              onClick={() => setMesVisible((mes) => new Date(mes.getFullYear(), mes.getMonth() - 1, 1))}
-              className="rounded-lg p-1.5 text-[var(--admin-texto-secundario)] transition-colors hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
+              onClick={() => desplazarMes(-1)}
+              className={claseNavegacion}
             >
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </button>
             <button
               type="button"
               aria-label="Mes siguiente"
-              onClick={() => setMesVisible((mes) => new Date(mes.getFullYear(), mes.getMonth() + 1, 1))}
-              className="rounded-lg p-1.5 text-[var(--admin-texto-secundario)] transition-colors hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
+              onClick={() => desplazarMes(1)}
+              className={claseNavegacion}
             >
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -205,7 +241,7 @@ export default function CalendarioMensualTurnos({
               !estaEnElMes || cargandoTurnos || !tieneTurnos;
             const descripcionDia = cargandoTurnos
               ? "Cargando turnos"
-              : descripcionIndicadores(resumenDia);
+              : descripcionIndicadores(resumenDia, vistaAdministrativa);
             const etiqueta = `${capitalizar(FORMATO_FECHA_LARGA.format(dia))}. ${descripcionDia}.`;
 
             return (
@@ -214,9 +250,20 @@ export default function CalendarioMensualTurnos({
                 type="button"
                 aria-label={etiqueta}
                 aria-pressed={seleccionado}
+                aria-current={vistaAdministrativa && esHoy ? "date" : undefined}
                 disabled={deshabilitado}
                 onClick={() => onSeleccionar(clave)}
-                className={`flex h-10 w-full flex-col items-center justify-center rounded-lg border border-transparent text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] sm:h-11 sm:text-sm ${
+                className={vistaAdministrativa
+                  ? `flex h-9 w-full flex-col items-center justify-center gap-1 rounded-lg text-sm tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-[var(--page-focus-ring)] sm:h-11 ${
+                    seleccionado
+                      ? deshabilitado
+                        ? "bg-[var(--admin-item)] font-semibold text-[var(--admin-texto-primario)] ring-1 ring-inset ring-[var(--page-primary-tinta)]"
+                        : "bg-[var(--page-primary-soft)] font-bold text-[var(--page-primary-tinta)] ring-1 ring-inset ring-[var(--page-primary-tinta)]"
+                      : deshabilitado
+                        ? "text-[var(--admin-texto-muted)]"
+                        : "bg-[var(--page-primary-soft)] font-semibold text-[var(--admin-texto-primario)] hover:bg-[var(--admin-item)]"
+                  } ${esHoy && !seleccionado ? "ring-1 ring-inset ring-[var(--admin-border-fuerte)]" : ""} ${!estaEnElMes ? "opacity-40" : deshabilitado && !seleccionado ? "opacity-80" : ""}`
+                  : `flex h-10 w-full flex-col items-center justify-center rounded-lg border border-transparent text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] sm:h-11 sm:text-sm ${
                   seleccionado
                     ? tieneTurnos && !cargandoTurnos
                       ? "bg-[var(--page-primary-20)] font-bold text-[var(--admin-texto-primario)] ring-1 ring-[var(--admin-border-fuerte)]"
@@ -229,11 +276,11 @@ export default function CalendarioMensualTurnos({
                 } ${esHoy && !seleccionado ? "ring-1 ring-inset ring-[var(--admin-border-fuerte)]" : ""}`}
               >
                 <span>{format(dia, "d")}</span>
-                <span className="mt-0.5 flex h-1 items-center justify-center gap-0.5" aria-hidden="true">
+                <span className={`flex items-center justify-center gap-0.5 ${vistaAdministrativa ? "h-1.5" : "mt-0.5 h-1"}`} aria-hidden="true">
                   {estaEnElMes && ESTADOS_CON_INDICADOR.filter((estado) => (resumenDia?.[estado] ?? 0) > 0).map((estado) => (
                     <span
                       key={estado}
-                      className={`h-1 w-1 rounded-full ${CLASES_PUNTO_ESTADO[estado]}`}
+                      className={`rounded-full ${vistaAdministrativa ? "size-1.5" : "size-1"} ${clasesPunto[estado]}`}
                     />
                   ))}
                 </span>
@@ -241,9 +288,17 @@ export default function CalendarioMensualTurnos({
             );
           })}
         </div>
-
+        {vistaAdministrativa && (
+          <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-2 border-t border-[var(--admin-border)] px-1 pt-3 text-[11px] text-[var(--admin-texto-secundario)]" aria-label="Estados del calendario">
+            {ESTADOS_CON_INDICADOR.map((estado) => (
+              <li key={estado} className="flex items-center gap-1.5">
+                <span className={`size-1.5 rounded-full ${clasesPunto[estado]}`} aria-hidden="true" />
+                {ETIQUETAS_ESTADO[estado]}
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
-
     </div>
   );
 }

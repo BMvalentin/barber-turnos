@@ -1,12 +1,13 @@
 // app/pago/success/page.tsx
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
+import { CLASE_ACCION_PRINCIPAL, CLASE_ACCION_SECUNDARIA, CLASE_ICONO_ESTADO, CLASE_VISTA_PAGO } from "@/components/pago/estilos-estado-pago";
 import { requerirPropietarioOAdmin } from "@/lib/seguridad/requerir-propietario";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { confirmarPagoTurno } from "@/actions/mercadopago/confirmar-pago.actions";
 import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 import RedireccionWhatsApp from "@/components/pago/RedireccionWhatsApp";
-import { CLASES_BOTON_MARCA, ESTADOS_PAGO_ACREDITADOS } from "@/lib/constants";
+import { ESTADOS_PAGO_ACREDITADOS } from "@/lib/constants";
 import Link from "next/link";
 import { CheckCircle2, Calendar, ArrowRight, Clock3 } from "lucide-react";
 
@@ -119,23 +120,23 @@ export default async function PagoSuccessPage({
   const esPagoTotal = datosFinales?.tipoPago === "TOTAL";
 
   return (
-    <div className="min-h-screen bg-[var(--page-bg)] text-[var(--page-bg-foreground)] flex items-center justify-center px-4">
-      <div className="max-w-md w-full text-center space-y-6">
+    <main className={CLASE_VISTA_PAGO}>
+      <div className="w-full max-w-md space-y-5 text-center">
 
         {/* Ícono de éxito */}
         <div className="flex justify-center">
-          <div className="w-24 h-24 rounded-full bg-[var(--admin-surface)] border-2 border-[var(--admin-border)] flex items-center justify-center">
+          <div className={`${CLASE_ICONO_ESTADO} ${turnoConfirmado ? "bg-emerald-100 text-emerald-800" : "bg-[var(--admin-item)] text-[var(--admin-texto-primario)]"}`}>
             {turnoConfirmado
-              ? <CheckCircle2 className="w-12 h-12 text-green-400" />
-              : <Clock3 className="w-12 h-12 text-[var(--admin-texto-secundario)]" />}
+              ? <CheckCircle2 aria-hidden="true" className="size-8" />
+              : <Clock3 aria-hidden="true" className="size-8" />}
           </div>
         </div>
 
         {/* Título */}
         <div>
-          <h1 className="text-3xl font-black text-[var(--page-bg-foreground)] uppercase tracking-tight mb-2">
+          <h1 className="mb-2 text-balance text-2xl font-black tracking-tight sm:text-3xl">
             {turnoConfirmado
-              ? esPagoTotal ? "¡Pago Total!" : "¡Seña Pagada!"
+              ? esPagoTotal ? "¡Pago total!" : "¡Seña pagada!"
               : "Pago en revisión"}
           </h1>
           <p className="text-[var(--admin-texto-secundario)]">
@@ -147,13 +148,13 @@ export default async function PagoSuccessPage({
 
         {/* Info del pago */}
         {turnoConfirmado && idPagoVerificado && (
-          <div className="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-2xl p-4 text-left space-y-2">
+          <div className="bg-[var(--admin-surface)] rounded-lg p-4 text-left space-y-2">
             <p className="text-xs text-[var(--admin-texto-muted)] uppercase tracking-widest font-bold">
               Comprobante
             </p>
             <p className="text-sm text-[var(--admin-texto-secundario)]">
               <span className="text-[var(--admin-texto-muted)]">ID de pago:</span>{" "}
-              <span className="font-mono text-[var(--page-primary-tinta)]">{idPagoVerificado}</span>
+              <span className="wrap-anywhere font-mono text-[var(--admin-texto-primario)]">{idPagoVerificado}</span>
             </p>
             {turnoId && (
               <p className="text-sm text-[var(--admin-texto-secundario)]">
@@ -165,7 +166,7 @@ export default async function PagoSuccessPage({
         )}
 
         {/* Acciones */}
-        {turnoConfirmado && datosFinales && whatsappPhone ? (
+        {turnoConfirmado && datosFinales && whatsappPhone && (
           <RedireccionWhatsApp
             numeroWhatsApp={whatsappPhone}
             clienteNombre={datosFinales.user.name}
@@ -178,25 +179,18 @@ export default async function PagoSuccessPage({
             tipoPago={datosFinales.tipoPago}
             estadoPago={datosFinales.estadoPago}
           />
-        ) : (
-          <div className="flex flex-col gap-3">
-            <Link
-              href="/dashboard?tab=turnos"
-              className={`flex items-center justify-center gap-2 w-full ${CLASES_BOTON_MARCA} font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm`}
-            >
-              <Calendar className="w-5 h-5" />
-              Ver mis turnos
-            </Link>
-            <Link
-              href="/"
-            className="flex items-center justify-center gap-2 w-full bg-[var(--admin-item)] hover:bg-[var(--admin-item-hover)] text-[var(--admin-texto-primario)] font-medium py-3 rounded-2xl transition-all text-sm"
-            >
-              Volver al inicio
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
         )}
+        <div className="flex flex-col gap-3">
+          <Link href="/dashboard?tab=turnos" className={CLASE_ACCION_PRINCIPAL}>
+            <Calendar aria-hidden="true" className="size-5" />
+            Ver mis turnos
+          </Link>
+          <Link href="/" className={CLASE_ACCION_SECUNDARIA}>
+            Volver al inicio
+            <ArrowRight aria-hidden="true" className="size-4" />
+          </Link>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

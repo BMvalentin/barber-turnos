@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
+import { VIGENCIA_CACHE_TURNOS_MS } from "@/lib/turnos/capacidad-horaria";
 import type { ParcheTurnoCache } from "@/lib/admin/turnos-cache-local";
 import type { TurnoListado } from "@/types/turno";
 
@@ -53,6 +54,7 @@ const esquemaDatos = z.object({
 const esquemaCache = z.object({
   version: z.literal(2),
   usuarioId: z.string(),
+  venceEn: z.number().int(),
   datos: esquemaDatos,
 });
 
@@ -117,7 +119,7 @@ function leerCache(usuarioId: string): CacheTurnosUsuario | null {
     }
 
     const resultado = esquemaCache.safeParse(valor);
-    if (!resultado.success || resultado.data.usuarioId !== usuarioId) {
+    if (!resultado.success || resultado.data.usuarioId !== usuarioId || resultado.data.venceEn <= Date.now()) {
       window.localStorage.removeItem(clave);
       return null;
     }
@@ -165,6 +167,7 @@ export function guardarTurnosUsuarioCacheLocal(
     const resultado = esquemaCache.safeParse({
       version: 2,
       usuarioId,
+      venceEn: Date.now() + VIGENCIA_CACHE_TURNOS_MS,
       datos: {
         historial: {
           ...datosLimitados.historial,

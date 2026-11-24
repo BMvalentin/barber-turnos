@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { Clock, Scissors, SquarePen, Trash2 } from "lucide-react";
+import { useId, useState } from "react";
+import { ChevronDown, Clock3, Scissors, SquarePen, Trash2 } from "lucide-react";
 import Image from "next/image";
 import EditServicioModal from "./EditServicioModal";
+import { formatearMoneda } from "@/lib/utils/formatear-moneda";
 import type { Servicio, ServicioCreado } from "@/types/servicio";
 
 type ServicioRowProps = {
@@ -13,113 +14,85 @@ type ServicioRowProps = {
   onServicioActualizado?: (servicio: ServicioCreado) => void;
 };
 
-export default function ServicioRow({
-  servicio,
-  puedeGestionar,
-  onEliminar,
-  onServicioActualizado,
-}: ServicioRowProps) {
+export default function ServicioRow({ servicio, puedeGestionar, onEliminar, onServicioActualizado }: ServicioRowProps) {
   const [showEditModal, setShowEditModal] = useState(false);
+  const [expandido, setExpandido] = useState(false);
+  const idDescripcion = useId();
 
   return (
-    <>
-      <div className="flex flex-col md:grid md:grid-cols-12 gap-4 p-4 md:items-center hover:bg-[var(--admin-item-hover)] transition-colors duration-150 group">
-        <div className={`flex items-start gap-4 md:items-center ${puedeGestionar ? "md:col-span-6" : "md:col-span-8"}`}>
-          <div
-            className="w-10 h-10 rounded-lg bg-[var(--admin-surface-elevated)] border border-[var(--admin-border)] flex items-center justify-center flex-shrink-0"
-            style={{ color: "var(--page-primary-tinta)" }}
-          >
-            {servicio.srcImage ? (
-              <Image
-                src={servicio.srcImage}
-                alt={servicio.nombre}
-                width={40}
-                height={40}
-                className="w-full h-full object-cover rounded-lg"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-            ) : (
-              <Scissors className="w-5 h-5" />
-            )}
-          </div>
-          <div className="flex-1">
-            <h3 className="text-[var(--admin-texto-primario)] font-semibold text-sm">
-              {servicio.nombre}
-            </h3>
-            {servicio.descripcion && (
-              <p className="text-[var(--admin-texto-muted)] text-xs line-clamp-2 md:max-w-[350px] mt-0.5">
-                {servicio.descripcion}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="hidden md:flex col-span-2 justify-center items-center gap-1 text-[var(--admin-texto-muted)] text-sm">
-          <Clock className="w-3 h-3" />
-          {servicio.duracion} min
-        </div>
-
-        <div
-          className="hidden md:flex col-span-2 justify-center font-semibold text-sm"
-          style={{ color: "var(--page-primary-tinta)" }}
-        >
-          ${servicio.precio}
-        </div>
-
-        {puedeGestionar && (
-          <div className="hidden items-center justify-end gap-2 md:col-span-2 md:flex">
-            <button
-              onClick={() => setShowEditModal(true)}
-              title="Editar servicio"
-              className="text-[var(--admin-texto-muted)] transition-colors duration-150 p-1 hover:bg-[var(--admin-item-hover)] rounded"
-              style={{ color: "var(--page-primary-tinta)" }}
-            >
-              <SquarePen className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => onEliminar(servicio.id)}
-              title="Eliminar servicio"
-              className="text-[var(--admin-texto-muted)] hover:text-red-500 transition-colors duration-150 p-1 hover:bg-[var(--admin-item-hover)] rounded"
-            >
-              <Trash2 className="w-5 h-5" />
-            </button>
-          </div>
-        )}
-
-        <div className="flex md:hidden items-center justify-between mt-2 pt-3 border-t border-[var(--admin-border)]">
-          <div className="flex items-center gap-4">
-            <span
-              className="font-semibold text-sm"
-              style={{ color: "var(--page-primary-tinta)" }}
-            >
-              ${servicio.precio}
-            </span>
-            <span className="flex items-center gap-1 text-[var(--admin-texto-muted)] text-sm">
-              <Clock className="w-3 h-3" /> {servicio.duracion} min
-            </span>
-          </div>
-          {puedeGestionar && (
-            <div className="flex items-center justify-end gap-2">
-              <button
-                onClick={() => setShowEditModal(true)}
-                title="Editar servicio"
-                className="text-[var(--admin-texto-muted)] transition-colors duration-150 p-1.5 bg-[var(--admin-surface-elevated)] rounded border border-[var(--admin-border)]"
-              >
-                <SquarePen className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => onEliminar(servicio.id)}
-                title="Eliminar servicio"
-                className="text-[var(--admin-texto-muted)] hover:text-red-500 transition-colors duration-150 p-1.5 bg-[var(--admin-surface-elevated)] rounded border border-[var(--admin-border)]"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
+    <li className="min-w-0 rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-3 lg:grid lg:grid-cols-[var(--servicio-columnas)] lg:items-center lg:gap-x-4 lg:rounded-none lg:border-0 lg:border-b lg:bg-transparent lg:px-4 lg:last:border-b-0">
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="relative grid size-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-[var(--page-primary-soft)] text-[var(--admin-acento-suave-texto)]">
+          <Scissors aria-hidden="true" className="size-4" />
+          {servicio.srcImage && (
+            <Image
+              src={servicio.srcImage}
+              alt=""
+              width={40}
+              height={40}
+              className="absolute inset-0 size-full object-cover"
+              onError={(evento) => { evento.currentTarget.hidden = true; }}
+            />
           )}
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-semibold [overflow-wrap:anywhere]">{servicio.nombre}</h3>
+          {!servicio.estado && <span className="text-xs text-[var(--admin-texto-muted)]">Inactivo</span>}
         </div>
+        {servicio.descripcion && (
+          <button
+            type="button"
+            aria-label={`${expandido ? "Ocultar" : "Ver"} descripción de ${servicio.nombre}`}
+            aria-expanded={expandido}
+            aria-controls={idDescripcion}
+            onClick={() => setExpandido((actual) => !actual)}
+            className="grid size-11 shrink-0 place-items-center rounded-xl text-[var(--admin-acento-suave-texto)] hover:bg-[var(--admin-item)] lg:hidden"
+          >
+            <ChevronDown aria-hidden="true" className={`size-5 motion-safe:transition-transform ${expandido ? "rotate-180" : ""}`} />
+          </button>
+        )}
       </div>
+
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 pl-[52px] text-sm lg:contents">
+        <span className="inline-flex items-center gap-1.5 text-[var(--admin-texto-muted)] lg:justify-end">
+          <span className="sr-only">Duración: </span>
+          <Clock3 aria-hidden="true" className="size-3.5 shrink-0 lg:hidden" />
+          {servicio.duracion} min
+        </span>
+        <span className="font-semibold tabular-nums text-[var(--admin-texto-primario)] [overflow-wrap:anywhere] lg:text-right">
+          <span className="sr-only">Precio: </span>
+          ${formatearMoneda(servicio.precio)}
+        </span>
+      </div>
+
+      {servicio.descripcion && (
+        <p id={idDescripcion} className={`${expandido ? "block" : "hidden"} mt-3 border-t border-[var(--admin-border)] pt-3 text-sm text-[var(--admin-texto-muted)] [overflow-wrap:anywhere] lg:col-span-full lg:row-start-2 lg:mt-1 lg:block lg:border-0 lg:pl-[52px] lg:pt-0`}>
+          {servicio.descripcion}
+        </p>
+      )}
+
+      {puedeGestionar && (
+        <div className="mt-3 flex items-center justify-end gap-1 border-t border-[var(--admin-border)] pt-1.5 lg:mt-0 lg:border-0 lg:pt-0">
+          <button
+            type="button"
+            onClick={() => setShowEditModal(true)}
+            title="Editar servicio"
+            aria-label={`Editar ${servicio.nombre}`}
+            className="grid size-11 place-items-center rounded-xl text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-item)] lg:size-9"
+          >
+            <SquarePen aria-hidden="true" className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onEliminar(servicio.id)}
+            title="Eliminar servicio"
+            aria-label={`Eliminar ${servicio.nombre}`}
+            className="grid size-11 place-items-center rounded-xl text-[var(--admin-error)] hover:bg-[var(--admin-error-suave)] lg:size-9"
+          >
+            <Trash2 aria-hidden="true" className="size-4" />
+          </button>
+        </div>
+      )}
 
       {showEditModal && (
         <EditServicioModal
@@ -128,6 +101,6 @@ export default function ServicioRow({
           onServicioActualizado={onServicioActualizado}
         />
       )}
-    </>
+    </li>
   );
 }

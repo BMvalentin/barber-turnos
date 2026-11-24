@@ -1,15 +1,27 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { addMonths, subMonths, format } from "date-fns";
-import { obtenerDiasDisponibles } from "@/actions/turnos/disponibilidad.actions";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { addMonths, subMonths, format, parseISO } from "date-fns";
 import { useSlotLocks } from "@/hooks/useSlotLocks";
+import { MINIMO_ANTICIPACION_MS } from "@/lib/constants";
+import { filtrarHorariosPorDuracion, type CapacidadHoraria } from "@/lib/turnos/capacidad-horaria";
+import {
+  claveDisponibilidad,
+  consultarDisponibilidadMensual,
+  invalidarDisponibilidadLocal,
+  leerDisponibilidadEnMemoria,
+  precargarDisponibilidadMensual,
+} from "@/lib/turnos/disponibilidad-cliente";
 import { filtrarSlotsVigentes } from "@/lib/turnos/filtrar-slots-vigentes";
+import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
+import type { HorarioNoDisponible } from "@/types/turno";
 
 interface OpcionesDisponibilidadHorarios {
-  servicioId?: string;
+  duracion?: number;
   barberoId?: string;
-  turnoIdAExcluir?: string;
+  barberos: readonly string[];
+  turnoInicial?: { id: string; barberoId: string; horarioReservado: Date } | null;
+  usuarioId?: string;
   defaultValue?: string;
   sessionId?: string;
   userId?: string;
@@ -20,33 +32,49 @@ interface OpcionesDisponibilidadHorarios {
  * Hook del seleccionador de horarios: estado de la fecha, los días del mes,
  * los slots horarios y la selección con locks en tiempo real.
  */
-export function useDisponibilidadHorarios({ servicioId, barberoId, turnoIdAExcluir, defaultValue, sessionId = "no-session", userId = "no-user", activo = true }: OpcionesDisponibilidadHorarios) {
-  const [fecha, setFecha] = useState<Date | undefined>(defaultValue ? new Date(defaultValue) : undefined);
-  const [mesVisible, setMesVisible] = useState<Date>(defaultValue ? new Date(defaultValue) : new Date());
-  const [diasDisponibles, setDiasDisponibles] = useState<string[]>([]);
-  const [cargandoDias, setCargandoDias] = useState(false);
+export function useDisponibilidadHorarios({ duracion, barberoId, barberos, turnoInicial, usuarioId, defaultValue, sessionId = "no-session", userId = "no-user", activo = true }: OpcionesDisponibilidadHorarios) {
+  const [fecha, setFecha] = useState<Date | undefined>(() => defaultValue ? parseISO(obtenerFechaSola(defaultValue)) : undefined);
+  const [mesVisible, setMesVisible] = useState(() => parseISO(obtenerFechaSola(defaultValue ?? new Date())));
   const [estadoMes, setEstadoMes] = useState<{
     clave: string;
-    horarios: Record<string, string[]> | null;
+    capacidad?: CapacidadHoraria;
   } | null>(null);
+  const [revision, setRevision] = useState(0);
   const [slotSeleccionado, setSlotSeleccionado] = useState<string>(defaultValue ?? "");
-  const solicitudDiasRef = useRef(0);
   const mesVisibleStr = format(mesVisible, "yyyy-MM");
-  const claveMes = JSON.stringify([mesVisibleStr, servicioId, barberoId, turnoIdAExcluir]);
+  const turnoId = turnoInicial?.id;
+  const barberoInicialId = turnoInicial?.barberoId;
+  const mesInicial = turnoInicial && obtenerFechaSola(turnoInicial.horarioReservado).slice(0, 7);
+  const obtenerExclusion = useCallback((mes: string, id: string) =>
+    turnoId && usuarioId && mes === mesInicial && id === barberoInicialId ? { turnoId, usuarioId } : undefined,
+  [barberoInicialId, mesInicial, turnoId, usuarioId]);
+  const claveMes = barberoId ? claveDisponibilidad(mesVisibleStr, barberoId, obtenerExclusion(mesVisibleStr, barberoId)) : "";
+  const capacidadMes = leerDisponibilidadEnMemoria(claveMes)?.capacidad ?? (estadoMes?.clave === claveMes ? estadoMes.capacidad : undefined);
+  const errorConsulta = estadoMes?.clave === claveMes && !capacidadMes;
+  const hayServicio = Boolean(duracion && duracion > 0);
+  const cargandoDias = activo && hayServicio && Boolean(barberoId) && !capacidadMes && !errorConsulta;
+  const horarios = useMemo(
+    () => activo && duracion && duracion > 0 && capacidadMes
+      ? filtrarHorariosPorDuracion(capacidadMes, duracion)
+      : {},
+    [activo, duracion, capacidadMes],
+  );
+  const ahora = Date.now();
+  const diasDisponibles = Object.entries(horarios).flatMap(([dia, inicios]) => {
+    const ultimo = inicios[inicios.length - 1];
+    return ultimo && Date.parse(ultimo) > ahora + MINIMO_ANTICIPACION_MS ? [dia] : [];
+  });
   const fechaStr = fecha ? format(fecha, "yyyy-MM-dd") : null;
   const fechaDelMesVisible = fechaStr?.slice(0, 7) === mesVisibleStr;
-  const consultaHorarioActiva = activo && Boolean(fechaStr && servicioId && barberoId && fechaDelMesVisible);
-  const cargando = consultaHorarioActiva && estadoMes?.clave !== claveMes;
-  const slots = consultaHorarioActiva && !cargando && fechaStr
-    ? filtrarSlotsVigentes(estadoMes?.horarios?.[fechaStr] ?? [])
+  const cargando = Boolean(fechaDelMesVisible && cargandoDias);
+  const slots = activo && fechaDelMesVisible && fechaStr
+    ? filtrarSlotsVigentes(horarios[fechaStr] ?? [], ahora)
     : [];
 
-  // Comparar con los valores anteriores evita limpiar el turno precargado al
-  // montar y también contempla volver a la selección inicial.
-  const valoresAnterioresRef = useRef({ servicioId, barberoId });
+  const barberoAnteriorRef = useRef(barberoId);
 
   // Locks en tiempo real (polling REST)
-  const { isSlotBloqueado, lockSlot, unlockSlot } = useSlotLocks({
+  const { isSlotBloqueado, lockSlot, unlockSlot, refrescarLocks } = useSlotLocks({
     barberoId: barberoId ?? "",
     fecha,
     sessionId,
@@ -60,73 +88,84 @@ export function useDisponibilidadHorarios({ servicioId, barberoId, turnoIdAExclu
     unlockSlotRef.current = unlockSlot;
   }, [unlockSlot]);
 
-  // Al cambiar barbero/servicio la fecha y el horario dejan de ser válidos:
-  // se libera el lock y se limpian las selecciones. En el montaje inicial no se
-  // limpia nada para no romper el modo edición (que inicializa defaultValue).
+  // Cambiar de barbero cambia la agenda. Al montar se conserva el turno en edición.
   useEffect(() => {
-    if (
-      servicioId === valoresAnterioresRef.current.servicioId &&
-      barberoId === valoresAnterioresRef.current.barberoId
-    ) {
-      return;
-    }
-    valoresAnterioresRef.current = { servicioId, barberoId };
+    if (barberoId === barberoAnteriorRef.current) return;
+    barberoAnteriorRef.current = barberoId;
     unlockSlotRef.current();
     setFecha(undefined);
     setSlotSeleccionado("");
-  }, [servicioId, barberoId]);
-
-  const cargarDiasDelMes = useCallback(async () => {
-    const idSolicitud = ++solicitudDiasRef.current;
-    if (!servicioId || !barberoId) {
-      setDiasDisponibles([]);
-      setCargandoDias(false);
-      setEstadoMes(null);
-      return;
-    }
-    try {
-      setCargandoDias(true);
-      const resultado = await obtenerDiasDisponibles(
-        mesVisibleStr,
-        servicioId,
-        barberoId,
-        turnoIdAExcluir
-      );
-      if (idSolicitud === solicitudDiasRef.current) {
-        const datos = resultado.success ? resultado.data : undefined;
-        setDiasDisponibles(datos?.dias ?? []);
-        setEstadoMes({ clave: claveMes, horarios: datos?.horarios ?? null });
-      }
-    } catch (error) {
-      console.error("Error cargando días disponibles:", error);
-      if (idSolicitud === solicitudDiasRef.current) {
-        setDiasDisponibles([]);
-        setEstadoMes({ clave: claveMes, horarios: null });
-      }
-    } finally {
-      if (idSolicitud === solicitudDiasRef.current) {
-        setCargandoDias(false);
-      }
-    }
-  }, [mesVisibleStr, servicioId, barberoId, turnoIdAExcluir, claveMes]);
+  }, [barberoId]);
 
   useEffect(() => {
-    if (!activo) {
-      solicitudDiasRef.current += 1;
-      setCargandoDias(false);
-      setEstadoMes(null);
-      return;
+    if (!activo) return;
+    precargarDisponibilidadMensual(mesVisibleStr, barberos);
+    precargarDisponibilidadMensual(format(addMonths(parseISO(`${mesVisibleStr}-01`), 1), "yyyy-MM"), barberos);
+  }, [activo, barberos, mesVisibleStr]);
+
+  useEffect(() => {
+    if (!activo || !barberoId) return;
+    let vigente = true;
+    let temporizador: ReturnType<typeof setTimeout> | undefined;
+    const exclusion = obtenerExclusion(mesVisibleStr, barberoId);
+    const consultar = async () => {
+      const entrada = await consultarDisponibilidadMensual(mesVisibleStr, barberoId, exclusion);
+      if (!vigente) return;
+      setEstadoMes({ clave: claveMes, capacidad: entrada?.capacidad });
+      if (entrada) temporizador = setTimeout(consultar, Math.max(0, entrada.venceEn - Date.now()));
+    };
+    void consultar();
+    return () => {
+      vigente = false;
+      clearTimeout(temporizador);
+    };
+  }, [activo, barberoId, claveMes, mesVisibleStr, obtenerExclusion, revision]);
+
+  const reintentarConsulta = () => {
+    if (!barberoId) return;
+    void consultarDisponibilidadMensual(mesVisibleStr, barberoId, obtenerExclusion(mesVisibleStr, barberoId), true);
+    setEstadoMes(null);
+    setRevision((actual) => actual + 1);
+  };
+
+  const actualizarTrasConflicto = useCallback(({ barberoId: id, horario }: HorarioNoDisponible) => {
+    const dia = obtenerFechaSola(horario);
+    const mes = dia.slice(0, 7);
+    const exclusion = obtenerExclusion(mes, id);
+    invalidarDisponibilidadLocal(id, dia);
+    void consultarDisponibilidadMensual(mes, id, exclusion, true);
+    if (id !== barberoId) return;
+    if (slotSeleccionado === horario) {
+      unlockSlot();
+      setSlotSeleccionado("");
     }
-    cargarDiasDelMes();
-  }, [cargarDiasDelMes, activo]);
+    if (fechaStr === dia) void refrescarLocks();
+    if (mes === mesVisibleStr) {
+      setEstadoMes(null);
+      setRevision((actual) => actual + 1);
+    }
+  }, [barberoId, fechaStr, mesVisibleStr, obtenerExclusion, refrescarLocks, slotSeleccionado, unlockSlot]);
+
+  const validarHorarioParaServicio = (duracionNueva?: number) => {
+    if (!fechaStr || !slotSeleccionado || !barberoId) return;
+    const mes = fechaStr.slice(0, 7);
+    const claveFecha = claveDisponibilidad(mes, barberoId, obtenerExclusion(mes, barberoId));
+    const capacidad = leerDisponibilidadEnMemoria(claveFecha)?.capacidad[fechaStr] ?? [];
+    const horariosCompatibles = duracionNueva
+      ? filtrarHorariosPorDuracion({ [fechaStr]: capacidad }, duracionNueva)[fechaStr] ?? []
+      : [];
+    if (horariosCompatibles.includes(slotSeleccionado)) return;
+
+    unlockSlot();
+    setSlotSeleccionado("");
+  };
 
   const irAlMesAnterior = useCallback(() => setMesVisible((m) => subMonths(m, 1)), []);
   const irAlMesSiguiente = useCallback(() => setMesVisible((m) => addMonths(m, 1)), []);
 
   const manejarSeleccionFecha = useCallback(
     (dia: Date) => {
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
+      const hoy = parseISO(obtenerFechaSola(new Date()));
       if (dia < hoy) return;
       if (fecha && format(fecha, "yyyy-MM-dd") === format(dia, "yyyy-MM-dd")) return;
       setFecha(dia);
@@ -159,5 +198,9 @@ export function useDisponibilidadHorarios({ servicioId, barberoId, turnoIdAExclu
     irAlMesSiguiente,
     manejarSeleccionFecha,
     manejarSeleccionSlot,
+    validarHorarioParaServicio,
+    errorConsulta: hayServicio && errorConsulta,
+    reintentarConsulta,
+    actualizarTrasConflicto,
   };
 }

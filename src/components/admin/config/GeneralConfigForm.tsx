@@ -30,7 +30,6 @@ interface GeneralConfigFormProps {
 }
 
 export default function GeneralConfigForm({ initialData, seccionInicial }: GeneralConfigFormProps) {
-  const esAjustesPago = seccionInicial === "ajustes-pago";
   const [isPending, startTransition] = useTransition();
   const [uploadingField, setUploadingField] = useState<NombreCampoImagen | null>(null);
 
@@ -137,9 +136,9 @@ export default function GeneralConfigForm({ initialData, seccionInicial }: Gener
         e.preventDefault();
         guardarModuloActivo();
       }}
-      className={esAjustesPago ? "mt-0" : "mt-8 space-y-10"}
+      className="admin-card min-w-0"
     >
-      <div className={esAjustesPago ? "space-y-12" : "space-y-10"}>
+      <div className="min-w-0 p-4 sm:p-6">
         {seccionInicial === "informacion-general" && (
           <SeccionIdentidad
             nombre={formData.name}
@@ -203,16 +202,14 @@ export default function GeneralConfigForm({ initialData, seccionInicial }: Gener
           />
         )}
 
+      </div>
+      <div className="flex justify-end border-t border-[var(--admin-border)] p-4 sm:px-6">
         <BotonSubmitPending
           pendiente={isPending}
           deshabilitado={uploadingField !== null}
           texto="Guardar cambios"
           mostrarSpinner={false}
-          claseAdicional="w-full sm:w-auto font-semibold transition-opacity hover:opacity-90"
-          estiloAdicional={{
-            backgroundColor: "var(--page-primary)",
-            color: "var(--page-primary-foreground)",
-          }}
+          claseAdicional="admin-accion w-full sm:w-auto"
         />
       </div>
     </form>

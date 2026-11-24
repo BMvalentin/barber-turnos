@@ -15,7 +15,7 @@ type Props = {
   whatsappPhone: string;
   datosTransferencia: DatosTransferencia;
   mostrarAvisoSeniaPendiente?: boolean;
-  alcanceCacheTurnos?: string;
+  vistaAdministrativa?: boolean;
   onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
 };
 
@@ -37,7 +37,7 @@ export default function PagoPendienteTurno({
   whatsappPhone,
   datosTransferencia,
   mostrarAvisoSeniaPendiente = true,
-  alcanceCacheTurnos = "",
+  vistaAdministrativa = false,
   onTurnoActualizado,
 }: Props) {
   const router = useRouter();
@@ -56,7 +56,6 @@ export default function PagoPendienteTurno({
   const pago = usePagoTurno({
     whatsappPhone,
     turnoInicial: turnoCreado,
-    alcanceCacheTurnos,
     onTurnoActualizado,
   });
 
@@ -73,15 +72,20 @@ export default function PagoPendienteTurno({
       <button
         type="button"
         onClick={() => setAbierto(true)}
-        className="flex items-center gap-1.5 rounded-lg bg-[var(--page-primary)] px-3 py-1.5 text-xs font-semibold text-[var(--page-primary-foreground)] transition-colors hover:bg-[var(--page-primary-hover)]"
+        aria-haspopup="dialog"
+        className={vistaAdministrativa
+          ? "flex items-center gap-1.5 rounded-lg bg-[var(--page-primary)] px-3 py-1.5 text-xs font-semibold text-[var(--page-primary-foreground)] transition-colors hover:bg-[var(--page-primary-hover)]"
+          : "flex min-h-11 items-center gap-1.5 rounded-lg border border-[var(--admin-border-fuerte)] bg-[var(--page-primary)] px-3 py-1.5 text-sm font-semibold text-[var(--page-primary-foreground)] transition-colors duration-150 hover:bg-[var(--page-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--page-focus-ring)]"}
       >
-        <CreditCard className="h-3.5 w-3.5" />
+        <CreditCard className={vistaAdministrativa ? "size-3.5 shrink-0" : "size-4 shrink-0"} aria-hidden="true" />
         Completar pago
       </button>
 
       {abierto && (
         <div style={ESTILO_TEMAS}>
           <ModalPagoTurno
+            esPagoPendiente={!vistaAdministrativa}
+            vistaAdministrativa={vistaAdministrativa}
             turnoCreado={turnoCreado}
             cargandoPago={pago.cargandoPago}
             errorPago={pago.errorPago}

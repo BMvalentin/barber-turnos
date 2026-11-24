@@ -1,7 +1,5 @@
-import { Phone } from "lucide-react";
-import type { ChangeEvent } from "react";
-import SelectorDesplegable from "@/components/ui/SelectorDesplegable";
-import type { OpcionDesplegable } from "@/components/ui/SelectorDesplegable";
+import { ChevronDown, Phone } from "lucide-react";
+import { useId, type ChangeEvent } from "react";
 
 const PREFIJOS = [
   ["🇦🇷", "+54 9"], ["🇺🇾", "+598"], ["🇨🇱", "+56"], ["🇧🇷", "+55"],
@@ -30,41 +28,46 @@ function conservarSoloDigitos(evento: ChangeEvent<HTMLInputElement>) {
 }
 
 export default function CampoTelefono({ prefijoInicial, telefonoInicial }: Propiedades) {
+  const idTelefono = useId();
   const telefonoNormalizado = telefonoInicial
     .replace(/\D/g, "")
     .slice(0, MAX_DIGITOS_TELEFONO);
-  const opcionesPrefijo: OpcionDesplegable<string>[] = PREFIJOS.map(([bandera, prefijo]) => ({
-    valor: prefijo,
-    etiqueta: `${bandera} ${prefijo}`,
-  }));
+  const prefijoGuardado = PREFIJOS.some(([, prefijo]) => prefijo === prefijoInicial);
 
   return (
-    <div className="space-y-3">
-      <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--page-primary-tinta)]">
-        <Phone className="h-3.5 w-3.5" /> WhatsApp / Teléfono
+    <div className="min-w-0 space-y-2">
+      <label htmlFor={idTelefono} className="flex items-center gap-2 text-sm font-semibold text-[var(--admin-texto-primario)]">
+        <Phone className="size-4 text-[var(--page-primary-tinta)]" aria-hidden="true" /> WhatsApp / Teléfono
       </label>
-      <div className="flex overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] transition-colors focus-within:border-[var(--page-primary)] focus-within:ring-2 focus-within:ring-[var(--page-focus-ring)]">
-        <div className="flex items-center border-r border-[var(--admin-border)] bg-[var(--page-primary-15)] px-2">
-          <SelectorDesplegable
+      <div className="flex rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)]">
+        <div className="relative flex shrink-0 items-center border-r border-[var(--admin-border)]">
+          <select
             name="prefix"
-            opciones={opcionesPrefijo}
-            valorInicial={prefijoInicial}
-            etiquetaAria="Prefijo telefónico"
-            className="w-auto shrink-0"
-            claseBoton="h-auto w-auto min-w-0 rounded-none border-0 bg-transparent px-2 py-0 text-sm font-bold text-[var(--admin-texto-primario)] hover:bg-transparent focus-visible:ring-inset"
-          />
+            defaultValue={prefijoInicial}
+            aria-label="Prefijo telefónico"
+            autoComplete="tel-country-code"
+            className="min-h-12 appearance-none rounded-l-md bg-[var(--admin-surface-elevated)] py-2 pl-2.5 pr-8 text-sm font-semibold text-[var(--admin-texto-primario)] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--page-focus-ring)]"
+          >
+            {!prefijoGuardado && <option value={prefijoInicial}>{prefijoInicial}</option>}
+            {PREFIJOS.map(([bandera, prefijo]) => (
+              <option key={prefijo} value={prefijo}>{bandera} {prefijo}</option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-2.5 size-4 text-[var(--admin-texto-secundario)]" aria-hidden="true" />
         </div>
         <input
+          id={idTelefono}
           name="telefono"
           defaultValue={telefonoNormalizado}
           type="tel"
           inputMode="numeric"
+          autoComplete="tel-national"
           pattern="[0-9]*"
           maxLength={MAX_DIGITOS_TELEFONO}
           onChange={conservarSoloDigitos}
           required
           placeholder="1112345678"
-          className="w-full bg-transparent p-4 text-[var(--admin-texto-primario)] outline-none placeholder:text-[var(--admin-texto-muted)]"
+          className="min-h-12 min-w-0 flex-1 rounded-r-md bg-transparent px-3 py-2 text-[var(--admin-texto-primario)] placeholder:text-[var(--admin-texto-muted)] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--page-focus-ring)]"
         />
       </div>
     </div>

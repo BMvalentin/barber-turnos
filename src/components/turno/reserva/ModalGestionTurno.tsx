@@ -10,8 +10,8 @@ import ModalBase from "@/components/ui/ModalBase";
 import FormularioReservaTurno from "@/components/turno/reserva/FormularioReservaTurno";
 import ModalPagoTurno from "@/components/turno/ModalPagoTurno";
 import BadgeEstadoTurno from "@/components/turno/gestion/BadgeEstadoTurno";
-import { CLASES_BOTON_CERRAR } from "@/lib/constants";
 import type { DatosTransferencia } from "@/types/pago";
+import { cn } from "@/lib/utils/cn";
 
 const DATOS_TRANSFERENCIA_VACIOS: DatosTransferencia = {
   transferenciaTitular: "",
@@ -29,6 +29,8 @@ const ESTILO_TEMAS = {
   "--primary-tinta": "var(--page-primary-tinta)",
 } as React.CSSProperties;
 
+const CLASE_TRIGGER_PUBLICO = "min-h-11 border border-[var(--admin-border-fuerte)] bg-[var(--page-primary)] px-5 font-semibold text-[var(--page-primary-foreground)] transition-colors duration-150 hover:bg-[var(--page-primary-hover)] hover:brightness-100 focus-visible:ring-[var(--page-focus-ring)]";
+
 export default function ModalGestionTurno({
   session,
   initialServicios,
@@ -43,11 +45,13 @@ export default function ModalGestionTurno({
   contenidoTrigger,
   onTriggerClick,
   onTurnoCreado,
-  alcanceCacheTurnos,
+  onTurnoActualizado,
   abrirAlMontar = false,
+  vistaAdministrativa = false,
 }: PropsModalGestionTurno) {
   const {
     esEdicion,
+    puedeGestionarTurnos,
     isOpen,
     setIsOpen,
     formRef,
@@ -87,13 +91,15 @@ export default function ModalGestionTurno({
     initialUsuarios,
     initialRelaciones,
     whatsappPhone,
-    alcanceCacheTurnos,
     datosTransferencia,
     turnoInicial,
     onTurnoCreado,
+    onTurnoActualizado,
+    vistaAdministrativa,
   });
 
   const aperturaInicialProcesadaRef = useRef(false);
+  const botonAbrirRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!abrirAlMontar || aperturaInicialProcesadaRef.current) return;
     aperturaInicialProcesadaRef.current = true;
@@ -104,18 +110,29 @@ export default function ModalGestionTurno({
     onTriggerClick?.();
     setIsOpen(true);
   };
+  const restaurarFoco = (evento: Event) => {
+    if (document.activeElement?.closest("[role='dialog']")) {
+      evento.preventDefault();
+    } else if (botonAbrirRef.current) {
+      evento.preventDefault();
+      botonAbrirRef.current.focus({ preventScroll: true });
+    }
+  };
+  const titulo = esEdicion ? "Gestionar turno" : vistaAdministrativa ? "Nuevo turno" : "Reservar turno";
 
   return (
     <>
       <div style={ESTILO_TEMAS}>
         {contenidoTrigger ? (
-          <button type="button" onClick={abrir} className={claseTrigger}>
+          <button ref={botonAbrirRef} type="button" aria-haspopup="dialog" onClick={abrir} className={claseTrigger}>
             {contenidoTrigger}
           </button>
         ) : (
           <Button
-            className="flex items-center gap-2 px-6 py-3 font-medium text-[var(--primary-foreground)] shadow-lg transition-all hover:opacity-90"
-            style={{ backgroundColor: "var(--primary)" }}
+            ref={botonAbrirRef}
+            aria-haspopup="dialog"
+            className={vistaAdministrativa ? "flex items-center gap-2 px-6 py-3 font-medium text-[var(--primary-foreground)] shadow-lg transition-all hover:opacity-90" : CLASE_TRIGGER_PUBLICO}
+            style={vistaAdministrativa ? { backgroundColor: "var(--primary)" } : undefined}
             onClick={abrir}
           >
             {esEdicion ? <Pencil className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
@@ -128,35 +145,42 @@ export default function ModalGestionTurno({
         createPortal(
           <div style={ESTILO_TEMAS}>
             <ModalBase
+              apariencia={vistaAdministrativa ? undefined : "publica"}
+              etiquetaDialogo={titulo}
               maxWidth="max-w-6xl"
-              overlayClase="bg-black/80 backdrop-blur-md p-2 sm:p-4"
-              contenedorClase="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-2xl max-h-[92dvh] overflow-hidden flex flex-col"
+              overlayClase="bg-black/50 backdrop-blur-[2px] p-2 sm:p-4"
+              contenedorClase={cn(
+                "marco-reserva flex flex-col overflow-hidden",
+                vistaAdministrativa && "max-h-[92dvh]",
+              )}
               onClose={() => setIsOpen(false)}
+              onCloseAutoFocus={restaurarFoco}
               header={
-                <div className="flex items-center justify-between border-b border-[var(--admin-border)] p-5 sm:p-6">
+                <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--page-separador)] px-4 py-3 sm:px-6 sm:py-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-[var(--admin-texto-primario)]">
-                      {esEdicion && turnoInicial
-                        ? "Gestionar Turno"
-                        : "Reservar turno"}
+                    <h2 className="text-xl font-semibold text-[var(--admin-texto-primario)]">
+                      {titulo}
                     </h2>
                     {esEdicion && turnoInicial && (
                       <div className="mt-2">
-                        <BadgeEstadoTurno estado={turnoInicial.estado} />
+                        <BadgeEstadoTurno estado={turnoInicial.estado} vistaAdministrativa={vistaAdministrativa} />
                       </div>
                     )}
                   </div>
                   <button
                     type="button"
                     onClick={() => setIsOpen(false)}
-                    className={CLASES_BOTON_CERRAR}
+                    aria-label="Cerrar"
+                    className="control-publico grid size-11 shrink-0 place-items-center rounded-md text-[var(--admin-texto-secundario)] transition-colors hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)]"
                   >
-                    <X className="h-5 w-5" />
+                    <X className="size-5" aria-hidden="true" />
                   </button>
                 </div>
               }
             >
               <FormularioReservaTurno
+                vistaAdministrativa={vistaAdministrativa}
+                puedeGestionarTurnos={puedeGestionarTurnos}
                 session={session}
                 formRef={formRef}
                 state={state}
@@ -177,7 +201,7 @@ export default function ModalGestionTurno({
                 handleBarberoChange={handleBarberoChange}
                 handleServicioChange={handleServicioChange}
                 onCancelar={() => setIsOpen(false)}
-                turnoInicial={turnoInicial}
+                turnoInicial={esEdicion ? turnoInicial : undefined}
                 estadoPago={estadoPago}
                 setEstadoPago={setEstadoPago}
                 estadoTurno={estadoTurno}
@@ -192,6 +216,7 @@ export default function ModalGestionTurno({
         createPortal(
           <div style={ESTILO_TEMAS}>
             <ModalPagoTurno
+              vistaAdministrativa={vistaAdministrativa}
               turnoCreado={turnoCreado}
               cargandoPago={cargandoPago}
               errorPago={errorPago}
@@ -201,6 +226,7 @@ export default function ModalGestionTurno({
               whatsappPhone={whatsappPhone}
               onPagar={handlePagar}
               onVolverTransferencia={() => setTransferenciaLista(false)}
+              onCloseAutoFocus={restaurarFoco}
               onClose={() => {
                 setTransferenciaLista(false);
                 setShowPagoModal(false);

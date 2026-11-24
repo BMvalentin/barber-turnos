@@ -65,7 +65,7 @@ const actualizarServicioBase = async (
       urlsFinales.push(subida.url);
     }
 
-    await prisma.$transaction([
+    const [, , servicioActualizado] = await prisma.$transaction([
       prisma.servicio_imagen.deleteMany({ where: { servicioId: id } }),
       prisma.servicio_imagen.createMany({
         data: urlsFinales.map((url, indice) => ({ url, orden: indice, servicioId: id })),
@@ -86,40 +86,17 @@ const actualizarServicioBase = async (
       }),
     ]);
 
-    const servicioActualizado = await prisma.servicio.findUnique({
-      where: { id },
-      include: {
-        imagenes: { orderBy: { orden: "asc" }, select: { url: true } },
-      },
-    });
-
     revalidarServicios(id);
 
     return {
       success: true,
-      data:
-        servicioActualizado
-          ? {
-              ...servicioActualizado,
-              precio: Number(servicioActualizado.precio),
-              descuento: Number(servicioActualizado.descuento),
-              senia: Number(servicioActualizado.senia),
-              imagenes: servicioActualizado.imagenes.map((imagen) => imagen.url),
-            }
-          : {
-              id,
-              nombre: nombre.trim(),
-              descripcion: descripcion || null,
-              srcImage: urlsFinales[0] ?? null,
-              estado: estado ?? true,
-              duracion,
-              precio,
-              descuento,
-              senia,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              imagenes: urlsFinales,
-            },
+      data: {
+        ...servicioActualizado,
+        precio: Number(servicioActualizado.precio),
+        descuento: Number(servicioActualizado.descuento),
+        senia: Number(servicioActualizado.senia),
+        imagenes: urlsFinales,
+      },
     };
   } catch (error) {
     console.error("Error al actualizar servicio:", error);

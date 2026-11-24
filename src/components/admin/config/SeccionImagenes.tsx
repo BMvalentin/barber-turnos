@@ -28,17 +28,17 @@ export default function SeccionImagenes({
         <div className="flex items-center gap-2">
           <ImageIcon className="h-4 w-4 text-[var(--admin-texto-muted)]" />
           <h2 className="text-lg font-semibold tracking-tight text-[var(--admin-texto-primario)]">
-            Imágenes
+            Recursos del sitio
           </h2>
         </div>
         <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-          Logo, favicon e imagen de fondo del sitio.
+          Podés subir un archivo o usar una URL.
         </p>
       </div>
 
-      <div className="mt-6 grid gap-6 sm:grid-cols-3">
+      <div className="mt-5 grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <CampoImagen
-          etiqueta="Logo del Negocio (icono de la web)"
+          etiqueta="Logo del negocio"
           campo="logo"
           valor={logo}
           pista="Se muestra en el encabezado y el pie de página."
@@ -64,7 +64,7 @@ export default function SeccionImagenes({
         />
 
         <CampoImagen
-          etiqueta="Imagen de fondo (Home)"
+          etiqueta="Imagen de portada"
           campo="backgroundImage"
           valor={fondo}
           pista="Se muestra atenuada detrás de la portada. Recomendado 1920×1080."

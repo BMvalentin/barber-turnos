@@ -2,6 +2,8 @@ import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
   Users,
+  UsersRound,
+  CircleUserRound,
   Scissors,
   Landmark,
   Calendar,
@@ -43,7 +45,7 @@ export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
     tituloPorRol: { EMPLEADO: "Inicio" },
     items: [
       {
-        titulo: "Dashboard",
+        titulo: "Inicio",
         tituloPorRol: { EMPLEADO: "Mi resumen" },
         href: "/admin",
         icono: LayoutDashboard,
@@ -60,12 +62,12 @@ export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
         href: "/admin/turno",
         icono: Calendar,
       },
-      { titulo: "Empleados", href: "/admin/barbero", icono: Users, roles: ["ADMIN"] },
+      { titulo: "Empleados", href: "/admin/barbero", icono: UsersRound, roles: ["ADMIN"] },
       { titulo: "Usuarios", href: "/admin/usuarios", icono: Users, roles: ["ADMIN"] },
     ],
   },
   {
-    titulo: "Perfil",
+    titulo: "Trabajo",
     tituloPorRol: { EMPLEADO: "Mi espacio" },
     items: [
       { titulo: "Servicios", href: "/admin/servicio", icono: Scissors, roles: ["ADMIN", "EMPLEADO"] },
@@ -73,7 +75,7 @@ export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
         titulo: "Mi perfil",
         tituloPorRol: { EMPLEADO: "Mis datos" },
         href: "/admin/barbero/perfil",
-        icono: Users,
+        icono: CircleUserRound,
         roles: ["ADMIN", "EMPLEADO"],
       },
       {
@@ -86,7 +88,7 @@ export const GRUPOS_NAVEGACION: GrupoNavegacion[] = [
     ],
   },
   {
-    titulo: "Configuración",
+    titulo: "Negocio",
     items: [
       {
         titulo: "Configuración",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useId, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import ItemNavegacionEnlace from "@/components/panel/navegacion/ItemNavegacionEnlace";
@@ -11,7 +11,7 @@ interface DesplegableNavegacionProps {
   grupo: GrupoDesplegable;
   colapsado: boolean;
   alCerrar: () => void;
-  alExpandirSidebar: () => void;
+  alExpandirSidebar?: () => void;
 }
 
 function suscribirseConsultaEscritorio(alCambiar: () => void) {
@@ -41,7 +41,7 @@ export default function DesplegableNavegacion({
   const contieneHijoActivo = grupo.items.some((item) => pathname === item.href);
   const expandido = estadoLocal ?? contieneHijoActivo;
   const muestraContenido = expandido && !(colapsado && estaEnEscritorio);
-  const identificadorContenido = `grupo-navegacion-${grupo.titulo.toLowerCase().replaceAll(" ", "-")}`;
+  const identificadorContenido = useId();
   const refBoton = useRef<HTMLButtonElement>(null);
   const { mostrar, ocultar, sugerencia } = useSugerenciaLateral(
     refBoton,
@@ -51,7 +51,7 @@ export default function DesplegableNavegacion({
 
   const alAlternar = () => {
     if (colapsado && estaEnEscritorio) {
-      alExpandirSidebar();
+      alExpandirSidebar?.();
       setEstadoLocal(true);
       return;
     }
@@ -72,39 +72,33 @@ export default function DesplegableNavegacion({
         onFocus={mostrar}
         onBlur={ocultar}
         className={`
-          flex items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-[background-color,color,transform] duration-200 ease-out motion-reduce:transition-none
-          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]
-          ${colapsado ? "admin-escritorio:w-full admin-escritorio:justify-center admin-escritorio:px-0 admin-escritorio:hover:scale-105" : "hover:-translate-y-px"}
+          flex min-h-11 w-full items-center gap-3 rounded-[10px] px-3 py-2 text-left text-sm font-medium transition-colors duration-150
+          ${colapsado ? "admin-escritorio:justify-center admin-escritorio:px-0" : ""}
           ${contieneHijoActivo
-            ? "bg-[var(--page-primary-15)] text-[var(--admin-texto-primario)]"
-            : "text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-border)] hover:text-[var(--admin-texto-primario)]"}
+            ? "bg-[var(--page-primary-soft)] text-[var(--page-primary-tinta)]"
+            : "text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-item)] hover:text-[var(--admin-texto-primario)]"}
         `}
       >
-        <Icono className="h-4 w-4 shrink-0" />
+        <Icono className="size-[17px] shrink-0" aria-hidden="true" />
         <span className={colapsado ? "admin-escritorio:hidden" : ""}>{grupo.titulo}</span>
-        <span className={colapsado ? "admin-escritorio:hidden" : "ml-auto"}>
-          <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--admin-texto-muted)] transition-transform duration-200 ease-out motion-reduce:transition-none ${expandido ? "rotate-180" : ""}`} />
+        <span className={`ml-auto ${colapsado ? "admin-escritorio:hidden" : ""}`}>
+          <ChevronDown aria-hidden="true" className={`h-4 w-4 shrink-0 text-[var(--admin-texto-muted)] transition-transform duration-150 ease-[var(--admin-ease-out)] motion-reduce:transition-none ${muestraContenido ? "rotate-180" : ""}`} />
         </span>
       </button>
       {sugerencia}
       <div
         id={identificadorContenido}
-        aria-hidden={!muestraContenido}
-        inert={!muestraContenido}
-        className={`grid transition-[grid-template-rows,opacity,margin] duration-[240ms] ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none ${muestraContenido ? "mt-1 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] pointer-events-none opacity-0"}`}
+        hidden={!muestraContenido}
+        className="mt-1 space-y-0.5 pl-3"
       >
-        <div className="min-h-0 overflow-hidden">
-          <div className="space-y-0.5 pl-3">
-            {grupo.items.map((item) => (
-              <ItemNavegacionEnlace
-                key={item.href}
-                item={item}
-                colapsado={colapsado}
-                alCerrar={alCerrar}
-              />
-            ))}
-          </div>
-        </div>
+        {grupo.items.map((item) => (
+          <ItemNavegacionEnlace
+            key={item.href}
+            item={item}
+            colapsado={colapsado}
+            alCerrar={alCerrar}
+          />
+        ))}
       </div>
     </>
   );

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { Calendar } from "lucide-react";
+import { completedTurno } from "@/actions/turnos/completar.actions";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
 import EmptyState from "@/components/ui/EmptyState";
@@ -25,13 +26,13 @@ interface Props {
   onCargarMas?: () => void;
   onEstadoActualizado?: (id: string, nuevoEstado: TurnoListado["estado"]) => void;
   onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
-  alcanceCacheTurnos?: string;
   whatsappPhone?: string;
   datosTransferencia?: DatosTransferencia;
   mostrarAvisoSeniaPendiente?: boolean;
   /** Muestra la fecha de cada día aunque todos los turnos sean del mismo día. */
   mostrarFechas?: boolean;
   modoCronologicoCompacto?: boolean;
+  vistaAdministrativa?: boolean;
   mensajeVacio?: string;
 }
 
@@ -59,12 +60,12 @@ export default function TurnoList({
   onCargarMas = () => {},
   onEstadoActualizado = () => {},
   onTurnoActualizado,
-  alcanceCacheTurnos = "",
   whatsappPhone = "",
   datosTransferencia,
   mostrarAvisoSeniaPendiente = true,
   mostrarFechas = false,
   modoCronologicoCompacto = false,
+  vistaAdministrativa = false,
   mensajeVacio = "No hay turnos para mostrar.",
 }: Props) {
   const gruposPorDia = useMemo(
@@ -104,7 +105,6 @@ export default function TurnoList({
     mostrarConfirmacion,
     accionConfirmacion,
     solicitarCancelar,
-    solicitarCompletar,
     solicitarConfirmar,
     cancelarConfirmacion,
     confirmarAccion,
@@ -113,15 +113,27 @@ export default function TurnoList({
     alActualizarEstado: onEstadoActualizado,
   });
 
+  const completarTurno = async (id: string) => {
+    const datosFormulario = new FormData();
+    datosFormulario.set("id", id);
+    try {
+      const resultado = await completedTurno({ success: false }, datosFormulario);
+      await retroalimentar(resultado, "Turno completado", "El turno se ha marcado como completado.");
+      if (resultado.success) onEstadoActualizado(id, "COMPLETADO");
+    } catch {
+      await retroalimentar({ success: false, error: "No se pudo procesar la acción." });
+    }
+  };
+
   // Sólo se reemplaza la lista por el esqueleto en la primera carga. Durante
   // un refresco con datos ya visibles se conserva el calendario montado para no
   // perder la posición de scroll.
   if (cargandoInicial && turnos.length === 0) {
     return (
-      <div className="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl p-4">
-        <div className="space-y-3">
-          {Array.from({ length: 8 }).map((_, indice) => (
-            <Skeleton key={indice} className="h-16 w-full rounded-xl bg-white/5" />
+      <div className={vistaAdministrativa ? "p-4 sm:p-5" : "bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl p-4"}>
+        <div className="space-y-3" aria-hidden="true">
+          {Array.from({ length: vistaAdministrativa ? 3 : 8 }).map((_, indice) => (
+            <Skeleton key={indice} className="h-16 w-full rounded-xl bg-[var(--admin-item)] motion-reduce:animate-none" />
           ))}
         </div>
       </div>
@@ -131,10 +143,14 @@ export default function TurnoList({
   if (turnos.length === 0) {
     return (
       <EmptyState
-        icono={<Calendar className="h-10 w-10" />}
+        icono={<Calendar className={vistaAdministrativa ? "size-6" : "h-10 w-10"} aria-hidden="true" />}
         mensaje={mensajeVacio}
-        claseContenedor={`bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl ${modoCronologicoCompacto ? "p-6" : "p-12"}`}
-        claseIcono="h-10 w-10 text-[var(--admin-texto-muted)] opacity-50"
+        claseContenedor={vistaAdministrativa
+          ? "px-4 py-10"
+          : `bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl ${modoCronologicoCompacto ? "p-6" : "p-12"}`}
+        claseIcono={vistaAdministrativa
+          ? "grid size-11 place-items-center rounded-xl bg-[var(--admin-item)]"
+          : "h-10 w-10 text-[var(--admin-texto-muted)] opacity-50"}
         claseMensaje="text-[var(--admin-texto-muted)]"
       />
     );
@@ -154,14 +170,14 @@ export default function TurnoList({
               turnos={grupo.turnos}
               session={session}
               onCancelar={solicitarCancelar}
-              onCompletar={solicitarCompletar}
+              onCompletar={completarTurno}
               onConfirmar={solicitarConfirmar}
               whatsappPhone={whatsappPhone}
               datosTransferencia={datosTransferencia}
               mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
-              alcanceCacheTurnos={alcanceCacheTurnos}
               onTurnoActualizado={onTurnoActualizado}
               modoCompacto={modoCronologicoCompacto}
+              vistaAdministrativa={vistaAdministrativa}
             />
           </section>
         ))}
@@ -170,8 +186,8 @@ export default function TurnoList({
       <div ref={sentinelRef} aria-hidden="true" className="h-1" />
 
       {cargandoMas && (
-        <div className="flex items-center justify-center gap-2 py-4">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--page-primary)] border-t-transparent" />
+        <div role="status" className="flex items-center justify-center gap-2 py-4">
+          <span aria-hidden="true" className={`size-4 animate-spin rounded-full border-2 border-t-transparent motion-reduce:animate-none ${vistaAdministrativa ? "border-[var(--page-primary)]" : "border-current"}`} />
           <span className="text-xs text-[var(--admin-texto-muted)]">Cargando más turnos...</span>
         </div>
       )}
@@ -181,14 +197,14 @@ export default function TurnoList({
           <button
             type="button"
             onClick={onCargarMas}
-            className="text-xs font-semibold text-[var(--page-primary-tinta)] hover:underline"
+            className="control-publico min-h-11 rounded-md px-3 text-sm font-semibold text-[var(--page-primary-tinta)] underline-offset-4 hover:underline"
           >
             Reintentar
           </button>
         </div>
       )}
 
-      {!tieneMas && turnos.length > 0 && (
+      {!vistaAdministrativa && !tieneMas && turnos.length > 0 && (
         <p className="py-3 text-center text-xs text-[var(--admin-texto-muted)]">
           No hay más turnos.
         </p>
@@ -196,8 +212,12 @@ export default function TurnoList({
 
       {mostrarConfirmacion && (
         <ConfirmDialog
-          title={accionConfirmacion === "cancelar" ? "Cancelar Turno" : accionConfirmacion === "completar" ? "Completar Turno" : "Confirmar Turno"}
-          message={accionConfirmacion === "cancelar" ? "¿Estás seguro de que querés cancelar este turno? Esta acción no se puede deshacer." : accionConfirmacion === "completar" ? "¿Marcar este turno como completado? El cliente recibirá una notificación." : "¿Estás seguro de que querés confirmar este turno?"}
+          apariencia={vistaAdministrativa ? undefined : "publica"}
+          etiquetaConfirmar={vistaAdministrativa ? undefined : accionConfirmacion === "cancelar" ? "Cancelar turno" : "Confirmar turno"}
+          title={accionConfirmacion === "cancelar" ? "Cancelar turno" : "Confirmar turno"}
+          message={accionConfirmacion === "cancelar"
+            ? "¿Estás seguro de que querés cancelar este turno? Esta acción no se puede deshacer."
+            : "¿Estás seguro de que querés confirmar este turno?"}
           onConfirm={confirmarAccion}
           onCancel={cancelarConfirmacion}
         />

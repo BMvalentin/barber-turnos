@@ -1,12 +1,22 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import {
+  filtrarPerfilesDelEquipo,
+  filtroBarberoDelEquipo,
+  seleccionarActividadProfesional,
+} from "@/lib/barberos/filtros-perfiles";
 
 const obtenerBarberosSelectorCacheados = unstable_cache(
-  async () => prisma.barbero.findMany({
-    select: { id: true, nombre: true },
-    orderBy: { nombre: "asc" },
-  }),
-  ["barberos-selector-excepciones-v1"],
+  async () => {
+    const perfiles = await prisma.barbero.findMany({
+      where: { ...filtroBarberoDelEquipo, estado: true },
+      select: { id: true, nombre: true, ...seleccionarActividadProfesional },
+      orderBy: { nombre: "asc" },
+    });
+
+    return filtrarPerfilesDelEquipo(perfiles);
+  },
+  ["barberos-selector-excepciones-v2"],
   { tags: ["barberos"], revalidate: 300 },
 );
 

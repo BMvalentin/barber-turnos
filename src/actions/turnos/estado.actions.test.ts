@@ -95,4 +95,41 @@ describe("actualizarTurno: cancelación administrativa", () => {
     expect(resultado.success).toBe(false);
     expect(mocks.enviarCancelacion).not.toHaveBeenCalled();
   });
+
+  it("identifica la agenda que debe refrescarse si al reprogramar se ocupó el horario", async () => {
+    const horario = "2099-12-15T15:30:00.000Z";
+    const formulario = new FormData();
+    formulario.set("id", "turno-1");
+    formulario.set("barberoId", "barbero-2");
+    formulario.set("horarioReservado", horario);
+    mocks.actualizarEnTransaccion.mockResolvedValue({ ok: false, error: "Horario ocupado" });
+
+    expect(await actualizarTurno({}, formulario)).toEqual({
+      success: false,
+      error: "Horario ocupado",
+      horarioNoDisponible: { barberoId: "barbero-2", horario },
+    });
+  });
+});
+
+describe("actualizarTurno: turnos completados", () => {
+  afterEach(() => vi.clearAllMocks());
+
+  it.each(["CONFIRMADO"])("guarda desde %s sin enviar correos", async (estadoAnterior) => {
+    const turnoAnterior = { ...turno, estado: estadoAnterior };
+    const turnoCompletado = { ...turnoCancelado, estado: "COMPLETADO", estadoPago: turnoAnterior.estadoPago };
+    mocks.findUnique.mockResolvedValue(turnoAnterior);
+    mocks.requerirAdmin.mockResolvedValue({ user: { id: "admin-1" } });
+    mocks.actualizarEnTransaccion.mockResolvedValue({ ok: true, turno: turnoCompletado, turnoAnterior });
+    mocks.serializar.mockReturnValue(turnoCompletado);
+
+    const formulario = new FormData();
+    formulario.set("id", turnoCompletado.id);
+    formulario.set("estado", turnoCompletado.estado);
+
+    expect(await actualizarTurno({}, formulario)).toEqual({ success: true, data: turnoCompletado });
+    expect(mocks.enviarTurno).not.toHaveBeenCalled();
+    expect(mocks.enviarBarbero).not.toHaveBeenCalled();
+    expect(mocks.enviarCancelacion).not.toHaveBeenCalled();
+  });
 });

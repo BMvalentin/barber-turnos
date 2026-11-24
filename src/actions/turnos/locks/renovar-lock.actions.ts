@@ -16,9 +16,10 @@ export async function renovarLockSlot(
     }
 
     // Renovar no cambia el conjunto de slots: no revalida caché
+    const ahora = new Date();
     await prisma.slotLock.updateMany({
-      where: { sessionId, userId: sesion.user.id },
-      data: { expiresAt: new Date(Date.now() + TTL_LOCK_SLOT_MS) },
+      where: { sessionId, userId: sesion.user.id, expiresAt: { gt: ahora } },
+      data: { expiresAt: new Date(ahora.getTime() + TTL_LOCK_SLOT_MS) },
     });
 
     return { success: true };

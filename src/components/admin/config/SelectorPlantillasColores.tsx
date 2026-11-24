@@ -22,9 +22,9 @@ export default function SelectorPlantillasColores({
     colorA.trim().toUpperCase() === colorB.trim().toUpperCase();
 
   return (
-    <div role="radiogroup" aria-label="Plantillas de colores">
-      <div className="max-h-[420px] overflow-y-auto overscroll-contain rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)]/40 p-3">
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-3">
+    <div role="group" aria-label="Plantillas de colores">
+      <div className="max-h-[420px] overflow-y-auto overscroll-contain rounded-xl bg-[var(--admin-surface-elevated)] p-2 sm:p-3">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,132px),1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(min(100%,230px),1fr))] sm:gap-3">
           {PLANTILLAS_COLORES.map((plantilla) => (
             <TarjetaPlantillaColor
               key={plantilla.id}

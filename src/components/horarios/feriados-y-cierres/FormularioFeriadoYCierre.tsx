@@ -5,6 +5,7 @@ import { createExcepcion } from "@/actions/excepciones/crear.actions";
 import BotonSubmitFormStatus from "@/components/ui/boton-submit-form-status";
 import SelectorDesplegable from "@/components/ui/SelectorDesplegable";
 import type { OpcionDesplegable } from "@/components/ui/SelectorDesplegable";
+import { nombreVisibleBarbero } from "@/lib/barberos/nombre-profesional";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { ActionStateInicialSimple } from "@/types/action-state";
 import type { BarberoParaSelector } from "@/types/barbero";
@@ -13,13 +14,16 @@ type FormularioFeriadoYCierreProps = {
   barberos: BarberoParaSelector[];
 };
 
+const CLASE_CAMPO =
+  "min-h-11 w-full min-w-0 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-3 text-[var(--admin-texto-primario)] outline-none placeholder:text-[var(--admin-texto-muted)] focus:ring-2 focus:ring-[var(--page-focus-ring)]";
+
 export function FormularioFeriadoYCierre({ barberos }: FormularioFeriadoYCierreProps) {
   const [estado, accionFormulario] = useActionState(createExcepcion, ActionStateInicialSimple);
   const opcionesBarbero = useMemo<OpcionDesplegable<string>[]>(() => [
     { valor: "", etiqueta: "Toda la barbería" },
     ...barberos.map((barbero) => ({
       valor: barbero.id,
-      etiqueta: barbero.nombre ?? "Profesional sin nombre",
+      etiqueta: nombreVisibleBarbero(barbero.nombre),
     })),
   ], [barberos]);
   const { retroalimentar } = useRetroalimentacionAccion({
@@ -36,14 +40,14 @@ export function FormularioFeriadoYCierre({ barberos }: FormularioFeriadoYCierreP
   }, [estado, retroalimentar]);
 
   return (
-    <form action={accionFormulario} className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
+    <form action={accionFormulario} className="mt-4 grid gap-4 sm:grid-cols-2 2xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] 2xl:items-end">
       <label className="grid gap-2 text-sm font-medium text-[var(--admin-texto-primario)]">
         Motivo
         <input
           required
           name="motivo"
           placeholder="Ej.: Feriado nacional"
-          className="h-10 w-full rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-3 text-[var(--admin-texto-primario)] placeholder:text-[var(--admin-texto-muted)] outline-none transition focus:border-[var(--page-primary)] focus:ring-2 focus:ring-[var(--page-focus-ring)]"
+          className={CLASE_CAMPO}
         />
       </label>
       <div className="grid gap-2 text-sm font-medium text-[var(--admin-texto-primario)]">
@@ -52,28 +56,28 @@ export function FormularioFeriadoYCierre({ barberos }: FormularioFeriadoYCierreP
           id="barbero-excepcion"
           name="barberoId"
           opciones={opcionesBarbero}
-          claseBoton="rounded-lg px-3"
+          claseBoton="min-h-11 rounded-lg px-3"
         />
       </div>
-      <label className="grid gap-2 text-sm font-medium text-[var(--admin-texto-primario)]">
+      <label className="grid min-w-0 gap-2 text-sm font-medium text-[var(--admin-texto-primario)]">
         Desde
         <input
           required
           type="datetime-local"
           name="desde"
-          className="h-10 w-full rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-3 text-[var(--admin-texto-primario)] outline-none transition focus:border-[var(--page-primary)] focus:ring-2 focus:ring-[var(--page-focus-ring)]"
+          className={CLASE_CAMPO}
         />
       </label>
-      <label className="grid gap-2 text-sm font-medium text-[var(--admin-texto-primario)]">
+      <label className="grid min-w-0 gap-2 text-sm font-medium text-[var(--admin-texto-primario)]">
         Hasta
         <input
           required
           type="datetime-local"
           name="hasta"
-          className="h-10 w-full rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-3 text-[var(--admin-texto-primario)] outline-none transition focus:border-[var(--page-primary)] focus:ring-2 focus:ring-[var(--page-focus-ring)]"
+          className={CLASE_CAMPO}
         />
       </label>
-      <BotonSubmitFormStatus texto="Agregar cierre" claseAdicional="h-10 px-4" />
+      <BotonSubmitFormStatus texto="Agregar cierre" claseAdicional="admin-accion sm:col-span-2 sm:justify-self-end 2xl:col-span-1" />
     </form>
   );
 }

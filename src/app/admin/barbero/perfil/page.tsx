@@ -2,21 +2,24 @@ import { redirect } from "next/navigation";
 import { obtenerServiciosActivos } from "@/lib/consultas/obtener-servicios-activos";
 import { obtenerDiasLaboralesActivos } from "@/lib/consultas/obtener-dias-laborales-activos";
 import { obtenerBarberosConRelaciones } from "@/lib/consultas/obtener-barberos-con-relaciones";
+import { obtenerPendientesPerfilBarbero } from "@/lib/consultas/obtener-pendientes-perfil-barbero";
 import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import PerfilBarbero from "@/components/barbero/PerfilBarbero";
 
 export default async function PerfilBarberoPage() {
   const contexto = await requerirPanel();
   if (!contexto) redirect("/dashboard");
+  if (!contexto.barberoId) redirect("/admin");
 
-  const [servicios, diasLaborales, perfiles] = await Promise.all([
+  const [servicios, diasLaborales, perfiles, pendientes] = await Promise.all([
     obtenerServiciosActivos(),
     obtenerDiasLaboralesActivos(),
-    obtenerBarberosConRelaciones(contexto.barberoId ?? undefined),
+    obtenerBarberosConRelaciones(contexto.barberoId),
+    obtenerPendientesPerfilBarbero(contexto.barberoId, contexto.session.user.id),
   ]);
   const perfil = perfiles[0];
 
-  if (!perfil) redirect("/admin");
+  if (perfil?.usuario?.id !== contexto.session.user.id) redirect("/admin");
 
   const perfilSerializado = {
     ...perfil,
@@ -32,19 +35,18 @@ export default async function PerfilBarberoPage() {
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-[var(--admin-texto-primario)] md:text-[28px]">
-          Mi perfil profesional
-        </h1>
-        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-          Consultá y actualizá la información de tu perfil de barbero.
-        </p>
-      </div>
+    <div className="admin-pagina">
+      <header className="admin-encabezado">
+        <div>
+          <h1>Mi perfil profesional</h1>
+          <p>Consultá y actualizá tu información de barbero.</p>
+        </div>
+      </header>
       <PerfilBarbero
         barbero={perfilSerializado}
-        servicios={servicios.map((servicio) => ({ id: servicio.id, nombre: servicio.nombre }))}
+        servicios={servicios}
         diasLaborales={diasLaborales}
+        pendientes={pendientes}
         esEmpleado={contexto.rol === "EMPLEADO"}
         perfilPropio
       />

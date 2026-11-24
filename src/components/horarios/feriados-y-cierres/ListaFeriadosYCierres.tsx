@@ -15,6 +15,8 @@ type ListaFeriadosYCierresProps = {
   excepciones: ExcepcionLaboral[];
 };
 
+const formatoFecha = new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeZone: ZONA_HORARIA });
+
 export function ListaFeriadosYCierres({ excepciones }: ListaFeriadosYCierresProps) {
   const [idPendienteDeEliminar, setIdPendienteDeEliminar] = useState<string | null>(null);
   const router = useRouter();
@@ -59,42 +61,37 @@ export function ListaFeriadosYCierres({ excepciones }: ListaFeriadosYCierresProp
 
   return (
     <>
-      <div className="overflow-x-auto rounded-lg border border-[var(--admin-border)]">
-        <div className="min-w-[680px] divide-y divide-[var(--admin-border)]">
-          <div className="grid grid-cols-[minmax(13rem,1.5fr)_minmax(10rem,1fr)_minmax(11rem,1fr)_minmax(11rem,1fr)_3rem] gap-4 bg-[var(--admin-surface-elevated)] px-4 py-3 text-xs font-medium uppercase tracking-wide text-[var(--admin-texto-muted)]">
-            <span>Motivo</span>
-            <span>Alcance</span>
-            <span>Desde</span>
-            <span>Hasta</span>
-            <span className="sr-only">Acciones</span>
-          </div>
-          {excepciones.map((excepcion) => (
-            <div
-              key={excepcion.id}
-              className="grid grid-cols-[minmax(13rem,1.5fr)_minmax(10rem,1fr)_minmax(11rem,1fr)_minmax(11rem,1fr)_3rem] items-center gap-4 px-4 py-4 text-sm transition-colors hover:bg-[var(--page-primary-08)]"
-            >
-              <p className="min-w-0 truncate font-medium text-[var(--admin-texto-primario)]">
+      <ul className="grid gap-2 p-3 sm:gap-0 sm:divide-y sm:divide-[var(--admin-border)] sm:p-0">
+        {excepciones.map((excepcion) => (
+          <li
+            key={excepcion.id}
+            className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2 rounded-xl bg-[var(--admin-surface-elevated)] p-3 text-sm sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_auto] sm:items-center sm:gap-4 sm:rounded-none sm:bg-transparent sm:px-6 sm:py-4"
+          >
+            <div className="col-start-1 row-start-1 min-w-0">
+              <p className="font-semibold break-words text-[var(--admin-texto-primario)]">
                 {excepcion.motivo}
               </p>
-              <span className="flex w-fit items-center gap-1.5 rounded-full border border-[var(--page-primary-30)] bg-[var(--page-primary-15)] px-2.5 py-1 text-xs text-[var(--admin-texto-primario)]">
-                {excepcion.barbero ? <UserRound className="h-3.5 w-3.5" /> : <Globe2 className="h-3.5 w-3.5" />}
-                {excepcion.barbero?.nombre ?? "Toda la barbería"}
+              <span className="mt-1 flex items-center gap-1.5 text-xs text-[var(--admin-texto-muted)]">
+                {excepcion.barbero ? <UserRound className="size-3.5 shrink-0" aria-hidden="true" /> : <Globe2 className="size-3.5 shrink-0" aria-hidden="true" />}
+                <span className="min-w-0 break-words">{excepcion.barbero?.nombre ?? "Toda la barbería"}</span>
               </span>
-              <FechaExcepcion fecha={excepcion.desde} />
-              <FechaExcepcion fecha={excepcion.hasta} />
-              <button
-                type="button"
-                title="Eliminar cierre"
-                aria-label={`Eliminar ${excepcion.motivo}`}
-                onClick={() => setIdPendienteDeEliminar(excepcion.id)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-red-500/20 text-red-400 transition-colors hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-500/40"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
             </div>
-          ))}
-        </div>
-      </div>
+            <dl className="col-span-2 col-start-1 row-start-2 grid grid-cols-2 gap-2 border-t border-[var(--admin-border)] pt-2 tabular-nums sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:border-t-0 sm:pt-0">
+              <FechaExcepcion etiqueta="Desde" fecha={excepcion.desde} />
+              <FechaExcepcion etiqueta="Hasta" fecha={excepcion.hasta} />
+            </dl>
+            <button
+              type="button"
+              title="Eliminar cierre"
+              aria-label={`Eliminar ${excepcion.motivo}`}
+              onClick={() => setIdPendienteDeEliminar(excepcion.id)}
+              className="col-start-2 row-start-1 grid size-11 place-items-center rounded-lg text-[var(--admin-texto-muted)] transition-colors hover:bg-[var(--admin-error-suave)] hover:text-[var(--admin-error)] focus-visible:outline-2 focus-visible:outline-[var(--page-focus-ring)] sm:col-start-3"
+            >
+              <Trash2 className="size-4" aria-hidden="true" />
+            </button>
+          </li>
+        ))}
+      </ul>
       {idPendienteDeEliminar ? (
         <ConfirmDialog
           title="Eliminar cierre"
@@ -107,11 +104,15 @@ export function ListaFeriadosYCierres({ excepciones }: ListaFeriadosYCierresProp
   );
 }
 
-function FechaExcepcion({ fecha }: { fecha: Date }) {
+function FechaExcepcion({ etiqueta, fecha }: { etiqueta: string; fecha: Date }) {
   return (
-    <div className="text-[var(--admin-texto-primario)]">
-      <p>{new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeZone: ZONA_HORARIA }).format(fecha)}</p>
-      <p className="mt-0.5 text-xs text-[var(--admin-texto-muted)]">{formatearHora(fecha)}</p>
+    <div>
+      <dt className="text-xs text-[var(--admin-texto-muted)]">{etiqueta}</dt>
+      <dd className="mt-0.5 text-[var(--admin-texto-primario)]">
+        <time dateTime={fecha.toISOString()}>
+          {formatoFecha.format(fecha)} <span className="inline-block text-xs text-[var(--admin-texto-muted)]">{formatearHora(fecha)}</span>
+        </time>
+      </dd>
     </div>
   );
 }

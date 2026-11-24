@@ -25,9 +25,10 @@ const ETIQUETAS: Record<EstadoPago, string> = {
 interface Props {
   turno: TurnoListado;
   onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
+  vistaAdministrativa?: boolean;
 }
 
-export default function SelectorEstadoPagoTurno({ turno, onTurnoActualizado }: Props) {
+export default function SelectorEstadoPagoTurno({ turno, onTurnoActualizado, vistaAdministrativa = false }: Props) {
   const [cargando, setCargando] = useState(false);
   const bloqueado = turno.estadoPago === ESTADOS_PAGO[2] || turno.estado === ESTADOS_TURNO[3];
   const esEstadoManual = ESTADOS_PAGO_MANUALES.some((estado) => estado === turno.estadoPago);
@@ -63,7 +64,7 @@ export default function SelectorEstadoPagoTurno({ turno, onTurnoActualizado }: P
     }
   };
 
-  if (bloqueado) return <BadgeEstadoPago estado={turno.estadoPago} />;
+  if (bloqueado) return <BadgeEstadoPago estado={turno.estadoPago} vistaAdministrativa={vistaAdministrativa} />;
 
   return (
     <SelectorDesplegable
@@ -73,8 +74,8 @@ export default function SelectorEstadoPagoTurno({ turno, onTurnoActualizado }: P
       etiquetaAria="Estado del pago"
       deshabilitado={cargando}
       cargando={cargando}
-      className="w-44"
-      claseBoton="h-8 rounded-full px-2.5 text-xs"
+      className={vistaAdministrativa ? "min-w-0 max-w-full" : "w-44"}
+      claseBoton={vistaAdministrativa ? "admin-control h-11 bg-[var(--admin-surface)]" : "h-8 rounded-full px-2.5 text-xs"}
     />
   );
 }

@@ -65,121 +65,100 @@ export default function CreateServicioForm({
   return (
     <ModalBase
       onClose={onClose}
-      titulo="Nuevo Servicio"
-      subtitulo="Completa los datos para agregar un servicio al catálogo."
-      maxWidth="max-w-4xl"
-      overlayClase="bg-black/90 p-4 sm:p-6 overflow-y-auto"
-      contenedorClase="bg-[var(--admin-surface)] border border-[var(--admin-border-fuerte)] rounded-xl relative flex flex-col max-h-[90vh]"
-      headerClase="flex justify-between items-center gap-4 p-6 border-b border-[var(--admin-border)]"
-      tituloClase="text-xl font-bold text-[var(--admin-texto-primario)]"
-      subtituloClase="text-[var(--admin-texto-muted)] text-xs mt-1"
+      titulo="Nuevo servicio"
+      maxWidth="max-w-2xl"
+      contenedorClase="admin-card flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden"
+      headerClase="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--admin-border)] p-4 sm:px-6"
+      tituloClase="text-xl font-semibold tracking-tight text-[var(--admin-texto-primario)]"
     >
-      {/* Formulario */}
-      <div className="overflow-y-auto p-6 flex-1">
-          <form
-            ref={formRef}
-            action={async (formData) => {
-              if (isPending) return;
+      <form
+        ref={formRef}
+        action={async (formData) => {
+          if (isPending) return;
 
-              setIsPending(true);
+          setIsPending(true);
 
-              try {
-                for (const [i, slot] of imagenes.entries()) {
-                  if (slot.tipo === "url") {
-                    formData.set(`slotTipo${i}`, "url");
-                    formData.set(`slot${i}`, slot.url);
-                  } else if (slot.tipo === "archivo") {
-                    formData.set(`slotTipo${i}`, "archivo");
-                    formData.set(`slotArchivo${i}`, slot.archivo);
-                  }
-                }
-
-                const result = await createServicio(initialState, formData);
-                setState(result);
-              } finally {
-                setIsPending(false);
+          try {
+            for (const [i, slot] of imagenes.entries()) {
+              if (slot.tipo === "url") {
+                formData.set(`slotTipo${i}`, "url");
+                formData.set(`slot${i}`, slot.url);
+              } else if (slot.tipo === "archivo") {
+                formData.set(`slotTipo${i}`, "archivo");
+                formData.set(`slotArchivo${i}`, slot.archivo);
               }
-            }}
-            className="space-y-6"
-          >
-            {/* Información General */}
-            <div 
-              className="bg-[var(--admin-surface-elevated)] border rounded-xl p-6"
-              style={{ borderColor: "var(--admin-border)" }}
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h3 
-                  className="text-xs font-bold uppercase tracking-wider"
-                  style={{ color: "var(--page-primary-tinta)" }}
-                >
-                  Información General
-                </h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-[var(--admin-texto-secundario)] uppercase font-bold">
-                    Estado
-                  </span>
-                  <SelectorDesplegable
-                    name="estado"
-                    opciones={OPCIONES_ESTADO_SERVICIO}
-                    valorInicial="true"
-                    etiquetaAria="Estado del servicio"
-                    className="w-auto"
-                    claseBoton="h-8 w-auto rounded px-2 py-1 text-xs"
-                  />
-                </div>
-              </div>
+            }
 
-              <div className="space-y-4">
-                <CampoFormulario
-                  label="Nombre del Servicio"
-                  name="nombre"
-                  placeholder="Ej: Corte Clásico"
-                  errors={state.errors?.nombre}
-                  required
-                />
+            const result = await createServicio(initialState, formData);
+            setState(result);
+          } finally {
+            setIsPending(false);
+          }
+        }}
+        className="flex min-h-0 flex-1 flex-col"
+      >
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 sm:p-6">
+          <section className="space-y-3">
+            <h3 className="text-base font-semibold">Datos del servicio</h3>
 
-                <CampoDescripcionServicio
-                  descripcion={descripcion}
-                  onDescripcionChange={setDescripcion}
-                  error={state.errors?.descripcion}
-                />
+            <div className="space-y-4">
+              <CampoFormulario
+                label="Nombre del servicio"
+                name="nombre"
+                placeholder="Ej. Corte clásico"
+                errors={state.errors?.nombre}
+                required
+              />
 
-                <SeccionImagenesServicio
-                  imagenes={imagenes}
-                  puedeAgregar={puedeAgregar}
-                  error={errorImagenes}
-                  isPending={isPending}
-                  onAgregar={agregarArchivo}
-                  onRemover={removerImagen}
-                  onReemplazar={reemplazarImagen}
+              <CampoDescripcionServicio
+                descripcion={descripcion}
+                onDescripcionChange={setDescripcion}
+                error={state.errors?.descripcion}
+              />
+
+              <div className="space-y-1.5">
+                <p className="text-sm font-medium text-[var(--admin-texto-secundario)]">Estado</p>
+                <SelectorDesplegable
+                  name="estado"
+                  opciones={OPCIONES_ESTADO_SERVICIO}
+                  valorInicial="true"
+                  etiquetaAria="Estado del servicio"
+                  className="w-full sm:w-48"
+                  claseBoton="min-h-11 rounded-xl"
                 />
               </div>
-            </div>
 
-            {/* Detalles Técnicos & Precios */}
-            <SeccionPrecioDetalles errors={state.errors} />
-
-            <div 
-              className="flex justify-end gap-4 pt-4 border-t"
-              style={{ borderColor: "var(--admin-border)" }}
-            >
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-6 py-3 hover:cursor-pointer rounded-lg font-bold text-xs uppercase tracking-wider text-[var(--admin-texto-primario)] hover:bg-[var(--admin-item-hover)] transition-colors duration-150"
-                style={{ backgroundColor: 'transparent' }}
-              >
-                Cancelar
-              </button>
-              <BotonSubmitPending
-                pendiente={isPending}
-                texto="Crear Servicio"
-                textoMientrasCarga="Creando..."
-                claseAdicional="font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg"
+              <SeccionImagenesServicio
+                imagenes={imagenes}
+                puedeAgregar={puedeAgregar}
+                error={errorImagenes}
+                isPending={isPending}
+                onAgregar={agregarArchivo}
+                onRemover={removerImagen}
+                onReemplazar={reemplazarImagen}
               />
             </div>
-          </form>
+          </section>
+
+          <SeccionPrecioDetalles errors={state.errors} />
         </div>
+
+        <div className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-4 sm:px-6">
+          <button
+            type="button"
+            onClick={onClose}
+            className="admin-control"
+          >
+            Cancelar
+          </button>
+          <BotonSubmitPending
+            pendiente={isPending}
+            texto="Crear servicio"
+            textoMientrasCarga="Creando…"
+            claseAdicional="admin-accion h-auto"
+          />
+        </div>
+      </form>
     </ModalBase>
   );
 }

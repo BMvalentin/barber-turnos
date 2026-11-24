@@ -3,132 +3,104 @@
 import Image from "next/image";
 import { useState } from "react";
 import { Clock3, Mail, Pencil, Scissors, UserRound } from "lucide-react";
-import EditBarberoModal from "@/components/barbero/EditBarberoModal";
+import { obtenerNombreProfesional } from "@/lib/barberos/nombre-profesional";
+import type { CampoPendientePerfil } from "@/lib/barberos/perfil-profesional";
+import EditBarberoModal from "./EditBarberoModal";
+import ModalPerfilIncompleto from "./ModalPerfilIncompleto";
+import { formatearNombreDia, obtenerHorariosPorDia } from "./horarios-barbero";
 import type { BarberoListado, DiaLaboral, ServicioOpcion } from "@/types/barbero";
-import { DIAS_SEMANA_DB } from "@/lib/constants";
 
 type Props = {
   barbero: BarberoListado;
   servicios: ServicioOpcion[];
   diasLaborales: DiaLaboral[];
+  pendientes?: CampoPendientePerfil[];
   esEmpleado?: boolean;
   perfilPropio?: boolean;
 };
 
-type Horario = NonNullable<BarberoListado["horarios"]>[number];
-
-function obtenerHorariosPorDia(horarios: Horario[] = []) {
-  const porDia = new Map<string, string[]>();
-
-  for (const horario of horarios) {
-    const rangos = porDia.get(horario.dia.dia) ?? [];
-    rangos.push(`${horario.margenLaboral.desde} — ${horario.margenLaboral.hasta}`);
-    porDia.set(horario.dia.dia, rangos);
-  }
-
-  const indiceDia = (dia: string) => {
-    const indice = DIAS_SEMANA_DB.findIndex((diaSemana) => diaSemana === dia);
-    return indice === -1 ? Number.MAX_SAFE_INTEGER : indice;
-  };
-
-  return [...porDia.entries()].sort(([diaA], [diaB]) => indiceDia(diaA) - indiceDia(diaB));
-}
-
-function nombreDia(dia: string) {
-  return dia === "Miercoles" ? "Miércoles" : dia === "Sabado" ? "Sábado" : dia;
-}
-
-export default function PerfilBarbero({ barbero, servicios, diasLaborales, esEmpleado = false, perfilPropio = false }: Props) {
+export default function PerfilBarbero({ barbero, servicios, diasLaborales, pendientes = [], esEmpleado = false, perfilPropio = false }: Props) {
   const [modalAbierto, establecerModalAbierto] = useState(false);
   const horarios = obtenerHorariosPorDia(barbero.horarios);
-  const nombre = barbero.nombre?.trim() || "Sin nombre";
+  const nombre = obtenerNombreProfesional(barbero.nombre) ?? "Perfil por completar";
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <section className="rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex min-w-0 items-center gap-4">
-              {barbero.srcImage ? (
-                <Image
-                  src={barbero.srcImage}
-                  alt={`Foto de ${nombre}`}
-                  width={88}
-                  height={88}
-                  className="h-[88px] w-[88px] shrink-0 rounded-full object-cover"
-                />
-              ) : (
-                <span className="flex h-[88px] w-[88px] shrink-0 items-center justify-center rounded-full bg-[var(--page-primary-20)] text-[var(--page-primary-tinta)]">
-                  <UserRound className="h-9 w-9" aria-hidden="true" />
-                </span>
-              )}
-              <div className="min-w-0">
-                <p className="text-xl font-semibold text-[var(--admin-texto-primario)]">{nombre}</p>
-                <p className="mt-1 flex items-center gap-1.5 break-all text-sm text-[var(--admin-texto-muted)]">
-                  <Mail className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  {barbero.usuario?.email ?? "Sin cuenta asociada"}
-                </p>
-                <p className={`mt-3 text-xs font-medium ${barbero.estado ? "text-emerald-400" : "text-[var(--admin-texto-muted)]"}`}>
-                  <span className={`mr-1.5 inline-block h-2 w-2 rounded-full ${barbero.estado ? "bg-emerald-400" : "bg-zinc-500"}`} />
-                  {barbero.estado ? "Perfil activo" : "Perfil inactivo"}
-                </p>
-              </div>
+      <section className="admin-card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5" aria-label="Datos del perfil">
+        <div className="flex min-w-0 items-center gap-3.5">
+          <span className="relative grid size-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-[var(--page-primary-soft)] text-[var(--admin-acento-suave-texto)] sm:size-16">
+            <UserRound className="size-6" aria-hidden="true" />
+            {barbero.srcImage && (
+              <Image src={barbero.srcImage} alt="" width={64} height={64} className="absolute inset-0 size-full object-cover" onError={(evento) => { evento.currentTarget.hidden = true; }} />
+            )}
+          </span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h2 className="text-xl font-semibold tracking-tight [overflow-wrap:anywhere]">{nombre}</h2>
+              <span className={`admin-distintivo ${barbero.estado ? "bg-[var(--admin-exito-suave)] text-[var(--admin-exito)]" : "bg-[var(--admin-item)] text-[var(--admin-texto-muted)]"}`}>
+                {barbero.estado ? "Activo" : "Inactivo"}
+              </span>
             </div>
-            <button
-              type="button"
-              onClick={() => establecerModalAbierto(true)}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[var(--admin-border-fuerte)] px-3 text-sm font-medium text-[var(--admin-texto-primario)] transition-colors hover:bg-[var(--admin-item-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
-            >
-              <Pencil className="h-4 w-4" aria-hidden="true" />
-              Editar mi perfil
-            </button>
+            <p className="mt-1 flex items-start gap-1.5 text-sm text-[var(--admin-texto-muted)] [overflow-wrap:anywhere]">
+              <Mail className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+              <span>{barbero.usuario?.email ?? "Sin cuenta asociada"}</span>
+            </p>
           </div>
-        </section>
+        </div>
+        <button type="button" onClick={() => establecerModalAbierto(true)} className="admin-accion shrink-0">
+          <Pencil aria-hidden="true" className="size-4" /> Editar mi perfil
+        </button>
+      </section>
 
-        <section className="rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6">
-          <div className="mb-4 flex items-center gap-2 border-b border-[var(--admin-border)] pb-3">
-            <Scissors className="h-4 w-4 text-[var(--page-primary-tinta)]" aria-hidden="true" />
-            <h2 className="text-sm font-semibold text-[var(--admin-texto-primario)]">{esEmpleado ? "Servicios asignados" : "Servicios que ofrecés"}</h2>
-          </div>
+      <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+        <section className="admin-card space-y-3 p-4 sm:p-5">
+          <h2 className="flex items-center gap-2 text-base font-semibold">
+            <Scissors aria-hidden="true" className="size-4 text-[var(--page-primary-tinta)]" />
+            {esEmpleado ? "Servicios asignados" : "Servicios que ofrecés"}
+          </h2>
           {barbero.servicios?.length ? (
-            <div className="flex flex-wrap gap-2">
+            <ul className="flex flex-wrap gap-2">
               {barbero.servicios.map(({ servicio }) => (
-                <span key={servicio.id} className="rounded-lg bg-[var(--admin-item)] px-3 py-2 text-sm text-[var(--admin-texto-secundario)]">
+                <li key={servicio.id} className="max-w-full rounded-lg bg-[var(--admin-item)] px-3 py-2 text-sm text-[var(--admin-texto-secundario)] [overflow-wrap:anywhere]">
                   {servicio.nombre}
-                </span>
+                </li>
               ))}
-            </div>
+            </ul>
           ) : (
             <p className="text-sm text-[var(--admin-texto-muted)]">Todavía no tenés servicios asignados.</p>
           )}
         </section>
 
-        <section className="rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 lg:col-span-2">
-          <div className="mb-4 flex items-center gap-2 border-b border-[var(--admin-border)] pb-3">
-            <Clock3 className="h-4 w-4 text-[var(--page-primary-tinta)]" aria-hidden="true" />
-            <div>
-              <h2 className="text-sm font-semibold text-[var(--admin-texto-primario)]">Tu disponibilidad</h2>
-              <p className="mt-0.5 text-xs text-[var(--admin-texto-muted)]">{esEmpleado ? "Los horarios los administra un administrador." : "Administrá los horarios desde “Horarios”."}</p>
-            </div>
-          </div>
+        <section className="admin-card">
+          <header className="space-y-1 p-4 sm:p-5">
+            <h2 className="flex items-center gap-2 text-base font-semibold">
+              <Clock3 aria-hidden="true" className="size-4 text-[var(--page-primary-tinta)]" />
+              Tu disponibilidad
+            </h2>
+            <p className="text-sm text-[var(--admin-texto-muted)]">
+              {esEmpleado ? "Los horarios los gestiona un administrador." : "Administrá los horarios desde «Horarios»."}
+            </p>
+          </header>
           {horarios.length ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <dl className="divide-y divide-[var(--admin-border)] border-t border-[var(--admin-border)]">
               {horarios.map(([dia, rangos]) => (
-                <div key={dia} className="rounded-lg bg-[var(--admin-item)] px-3 py-2.5">
-                  <p className="text-sm font-medium text-[var(--admin-texto-primario)]">{nombreDia(dia)}</p>
-                  <div className="mt-1 space-y-0.5">
-                    {rangos.map((rango) => <p key={rango} className="text-xs text-[var(--admin-texto-muted)]">{rango}</p>)}
-                  </div>
+                <div key={dia} className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1 px-4 py-3 text-sm sm:px-5">
+                  <dt className="font-medium">{formatearNombreDia(dia)}</dt>
+                  <dd className="flex flex-wrap gap-x-3 gap-y-1 text-[var(--admin-texto-muted)] tabular-nums">
+                    {rangos.map(({ margenLaboral, margenLaboralId }) => (
+                      <span key={margenLaboralId} className="whitespace-nowrap">{margenLaboral.desde}–{margenLaboral.hasta}</span>
+                    ))}
+                  </dd>
                 </div>
               ))}
-            </div>
+            </dl>
           ) : (
-            <p className="text-sm text-[var(--admin-texto-muted)]">Todavía no configuraste tu disponibilidad.</p>
+            <p className="border-t border-[var(--admin-border)] p-4 text-sm text-[var(--admin-texto-muted)] sm:px-5">Todavía no configuraste tu disponibilidad.</p>
           )}
         </section>
       </div>
 
-      {modalAbierto && (
+      {modalAbierto ? (
         <EditBarberoModal
           barbero={barbero}
           servicios={servicios}
@@ -137,7 +109,9 @@ export default function PerfilBarbero({ barbero, servicios, diasLaborales, esEmp
           perfilPropio={perfilPropio || esEmpleado}
           onClose={() => establecerModalAbierto(false)}
         />
-      )}
+      ) : pendientes.length > 0 ? (
+        <ModalPerfilIncompleto pendientes={pendientes} esEmpleado={esEmpleado} alCompletar={() => establecerModalAbierto(true)} />
+      ) : null}
     </>
   );
 }

@@ -31,7 +31,7 @@ export default function SeccionImagenServicio({
     <div className="space-y-2">
       {esBarbero ? (
         <label className="text-sm font-medium text-[var(--admin-texto-primario)]">
-          {tituloBarbero ?? "Foto del barbero"} <span className="text-[var(--admin-texto-muted)] text-xs">(Opcional)</span>
+          {tituloBarbero ?? "Foto del barbero"} <span className="text-[var(--admin-texto-muted)] text-xs">(Requerida para aparecer en reservas)</span>
         </label>
       ) : (
         <label className="block text-xs font-medium text-[var(--admin-texto-secundario)]">
@@ -50,14 +50,14 @@ export default function SeccionImagenServicio({
             style={{ borderColor: esBarbero ? "var(--admin-border-fuerte)" : "var(--admin-border)" }}
           />
 
-          {esBarbero ? <button type="button" onClick={onRemove} className="text-sm text-red-400 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]">Eliminar foto</button> : <button type="button" onClick={onRemove} className="absolute -top-2 -right-2 p-1 bg-red-600 rounded-full text-white hover:bg-red-700"><X className="h-4 w-4" /></button>}
+          {esBarbero ? <button type="button" onClick={onRemove} className="admin-control text-[var(--admin-error)]">Eliminar foto</button> : <button type="button" onClick={onRemove} className="absolute -top-2 -right-2 p-1 bg-red-600 rounded-full text-white hover:bg-red-700"><X className="h-4 w-4" /></button>}
         </div>
       ) : (
         <SelectorImagenConRecorte
           alConfirmar={onFileChange}
           proporcion={1}
           deshabilitado={isPending}
-          className={`relative flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg cursor-pointer transition ${
+          className={`relative flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--admin-border-fuerte)] p-4 transition ${
             isPending ? "opacity-50 pointer-events-none" : ""
           }`}
         >
@@ -69,7 +69,7 @@ export default function SeccionImagenServicio({
             <>
               <Upload className="h-6 w-6" style={{ color: "var(--page-primary-tinta)" }} />
               <span className="text-sm text-[var(--admin-texto-muted)]">
-                Hacé clic para cambiar la foto
+                Seleccionar foto
               </span>
             </>
           )}
@@ -78,7 +78,7 @@ export default function SeccionImagenServicio({
       )}
 
       {uploadError && (
-        <p className={`text-sm ${esBarbero ? "text-red-400" : "text-red-500"}`}>
+        <p role="alert" className="text-sm text-[var(--admin-error)]">
           {uploadError}
         </p>
       )}
