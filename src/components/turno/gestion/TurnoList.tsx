@@ -133,7 +133,7 @@ export default function TurnoList({
       <div className={vistaAdministrativa ? "p-4 sm:p-5" : "bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl p-4"}>
         <div className="space-y-3" aria-hidden="true">
           {Array.from({ length: vistaAdministrativa ? 3 : 8 }).map((_, indice) => (
-            <Skeleton key={indice} className={`h-16 w-full rounded-xl ${vistaAdministrativa ? "bg-[var(--admin-item)] motion-reduce:animate-none" : "bg-white/5"}`} />
+            <Skeleton key={indice} className="h-16 w-full rounded-xl bg-[var(--admin-item)] motion-reduce:animate-none" />
           ))}
         </div>
       </div>
@@ -186,8 +186,8 @@ export default function TurnoList({
       <div ref={sentinelRef} aria-hidden="true" className="h-1" />
 
       {cargandoMas && (
-        <div className="flex items-center justify-center gap-2 py-4">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--page-primary)] border-t-transparent" />
+        <div role="status" className="flex items-center justify-center gap-2 py-4">
+          <span aria-hidden="true" className={`size-4 animate-spin rounded-full border-2 border-t-transparent motion-reduce:animate-none ${vistaAdministrativa ? "border-[var(--page-primary)]" : "border-current"}`} />
           <span className="text-xs text-[var(--admin-texto-muted)]">Cargando más turnos...</span>
         </div>
       )}
@@ -197,7 +197,7 @@ export default function TurnoList({
           <button
             type="button"
             onClick={onCargarMas}
-            className="text-xs font-semibold text-[var(--page-primary-tinta)] hover:underline"
+            className="control-publico min-h-11 rounded-md px-3 text-sm font-semibold text-[var(--page-primary-tinta)] underline-offset-4 hover:underline"
           >
             Reintentar
           </button>
@@ -212,7 +212,9 @@ export default function TurnoList({
 
       {mostrarConfirmacion && (
         <ConfirmDialog
-          title={accionConfirmacion === "cancelar" ? "Cancelar Turno" : "Confirmar Turno"}
+          apariencia={vistaAdministrativa ? undefined : "publica"}
+          etiquetaConfirmar={vistaAdministrativa ? undefined : accionConfirmacion === "cancelar" ? "Cancelar turno" : "Confirmar turno"}
+          title={accionConfirmacion === "cancelar" ? "Cancelar turno" : "Confirmar turno"}
           message={accionConfirmacion === "cancelar"
             ? "¿Estás seguro de que querés cancelar este turno? Esta acción no se puede deshacer."
             : "¿Estás seguro de que querés confirmar este turno?"}

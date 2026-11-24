@@ -8,26 +8,38 @@ const CASOS = [
   { nombre: "Grises idénticos", primario: "#777777", secundario: "#777777", fondo: "#777777" },
   { nombre: "Oscuros próximos", primario: "#111214", secundario: "#121315", fondo: "#101113" },
   { nombre: "Claros próximos", primario: "#f7f7f6", secundario: "#f5f5f4", fondo: "#f8f8f7" },
+  { nombre: "Gris al límite oscuro", primario: "#aaaabb", secundario: "#ffe2ca", fondo: "#757575" },
+  { nombre: "Gris al límite claro", primario: "#4c4c68", secundario: "#285c99", fondo: "#767676" },
+  { nombre: "Fondo saturado", primario: "#dd5520", secundario: "#ef9642", fondo: "#ba4d04" },
+  { nombre: "Marca brillante en fondo oscuro", primario: "#ffee00", secundario: "#31d48f", fondo: "#1c1425" },
 ] as const;
+
+const fondosPagina = ["--tema-fondo", "--tema-superficie-1", "--tema-superficie-2", "--tema-superficie-3"] as const;
 
 for (const caso of CASOS) {
   const tema = crearVariablesTema(caso);
-  const comprobaciones = [
-    ["texto principal", "--tema-texto-principal", "--tema-fondo", 4.5],
-    ["texto primario", "--tema-primario-texto", "--tema-superficie-1", 4.5],
-    ["texto sobre suave", "--tema-primario-suave-texto", "--tema-primario-suave", 4.5],
-    ["texto de botón", "--tema-primario-sobre", "--tema-primario", 4.5],
-    ["marca sobre overlay", "--tema-primario-sobre-oscuro", "--tema-fondo-overlay", 4.5],
-  ] as const;
-
-  tema["--tema-fondo-overlay"] = "#09090b";
-
-  for (const [etiqueta, texto, fondo, minimo] of comprobaciones) {
-    const contraste = calcularRazonDeContraste(tema[texto], tema[fondo]);
+  function verificar(texto: `--${string}`, fondo: string, minimo = 4.5) {
+    const contraste = calcularRazonDeContraste(tema[texto], fondo);
     if (contraste < minimo) {
-      throw new Error(`${caso.nombre}: ${etiqueta} tiene contraste ${contraste.toFixed(2)}.`);
+      throw new Error(`${caso.nombre}: ${texto} sobre ${fondo} tiene contraste ${contraste.toFixed(2)}.`);
     }
   }
+
+  for (const superficie of fondosPagina) {
+    for (const texto of ["--tema-texto-principal", "--tema-texto-secundario", "--tema-texto-tenue", "--tema-primario-texto", "--tema-secundario-texto", "--tema-error"] as const) {
+      verificar(texto, tema[superficie]);
+    }
+    verificar("--tema-foco", tema[superficie], 3);
+    verificar("--tema-borde-fuerte", tema[superficie], 3);
+  }
+
+  verificar("--tema-primario-suave-texto", tema["--tema-primario-suave"]);
+  verificar("--tema-secundario-suave-texto", tema["--tema-secundario-suave"]);
+  verificar("--tema-primario-sobre-oscuro", "#38383a");
+  verificar("--tema-primario-sobre", tema["--tema-primario"]);
+  verificar("--tema-primario-sobre", tema["--tema-primario-hover"]);
+  verificar("--tema-secundario-sobre", tema["--tema-secundario"]);
+  verificar("--tema-secundario-sobre", tema["--tema-secundario-hover"]);
 
   const marcaCercanaAlFondo = calcularRazonDeContraste(caso.primario, caso.fondo) < 3;
   if (marcaCercanaAlFondo && tema["--tema-primario-texto"] !== tema["--tema-texto-principal"]) {

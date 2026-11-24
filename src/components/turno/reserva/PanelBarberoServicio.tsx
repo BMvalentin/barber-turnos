@@ -14,7 +14,7 @@ export default function PanelBarberoServicio({
   onSeleccionarServicio,
 }: PropsPanelBarberoServicio) {
   return (
-    <section className="flex min-h-0 flex-col gap-6 lg:overflow-hidden">
+    <section className="flex min-h-0 flex-col gap-6 lg:overflow-hidden in-[.reserva-publica]:lg:overflow-visible">
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-[var(--admin-texto-primario)]">
           Elegí tu barbero
@@ -31,12 +31,12 @@ export default function PanelBarberoServicio({
           Elegí un servicio
         </h2>
         {!selectedBarberoId ? (
-          <div className="flex items-center gap-3 rounded-xl border border-dashed border-[var(--admin-border)] p-4 text-sm text-[var(--admin-texto-muted)]">
-            <Scissors className="h-5 w-5 shrink-0 text-[var(--page-primary-tinta)]" />
+          <div className="flex items-center gap-3 py-2 text-sm text-[var(--admin-texto-muted)]">
+            <Scissors className="size-5 shrink-0 text-[var(--page-primary-tinta)]" aria-hidden="true" />
             Elegí un barbero para ver los servicios disponibles.
           </div>
         ) : serviciosFiltrados.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-[var(--admin-border)] p-4 text-sm text-[var(--admin-texto-muted)]">
+          <div className="py-2 text-sm text-[var(--admin-texto-muted)]">
             Este barbero no tiene servicios disponibles para reservar.
           </div>
         ) : (

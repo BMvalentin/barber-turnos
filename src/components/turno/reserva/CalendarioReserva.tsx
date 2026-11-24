@@ -17,6 +17,7 @@ import DiaCalendarioReserva from "@/components/turno/reserva/DiaCalendarioReserv
 import type { PropsCalendarioReserva } from "@/components/turno/reserva/tipos";
 
 const ABREVIATURAS_DIAS = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
+const CLASE_NAVEGACION = "rounded-lg p-1.5 text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] in-[.reserva-publica]:grid in-[.reserva-publica]:size-11 in-[.reserva-publica]:place-items-center";
 
 export default function CalendarioReserva({
   mesVisible,
@@ -28,13 +29,10 @@ export default function CalendarioReserva({
   onSeleccionarDia,
   permitirFechasPasadas = false,
 }: PropsCalendarioReserva) {
-  const construirGrillaDelMes = (): Date[] => {
-    const inicioDeMes = startOfMonth(mesVisible);
-    const finDeMes = endOfMonth(mesVisible);
-    const inicioGrilla = startOfWeek(inicioDeMes, { weekStartsOn: 0 });
-    const finGrilla = endOfWeek(finDeMes, { weekStartsOn: 0 });
-    return eachDayOfInterval({ start: inicioGrilla, end: finGrilla });
-  };
+  const grillaDelMes = eachDayOfInterval({
+    start: startOfWeek(startOfMonth(mesVisible), { weekStartsOn: 0 }),
+    end: endOfWeek(endOfMonth(mesVisible), { weekStartsOn: 0 }),
+  });
 
   const inicioDeHoy = new Date();
   inicioDeHoy.setHours(0, 0, 0, 0);
@@ -45,9 +43,9 @@ export default function CalendarioReserva({
   );
 
   return (
-    <div className="bg-[var(--admin-surface-elevated)] border border-[var(--admin-border)] rounded-xl p-4 space-y-3">
+    <div className="space-y-2 rounded-xl bg-[var(--admin-surface-elevated)] p-2 sm:p-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-[var(--admin-texto-primario)] capitalize">
+        <h3 className="text-sm font-semibold capitalize text-[var(--admin-texto-primario)]" aria-live="polite">
           {tituloMes}
         </h3>
         <div className="flex items-center gap-1">
@@ -55,7 +53,7 @@ export default function CalendarioReserva({
             type="button"
             onClick={onMesAnterior}
             aria-label="Mes anterior"
-            className="p-1.5 rounded-lg text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
+            className={CLASE_NAVEGACION}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -63,7 +61,7 @@ export default function CalendarioReserva({
             type="button"
             onClick={onMesSiguiente}
             aria-label="Mes siguiente"
-            className="p-1.5 rounded-lg text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
+            className={CLASE_NAVEGACION}
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -82,29 +80,30 @@ export default function CalendarioReserva({
       </div>
 
       {cargandoDias ? (
-        <div className="grid grid-cols-7 gap-1">
-          {Array.from({ length: 42 }).map((_, indice) => (
+        <div className="grid grid-cols-7 gap-1" role="status" aria-busy="true" aria-label="Cargando días disponibles">
+          {grillaDelMes.map((dia) => (
             <div
-              key={indice}
-              className="h-10 animate-pulse rounded-lg bg-[var(--admin-border)]"
+              key={format(dia, "yyyy-MM-dd")}
+              className="h-10 rounded-lg bg-[var(--admin-border)] motion-safe:animate-pulse in-[.reserva-publica]:h-11"
             />
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-7 gap-1">
-          {construirGrillaDelMes().map((dia, indice) => {
+          {grillaDelMes.map((dia) => {
+            const claveDia = format(dia, "yyyy-MM-dd");
             const estaEnElMes = isSameMonth(dia, mesVisible);
             const pasado = !permitirFechasPasadas && dia < inicioDeHoy;
             const disponible =
               estaEnElMes &&
               !pasado &&
-              diasDisponibles.includes(format(dia, "yyyy-MM-dd"));
+              diasDisponibles.includes(claveDia);
             const seleccionado = fecha ? isSameDay(dia, fecha) : false;
             const esHoy = isToday(dia);
 
             return (
               <DiaCalendarioReserva
-                key={indice}
+                key={claveDia}
                 dia={dia}
                 estaEnElMes={estaEnElMes}
                 disponible={disponible}

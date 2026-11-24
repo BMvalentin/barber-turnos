@@ -1,9 +1,10 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { filtroBarberoActivo, filtroBarberoReservable } from "@/lib/barberos/filtros-perfiles";
+import { filtroBarberoActivo, filtroBarberoReservable, filtroHorarioBarberoActivo } from "@/lib/barberos/filtros-perfiles";
+import { obtenerCamposPendientesPerfil } from "@/lib/barberos/perfil-profesional";
 
 export const obtenerDatosReserva = unstable_cache(
-  async () => {
+  async ({ soloPerfilesCompletos = false }: { soloPerfilesCompletos?: boolean } = {}) => {
     const [registrosServicios, barberos, relaciones] = await Promise.all([
       prisma.servicio.findMany({
         where: { estado: true },
@@ -14,7 +15,12 @@ export const obtenerDatosReserva = unstable_cache(
         orderBy: { nombre: "asc" },
       }),
       prisma.barbero.findMany({
-        where: filtroBarberoReservable,
+        where: {
+          ...filtroBarberoReservable,
+          ...(soloPerfilesCompletos && {
+            horarios: { some: filtroHorarioBarberoActivo },
+          }),
+        },
         select: { id: true, nombre: true, srcImage: true, estado: true },
         orderBy: { nombre: "asc" },
       }),
@@ -30,8 +36,20 @@ export const obtenerDatosReserva = unstable_cache(
       descuento: Number(servicio.descuento),
       senia: Number(servicio.senia),
     }));
-    return { servicios, barberos, relaciones };
+    if (!soloPerfilesCompletos) return { servicios, barberos, relaciones };
+
+    const barberosVisibles = barberos.filter((barbero) => obtenerCamposPendientesPerfil({
+      ...barbero,
+      tieneServicioActivo: true,
+      tieneHorarioActivo: true,
+    }).length === 0);
+    const idsVisibles = new Set(barberosVisibles.map(({ id }) => id));
+    return {
+      servicios,
+      barberos: barberosVisibles,
+      relaciones: relaciones.filter(({ barberoId }) => idsVisibles.has(barberoId)),
+    };
   },
-  ["catalogo-reserva-v3"],
-  { tags: ["servicios", "barberos"], revalidate: 300 },
+  ["catalogo-reserva-v4"],
+  { tags: ["servicios", "barberos", "dias-laborales"], revalidate: 300 },
 );

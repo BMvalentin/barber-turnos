@@ -27,7 +27,7 @@ export default function PanelFechaHorario({
   } = disponibilidad;
 
   return (
-    <section className="flex flex-col gap-4 lg:min-h-0 lg:overflow-hidden">
+    <section className="flex flex-col gap-4 lg:min-h-0 lg:overflow-hidden in-[.reserva-publica]:lg:overflow-visible">
       <h2 className="text-lg font-semibold text-[var(--admin-texto-primario)]">
         Seleccioná una fecha
       </h2>
@@ -45,7 +45,7 @@ export default function PanelFechaHorario({
       {errorConsulta ? (
         <div role="status" className="text-sm text-[var(--admin-texto-secundario)]">
           No se pudieron cargar los horarios. {" "}
-          <button type="button" onClick={reintentarConsulta} className="font-semibold text-[var(--page-primary-tinta)] underline">
+          <button type="button" onClick={reintentarConsulta} className="font-semibold text-[var(--page-primary-tinta)] underline in-[.reserva-publica]:min-h-11 in-[.reserva-publica]:rounded-md in-[.reserva-publica]:px-2 in-[.reserva-publica]:underline-offset-4 in-[.reserva-publica]:focus-visible:outline-2 in-[.reserva-publica]:focus-visible:outline-[var(--page-focus-ring)]">
             Reintentar
           </button>
         </div>

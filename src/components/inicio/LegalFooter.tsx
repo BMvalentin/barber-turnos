@@ -10,15 +10,15 @@ export function LegalFooter() {
 
   return (
     <div>
-      <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-[var(--page-primary-tinta)]">
+      <h3 className="mb-1 text-xs font-bold uppercase tracking-widest text-[var(--page-primary-tinta)]">
         Legal
       </h3>
-      <nav className="flex flex-col items-start gap-3">
+      <nav aria-label="Documentos legales" className="flex flex-col items-start">
         {enlaces.map((enlace) => (
           <Link
             key={enlace.href}
             href={enlace.href}
-            className="text-sm font-medium text-[var(--admin-texto-secundario)] transition-colors hover:text-[var(--admin-texto-primario)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--admin-background)] rounded"
+            className="control-publico flex min-h-11 items-center rounded-md py-1 text-sm font-medium text-[var(--admin-texto-secundario)] underline-offset-4 hover:text-[var(--admin-texto-primario)] hover:underline"
           >
             {enlace.texto}
           </Link>

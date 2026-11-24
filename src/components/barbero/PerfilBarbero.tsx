@@ -4,7 +4,9 @@ import Image from "next/image";
 import { useState } from "react";
 import { Clock3, Mail, Pencil, Scissors, UserRound } from "lucide-react";
 import { obtenerNombreProfesional } from "@/lib/barberos/nombre-profesional";
+import type { CampoPendientePerfil } from "@/lib/barberos/perfil-profesional";
 import EditBarberoModal from "./EditBarberoModal";
+import ModalPerfilIncompleto from "./ModalPerfilIncompleto";
 import { formatearNombreDia, obtenerHorariosPorDia } from "./horarios-barbero";
 import type { BarberoListado, DiaLaboral, ServicioOpcion } from "@/types/barbero";
 
@@ -12,11 +14,12 @@ type Props = {
   barbero: BarberoListado;
   servicios: ServicioOpcion[];
   diasLaborales: DiaLaboral[];
+  pendientes?: CampoPendientePerfil[];
   esEmpleado?: boolean;
   perfilPropio?: boolean;
 };
 
-export default function PerfilBarbero({ barbero, servicios, diasLaborales, esEmpleado = false, perfilPropio = false }: Props) {
+export default function PerfilBarbero({ barbero, servicios, diasLaborales, pendientes = [], esEmpleado = false, perfilPropio = false }: Props) {
   const [modalAbierto, establecerModalAbierto] = useState(false);
   const horarios = obtenerHorariosPorDia(barbero.horarios);
   const nombre = obtenerNombreProfesional(barbero.nombre) ?? "Perfil por completar";
@@ -97,7 +100,7 @@ export default function PerfilBarbero({ barbero, servicios, diasLaborales, esEmp
         </section>
       </div>
 
-      {modalAbierto && (
+      {modalAbierto ? (
         <EditBarberoModal
           barbero={barbero}
           servicios={servicios}
@@ -106,7 +109,9 @@ export default function PerfilBarbero({ barbero, servicios, diasLaborales, esEmp
           perfilPropio={perfilPropio || esEmpleado}
           onClose={() => establecerModalAbierto(false)}
         />
-      )}
+      ) : pendientes.length > 0 ? (
+        <ModalPerfilIncompleto pendientes={pendientes} esEmpleado={esEmpleado} alCompletar={() => establecerModalAbierto(true)} />
+      ) : null}
     </>
   );
 }

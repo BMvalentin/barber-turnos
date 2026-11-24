@@ -4,9 +4,11 @@ import { obtenerBarberosFiltroTurnos } from "./obtener-barberos-filtro-turnos";
 import { obtenerDatosReserva } from "./obtener-datos-reserva";
 import { obtenerBarberosParaHorarios } from "./obtener-barberos-para-horarios";
 import { obtenerBarberosParaSelector } from "./obtener-barberos-para-selector";
+import { obtenerPendientesPerfilBarbero } from "./obtener-pendientes-perfil-barbero";
 
 const mocks = vi.hoisted(() => ({
   barbero: vi.fn(),
+  perfil: vi.fn(),
   servicio: vi.fn(),
   asignacion: vi.fn(),
 }));
@@ -14,7 +16,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("next/cache", () => ({ unstable_cache: (consulta: unknown) => consulta }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    barbero: { findMany: mocks.barbero },
+    barbero: { findMany: mocks.barbero, findUnique: mocks.perfil },
     servicio: { findMany: mocks.servicio },
     servicioxbarbero: { findMany: mocks.asignacion },
   },
@@ -46,6 +48,35 @@ describe("catálogos de barberos", () => {
     }));
   });
 
+  it("en reservas de clientes exige un horario activo, nombre profesional y foto", async () => {
+    const completo = { id: "completo", nombre: "Alex", srcImage: "/alex.jpg", estado: true };
+    mocks.barbero.mockResolvedValueOnce([
+      completo,
+      { ...completo, id: "pendiente-nombre", nombre: "  SIN NOMBRE  " },
+      { ...completo, id: "pendiente-foto", srcImage: "  " },
+    ]);
+    mocks.asignacion.mockResolvedValueOnce([
+      { barberoId: "completo", servicioId: "corte" },
+      { barberoId: "pendiente-nombre", servicioId: "corte" },
+      { barberoId: "pendiente-foto", servicioId: "corte" },
+      { barberoId: "sin-horarios", servicioId: "corte" },
+    ]);
+
+    expect(await obtenerDatosReserva({ soloPerfilesCompletos: true })).toEqual({
+      barberos: [completo],
+      relaciones: [{ barberoId: "completo", servicioId: "corte" }],
+      servicios: [],
+    });
+    expect(mocks.barbero).toHaveBeenCalledWith(expect.objectContaining({
+      where: {
+        estado: true,
+        usuarioId: { not: null },
+        servicios: { some: { servicio: { estado: true } } },
+        horarios: { some: { estado: true, margenLaboral: { estado: true, dia: { estado: true } } } },
+      },
+    }));
+  });
+
   it("el desplegable de turnos solo ofrece empleados activos con servicios activos", async () => {
     await obtenerBarberosFiltroTurnos();
 
@@ -56,6 +87,25 @@ describe("catálogos de barberos", () => {
         servicios: { some: { servicio: { estado: true } } },
         usuario: { role: "EMPLEADO" },
       },
+    }));
+  });
+
+  it("identifica los pendientes del perfil activo de la cuenta que abrió el panel", async () => {
+    mocks.perfil.mockResolvedValueOnce({ nombre: "Sin nombre", srcImage: null, _count: { servicios: 0, horarios: 0 } });
+    mocks.perfil.mockResolvedValueOnce({ nombre: "Alex", srcImage: "/alex.jpg", _count: { servicios: 1, horarios: 1 } });
+    mocks.perfil.mockResolvedValueOnce(null);
+
+    expect(await obtenerPendientesPerfilBarbero("perfil", "cuenta")).toEqual(["nombre", "foto", "servicio", "horario"]);
+    expect(await obtenerPendientesPerfilBarbero("perfil", "cuenta")).toEqual([]);
+    expect(await obtenerPendientesPerfilBarbero("perfil", "cuenta")).toEqual([]);
+    expect(mocks.perfil).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "perfil", usuarioId: "cuenta", estado: true },
+      select: expect.objectContaining({
+        _count: { select: {
+          servicios: { where: { servicio: { estado: true } } },
+          horarios: { where: { estado: true, margenLaboral: { estado: true, dia: { estado: true } } } },
+        } },
+      }),
     }));
   });
 

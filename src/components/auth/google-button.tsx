@@ -14,6 +14,7 @@ export default function GoogleButton() {
           <>
             {/* Logo oficial de Google optimizado */}
             <svg
+              aria-hidden="true"
               className="w-5 h-5"
               style={{ width: 20, height: 20 }}
               viewBox="0 0 24 24"
@@ -41,7 +42,7 @@ export default function GoogleButton() {
         }
         textoMientrasCarga="Redirigiendo a Google..."
         mostrarSpinner={false}
-        claseAdicional="h-auto w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2.5 px-4 rounded-lg transition-colors shadow-sm hover:shadow-none"
+        claseAdicional="h-auto min-h-12 w-full flex items-center justify-center gap-3 whitespace-normal bg-white border border-gray-400 text-gray-800 hover:bg-gray-100 hover:brightness-100 font-semibold py-2.5 px-4 rounded-lg transition-colors duration-150"
       />
     </form>
   );

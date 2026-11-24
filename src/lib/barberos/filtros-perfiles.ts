@@ -32,6 +32,11 @@ export function filtrarPerfilesDelEquipo<T extends PerfilConActividad>(
 
 export const filtroBarberoActivo = { estado: true, usuarioId: { not: null } } satisfies Prisma.barberoWhereInput;
 
+export const filtroHorarioBarberoActivo = {
+  estado: true,
+  margenLaboral: { estado: true, dia: { estado: true } },
+} satisfies Prisma.margen_laboral_barberoWhereInput;
+
 export const filtroBarberoReservable = {
   ...filtroBarberoActivo,
   servicios: { some: { servicio: { estado: true } } },

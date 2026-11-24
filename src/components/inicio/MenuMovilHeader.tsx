@@ -6,7 +6,7 @@ import type { MenuMovilHeaderProps } from "@/components/inicio/header-tipos";
 import { esAdmin, esEmpleado } from "@/lib/seguridad/es-admin";
 
 export function MenuMovilHeader({ sesion, cerrarMenu }: MenuMovilHeaderProps) {
-  const claseEnlace = "py-2 text-base text-[var(--admin-texto-secundario)] transition-colors hover:text-[var(--admin-texto-primario)]";
+  const claseEnlace = "control-publico flex min-h-11 items-center gap-2 rounded-md px-2 text-base text-[var(--admin-texto-secundario)] transition-colors hover:bg-[var(--admin-item)] hover:text-[var(--admin-texto-primario)]";
   const esUsuarioEmpleado = esEmpleado(sesion);
   const destinoTurnos = !sesion
     ? "/login"
@@ -14,16 +14,17 @@ export function MenuMovilHeader({ sesion, cerrarMenu }: MenuMovilHeaderProps) {
       ? "/admin/turno"
       : "/dashboard?tab=turnos";
   return (
-    <div className="border-t border-[var(--admin-border)] bg-[var(--admin-surface)] md:hidden"><div className="flex flex-col space-y-4 px-6 py-6">
-      <Link href="/#servicios" onClick={cerrarMenu} className={claseEnlace}>Servicios</Link><Link href="/#ubicacion" onClick={cerrarMenu} className={claseEnlace}>Ubicación</Link>
+    <nav id="navegacion-movil" aria-label="Navegación principal" className="flex max-h-[calc(100dvh-4rem)] flex-col gap-1 overflow-y-auto overscroll-contain border-b border-[var(--page-separador)] bg-[var(--admin-surface)] px-4 py-3 shadow-lg sm:px-6 md:hidden">
+      <Link href="/#servicios" onClick={cerrarMenu} className={claseEnlace}>Servicios</Link>
+      <Link href="/#ubicacion" onClick={cerrarMenu} className={claseEnlace}>Ubicación</Link>
       {(esAdmin(sesion) || esUsuarioEmpleado) && <Link href="/admin" onClick={cerrarMenu} className={claseEnlace}>{esUsuarioEmpleado ? "Mi panel" : "Administrador"}</Link>}
-      <div className="pt-2"><Link href={destinoTurnos} onClick={cerrarMenu} className="block w-full rounded-lg bg-[var(--page-primary)] px-3.5 py-2 text-center text-sm font-semibold text-[var(--page-primary-foreground)] transition-colors hover:bg-[var(--page-primary-hover)]">Turnos</Link></div>
-      <div className="mt-4 border-t border-[var(--admin-border)] pt-6">
-        {sesion ? <div className="flex flex-col gap-4">
-          <Link href="/dashboard" onClick={cerrarMenu} className="flex items-center gap-3 py-2"><Image src={sesion.user?.image || "/images/avatar-default.svg"} alt="" className="rounded-full" width={40} height={40} /><span className="text-base font-medium text-[var(--admin-texto-primario)]">{sesion.user?.name}</span></Link>
-          <form action={handleSignOut} className="w-full"><button type="submit" className="w-full py-2 text-left text-base text-red-500 transition-colors hover:text-red-600">Cerrar sesión</button></form>
-        </div> : <Link href="/login" onClick={cerrarMenu} className={`flex items-center gap-2 ${claseEnlace}`}><DoorOpen className="h-4 w-4" />Iniciar Sesión</Link>}
+      <Link href={destinoTurnos} onClick={cerrarMenu} className="control-publico mt-2 grid min-h-11 place-items-center rounded-md border border-[var(--admin-border-fuerte)] bg-[var(--page-primary)] px-4 text-sm font-semibold text-[var(--page-primary-foreground)] transition-colors hover:bg-[var(--page-primary-hover)]">Turnos</Link>
+      <div className="mt-2 border-t border-[var(--page-separador)] pt-2">
+        {sesion ? <div className="flex flex-col gap-1">
+          <Link href="/dashboard" onClick={cerrarMenu} className={claseEnlace}><Image src={sesion.user?.image || "/images/avatar-default.svg"} alt="" className="shrink-0 rounded-full" width={28} height={28} /><span className="min-w-0 break-words">{sesion.user?.name || "Mi perfil"}</span></Link>
+          <form action={handleSignOut}><button type="submit" className="control-publico min-h-11 w-full rounded-md px-2 text-left text-base text-[var(--page-error)] transition-colors hover:bg-[var(--admin-item)]">Cerrar sesión</button></form>
+        </div> : <Link href="/login" onClick={cerrarMenu} className={claseEnlace}><DoorOpen className="size-4" aria-hidden="true" />Iniciar sesión</Link>}
       </div>
-    </div></div>
+    </nav>
   );
 }

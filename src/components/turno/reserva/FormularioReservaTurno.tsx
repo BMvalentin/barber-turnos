@@ -7,9 +7,11 @@ import { useDisponibilidadHorarios } from "@/hooks/useDisponibilidadHorarios";
 import PanelBarberoServicio from "@/components/turno/reserva/PanelBarberoServicio";
 import PanelFechaHorario from "@/components/turno/reserva/PanelFechaHorario";
 import ResumenReserva from "@/components/turno/reserva/ResumenReserva";
-import { esAdmin, esEmpleado } from "@/lib/seguridad/es-admin";
+import { cn } from "@/lib/utils/cn";
 
 export default function FormularioReservaTurno({
+  vistaAdministrativa,
+  puedeGestionarTurnos,
   session,
   formRef,
   state,
@@ -57,10 +59,10 @@ export default function FormularioReservaTurno({
     if (estadoRecibido.current === state) return;
     estadoRecibido.current = state;
     if (state.horarioNoDisponible) actualizarTrasConflicto(state.horarioNoDisponible);
-    if (state.error) {
+    if (state.error && vistaAdministrativa) {
       toast.error("Error", { description: state.error });
     }
-  }, [actualizarTrasConflicto, state]);
+  }, [actualizarTrasConflicto, state, vistaAdministrativa]);
 
   const seleccionarServicio = (id: string) => {
     if (id === selectedServicioId) return;
@@ -68,13 +70,11 @@ export default function FormularioReservaTurno({
     handleServicioChange(id);
   };
 
-  const esUsuarioNormal = session?.user?.role === "USER";
-  const puedeGestionarTurnos = esAdmin(session) || esEmpleado(session);
-  const clienteCompleto = esUsuarioNormal || (
-    selectedUserId === "nuevo"
+  const clienteCompleto = puedeGestionarTurnos
+    ? selectedUserId === "nuevo"
       ? Boolean(clienteNombre.trim() && clienteApellido.trim())
       : Boolean(selectedUserId)
-  );
+    : Boolean(session?.user?.id);
   const completo = Boolean(
     selectedServicioId &&
       selectedBarberoId &&
@@ -120,7 +120,10 @@ export default function FormularioReservaTurno({
       ref={formRef}
       action={formAction}
       onSubmit={manejarEnvio}
-      className="flex flex-1 min-h-0 flex-col gap-5 overflow-y-auto p-5 sm:p-6 lg:overflow-hidden"
+      className={cn(
+        "flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4 sm:p-6",
+        vistaAdministrativa ? "lg:overflow-hidden" : "reserva-publica overscroll-contain",
+      )}
     >
       <input type="hidden" name="servicioId" value={selectedServicioId} />
       <input type="hidden" name="barberoId" value={selectedBarberoId} />
@@ -133,8 +136,11 @@ export default function FormularioReservaTurno({
         value={disponibilidad.slotSeleccionado}
       />
 
-      <div className="grid grid-cols-1 gap-5 lg:min-h-0 lg:flex-1 lg:grid-cols-[340px_minmax(0,1fr)_320px] lg:gap-6">
-        <div className="flex min-w-0 flex-col lg:order-2 lg:min-h-0 lg:overflow-hidden">
+      <div className={cn(
+        "grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.3fr)_minmax(0,1fr)] lg:gap-6",
+        vistaAdministrativa ? "lg:min-h-0 lg:flex-1" : "lg:items-start",
+      )}>
+        <div className={cn("flex min-w-0 flex-col lg:order-2", vistaAdministrativa && "lg:min-h-0 lg:overflow-hidden")}>
           <PanelBarberoServicio
             barberos={barberos}
             selectedBarberoId={selectedBarberoId}
@@ -145,7 +151,7 @@ export default function FormularioReservaTurno({
           />
         </div>
 
-        <div className="flex min-w-0 flex-col lg:order-1 lg:min-h-0 lg:overflow-hidden">
+        <div className={cn("flex min-w-0 flex-col lg:order-1", vistaAdministrativa && "lg:min-h-0 lg:overflow-hidden")}>
           <PanelFechaHorario
             disponibilidad={disponibilidad}
             servicioId={selectedServicioId}
@@ -153,8 +159,9 @@ export default function FormularioReservaTurno({
           />
         </div>
 
-        <div className="flex min-w-0 flex-col lg:order-3 lg:min-h-0 lg:overflow-y-auto">
+        <div className={cn("flex min-w-0 flex-col lg:order-3", vistaAdministrativa && "lg:min-h-0 lg:overflow-y-auto")}>
           <ResumenReserva
+            error={vistaAdministrativa ? undefined : state.error}
             servicio={servicio}
             barbero={barbero}
             fecha={disponibilidad.fecha}

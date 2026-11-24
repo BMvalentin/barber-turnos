@@ -3,6 +3,8 @@ import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { redirect } from "next/navigation";
 import AdminShell from "@/components/panel/navegacion/AdminShell";
+import AvisoPerfilIncompletoAdmin from "@/components/barbero/AvisoPerfilIncompletoAdmin";
+import { obtenerPendientesPerfilBarbero } from "@/lib/consultas/obtener-pendientes-perfil-barbero";
 import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 import { cookies } from "next/headers";
 import type { Viewport } from "next";
@@ -34,6 +36,9 @@ export default async function AdminLayout({
   }
 
   const temaGuardado = almacen.get("mayoraz-admin-tema")?.value;
+  const pendientes = contexto.barberoId
+    ? await obtenerPendientesPerfilBarbero(contexto.barberoId, session.user.id)
+    : [];
 
   return (
     <AdminShell
@@ -43,6 +48,9 @@ export default async function AdminLayout({
       temaInicial={temaGuardado === "claro" || temaGuardado === "oscuro" ? temaGuardado : "sistema"}
     >
       {children}
+      {pendientes.length > 0 && (
+        <AvisoPerfilIncompletoAdmin pendientes={pendientes} esEmpleado={contexto.rol === "EMPLEADO"} />
+      )}
     </AdminShell>
   );
 }

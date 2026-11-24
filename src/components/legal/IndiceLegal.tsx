@@ -6,12 +6,11 @@ export default function IndiceLegal() {
   const documentos = listarDocumentosLegales();
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-12 sm:py-16">
-      <header className="border-b border-[var(--admin-border)] pb-6">
+    <main className="mx-auto w-full max-w-3xl px-4 pt-24 pb-12 sm:px-6 sm:pt-28 sm:pb-16">
+      <header className="border-b border-[var(--page-separador)] pb-6">
         <div className="flex items-start gap-3">
           <div
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl"
-            style={{ backgroundColor: "var(--page-primary-15)" }}
+            className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[var(--admin-surface-elevated)]"
           >
             <FileText className="h-5 w-5 text-[var(--admin-texto-primario)]" aria-hidden="true" />
           </div>
@@ -19,19 +18,19 @@ export default function IndiceLegal() {
             <h1 className="text-2xl font-black tracking-tight text-[var(--admin-texto-primario)] sm:text-3xl">
               Información legal
             </h1>
-            <p className="mt-1 text-sm text-[var(--admin-texto-secundario)]">
+            <p className="mt-1 text-base leading-relaxed text-[var(--admin-texto-secundario)]">
               Documentos que regulan el uso del sitio y el tratamiento de tus datos.
             </p>
           </div>
         </div>
       </header>
 
-      <ul className="mt-8 flex flex-col gap-4">
+      <ul className="mt-6 flex flex-col gap-3">
         {documentos.map((documento) => (
           <li key={documento.clave}>
             <Link
               href={`/legal/${documento.slug}`}
-              className="group flex items-start justify-between gap-4 rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5 transition-colors hover:border-[var(--admin-border-fuerte)] hover:bg-[var(--admin-item)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--admin-background)]"
+              className="control-publico flex items-start justify-between gap-3 rounded-lg bg-[var(--admin-surface)] p-4 transition-colors hover:bg-[var(--admin-item)] sm:gap-4 sm:p-5"
             >
               <div>
                 <h2 className="text-base font-bold text-[var(--admin-texto-primario)]">
@@ -46,13 +45,13 @@ export default function IndiceLegal() {
                 </p>
               </div>
               <ArrowRight
-                className="mt-1 h-5 w-5 shrink-0 text-[var(--page-primary-tinta)] transition-transform group-hover:translate-x-1"
+                className="mt-1 size-5 shrink-0 text-[var(--admin-texto-secundario)]"
                 aria-hidden="true"
               />
             </Link>
           </li>
         ))}
       </ul>
-    </div>
+    </main>
   );
 }

@@ -110,6 +110,7 @@ export type PropsTarjetaServicioReserva = {
 };
 
 export type PropsResumenReserva = {
+  error?: string;
   servicio: ServicioData | null;
   barbero: BarberoData | null;
   fecha: Date | undefined;
@@ -146,6 +147,8 @@ export type PropsSelectorClienteReserva = {
 };
 
 export type PropsFormularioReservaTurno = {
+  vistaAdministrativa: boolean;
+  puedeGestionarTurnos: boolean;
   session: Session | null;
   formRef: RefObject<HTMLFormElement | null>;
   state: EstadoFormularioTurno;
@@ -174,7 +177,6 @@ export type PropsFormularioReservaTurno = {
 };
 
 export type PropsModalGestionTurno = ParametrosFormularioTurno & {
-  vistaAdministrativa?: boolean;
   mostrarAvisoSeniaPendiente?: boolean;
   claseTrigger?: string;
   contenidoTrigger?: ReactNode;

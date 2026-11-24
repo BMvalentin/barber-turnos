@@ -10,30 +10,34 @@ export function crearVariablesTema(entradas: EntradasTema): VariablesTema {
   const { primario, secundario, fondo } = normalizarColoresTema(entradas);
   const textoFondo = elegirColorTexto(fondo);
   const poloSuperficie = textoFondo === "#ffffff" ? "#ffffff" : "#000000";
-  const crearSuperficie = (proporcion: number) => {
-    const candidata = mezclarColores(fondo, poloSuperficie, proporcion);
-    if (calcularRazonDeContraste(textoFondo, candidata) >= 4.5) return candidata;
-    const poloAlternativo = poloSuperficie === "#ffffff" ? "#000000" : "#ffffff";
-    return mezclarColores(fondo, poloAlternativo, proporcion);
-  };
+  const poloAlternativo = textoFondo === "#ffffff" ? "#000000" : "#ffffff";
+  const usarPoloSuperficie = calcularRazonDeContraste(textoFondo, mezclarColores(fondo, poloSuperficie, 0.18)) >= 4.5;
+  const crearSuperficie = (proporcion: number) =>
+    mezclarColores(fondo, usarPoloSuperficie ? poloSuperficie : poloAlternativo, proporcion);
   const superficie1 = crearSuperficie(0.06);
   const superficie2 = crearSuperficie(0.12);
   const superficie3 = crearSuperficie(0.18);
+  const superficieMenosContrastada = usarPoloSuperficie ? superficie3 : fondo;
   const textoSecundario = ajustarColorParaContraste(
     mezclarColores(textoFondo, fondo, 0.22),
-    superficie1
+    superficieMenosContrastada
   );
   const textoTenue = ajustarColorParaContraste(
     mezclarColores(textoFondo, fondo, 0.42),
-    superficie1
+    superficieMenosContrastada
   );
   const primarioSuave = mezclarColores(superficie1, primario, 0.16);
   const secundarioSuave = mezclarColores(superficie1, secundario, 0.14);
-  const textoPrimario = resolverColorTextoMarca(primario, superficie1, textoFondo);
-  const primarioSobreOscuro = resolverColorTextoMarca(primario, "#09090b", "#ffffff");
-  const textoSecundarioMarca = resolverColorTextoMarca(secundario, superficie1, textoFondo);
-  const textoPrimarioSuave = resolverColorTextoMarca(primario, primarioSuave, textoFondo);
-  const textoSecundarioSuave = resolverColorTextoMarca(secundario, secundarioSuave, textoFondo);
+  const superficies = [fondo, superficie1, superficie2, superficie3];
+  const asegurarContraste = (color: string, minimo = 4.5) =>
+    superficies.every((superficie) => calcularRazonDeContraste(color, superficie) >= minimo)
+      ? color
+      : textoFondo;
+  const textoPrimario = asegurarContraste(resolverColorTextoMarca(primario, superficie1, textoFondo));
+  const primarioSobreOscuro = resolverColorTextoMarca(primario, "#38383a", "#ffffff");
+  const textoSecundarioMarca = asegurarContraste(resolverColorTextoMarca(secundario, superficie1, textoFondo));
+  const textoPrimarioSuave = resolverColorTextoMarca(primario, primarioSuave, elegirColorTexto(primarioSuave));
+  const textoSecundarioSuave = resolverColorTextoMarca(secundario, secundarioSuave, elegirColorTexto(secundarioSuave));
   const sobrePrimario = elegirColorTexto(primario);
   const sobreSecundario = elegirColorTexto(secundario);
   const destinoInteraccionPrimaria = sobrePrimario === "#ffffff" ? "#000000" : "#ffffff";
@@ -42,8 +46,12 @@ export function crearVariablesTema(entradas: EntradasTema): VariablesTema {
   const primarioActivo = mezclarColores(primario, destinoInteraccionPrimaria, 0.2);
   const secundarioHover = mezclarColores(secundario, destinoInteraccionSecundaria, 0.12);
   const bordeSuave = ajustarColorParaContraste(mezclarColores(textoFondo, superficie1, 0.65), superficie1, 3);
-  const bordeFuerte = ajustarColorParaContraste(mezclarColores(textoFondo, superficie1, 0.45), superficie1, 3);
-  const foco = resolverColorTextoMarca(primario, fondo, bordeFuerte);
+  const bordeFuerte = asegurarContraste(ajustarColorParaContraste(
+    mezclarColores(textoFondo, superficie1, 0.45), superficieMenosContrastada, 3
+  ), 3);
+  const foco = asegurarContraste(resolverColorTextoMarca(primario, fondo, bordeFuerte), 3);
+  const rojo = textoFondo === "#ffffff" ? "#ff9ca5" : "#a82a37";
+  const error = asegurarContraste(ajustarColorParaContraste(rojo, superficieMenosContrastada));
 
   return {
     "--tema-fondo": fondo,
@@ -56,6 +64,7 @@ export function crearVariablesTema(entradas: EntradasTema): VariablesTema {
     "--tema-borde-suave": bordeSuave,
     "--tema-borde-fuerte": bordeFuerte,
     "--tema-foco": foco,
+    "--tema-error": error,
     "--tema-primario": primario,
     "--tema-primario-hover": primarioHover,
     "--tema-primario-activo": primarioActivo,

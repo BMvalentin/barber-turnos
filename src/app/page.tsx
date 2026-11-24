@@ -15,7 +15,7 @@ export default async function Page() {
 
   return (
     <div className="min-h-screen justify-center items-center mx-auto">
-      <main>
+      <main id="contenido-inicio" tabIndex={-1}>
         <Hero config={config ? {
           slogan: config.slogan,
           description: config.description,

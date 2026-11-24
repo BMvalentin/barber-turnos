@@ -1,6 +1,6 @@
 "use client";
 
-import { createTurno } from "@/actions/turnos/crear.actions";
+import { createTurno, reservarTurnoPropio } from "@/actions/turnos/crear.actions";
 import { actualizarTurno } from "@/actions/turnos/estado.actions";
 import type { TurnoConDetalle, TurnoCreado, TurnoListado } from "@/types/turno";
 import { ActionStateInicial } from "@/types/action-state";
@@ -19,6 +19,7 @@ import { invalidarDisponibilidadLocal } from "@/lib/turnos/disponibilidad-client
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 
 export type ParametrosFormularioTurno = ParametrosDatosTurno & {
+  vistaAdministrativa?: boolean;
   whatsappPhone: string;
   onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
   datosTransferencia?: DatosTransferencia;
@@ -43,9 +44,10 @@ export function useFormularioTurno({
   onTurnoActualizado,
   turnoInicial,
   onTurnoCreado,
+  vistaAdministrativa,
 }: ParametrosFormularioTurno) {
-  const esEdicion = Boolean(turnoInicial);
-  const puedeGestionarTurnos = esAdmin(session) || esEmpleado(session);
+  const puedeGestionarTurnos = Boolean(vistaAdministrativa && (esAdmin(session) || esEmpleado(session)));
+  const esEdicion = puedeGestionarTurnos && Boolean(turnoInicial);
 
   const datos = useDatosFormularioTurno({
     session,
@@ -53,7 +55,8 @@ export function useFormularioTurno({
     initialBarberos,
     initialUsuarios,
     initialRelaciones,
-    turnoInicial,
+    turnoInicial: esEdicion ? turnoInicial : undefined,
+    puedeGestionarTurnos,
   });
   const pago = usePagoTurno({ whatsappPhone, onTurnoActualizado });
   const {
@@ -71,7 +74,7 @@ export function useFormularioTurno({
   } = datos;
   const { setTurnoCreado, setShowPagoModal, setTransferenciaLista } = pago;
 
-  const accion = esEdicion ? actualizarTurno : createTurno;
+  const accion = esEdicion ? actualizarTurno : puedeGestionarTurnos ? createTurno : reservarTurnoPropio;
   const [state, formAction] = useActionState(accion, estadoInicial);
   const estadoEdicionProcesado = useRef(state);
   const formRef = useRef<HTMLFormElement>(null);
@@ -128,7 +131,7 @@ export function useFormularioTurno({
     formRef.current?.reset();
     setSelectedServicioId("");
     setSelectedBarberoId("");
-    setSelectedUserId(session?.user?.role === "USER" ? session?.user?.id ?? "" : "");
+    setSelectedUserId(puedeGestionarTurnos ? "" : session?.user?.id ?? "");
     setClienteNombre("");
     setClienteApellido("");
     setEstadoPago(ESTADOS_PAGO[0]);
@@ -181,6 +184,7 @@ export function useFormularioTurno({
 
   return {
     esEdicion,
+    puedeGestionarTurnos,
     ...datos,
     ...pago,
     state,

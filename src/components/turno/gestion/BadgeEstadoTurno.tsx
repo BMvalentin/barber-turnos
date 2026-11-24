@@ -6,25 +6,25 @@ interface Props {
 const MAPA_ESTADOS: Record<string, { etiqueta: string; clases: string }> = {
   PENDIENTE: {
     etiqueta: "Pendiente",
-    clases: "text-amber-400 bg-amber-400/10 border-amber-400/20",
+    clases: "text-amber-900 bg-amber-50 border-amber-300",
   },
   CONFIRMADO: {
     etiqueta: "Confirmado",
-    clases: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
+    clases: "text-emerald-900 bg-emerald-50 border-emerald-300",
   },
   COMPLETADO: {
     etiqueta: "Completado",
-    clases: "text-emerald-400/70 bg-emerald-400/5 border-emerald-400/10",
+    clases: "text-emerald-900 bg-emerald-50 border-emerald-300",
   },
   CANCELADO: {
     etiqueta: "Cancelado",
-    clases: "text-red-400/80 bg-red-400/10 border-red-400/20",
+    clases: "text-red-900 bg-red-50 border-red-300",
   },
 };
 
 const ESTADO_FALLBACK = {
   etiqueta: "Desconocido",
-  clases: "text-zinc-400 bg-zinc-400/10 border-zinc-400/20",
+  clases: "text-zinc-900 bg-zinc-100 border-zinc-300",
 };
 
 const TONOS_ESTADO_ADMIN: Record<string, string> = {

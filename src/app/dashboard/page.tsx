@@ -24,7 +24,7 @@ export default async function DashboardPage({ searchParams }: PropiedadesPaginaD
   }
 
   const [{ servicios, barberos, relaciones }, config] = await Promise.all([
-    obtenerDatosReserva(),
+    obtenerDatosReserva({ soloPerfilesCompletos: true }),
     obtenerConfigCacheada(),
   ]);
 

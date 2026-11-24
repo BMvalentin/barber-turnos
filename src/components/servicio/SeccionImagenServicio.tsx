@@ -31,7 +31,7 @@ export default function SeccionImagenServicio({
     <div className="space-y-2">
       {esBarbero ? (
         <label className="text-sm font-medium text-[var(--admin-texto-primario)]">
-          {tituloBarbero ?? "Foto del barbero"} <span className="text-[var(--admin-texto-muted)] text-xs">(Opcional)</span>
+          {tituloBarbero ?? "Foto del barbero"} <span className="text-[var(--admin-texto-muted)] text-xs">(Requerida para aparecer en reservas)</span>
         </label>
       ) : (
         <label className="block text-xs font-medium text-[var(--admin-texto-secundario)]">

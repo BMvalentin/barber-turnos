@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { updateProfile } from "@/actions/sesion/perfil.actions";
@@ -22,14 +21,14 @@ import type { DatosTurnosUsuarioCache } from "@/components/dashboard/turnos-usua
 function CargadorTurnosUsuario() {
   return (
     <div
-      className="rounded-3xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-4 shadow-2xl md:p-6"
+      className="rounded-xl bg-[var(--admin-surface)] p-4 md:p-6"
       role="status"
       aria-live="polite"
       aria-busy="true"
     >
       <span className="sr-only">Cargando tus turnos...</span>
-      <div aria-hidden="true">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--admin-border)] pb-4">
+      <div aria-hidden="true" className="motion-reduce:[&_.animate-pulse]:animate-none">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--page-separador)] pb-4">
           <div className="flex gap-2">
             <Skeleton className="h-9 w-32 rounded-lg bg-[var(--admin-border)]" />
             <Skeleton className="h-9 w-24 rounded-lg bg-[var(--admin-border)]" />
@@ -43,7 +42,7 @@ function CargadorTurnosUsuario() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(250px,2fr)_minmax(0,3fr)]">
-          <div className="rounded-xl border border-[var(--admin-border)] p-4">
+          <div className="rounded-xl bg-[var(--admin-item)] p-4">
             <div className="mb-4 flex items-center justify-between">
               <Skeleton className="h-5 w-32 bg-[var(--admin-border)]" />
               <div className="flex gap-2">
@@ -166,38 +165,30 @@ export default function DashboardPanel({
       {!tieneTelefono && (
         <ModalTelefonoObligatorio usuario={usuario} prefijoInicial={prefijoInicial} telefonoInicial={telefonoInicial} guardando={guardando} alGuardar={guardarPerfil} />
       )}
-      <main className="mx-auto w-full max-w-5xl flex-grow px-4 pb-12 pt-24 md:px-8">
+      <main className="mx-auto w-full max-w-5xl grow px-4 pb-12 pt-24 md:px-8">
         <EncabezadoPanelUsuario nombre={usuario.name} pestana={pestana} alCambiar={cambiarPestana} />
-        <AnimatePresence mode="wait">
-          <motion.div key={pestana} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.3 }}>
-            {pestana === "perfil" ? (
-              <FormularioPerfilUsuario usuario={usuario} prefijoInicial={prefijoInicial} telefonoInicial={telefonoInicial} guardando={guardando} alGuardar={guardarPerfil} />
-            ) : (
-              datosTurnos ? (
-                <PanelTurnosUsuario
-                  turnosProximosIniciales={datosTurnos.proximos}
-                  turnosHistorialIniciales={datosTurnos.historial.turnos}
-                  paginaInicial={datosTurnos.historial.paginaActual}
-                  totalPaginasInicial={datosTurnos.historial.totalPaginas}
-                  session={session}
-                  initialServicios={initialServicios}
-                  initialBarberos={initialBarberos}
-                  initialRelaciones={initialRelaciones}
-                  {...datosPago}
-                />
-              ) : (
-                errorTurnos ? (
-                  <div className="rounded-3xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-8 text-center" role="alert">
-                    <p className="text-[var(--admin-texto-secundario)]">No se pudieron cargar tus turnos.</p>
-                    <button type="button" onClick={() => void cargarTurnos()} className="mt-4 font-semibold text-[var(--page-primary-tinta)] hover:underline">Reintentar</button>
-                  </div>
-                ) : (
-                  <CargadorTurnosUsuario />
-                )
-              )
-            )}
-          </motion.div>
-        </AnimatePresence>
+        {pestana === "perfil" ? (
+          <FormularioPerfilUsuario usuario={usuario} prefijoInicial={prefijoInicial} telefonoInicial={telefonoInicial} guardando={guardando} alGuardar={guardarPerfil} />
+        ) : datosTurnos ? (
+          <PanelTurnosUsuario
+            turnosProximosIniciales={datosTurnos.proximos}
+            turnosHistorialIniciales={datosTurnos.historial.turnos}
+            paginaInicial={datosTurnos.historial.paginaActual}
+            totalPaginasInicial={datosTurnos.historial.totalPaginas}
+            session={session}
+            initialServicios={initialServicios}
+            initialBarberos={initialBarberos}
+            initialRelaciones={initialRelaciones}
+            {...datosPago}
+          />
+        ) : errorTurnos ? (
+          <div className="rounded-xl bg-[var(--admin-surface)] p-6 text-center sm:p-8">
+            <p className="text-[var(--admin-texto-secundario)]" role="alert">No se pudieron cargar tus turnos.</p>
+            <button type="button" onClick={() => void cargarTurnos()} className="mt-2 min-h-11 rounded-md px-3 font-semibold text-[var(--page-primary-tinta)] underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-[var(--page-focus-ring)]">Reintentar</button>
+          </div>
+        ) : (
+          <CargadorTurnosUsuario />
+        )}
       </main>
     </div>
   );

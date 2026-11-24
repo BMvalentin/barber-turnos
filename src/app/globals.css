@@ -30,6 +30,7 @@
   --tema-borde-suave: #636364;
   --tema-borde-fuerte: #888889;
   --tema-foco: #d97706;
+  --tema-error: #ff9ca5;
   --tema-primario: #d97706;
   --tema-primario-hover: #bf6905;
   --tema-primario-activo: #ad5f05;
@@ -80,6 +81,8 @@
   --page-primary-soft: var(--tema-primario-suave);
   --page-primary-muted: var(--tema-primario-suave);
   --page-focus-ring: var(--tema-foco);
+  --page-error: var(--tema-error);
+  --page-separador: color-mix(in srgb, var(--tema-texto-principal) 14%, transparent);
 
   /* Variantes alfa derivadas (color-mix) usadas como ${primaryColor}XX antes */
   --page-primary-15: color-mix(in srgb, var(--page-primary) 15%, transparent);
@@ -116,14 +119,17 @@
 
   /* Custom tokens */
   --shadow-elevated: 0 20px 60px -20px hsl(210 25% 10% / 0.25);
+  --fuente-panel: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 /* =========================
    BASE STYLES
 ========================= */
 
-* {
-  border-color: var(--border);
+@layer base {
+  * {
+    border-color: var(--border);
+  }
 }
 
 html {
@@ -162,6 +168,78 @@ button:not(:disabled),
   }
 }
 
+.control-publico:focus-visible,
+.modal-publico :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--page-focus-ring);
+  outline-offset: 2px;
+}
+
+.boton-foto {
+  border-color: var(--page-primary-sobre-oscuro);
+  background-color: var(--page-primary);
+  color: var(--page-primary-foreground);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .boton-foto:hover { background-color: var(--page-primary-hover); }
+}
+
+.boton-foto:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 3px;
+}
+
+.entrada-inicio {
+  animation: aparecer-inicio 250ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+
+@keyframes aparecer-inicio {
+  from { opacity: 0.7; translate: 0 6px; }
+}
+
+.modal-publico {
+  border-radius: 0.75rem;
+  background: var(--admin-surface);
+  color: var(--admin-texto-primario);
+  box-shadow: 0 20px 52px -20px rgb(0 0 0 / 55%);
+  scrollbar-gutter: stable;
+}
+
+.marco-reserva {
+  border: 1px solid var(--page-separador);
+  border-radius: 0.75rem;
+  background: var(--admin-surface);
+  box-shadow: var(--shadow-elevated);
+  font-family: var(--fuente-panel);
+  scrollbar-gutter: auto;
+}
+
+.marco-reserva :is(h1, h2, h3) {
+  font-family: inherit;
+}
+
+.entrada-modal-publico {
+  animation: aparecer-modal-publico 200ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+
+.velo-modal-publico {
+  animation: aparecer-velo-publico 180ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+
+@keyframes aparecer-modal-publico {
+  from { opacity: 0; scale: 0.98; }
+}
+
+@keyframes aparecer-velo-publico {
+  from { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .entrada-inicio { animation: none; }
+  .entrada-modal-publico { animation-name: aparecer-velo-publico; }
+}
+
 /* Scrollbar minimalista */
 ::-webkit-scrollbar {
   width: 5px;
@@ -171,24 +249,12 @@ button:not(:disabled),
   border-radius: 10px;
 }
 
-@keyframes deslizar-barberia {
-  to {
-    background-position: 0 5rem;
-  }
-}
-
 .barra-barberia {
   background: repeating-linear-gradient(
     -45deg,
     var(--page-primary) 0 1rem,
     var(--page-bg-foreground) 1rem 2rem
   );
-  background-size: 100% 5rem;
-  animation: deslizar-barberia 4s linear infinite;
-}
-
-.numero-error {
-  text-shadow: 0 0 42px var(--page-primary-30);
 }
 
 body:has([data-pagina-no-encontrada]) footer {
@@ -201,12 +267,6 @@ body:has([data-pagina-no-encontrada]) {
 
 body:has([data-pagina-no-encontrada])::-webkit-scrollbar {
   display: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .barra-barberia {
-    animation: none;
-  }
 }
 
 /* Los portales de los selectores y los diálogos también heredan el tema del panel. */
@@ -250,6 +310,7 @@ body:has(.admin-shell) {
   --page-primary-soft: var(--admin-acento-suave);
   --page-primary-muted: var(--admin-acento-suave);
   --page-focus-ring: var(--admin-acento-tinta);
+  --page-separador: var(--admin-border);
   --page-bg: var(--admin-background);
   --page-bg-foreground: var(--admin-texto-primario);
   --page-bg-tinta: var(--admin-texto-primario);
@@ -271,7 +332,7 @@ body:has(.admin-shell) {
   color-scheme: light;
   accent-color: var(--admin-acento);
   caret-color: var(--admin-acento-tinta);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--fuente-panel);
 }
 
 @custom-variant admin-tema-oscuro {

@@ -47,10 +47,10 @@ export default function TurnoRow({
   vistaAdministrativa = false,
 }: Props) {
   const [completando, iniciarCompletado] = useTransition();
-  const esAdminUsuario = esAdmin(session);
+  const esAdminUsuario = vistaAdministrativa && esAdmin(session);
   const esEmpleado = session?.user?.role === "EMPLEADO";
   const esDueno =
-    turno.user?.id === session?.user?.id && session?.user?.role !== "ADMIN";
+    Boolean(session?.user?.id && turno.user?.id === session.user.id && !esAdminUsuario);
   const turnoActivo =
     turno.estado === ESTADOS_TURNO[0] || turno.estado === ESTADOS_TURNO[1];
   const nombreCliente =
@@ -94,7 +94,7 @@ export default function TurnoRow({
         onClick={() => onCancelar(turno.id)}
         className={vistaAdministrativa
           ? "admin-control text-[var(--admin-error)]"
-          : "rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-1.5 text-xs font-semibold text-red-400 transition-colors hover:bg-red-400/20"}
+          : "control-publico min-h-11 rounded-md border border-[var(--admin-border-fuerte)] px-3 text-sm font-semibold text-[var(--page-error)] transition-colors hover:bg-[var(--admin-item-hover)]"}
       >
         Cancelar
       </button>
@@ -135,7 +135,7 @@ export default function TurnoRow({
   const formaDePago = turno.metodoPago === "TRANSFERENCIA" && (
     <span className={vistaAdministrativa
       ? "text-xs text-[var(--admin-texto-secundario)]"
-      : "inline-flex items-center rounded-full border border-sky-400/20 bg-sky-400/10 px-2.5 py-0.5 text-[11px] font-semibold text-sky-400"}>
+      : "inline-flex items-center rounded-full border border-sky-300 bg-sky-50 px-2.5 py-0.5 text-xs font-semibold text-sky-900"}>
       Transferencia
     </span>
   );
@@ -159,6 +159,7 @@ export default function TurnoRow({
           whatsappPhone={whatsappPhone}
           datosTransferencia={datosTransferencia}
           mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
+          vistaAdministrativa={vistaAdministrativa}
           onTurnoActualizado={onTurnoActualizado}
         />
       )}

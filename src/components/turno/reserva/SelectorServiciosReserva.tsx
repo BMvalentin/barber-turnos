@@ -9,7 +9,7 @@ export default function SelectorServiciosReserva({
   onSeleccionar,
 }: PropsSelectorServiciosReserva) {
   return (
-    <div className="grid max-h-[220px] grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
+    <div className="grid max-h-[220px] grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 in-[.reserva-publica]:max-h-none in-[.reserva-publica]:overflow-visible in-[.reserva-publica]:pr-0">
       {servicios.map((servicio) => (
         <TarjetaServicioReserva
           key={servicio.id}

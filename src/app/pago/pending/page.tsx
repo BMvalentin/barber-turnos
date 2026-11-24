@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { CLASES_BOTON_MARCA } from "@/lib/constants";
+import { CLASE_ACCION_PRINCIPAL, CLASE_ICONO_ESTADO, CLASE_VISTA_PAGO } from "@/components/pago/estilos-estado-pago";
 import { Clock, ArrowRight } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
 export default function PagoPendingPage() {
   return (
-    <Suspense fallback={<p role="status" className="p-8 text-center">Cargando estado del pago...</p>}>
+    <Suspense fallback={<p role="status" className={CLASE_VISTA_PAGO}>Cargando estado del pago...</p>}>
       <ContenidoPagoPendiente />
     </Suspense>
   );
@@ -19,18 +19,18 @@ function ContenidoPagoPendiente() {
   const paymentId = paymentIdRecibido && /^\d{1,32}$/.test(paymentIdRecibido) ? paymentIdRecibido : null;
 
   return (
-    <div className="min-h-screen bg-[var(--page-bg)] text-[var(--page-bg-foreground)] flex items-center justify-center px-4">
-      <div className="max-w-md w-full text-center space-y-6">
+    <main className={CLASE_VISTA_PAGO}>
+      <div className="w-full max-w-md space-y-5 text-center">
 
         <div className="flex justify-center">
-          <div className="w-24 h-24 rounded-full bg-yellow-500/20 border-2 border-yellow-500/40 flex items-center justify-center">
-            <Clock className="w-12 h-12 text-yellow-400" />
+          <div className={`${CLASE_ICONO_ESTADO} bg-amber-100 text-amber-800`}>
+            <Clock aria-hidden="true" className="size-8" />
           </div>
         </div>
 
         <div>
-          <h1 className="text-3xl font-black text-[var(--page-bg-foreground)] uppercase tracking-tight mb-2">
-            Pago Pendiente
+          <h1 className="mb-2 text-balance text-2xl font-black tracking-tight sm:text-3xl">
+            Pago pendiente
           </h1>
           <p className="text-[var(--admin-texto-secundario)]">
             Tu pago está siendo procesado. Te notificaremos cuando se acredite.
@@ -39,22 +39,22 @@ function ContenidoPagoPendiente() {
         </div>
 
         {paymentId && (
-          <div className="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-2xl p-4 text-left">
+          <div className="bg-[var(--admin-surface)] rounded-lg p-4 text-left">
             <p className="text-xs text-[var(--admin-texto-muted)] uppercase tracking-widest font-bold mb-1">
               Referencia
             </p>
-            <p className="font-mono text-yellow-400 text-sm">{paymentId}</p>
+            <p className="wrap-anywhere font-mono text-sm text-[var(--admin-texto-primario)]">{paymentId}</p>
           </div>
         )}
 
         <Link
           href="/dashboard?tab=turnos"
-          className={`flex items-center justify-center gap-2 w-full ${CLASES_BOTON_MARCA} font-black py-4 rounded-2xl transition-all uppercase tracking-widest text-sm`}
+          className={CLASE_ACCION_PRINCIPAL}
         >
           Ver mis turnos
-          <ArrowRight className="w-5 h-5" />
+          <ArrowRight aria-hidden="true" className="size-5" />
         </Link>
       </div>
-    </div>
+    </main>
   );
 }

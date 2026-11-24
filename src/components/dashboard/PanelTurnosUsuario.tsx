@@ -9,6 +9,7 @@ import DatosReservaProveedor from "@/contextos/DatosReservaProveedor";
 import CalendarioMensualTurnos from "@/components/turno/gestion/CalendarioMensualTurnos";
 import TurnoList from "@/components/turno/gestion/TurnoList";
 import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
+import { cn } from "@/lib/utils/cn";
 import type { ParcheTurnoCache } from "@/lib/admin/turnos-cache-local";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import { invalidarDisponibilidadLocal } from "@/lib/turnos/disponibilidad-cliente";
@@ -32,6 +33,10 @@ type Propiedades = {
   datosTransferencia: DatosTransferencia;
   mostrarAvisoSeniaPendiente: boolean;
 };
+
+const CLASE_APARTADO = "min-h-11 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--page-focus-ring)] sm:px-4";
+const CLASE_APARTADO_SELECCIONADO = "border-[var(--admin-border-fuerte)] bg-[var(--page-primary)] text-[var(--page-primary-foreground)]";
+const CLASE_APARTADO_INACTIVO = "border-transparent text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-item-hover)]";
 
 export default function PanelTurnosUsuario({
   turnosProximosIniciales,
@@ -171,20 +176,20 @@ export default function PanelTurnosUsuario({
 
   const actualizarTurnosTrasCrear = useCallback(async () => {
     const idUsuario = session?.user?.id;
-    if (!idUsuario || session?.user?.role !== "USER") return;
+    if (!idUsuario) return;
 
     await refrescarTurnos(idUsuario);
-  }, [refrescarTurnos, session?.user?.id, session?.user?.role]);
+  }, [refrescarTurnos, session?.user?.id]);
 
   return (
-    <div className="rounded-3xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-4 shadow-2xl md:p-6">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--admin-border)] pb-4">
-        <div className="flex flex-wrap gap-2" aria-label="Apartados de turnos">
+    <div className="rounded-xl bg-[var(--admin-surface)] p-4 md:p-6">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--page-separador)] pb-4">
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Apartados de turnos">
           <button
             type="button"
             aria-pressed={apartado === "proximos"}
             onClick={() => establecerApartado("proximos")}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] ${apartado === "proximos" ? "bg-[var(--page-primary)] text-[var(--page-primary-foreground)]" : "text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-item-hover)]"}`}
+            className={cn(CLASE_APARTADO, apartado === "proximos" ? CLASE_APARTADO_SELECCIONADO : CLASE_APARTADO_INACTIVO)}
           >
             Próximos turnos
           </button>
@@ -192,7 +197,7 @@ export default function PanelTurnosUsuario({
             type="button"
             aria-pressed={apartado === "historial"}
             onClick={() => establecerApartado("historial")}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] ${apartado === "historial" ? "bg-[var(--page-primary)] text-[var(--page-primary-foreground)]" : "text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-item-hover)]"}`}
+            className={cn(CLASE_APARTADO, apartado === "historial" ? CLASE_APARTADO_SELECCIONADO : CLASE_APARTADO_INACTIVO)}
           >
             Historial
           </button>
@@ -214,7 +219,7 @@ export default function PanelTurnosUsuario({
             datosTransferencia={datosTransferencia}
             mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
             onTurnoCreado={actualizarTurnosTrasCrear}
-            claseTrigger="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--page-primary)] px-4 py-2 text-sm font-semibold text-[var(--page-primary-foreground)] transition-colors hover:bg-[var(--page-primary-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]"
+            claseTrigger="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--admin-border-fuerte)] bg-[var(--page-primary)] px-4 py-2 text-sm font-semibold text-[var(--page-primary-foreground)] transition-colors duration-150 hover:bg-[var(--page-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--page-focus-ring)] disabled:cursor-wait"
             contenidoTrigger={<><CalendarPlus className="h-4 w-4" aria-hidden="true" />Pedir un turno</>}
           />
         </DatosReservaProveedor>
