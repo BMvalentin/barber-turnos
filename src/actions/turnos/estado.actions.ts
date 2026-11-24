@@ -51,6 +51,9 @@ export async function actualizarTurno(
       },
     });
     if (!turnoActual) return { success: false, error: "Turno no encontrado" };
+    if (turnoActual.estado === ESTADOS_TURNO[2]) {
+      return { success: false, error: "No se pueden editar turnos completados" };
+    }
 
     const servicioId = formData.get("servicioId") || turnoActual.servicioId;
     const barberoId = formData.get("barberoId") || turnoActual.barberoId;
@@ -124,7 +127,7 @@ export async function actualizarTurno(
       if (resultado.turnoAnterior.estado !== ESTADOS_TURNO[3]) {
         await enviarEmailCancelacionTurnoSeguro(resultado.turno, "ADMINISTRADOR");
       }
-    } else {
+    } else if (resultado.turno.estado !== "COMPLETADO") {
       enviarEmailTurnoSeguro(resultado.turno, "ACTUALIZADO");
     }
     if (resultado.turno.estado === ESTADOS_TURNO[1] && resultado.turnoAnterior.estado !== ESTADOS_TURNO[1]) {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransition } from "react";
 import { Clock } from "lucide-react";
 import BadgeEstadoTurno from "./BadgeEstadoTurno";
 import BadgeEstadoPago from "./BadgeEstadoPago";
@@ -20,7 +21,7 @@ interface Props {
   turno: TurnoListado;
   session: Session | null;
   onCancelar: (id: string) => void;
-  onCompletar: (id: string) => void;
+  onCompletar: (id: string) => Promise<void>;
   onConfirmar: (id: string) => void;
   whatsappPhone?: string;
   datosTransferencia?: DatosTransferencia;
@@ -45,6 +46,7 @@ export default function TurnoRow({
   compacto = false,
   vistaAdministrativa = false,
 }: Props) {
+  const [completando, iniciarCompletado] = useTransition();
   const esAdminUsuario = esAdmin(session);
   const esEmpleado = session?.user?.role === "EMPLEADO";
   const esDueno =
@@ -77,12 +79,14 @@ export default function TurnoRow({
     ) : esAdminUsuario && turno.estado === ESTADOS_TURNO[1] ? (
       <button
         type="button"
-        onClick={() => onCompletar(turno.id)}
+        disabled={completando}
+        aria-busy={completando}
+        onClick={() => iniciarCompletado(() => onCompletar(turno.id))}
         className={vistaAdministrativa
           ? "admin-control"
-          : "rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 transition-colors hover:bg-emerald-400/20"}
+          : "rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 transition-colors enabled:hover:bg-emerald-400/20 disabled:opacity-60"}
       >
-        Completar
+        {completando ? "Completando…" : "Completar"}
       </button>
     ) : esDueno && turnoActivo && new Date(turno.horarioReservado).getTime() > Date.now() ? (
       <button

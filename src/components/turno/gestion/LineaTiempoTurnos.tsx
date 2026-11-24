@@ -14,7 +14,7 @@ interface Props {
   turnos: TurnoListado[];
   session: Session | null;
   onCancelar: (id: string) => void;
-  onCompletar: (id: string) => void;
+  onCompletar: (id: string) => Promise<void>;
   onConfirmar: (id: string) => void;
   whatsappPhone?: string;
   datosTransferencia?: DatosTransferencia;

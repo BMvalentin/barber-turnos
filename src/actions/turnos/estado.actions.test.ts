@@ -111,3 +111,25 @@ describe("actualizarTurno: cancelación administrativa", () => {
     });
   });
 });
+
+describe("actualizarTurno: turnos completados", () => {
+  afterEach(() => vi.clearAllMocks());
+
+  it.each(["CONFIRMADO"])("guarda desde %s sin enviar correos", async (estadoAnterior) => {
+    const turnoAnterior = { ...turno, estado: estadoAnterior };
+    const turnoCompletado = { ...turnoCancelado, estado: "COMPLETADO", estadoPago: turnoAnterior.estadoPago };
+    mocks.findUnique.mockResolvedValue(turnoAnterior);
+    mocks.requerirAdmin.mockResolvedValue({ user: { id: "admin-1" } });
+    mocks.actualizarEnTransaccion.mockResolvedValue({ ok: true, turno: turnoCompletado, turnoAnterior });
+    mocks.serializar.mockReturnValue(turnoCompletado);
+
+    const formulario = new FormData();
+    formulario.set("id", turnoCompletado.id);
+    formulario.set("estado", turnoCompletado.estado);
+
+    expect(await actualizarTurno({}, formulario)).toEqual({ success: true, data: turnoCompletado });
+    expect(mocks.enviarTurno).not.toHaveBeenCalled();
+    expect(mocks.enviarBarbero).not.toHaveBeenCalled();
+    expect(mocks.enviarCancelacion).not.toHaveBeenCalled();
+  });
+});

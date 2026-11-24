@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { cancelTurno } from "@/actions/sesion/cancelar-turno.actions";
-import { completedTurno } from "@/actions/turnos/completar.actions";
 import { confirmarTurno } from "@/actions/turnos/confirmar.actions";
 import { ESTADOS_TURNO } from "@/lib/constants";
 import type { ActionState } from "@/types/action-state";
 import type { TurnoListado } from "@/types/turno";
 
-type AccionConfirmacion = "cancelar" | "completar" | "confirmar";
+type AccionConfirmacion = "cancelar" | "confirmar";
 
 type Parametros = {
   alRetroalimentar: (estado: ActionState, titulo?: string, descripcion?: string) => Promise<ActionState>;
@@ -51,19 +50,6 @@ export function useConfirmacionTurno({
         return;
       }
 
-      if (accionConfirmacion === "completar") {
-        const datosFormulario = new FormData();
-        datosFormulario.append("id", turnoIdConfirmacion);
-        const resultado = await completedTurno({ success: false }, datosFormulario);
-        await alRetroalimentar(
-          resultado,
-          "Turno completado",
-          "El turno se ha marcado como completado.",
-        );
-        if (resultado.success) alActualizarEstado(turnoIdConfirmacion, ESTADOS_TURNO[2]);
-        return;
-      }
-
       const resultado = await confirmarTurno(turnoIdConfirmacion);
       await alRetroalimentar(
         resultado,
@@ -82,7 +68,6 @@ export function useConfirmacionTurno({
     mostrarConfirmacion,
     accionConfirmacion,
     solicitarCancelar: (id: string) => solicitarAccion("cancelar", id),
-    solicitarCompletar: (id: string) => solicitarAccion("completar", id),
     solicitarConfirmar: (id: string) => solicitarAccion("confirmar", id),
     cancelarConfirmacion,
     confirmarAccion,

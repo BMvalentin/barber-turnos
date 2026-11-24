@@ -58,7 +58,7 @@ export default function MenuAccionesTurno({
   const esDueno =
     turno.user?.id === session?.user?.id && session?.user?.role !== "ADMIN";
   const puedeCancelar = turnoActivo && (esAdmin(session) || esDueno);
-  const puedeEditar = esAdmin(session);
+  const puedeEditar = esAdmin(session) && turno.estado !== ESTADOS_TURNO[2];
 
   if (!puedeEditar && !puedeCancelar) return null;
 

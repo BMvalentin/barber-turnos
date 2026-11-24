@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { Calendar } from "lucide-react";
+import { completedTurno } from "@/actions/turnos/completar.actions";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
 import EmptyState from "@/components/ui/EmptyState";
@@ -104,7 +105,6 @@ export default function TurnoList({
     mostrarConfirmacion,
     accionConfirmacion,
     solicitarCancelar,
-    solicitarCompletar,
     solicitarConfirmar,
     cancelarConfirmacion,
     confirmarAccion,
@@ -112,6 +112,18 @@ export default function TurnoList({
     alRetroalimentar: retroalimentar,
     alActualizarEstado: onEstadoActualizado,
   });
+
+  const completarTurno = async (id: string) => {
+    const datosFormulario = new FormData();
+    datosFormulario.set("id", id);
+    try {
+      const resultado = await completedTurno({ success: false }, datosFormulario);
+      await retroalimentar(resultado, "Turno completado", "El turno se ha marcado como completado.");
+      if (resultado.success) onEstadoActualizado(id, "COMPLETADO");
+    } catch {
+      await retroalimentar({ success: false, error: "No se pudo procesar la acción." });
+    }
+  };
 
   // Sólo se reemplaza la lista por el esqueleto en la primera carga. Durante
   // un refresco con datos ya visibles se conserva el calendario montado para no
@@ -158,7 +170,7 @@ export default function TurnoList({
               turnos={grupo.turnos}
               session={session}
               onCancelar={solicitarCancelar}
-              onCompletar={solicitarCompletar}
+              onCompletar={completarTurno}
               onConfirmar={solicitarConfirmar}
               whatsappPhone={whatsappPhone}
               datosTransferencia={datosTransferencia}
@@ -200,8 +212,10 @@ export default function TurnoList({
 
       {mostrarConfirmacion && (
         <ConfirmDialog
-          title={accionConfirmacion === "cancelar" ? "Cancelar Turno" : accionConfirmacion === "completar" ? "Completar Turno" : "Confirmar Turno"}
-          message={accionConfirmacion === "cancelar" ? "¿Estás seguro de que querés cancelar este turno? Esta acción no se puede deshacer." : accionConfirmacion === "completar" ? "¿Marcar este turno como completado? El cliente recibirá una notificación." : "¿Estás seguro de que querés confirmar este turno?"}
+          title={accionConfirmacion === "cancelar" ? "Cancelar Turno" : "Confirmar Turno"}
+          message={accionConfirmacion === "cancelar"
+            ? "¿Estás seguro de que querés cancelar este turno? Esta acción no se puede deshacer."
+            : "¿Estás seguro de que querés confirmar este turno?"}
           onConfirm={confirmarAccion}
           onCancel={cancelarConfirmacion}
         />

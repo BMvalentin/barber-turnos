@@ -4,6 +4,7 @@ import { revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { TTL_LOCK_SLOT_MS } from "@/lib/constants";
+import { ejecutarConBloqueReserva } from "@/lib/turnos/ejecutar-con-bloque-reserva";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 
 export async function crearLockSlot(
@@ -24,20 +25,29 @@ export async function crearLockSlot(
       return { success: false, error: "Horario inválido" };
     }
 
-    const expiresAt = new Date(Date.now() + TTL_LOCK_SLOT_MS);
+    const { id: userId } = sesion.user;
+    const creado = await prisma.$transaction((tx) => ejecutarConBloqueReserva(tx, barberoId, async () => {
+      const ahora = new Date();
+      await tx.slotLock.deleteMany({ where: { userId } });
 
-    // Eliminar lock anterior de este usuario (cambió de slot)
-    await prisma.slotLock.deleteMany({ where: { userId: sesion.user.id } });
+      const lockAjeno = await tx.slotLock.findFirst({
+        where: { barberoId, horarioReservado, expiresAt: { gt: ahora }, userId: { not: userId } },
+        select: { id: true },
+      });
+      if (lockAjeno) return false;
 
-    await prisma.slotLock.create({
-      data: {
-        barberoId,
-        horarioReservado,
-        userId: sesion.user.id,
-        sessionId,
-        expiresAt,
-      },
-    });
+      await tx.slotLock.create({
+        data: {
+          barberoId,
+          horarioReservado,
+          userId,
+          sessionId,
+          expiresAt: new Date(ahora.getTime() + TTL_LOCK_SLOT_MS),
+        },
+      });
+      return true;
+    }));
+    if (!creado) return { success: false, error: "Otro usuario ya seleccionó este horario" };
 
     revalidateTag(`locks-${barberoId}-${obtenerFechaSola(horarioReservado)}`);
 
