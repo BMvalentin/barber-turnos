@@ -5,6 +5,7 @@ import { createExcepcion } from "@/actions/excepciones/crear.actions";
 import BotonSubmitFormStatus from "@/components/ui/boton-submit-form-status";
 import SelectorDesplegable from "@/components/ui/SelectorDesplegable";
 import type { OpcionDesplegable } from "@/components/ui/SelectorDesplegable";
+import { nombreVisibleBarbero } from "@/lib/barberos/nombre-profesional";
 import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { ActionStateInicialSimple } from "@/types/action-state";
 import type { BarberoParaSelector } from "@/types/barbero";
@@ -22,7 +23,7 @@ export function FormularioFeriadoYCierre({ barberos }: FormularioFeriadoYCierreP
     { valor: "", etiqueta: "Toda la barbería" },
     ...barberos.map((barbero) => ({
       valor: barbero.id,
-      etiqueta: barbero.nombre ?? "Profesional sin nombre",
+      etiqueta: nombreVisibleBarbero(barbero.nombre),
     })),
   ], [barberos]);
   const { retroalimentar } = useRetroalimentacionAccion({

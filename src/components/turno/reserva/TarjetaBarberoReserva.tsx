@@ -3,6 +3,7 @@
 import { Check } from "lucide-react";
 import Image from "next/image";
 import type { PropsTarjetaBarberoReserva } from "@/components/turno/reserva/tipos";
+import { nombreVisibleBarbero, obtenerNombreProfesional } from "@/lib/barberos/nombre-profesional";
 import { cn } from "@/lib/utils/cn";
 
 export default function TarjetaBarberoReserva({
@@ -10,7 +11,8 @@ export default function TarjetaBarberoReserva({
   seleccionado,
   onSeleccionar,
 }: PropsTarjetaBarberoReserva) {
-  const inicial = barbero.nombre.trim().charAt(0).toUpperCase() || "?";
+  const nombre = nombreVisibleBarbero(barbero.nombre);
+  const inicial = obtenerNombreProfesional(barbero.nombre)?.charAt(0).toUpperCase() ?? "?";
 
   return (
     <button
@@ -32,7 +34,7 @@ export default function TarjetaBarberoReserva({
         )}
       >
         {barbero.srcImage ? (
-          <Image src={barbero.srcImage} alt={barbero.nombre} width={56} height={56} className="h-full w-full object-cover" />
+          <Image src={barbero.srcImage} alt="" width={56} height={56} className="h-full w-full object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-[var(--page-primary-30)] text-xl font-bold text-[var(--admin-texto-primario)]">
             {inicial}
@@ -45,7 +47,7 @@ export default function TarjetaBarberoReserva({
           seleccionado && "font-semibold text-[var(--admin-texto-primario)]"
         )}
       >
-        {barbero.nombre}
+        {nombre}
       </span>
       {seleccionado && (
         <span className="absolute right-2 top-2 rounded-full bg-[var(--page-primary)] p-1 text-[var(--page-primary-foreground)]">

@@ -6,6 +6,7 @@ import CargadorModalGestionTurno from "@/components/turno/reserva/CargadorModalG
 import DatosReservaProveedor from "@/contextos/DatosReservaProveedor";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import { esAdmin } from "@/lib/seguridad/es-admin";
+import { nombreVisibleBarbero } from "@/lib/barberos/nombre-profesional";
 import { invalidarDisponibilidadLocal } from "@/lib/turnos/disponibilidad-cliente";
 import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
 import type { ParcheTurnoCache } from "@/lib/admin/turnos-cache-local";
@@ -91,7 +92,10 @@ export default function TurnoManager({
   const mesAgenda = fecha.slice(0, 7);
   const [mesCalendario, setMesCalendario] = useState(mesAgenda);
   const { agenda, calendario, cargarMes, obtenerTurno, registrarTurno } = useAgendaMensual(mesAgenda, mesCalendario);
-  const [barberoId, setBarberoId] = useState(agendaInicial === "equipo" ? "" : barberoIdInicial);
+  const [barberoSeleccionado, setBarberoId] = useState(agendaInicial === "equipo" ? "" : barberoIdInicial);
+  const barberoId = !mostrarFiltroBarbero || barberosFiltro.some(({ id }) => id === barberoSeleccionado)
+    ? barberoSeleccionado
+    : "";
   const opcionesFiltroBarbero = useMemo<OpcionDesplegable<string>[]>(() => [
     {
       valor: "",
@@ -104,7 +108,7 @@ export default function TurnoManager({
       if (barbero.id === barberoIdInicial) distintivos.push("Yo");
       return {
         valor: barbero.id,
-        etiqueta: barbero.nombre,
+        etiqueta: nombreVisibleBarbero(barbero.nombre),
         distintivos,
         icono: <UserRound className="h-4 w-4 shrink-0 text-[var(--admin-texto-muted)]" aria-hidden="true" />,
       };
@@ -172,7 +176,7 @@ export default function TurnoManager({
   };
 
   const cambiarBarbero = (nuevoBarberoId: string) => {
-    if (nuevoBarberoId === barberoId) return;
+    if (nuevoBarberoId === barberoSeleccionado) return;
     setBarberoId(nuevoBarberoId);
     setPaginaActual(1);
     if (clavePreferenciaBarbero) {

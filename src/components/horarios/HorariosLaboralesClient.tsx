@@ -182,7 +182,7 @@ export function HorariosLaboralesClient({ diasLaborales, barberos, barberoIdInic
             titulo={esEmpleado ? "No encontramos tu perfil profesional" : "No hay empleados configurados"}
             mensaje={esEmpleado
               ? "Tu cuenta todavía no tiene un perfil de barbero asociado."
-              : "Creá un barbero en el panel para poder asignarle horarios."}
+              : "Completá un perfil profesional para poder asignarle horarios."}
           />
         </div>
       ) : (

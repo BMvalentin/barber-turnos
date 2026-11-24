@@ -49,11 +49,12 @@ async function ContenidoHorarios({
 }) {
   const [diasLaborales, barberos] = await Promise.all([
     getDiasLaborales(),
-    obtenerBarberosParaHorarios(barberoId, !esEmpleado),
+    obtenerBarberosParaHorarios(barberoId),
   ]);
 
   return (
     <HorariosLaboralesClient
+      key={barberos.map(({ id }) => id).sort().join("|")}
       diasLaborales={diasLaborales}
       barberos={barberos}
       barberoIdInicial={barberoIdInicial}

@@ -34,12 +34,14 @@ export default async function AdminTurnoPage({ searchParams }: {
   const session = contexto.session;
   const esEmpleado = contexto.rol === "EMPLEADO";
   const agendaInicial = agenda === "personal" || (agenda === "equipo" && !esEmpleado) ? agenda : undefined;
-  const barberoIdInicial = contexto.barberoId ?? "";
   const fechaInicial = obtenerFechaSola(new Date());
   const [{ servicios, barberos, barberosFiltro, relaciones }, config] = await Promise.all([
     obtenerCatalogoAgenda(esEmpleado ? contexto.barberoId ?? "" : undefined),
     obtenerConfigCacheada(),
   ]);
+  const barberoIdInicial = esEmpleado
+    ? contexto.barberoId ?? ""
+    : barberosFiltro.find(({ id }) => id === contexto.barberoId)?.id ?? "";
 
   return (
     <TurnoManager

@@ -5,6 +5,7 @@ import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button/Button";
 import SelectorDesplegable from "@/components/ui/SelectorDesplegable";
 import type { OpcionDesplegable } from "@/components/ui/SelectorDesplegable";
+import { nombreVisibleBarbero } from "@/lib/barberos/nombre-profesional";
 import type { BarberoParaHorarios } from "@/types/horarios";
 
 type Props = {
@@ -15,13 +16,14 @@ type Props = {
 
 export default function CopiarHorario({ destinos, pendiente, alCopiar }: Props) {
   const [abierto, setAbierto] = useState(false);
-  const [barberoId, setBarberoId] = useState("");
+  const [destinoSeleccionado, setBarberoId] = useState("");
+  const barberoId = destinos.some(({ id }) => id === destinoSeleccionado) ? destinoSeleccionado : "";
   const contenedorRef = useRef<HTMLDivElement>(null);
   const opciones = useMemo<OpcionDesplegable<string>[]>(() => [
     { valor: "", etiqueta: "Seleccionar empleado..." },
     ...destinos.map((destino) => ({
       valor: destino.id,
-      etiqueta: destino.nombre ?? "Sin nombre",
+      etiqueta: nombreVisibleBarbero(destino.nombre),
     })),
   ], [destinos]);
 

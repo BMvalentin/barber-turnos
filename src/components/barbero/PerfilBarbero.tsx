@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { Clock3, Mail, Pencil, Scissors, UserRound } from "lucide-react";
+import { obtenerNombreProfesional } from "@/lib/barberos/nombre-profesional";
 import EditBarberoModal from "./EditBarberoModal";
 import { formatearNombreDia, obtenerHorariosPorDia } from "./horarios-barbero";
 import type { BarberoListado, DiaLaboral, ServicioOpcion } from "@/types/barbero";
@@ -18,7 +19,7 @@ type Props = {
 export default function PerfilBarbero({ barbero, servicios, diasLaborales, esEmpleado = false, perfilPropio = false }: Props) {
   const [modalAbierto, establecerModalAbierto] = useState(false);
   const horarios = obtenerHorariosPorDia(barbero.horarios);
-  const nombre = barbero.nombre?.trim() || "Sin nombre";
+  const nombre = obtenerNombreProfesional(barbero.nombre) ?? "Perfil por completar";
 
   return (
     <>

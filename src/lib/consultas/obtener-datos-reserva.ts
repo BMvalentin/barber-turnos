@@ -1,9 +1,9 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { filtroBarberoActivo, filtroBarberoReservable } from "@/lib/barberos/filtros-perfiles";
 
 export const obtenerDatosReserva = unstable_cache(
   async () => {
-    const barberoActivo = { estado: true, usuarioId: { not: null } };
     const [registrosServicios, barberos, relaciones] = await Promise.all([
       prisma.servicio.findMany({
         where: { estado: true },
@@ -14,12 +14,12 @@ export const obtenerDatosReserva = unstable_cache(
         orderBy: { nombre: "asc" },
       }),
       prisma.barbero.findMany({
-        where: barberoActivo,
+        where: filtroBarberoReservable,
         select: { id: true, nombre: true, srcImage: true, estado: true },
         orderBy: { nombre: "asc" },
       }),
       prisma.servicioxbarbero.findMany({
-        where: { barbero: barberoActivo, servicio: { estado: true } },
+        where: { barbero: filtroBarberoActivo, servicio: { estado: true } },
         select: { barberoId: true, servicioId: true },
       }),
     ]);
@@ -32,6 +32,6 @@ export const obtenerDatosReserva = unstable_cache(
     }));
     return { servicios, barberos, relaciones };
   },
-  ["catalogo-reserva-v2"],
+  ["catalogo-reserva-v3"],
   { tags: ["servicios", "barberos"], revalidate: 300 },
 );

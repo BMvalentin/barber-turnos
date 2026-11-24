@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { deleteBarbero } from "@/actions/barberos/eliminar.actions";
 import EditBarberoModal from "./EditBarberoModal";
 import { ConfirmDialog } from "@/components/ui/confirm-modal";
+import { obtenerNombreProfesional } from "@/lib/barberos/nombre-profesional";
 import type { BarberoListado, DiaLaboral, ServicioOpcion } from "@/types/barbero";
 import { formatearNombreDia, obtenerHorariosPorDia } from "./horarios-barbero";
 
@@ -27,7 +28,7 @@ export default function BarberoFila({ barbero, servicios, diasLaborales }: Propi
   const serviciosAsignados = barbero.servicios ?? [];
   const cantidadDias = horarios.length;
   const cantidadServicios = serviciosAsignados.length;
-  const nombre = barbero.nombre?.trim() || "Sin nombre";
+  const nombre = obtenerNombreProfesional(barbero.nombre) ?? "Perfil por completar";
   const resumenHorarios = cantidadDias ? `${cantidadDias} ${cantidadDias === 1 ? "día" : "días"}` : "Sin horarios";
 
   const darDeBaja = () => iniciarTransicion(async () => {

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { asegurarPerfilBarbero } from "@/lib/barberos/asegurar-perfil-barbero";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import type { Session } from "next-auth";
 import type { RolPanel } from "@/types/usuario";
@@ -41,38 +42,6 @@ export function invalidarCacheRol(userId: string): void {
   cacheRolPorUsuario.delete(userId);
 }
 
-async function asegurarPerfilBarbero(userId: string, email: string): Promise<string> {
-  const perfil = await prisma.$transaction(async (tx) => {
-    const perfilExistente = await tx.barbero.findFirst({
-      where: { usuarioId: null, email },
-      orderBy: { createdAt: "asc" },
-      select: { id: true },
-    });
-
-    if (perfilExistente) {
-      return tx.barbero.update({
-        where: { id: perfilExistente.id },
-        data: { usuarioId: userId, email },
-        select: { id: true },
-      });
-    }
-
-    return tx.barbero.upsert({
-      where: { usuarioId: userId },
-      update: { email },
-      create: {
-        nombre: "Sin nombre",
-        email,
-        usuarioId: userId,
-        estado: true,
-      },
-      select: { id: true },
-    });
-  });
-
-  return perfil.id;
-}
-
 export type ContextoPanel = {
   session: Session;
   rol: RolPanel;
@@ -93,16 +62,22 @@ export const requerirPanel = cache(async (): Promise<ContextoPanel | null> => {
 
   let barberoId = usuario.barberoId;
   if (!barberoId) {
-    const cuenta = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { email: true },
-    });
-    if (!cuenta) return null;
     try {
-      barberoId = await asegurarPerfilBarbero(session.user.id, cuenta.email);
+      const perfil = await prisma.$transaction(async (tx) => {
+        // Comparte el bloqueo de la cuenta con el cambio de rol.
+        await tx.$queryRaw`SELECT id FROM \`user\` WHERE id = ${session.user.id} FOR UPDATE`;
+        const cuenta = await tx.user.findUnique({
+          where: { id: session.user.id },
+          select: { id: true, role: true, email: true },
+        });
+        if (!cuenta || cuenta.role !== usuario.rol) return null;
+        return asegurarPerfilBarbero(tx, cuenta);
+      });
       invalidarCacheRol(session.user.id);
-    } catch (error) {
-      console.error("No se pudo asegurar el perfil de barbero:", error);
+      if (!perfil) return null;
+      barberoId = perfil.id;
+    } catch {
+      console.error("No se pudo asegurar el perfil de barbero.");
       return null;
     }
   }

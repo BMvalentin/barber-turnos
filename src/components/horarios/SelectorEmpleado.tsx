@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { User } from "lucide-react";
 import SelectorDesplegable from "@/components/ui/SelectorDesplegable";
 import type { OpcionDesplegable } from "@/components/ui/SelectorDesplegable";
+import { nombreVisibleBarbero } from "@/lib/barberos/nombre-profesional";
 import type { BarberoParaHorarios } from "@/types/horarios";
 
 type Props = {
@@ -37,14 +38,11 @@ function FotoEmpleado({ src }: { src: string | null }) {
 
 export default function SelectorEmpleado({ barberos, valor, alCambiar }: Props) {
   const opciones = useMemo<OpcionDesplegable<string>[]>(
-    () => barberos.map((barbero) => {
-      const nombre = barbero.nombre ?? "Sin nombre";
-      return {
-        valor: barbero.id,
-        etiqueta: nombre,
-        icono: <FotoEmpleado src={barbero.srcImage} />,
-      };
-    }),
+    () => barberos.map((barbero) => ({
+      valor: barbero.id,
+      etiqueta: nombreVisibleBarbero(barbero.nombre),
+      icono: <FotoEmpleado src={barbero.srcImage} />,
+    })),
     [barberos],
   );
 
