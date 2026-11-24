@@ -23,11 +23,15 @@ async function getTurnoData(barberoId: string | null, incluirUsuarios: boolean) 
   return { servicios: serializarServiciosReserva(serviciosVisibles), barberos, barberosFiltro, usuarios, relaciones, config };
 }
 
-export default async function AdminTurnoPage() {
+export default async function AdminTurnoPage({ searchParams }: {
+  searchParams: Promise<{ agenda?: string | string[] }>;
+}) {
   const contexto = await requerirPanel();
   if (!contexto) redirect("/dashboard");
   const session = contexto.session;
   const esEmpleado = contexto.rol === "EMPLEADO";
+  const { agenda } = await searchParams;
+  const agendaInicial = agenda === "personal" || (agenda === "equipo" && !esEmpleado) ? agenda : undefined;
   const barberoIdInicial = contexto.barberoId ?? "";
   const fechaInicial = obtenerFechaSola(new Date());
   const datosTurno = await getTurnoData(esEmpleado ? contexto.barberoId : null, false);
@@ -35,6 +39,7 @@ export default async function AdminTurnoPage() {
 
   return (
     <TurnoManager
+      key={agendaInicial}
       turnosIniciales={[]}
       cargarTurnosAlMontar
       session={session}
@@ -45,6 +50,7 @@ export default async function AdminTurnoPage() {
       initialRelaciones={relaciones}
       mostrarFiltroBarbero={!esEmpleado}
       barberoIdInicial={barberoIdInicial}
+      agendaInicial={agendaInicial}
       fechaInicial={fechaInicial}
       vistaAgendaCompleta
       whatsappPhone={config?.whatsapp || ""}

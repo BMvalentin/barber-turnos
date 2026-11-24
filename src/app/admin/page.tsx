@@ -1,101 +1,87 @@
-import { CalendarDays, ChartNoAxesColumnIncreasing, Clock3, Scissors, UsersRound } from "lucide-react";
-import { formatearMoneda } from "@/lib/utils/formatear-moneda";
-import { StatCard } from "@/components/panel/StatCard";
-import { DetailCard } from "@/components/panel/DetailCard";
-import { ItemLista } from "@/components/panel/ItemLista";
-import { AgendaResumen } from "@/components/panel/AgendaResumen";
-import PanelResumenEmpleado from "@/components/panel/PanelResumenEmpleado";
-import { obtenerEstadisticasPanel } from "@/lib/consultas/obtener-estadisticas-panel";
-import { requerirPanel } from "@/lib/seguridad/requerir-admin";
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Scissors } from "lucide-react";
+import { AgendaResumen } from "@/components/panel/AgendaResumen";
+import { DetailCard } from "@/components/panel/DetailCard";
+import { DetalleVentasEquipo } from "@/components/panel/DetalleVentasEquipo";
+import { ItemLista } from "@/components/panel/ItemLista";
+import { ResumenVentas } from "@/components/panel/ResumenVentas";
+import { obtenerEstadisticasPanel } from "@/lib/consultas/obtener-estadisticas-panel";
+import { leerPeriodoVentas, PERIODOS_VENTAS } from "@/lib/consultas/periodo-ventas-panel";
+import { requerirPanel } from "@/lib/seguridad/requerir-admin";
+import { formatearFecha } from "@/lib/utils/formatear-fecha";
 
-export default async function AdminDashboard() {
+export default async function AdminDashboard({ searchParams }: {
+  searchParams: Promise<{ periodo?: string | string[] }>;
+}) {
   const contexto = await requerirPanel();
   if (!contexto) redirect("/dashboard");
-  const esEmpleado = contexto.rol === "EMPLEADO";
-  const stats = await obtenerEstadisticasPanel(
-    esEmpleado ? (contexto.barberoId ?? undefined) : undefined,
-  );
 
-  if (esEmpleado) {
-    return <PanelResumenEmpleado stats={stats} />;
-  }
+  const periodo = leerPeriodoVentas((await searchParams).periodo);
+  const ahora = new Date();
+  const stats = await obtenerEstadisticasPanel(contexto, periodo, ahora);
+  if (!stats) redirect("/dashboard");
+
+  const { propio, equipo, agenda, serviciosPopulares } = stats;
 
   return (
-    <div className="admin-pagina">
+    <div className="admin-pagina @container">
       <header className="admin-encabezado">
         <div>
-          <h1>Resumen</h1>
-          <p>Consultá los turnos y la actividad de tu barbería.</p>
+          <h1>Inicio</h1>
+          <p className="first-letter:uppercase">{formatearFecha(ahora)}</p>
         </div>
+        <nav aria-label="Período de ventas" className="w-full sm:w-auto">
+          <span className="mb-1.5 block text-sm font-medium text-[var(--admin-texto-secundario)]">Período de ventas</span>
+          <div className="grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.65fr)_minmax(0,1fr)] gap-1 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-1 sm:grid-cols-[auto_auto_auto]">
+            {PERIODOS_VENTAS.map(({ valor, etiqueta }) => (
+              <Link
+                key={valor}
+                href={valor === "hoy" ? "/admin" : `/admin?periodo=${valor}`}
+                scroll={false}
+                aria-current={periodo === valor ? "true" : undefined}
+                className="admin-control border-0 px-1.5 text-[var(--admin-texto-secundario)] aria-[current=true]:bg-[var(--page-primary-soft)] aria-[current=true]:text-[var(--admin-texto-primario)] sm:px-3"
+              >
+                {etiqueta}
+              </Link>
+            ))}
+          </div>
+        </nav>
       </header>
 
-      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
-        <StatCard title="Empleados activos" value={stats.totalBarberos} icon={UsersRound} href="/admin/barbero" />
-        <StatCard title="Servicios activos" value={stats.totalServicios} icon={Scissors} href="/admin/servicio" />
-        <StatCard title="Turnos registrados" value={stats.totalTurnos} icon={CalendarDays} href="/admin/turno" />
-        <StatCard title="Turnos activos" value={stats.turnosPendientes} icon={Clock3} href="/admin/turno?filtro=activos" />
+      <div className="grid gap-2.5">
+        <div className={`grid gap-4 ${propio && equipo ? "@min-[48rem]:grid-cols-2" : ""}`}>
+          {propio && <ResumenVentas titulo="Mis ventas" ventas={propio.ventas} ganancia={propio.ganancia} />}
+          {equipo && <ResumenVentas titulo={propio ? "Ventas del equipo" : "Ventas de la barbería"} ventas={equipo.ventas} />}
+        </div>
+        <p className="text-sm text-[var(--admin-texto-muted)]">
+          Importes según la fecha del turno y el pago registrado. Se excluyen los turnos cancelados.
+        </p>
       </div>
 
-      <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
-        <AgendaResumen grupos={stats.turnosHoyPorBarbero.filter((barbero) => barbero.turnos.length > 0)} />
-        <DetailCard title="Rendimiento de hoy" icon={ChartNoAxesColumnIncreasing}>
-          {stats.rendimientoHoyPorBarbero.length === 0 ? (
-            <VacioResumen>No hay empleados activos.</VacioResumen>
-          ) : (
-            stats.rendimientoHoyPorBarbero.map((barbero) => (
-              <ItemLista key={barbero.id}>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium [overflow-wrap:anywhere]">{barbero.nombre}</p>
-                  <p className="text-xs text-[var(--admin-texto-muted)]">
-                    {barbero.completados} {barbero.completados === 1 ? "corte completado" : "cortes completados"}
-                  </p>
-                </div>
-                {barbero.completados > 0 && (
-                  <span className="shrink-0 text-sm font-medium text-[var(--admin-exito)] tabular-nums">
-                    ${formatearMoneda(barbero.ganancia)}
-                  </span>
-                )}
-              </ItemLista>
-            ))
-          )}
-        </DetailCard>
-      </div>
-
-      <div className="grid items-start gap-3 md:grid-cols-2">
-        <DetailCard title="Empleados" icon={UsersRound}>
-          {stats.barberos.length === 0 ? (
-            <VacioResumen>No hay empleados activos.</VacioResumen>
-          ) : (
-            stats.barberos.map((barbero) => (
-              <ItemLista key={barbero.id}>
-                <p className="text-sm [overflow-wrap:anywhere]">{barbero.nombre}</p>
-                <p className="shrink-0 text-xs text-[var(--admin-texto-muted)] tabular-nums">
-                  {barbero._count.turnos} {barbero._count.turnos === 1 ? "turno activo" : "turnos activos"}
-                </p>
-              </ItemLista>
-            ))
-          )}
-        </DetailCard>
-        <DetailCard title="Servicios más reservados" icon={Scissors}>
-          {stats.serviciosPopulares.length === 0 ? (
-            <VacioResumen>No hay reservas por servicio.</VacioResumen>
-          ) : (
-            stats.serviciosPopulares.map((servicio) => (
-              <ItemLista key={servicio.id}>
-                <p className="text-sm [overflow-wrap:anywhere]">{servicio.nombre}</p>
-                <p className="shrink-0 text-xs text-[var(--admin-texto-muted)] tabular-nums">
-                  {servicio._count.turnos} {servicio._count.turnos === 1 ? "reserva" : "reservas"}
-                </p>
-              </ItemLista>
-            ))
-          )}
-        </DetailCard>
+      <div className="grid items-start gap-4 @min-[44rem]:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+        <AgendaResumen {...agenda} personal={Boolean(propio)} />
+        <div className="grid min-w-0 gap-4">
+          {equipo && <DetalleVentasEquipo key={periodo} empleados={equipo.empleados} />}
+          <DetailCard title={propio ? "Mis servicios más reservados" : "Servicios más reservados"} icon={Scissors}>
+            {serviciosPopulares.length === 0 ? (
+              <p className="py-4 text-sm text-[var(--admin-texto-muted)]">Todavía no hay reservas por servicio.</p>
+            ) : (
+              <>
+                <p className="pt-3 text-sm text-[var(--admin-texto-muted)]">Histórico de reservas</p>
+                {serviciosPopulares.map((servicio) => (
+                  <ItemLista key={servicio.id}>
+                    <p className="line-clamp-2 min-w-0 text-sm font-medium [overflow-wrap:anywhere]">{servicio.nombre}</p>
+                    <p className="shrink-0 text-sm tabular-nums text-[var(--admin-texto-muted)]">
+                      {servicio.reservas} {servicio.reservas === 1 ? "reserva" : "reservas"}
+                    </p>
+                  </ItemLista>
+                ))}
+              </>
+            )}
+          </DetailCard>
+        </div>
       </div>
     </div>
   );
-}
-
-function VacioResumen({ children }: { children: string }) {
-  return <p className="py-5 text-sm text-[var(--admin-texto-muted)]">{children}</p>;
 }

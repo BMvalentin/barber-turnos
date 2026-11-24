@@ -37,6 +37,7 @@ interface Props {
   barberoIdInicial?: string;
   fechaInicial?: string;
   vistaAgendaCompleta?: boolean;
+  agendaInicial?: "personal" | "equipo";
 }
 
 function ordenarTurnos(turnos: TurnoListado[]): TurnoListado[] {
@@ -95,12 +96,13 @@ export default function TurnoManager({
   barberoIdInicial = "",
   fechaInicial = "",
   vistaAgendaCompleta = false,
+  agendaInicial,
 }: Props) {
   const esEmpleado = session?.user?.role === "EMPLEADO";
-  const filtroInicial = esAdmin(session) || esEmpleado ? "CONFIRMADO" : "PENDIENTE";
+  const filtroInicial = agendaInicial ? "TODOS" : esAdmin(session) || esEmpleado ? "CONFIRMADO" : "PENDIENTE";
   const [filtroEstado, setFiltroEstado] = useState(filtroInicial);
   const [fecha, setFecha] = useState(fechaInicial);
-  const [barberoId, setBarberoId] = useState(barberoIdInicial);
+  const [barberoId, setBarberoId] = useState(agendaInicial === "equipo" ? "" : barberoIdInicial);
   const [turnos, setTurnos] = useState(turnosIniciales);
   const opcionesFiltroBarbero = useMemo<OpcionDesplegable<string>[]>(() => [
     {
@@ -129,8 +131,9 @@ export default function TurnoManager({
   const clavePreferenciaBarbero = mostrarFiltroBarbero && session?.user?.id
     ? `mayoraz-admin-turno-barbero-v1:${session.user.id}`
     : null;
+  const clavePreferenciaInicial = agendaInicial ? null : clavePreferenciaBarbero;
   const [preferenciaBarberoLista, setPreferenciaBarberoLista] = useState(
-    !clavePreferenciaBarbero,
+    !clavePreferenciaInicial,
   );
 
   const turnosRef = useRef(turnosIniciales);
@@ -190,13 +193,13 @@ export default function TurnoManager({
 
   useEffect(() => {
     if (
-      !clavePreferenciaBarbero ||
-      preferenciaBarberoLeidaRef.current === clavePreferenciaBarbero
+      !clavePreferenciaInicial ||
+      preferenciaBarberoLeidaRef.current === clavePreferenciaInicial
     ) return;
-    preferenciaBarberoLeidaRef.current = clavePreferenciaBarbero;
+    preferenciaBarberoLeidaRef.current = clavePreferenciaInicial;
 
     try {
-      const barberoGuardado = window.localStorage.getItem(clavePreferenciaBarbero);
+      const barberoGuardado = window.localStorage.getItem(clavePreferenciaInicial);
       if (barberoGuardado !== null) {
         const esBarberoDisponible = barberosFiltro.some(
           (barbero) => barbero.id === barberoGuardado,
@@ -205,7 +208,7 @@ export default function TurnoManager({
           setBarberoId(barberoGuardado);
           setPaginaActual(1);
         } else {
-          window.localStorage.removeItem(clavePreferenciaBarbero);
+          window.localStorage.removeItem(clavePreferenciaInicial);
         }
       }
     } catch {
@@ -213,7 +216,7 @@ export default function TurnoManager({
     } finally {
       setPreferenciaBarberoLista(true);
     }
-  }, [barberosFiltro, clavePreferenciaBarbero]);
+  }, [barberosFiltro, clavePreferenciaInicial]);
 
   const turnosFiltrados = useMemo(
     () => turnos.filter((turno) =>

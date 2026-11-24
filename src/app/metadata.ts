@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
     icons: {
       icon,
       shortcut: icon,
-      apple: icon,
+      apple: config?.favicon || "/images/app-icon-192.png",
     },
     openGraph: {
       title,
