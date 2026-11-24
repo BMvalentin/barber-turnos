@@ -21,7 +21,7 @@ const CAMPOS: { clave: CampoEditable; etiqueta: string; tipo: string; autoComple
 ];
 
 const CLASES_INPUT =
-  "h-10 w-full rounded-lg border bg-[var(--admin-surface)] px-3 text-sm text-[var(--admin-texto-primario)] placeholder:text-[var(--admin-texto-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--page-focus-ring)]";
+  "min-h-11 w-full rounded-xl border bg-[var(--admin-surface)] px-3 text-base text-[var(--admin-texto-primario)] placeholder:text-[var(--admin-texto-muted)] sm:text-sm";
 
 export default function EditarUsuarioModal({ usuario, onClose, onGuardado }: Props) {
   const [datos, setDatos] = useState<DatosEdicionUsuario>({
@@ -53,7 +53,13 @@ export default function EditarUsuarioModal({ usuario, onClose, onGuardado }: Pro
   };
 
   return (
-    <ModalBase titulo="Editar usuario" subtitulo={usuario.email} onClose={pendiente ? undefined : onClose}>
+    <ModalBase
+      titulo="Editar usuario"
+      subtitulo={usuario.email}
+      subtituloClase="text-sm text-[var(--admin-texto-muted)] [overflow-wrap:anywhere]"
+      contenedorClase="admin-card max-h-[calc(100dvh-2rem)] overflow-y-auto p-4 sm:p-6"
+      onClose={pendiente ? undefined : onClose}
+    >
       <form onSubmit={guardar} className="mt-5 space-y-4 text-left" noValidate>
         {CAMPOS.map((campo) => {
           const error = errores[campo.clave];
@@ -72,18 +78,18 @@ export default function EditarUsuarioModal({ usuario, onClose, onGuardado }: Pro
                 aria-invalid={Boolean(error)}
                 aria-describedby={error ? `${idCampo}-error` : undefined}
                 className={CLASES_INPUT}
-                style={{ borderColor: error ? "rgb(248 113 113)" : "var(--admin-border)" }}
+                style={{ borderColor: error ? "var(--admin-error)" : "var(--admin-border-fuerte)" }}
               />
-              {error && <p id={`${idCampo}-error`} className="text-xs text-red-400">{error}</p>}
+              {error && <p id={`${idCampo}-error`} className="text-sm text-[var(--admin-error)]">{error}</p>}
             </div>
           );
         })}
 
-        <div className="flex justify-end gap-3 pt-2">
-          <button type="button" onClick={onClose} disabled={pendiente} className="rounded-lg px-3.5 py-2 text-sm font-medium text-[var(--admin-texto-secundario)] transition-colors hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)] disabled:opacity-50">
+        <div className="flex flex-wrap justify-end gap-2 pt-2">
+          <button type="button" onClick={onClose} disabled={pendiente} className="admin-control">
             Cancelar
           </button>
-          <button type="submit" disabled={pendiente} className="rounded-lg bg-[var(--page-primary)] px-3.5 py-2 text-sm font-semibold text-[var(--page-primary-foreground)] disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="submit" disabled={pendiente} className="admin-accion">
             {pendiente ? "Guardando..." : "Guardar cambios"}
           </button>
         </div>

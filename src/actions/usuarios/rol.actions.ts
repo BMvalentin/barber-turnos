@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { asegurarPerfilBarbero } from "@/lib/barberos/asegurar-perfil-barbero";
 import { revalidatePath } from "next/cache";
 import { invalidarCacheRol, requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { revalidarBarberos } from "@/lib/revalidar/revalidar-barberos";
@@ -26,7 +27,7 @@ export async function actualizarRolUsuario(
 
     const usuario = await prisma.user.findUnique({
       where: { id: parsed.data.userId },
-      select: { id: true, role: true, email: true },
+      select: { id: true, role: true },
     });
     if (!usuario) return { success: false, error: "Usuario no encontrado" };
 
@@ -42,46 +43,22 @@ export async function actualizarRolUsuario(
     }
 
     await prisma.$transaction(async (tx) => {
-      const barberoActual = await tx.barbero.findFirst({
-        where: { usuarioId: parsed.data.userId },
-        select: { id: true },
+      const cuenta = await tx.user.update({
+        where: { id: usuario.id },
+        data: { role: parsed.data.role },
+        select: { id: true, email: true },
       });
 
       if (parsed.data.role === "EMPLEADO" || parsed.data.role === "ADMIN") {
-        const perfilExistente = barberoActual ?? await tx.barbero.findFirst({
-          where: { usuarioId: null, email: usuario.email },
-          orderBy: { createdAt: "asc" },
-          select: { id: true },
-        });
-
-        if (perfilExistente) {
-          await tx.barbero.update({
-            where: { id: perfilExistente.id },
-            data: { usuarioId: parsed.data.userId, email: usuario.email },
-          });
-        } else {
-          await tx.barbero.create({
-            data: {
-              nombre: "Sin nombre",
-              email: usuario.email,
-              usuarioId: parsed.data.userId,
-              estado: true,
-            },
-          });
-        }
-      } else if (barberoActual) {
-        await tx.barbero.update({
-          where: { id: barberoActual.id },
+        await asegurarPerfilBarbero(tx, cuenta);
+      } else {
+        await tx.barbero.updateMany({
+          where: { usuarioId: usuario.id },
           // Se conserva el correo para reutilizar este perfil si la cuenta vuelve a ser
           // empleado o administrador, en lugar de crear un perfil duplicado.
           data: { usuarioId: null, estado: false },
         });
       }
-
-      await tx.user.update({
-        where: { id: parsed.data.userId },
-        data: { role: parsed.data.role },
-      });
     });
 
     invalidarCacheRol(parsed.data.userId);

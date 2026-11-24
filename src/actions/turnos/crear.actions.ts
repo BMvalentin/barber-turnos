@@ -3,8 +3,7 @@
 import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
-import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
-import { requerirPanel } from "@/lib/seguridad/requerir-admin";
+import { requerirAdmin, requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { enviarEmailTurnoSeguro } from "@/lib/email/enviar-email-turno-seguro";
 import { enviarEmailTurnoBarberoSeguro } from "@/lib/email/enviar-email-turno-barbero-seguro";
 import { enviarEmailNuevaReservaSeguro } from "@/lib/email/enviar-email-nueva-reserva-seguro";
@@ -13,8 +12,8 @@ import { crearTurnoEnTransaccion } from "@/lib/crear-turno-transaccion";
 import { revalidarDisponibilidadTurno } from "@/lib/turnos/revalidar-disponibilidad-turno";
 import { MINIMO_ANTICIPACION_MS, ESTADOS_TURNO, ESTADOS_PAGO, ESTADOS_PAGO_MANUALES } from "@/lib/constants";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
-import type { ActionState } from "@/types/action-state";
-import type { TurnoConDetalle } from "@/types/turno";
+import { esConflictoHorario } from "@/lib/interpretar-error-turno";
+import type { EstadoFormularioTurno } from "@/types/turno";
 import { z } from "zod";
 
 const esquemaClienteNuevo = z.object({
@@ -27,15 +26,27 @@ const esquemaClienteNuevo = z.object({
 });
 
 export async function createTurno(
-  prevState: ActionState<TurnoConDetalle>,
+  _estadoAnterior: EstadoFormularioTurno,
   formData: FormData,
-): Promise<ActionState<TurnoConDetalle>> {
+): Promise<EstadoFormularioTurno> {
+  return crearTurno(formData, true);
+}
+
+export async function reservarTurnoPropio(
+  _estadoAnterior: EstadoFormularioTurno,
+  formData: FormData,
+): Promise<EstadoFormularioTurno> {
+  return crearTurno(formData, false);
+}
+
+async function crearTurno(
+  formData: FormData,
+  desdePanel: boolean,
+): Promise<EstadoFormularioTurno> {
   try {
     const session = await requerirSesion();
     if (!session?.user) return { success: false, error: "Iniciá sesión para reservar un turno" };
-    const contextoPanel = await requerirPanel();
-    // Para clientes normales el rol firmado del JWT alcanza para descartar
-    // privilegios. Un supuesto admin siempre se confirma contra la BD.
+    const contextoPanel = desdePanel ? await requerirPanel() : null;
     const usuarioEsAdmin = contextoPanel?.rol === "ADMIN" && Boolean(await requerirAdmin());
     const usuarioEsEmpleado = contextoPanel?.rol === "EMPLEADO";
     const puedeGestionarTurnos = usuarioEsAdmin || usuarioEsEmpleado;
@@ -109,7 +120,13 @@ export async function createTurno(
       estadoFinal,
       confirmarSinSeña: !puedeGestionarTurnos,
     });
-    if (!resultado.ok) return { success: false, error: resultado.error };
+    if (!resultado.ok) {
+      return {
+        success: false,
+        error: resultado.error,
+        ...(esConflictoHorario(resultado.error) && { horarioNoDisponible: { barberoId, horario: inicio.toISOString() } }),
+      };
+    }
     const turno = resultado.turno;
     after(async () => {
       const tareas: Promise<unknown>[] = [

@@ -9,7 +9,6 @@ import {
   TIPOS_PAGO,
 } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
-import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 import { esTransferenciaConfigurada } from "@/lib/pagos/es-transferencia-configurada";
 import type { ActionState } from "@/types/action-state";
 import type { TipoPago } from "@/types/mercadopago";
@@ -39,7 +38,17 @@ export async function registrarTransferencia(
 
     const sesionAutorizada = await requerirPropietarioOAdmin(turno.userId);
     if (!sesionAutorizada) return { success: false, error: "No autorizado" };
-    const configuracion = await obtenerConfigCacheada();
+    const configuracion = await prisma.pageConfig.findUnique({
+      where: { id: 1 },
+      select: {
+        transferenciaTitular: true,
+        transferenciaCuit: true,
+        transferenciaAlias: true,
+        transferenciaCbu: true,
+        transferenciaBanco: true,
+        transferenciaActiva: true,
+      },
+    });
     if (!configuracion || !esTransferenciaConfigurada({
       transferenciaTitular: configuracion.transferenciaTitular || "",
       transferenciaCuit: configuracion.transferenciaCuit || "",

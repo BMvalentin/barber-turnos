@@ -10,16 +10,14 @@ export default function SelectorBarberosReserva({
 }: PropsSelectorBarberosReserva) {
   if (barberos.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-[var(--admin-border)] p-4 text-sm text-[var(--admin-texto-muted)]">
+      <div className="py-2 text-sm text-[var(--admin-texto-muted)]">
         No hay barberos disponibles para reservar.
       </div>
     );
   }
 
   return (
-    // El selector mantiene una altura acotada y permite desplazarse cuando
-    // hay más barberos o algún nombre ocupa varias líneas.
-    <div className="grid max-h-[244px] grid-cols-2 gap-3 overflow-y-auto pr-1 sm:grid-cols-3">
+    <div className="grid max-h-[244px] grid-cols-2 gap-3 overflow-y-auto pr-1 sm:grid-cols-3 in-[.reserva-publica]:max-h-none in-[.reserva-publica]:overflow-visible in-[.reserva-publica]:pr-0 in-[.reserva-publica]:lg:grid-cols-2 in-[.reserva-publica]:xl:grid-cols-3">
       {barberos.map((barbero) => (
         <TarjetaBarberoReserva
           key={barbero.id}

@@ -20,8 +20,8 @@ const deleteservicioBase = async (
 
     const servicioConTurnos = await prisma.servicio.findUnique({
       where: { id },
-      include: {
-        turnos: true,
+      select: {
+        turnos: { select: { id: true }, take: 1 },
       },
     });
 

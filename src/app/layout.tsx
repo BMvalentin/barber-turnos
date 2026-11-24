@@ -4,6 +4,7 @@ import "./globals.css";
 import LayoutComponent from "@/components/comunes/LayoutComponent";
 import AppGate from "@/components/comunes/AppGate";
 import ConsentimientoInicial from "@/components/legal/ConsentimientoInicial";
+import ModalInstalarApp from "@/components/instalacion/ModalInstalarApp";
 import { ProveedorConsentimientoLegal } from "@/contextos/ContextoConsentimientoLegal";
 import { Toaster } from "sonner";
 import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
@@ -79,6 +80,7 @@ export default async function RootLayout({
             <ProveedorConsentimientoLegal aceptadoInicial={Boolean(consentimiento)}>
               <ConsentimientoInicial />
               {children}
+              <ModalInstalarApp />
               <Toaster
                 position="bottom-right"
                 richColors

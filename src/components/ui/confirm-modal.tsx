@@ -1,59 +1,63 @@
 "use client";
 
-import { X } from "lucide-react";
-import { createPortal } from "react-dom";
+import { useRef } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
 
 interface ConfirmDialogProps {
   title: string;
   message: string;
   onConfirm: () => void;
   onCancel: () => void;
+  apariencia?: "publica";
+  etiquetaConfirmar?: string;
 }
 
-export function ConfirmDialog({ title, message, onConfirm, onCancel }: ConfirmDialogProps) {
-  // En SSR document no existe, evitamos renderizar hasta estar en el cliente
-  if (typeof document === "undefined") return null;
+export function ConfirmDialog({ title, message, onConfirm, onCancel, apariencia, etiquetaConfirmar = "Aceptar" }: ConfirmDialogProps) {
+  const volverA = useRef<HTMLElement | null>(null);
+  const cancelar = useRef<HTMLButtonElement>(null);
+  const publico = apariencia === "publica";
 
-  return createPortal(
-    <div
-      data-confirm-modal
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-      style={{
-        background: "rgba(0,0,0,0.7)",
-        backdropFilter: "blur(8px)",
-        pointerEvents: "auto",
-      }}
-    >
-      <div
-        className="relative w-[min(92vw,400px)] rounded-xl border bg-[var(--admin-surface-elevated)] p-6 shadow-2xl shadow-black/40"
-        style={{ borderColor: "var(--admin-border)" }}
-      >
-        <button
-          onClick={onCancel}
-          className="absolute right-4 top-4 rounded-md p-1.5 text-[var(--admin-texto-muted)] transition-colors hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)]"
+  return (
+    <Dialog.Root open onOpenChange={(abierto) => { if (!abierto) onCancel(); }}>
+      <Dialog.Portal>
+        <Dialog.Overlay className={publico ? "velo-modal-publico fixed inset-0 z-[200] bg-black/60" : "fixed inset-0 z-[200] bg-black/45 backdrop-blur-[2px]"} />
+        <Dialog.Content
+          role="alertdialog"
+          data-confirm-modal
+          className={`${publico ? "modal-publico entrada-modal-publico max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-contain" : "admin-card"} fixed top-1/2 left-1/2 z-[201] w-[calc(100%-2rem)] max-w-md -translate-1/2 p-5 sm:p-6`}
+          onPointerDownOutside={(evento) => evento.preventDefault()}
+          onOpenAutoFocus={(evento) => {
+            evento.preventDefault();
+            volverA.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+            cancelar.current?.focus();
+          }}
+          onCloseAutoFocus={(evento) => {
+            if (volverA.current?.isConnected) {
+              evento.preventDefault();
+              volverA.current.focus();
+            }
+          }}
         >
-          <X className="h-4 w-4" />
-        </button>
-        <h3 className="mb-4 text-base font-semibold text-[var(--admin-texto-primario)]">
-          {title}
-        </h3>
-        <p className="mb-8 text-sm text-[var(--admin-texto-secundario)]">{message}</p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            className="rounded-lg px-3.5 py-2 text-sm font-medium text-[var(--admin-texto-secundario)] transition-colors hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)]"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={onConfirm}
-            className="rounded-lg bg-red-500/10 px-3.5 py-2 text-sm font-semibold text-red-400 transition-colors hover:bg-red-500/20"
-          >
-            Aceptar
-          </button>
-        </div>
-      </div>
-    </div>,
-    document.body
+          <Dialog.Title className="text-lg font-semibold text-[var(--admin-texto-primario)]">
+            {title}
+          </Dialog.Title>
+          <Dialog.Description className="mt-2 text-sm leading-relaxed text-[var(--admin-texto-secundario)] [overflow-wrap:anywhere]">
+            {message}
+          </Dialog.Description>
+          <div className="mt-5 flex flex-wrap justify-end gap-2">
+            <Dialog.Close ref={cancelar} className={publico ? "min-h-11 rounded-md border border-[var(--admin-border-fuerte)] px-4 text-sm font-semibold hover:bg-[var(--admin-item)]" : "admin-control"}>
+              {publico ? "Volver" : "Cancelar"}
+            </Dialog.Close>
+            <button
+              type="button"
+              onClick={onConfirm}
+              className={publico ? "min-h-11 rounded-md bg-red-800 px-4 text-sm font-semibold text-white transition-colors hover:bg-red-900" : "admin-control border-transparent bg-[var(--admin-error-suave,var(--admin-item))] text-[var(--admin-error,var(--color-red-400))]"}
+            >
+              {etiquetaConfirmar}
+            </button>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

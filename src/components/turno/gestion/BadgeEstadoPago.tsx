@@ -1,51 +1,65 @@
 interface Props {
   estado: string;
+  vistaAdministrativa?: boolean;
 }
 
 const MAPA_ESTADOS: Record<string, { etiqueta: string; clases: string }> = {
   PENDIENTE: {
     etiqueta: "Pendiente",
-    clases: "text-amber-400 bg-amber-400/10 border-amber-400/20",
+    clases: "text-amber-900 bg-amber-50 border-amber-300",
   },
   SEÑADO: {
     etiqueta: "Señado",
-    clases: "text-sky-400 bg-sky-400/10 border-sky-400/20",
+    clases: "text-sky-900 bg-sky-50 border-sky-300",
   },
   PAGADO: {
     etiqueta: "Pagado",
-    clases: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
+    clases: "text-emerald-900 bg-emerald-50 border-emerald-300",
   },
   APROBADO: {
     etiqueta: "Aprobado",
-    clases: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
+    clases: "text-emerald-900 bg-emerald-50 border-emerald-300",
   },
   RECHAZADO: {
     etiqueta: "Rechazado",
-    clases: "text-red-400 bg-red-400/10 border-red-400/20",
+    clases: "text-red-900 bg-red-50 border-red-300",
   },
   CANCELADO: {
     etiqueta: "Cancelado",
-    clases: "text-zinc-400 bg-zinc-400/10 border-zinc-400/20",
+    clases: "text-zinc-900 bg-zinc-100 border-zinc-300",
   },
   EN_ACREDITACION: {
     etiqueta: "En acreditación",
-    clases: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
+    clases: "text-yellow-900 bg-yellow-50 border-yellow-300",
   },
 };
 
 const ESTADO_FALLBACK = {
   etiqueta: "Desconocido",
-  clases: "text-zinc-400 bg-zinc-400/10 border-zinc-400/20",
+  clases: "text-zinc-900 bg-zinc-100 border-zinc-300",
 };
 
-export default function BadgeEstadoPago({ estado }: Props) {
+const TONOS_ESTADO_ADMIN: Record<string, string> = {
+  PENDIENTE: "aviso",
+  SEÑADO: "info",
+  PAGADO: "exito",
+  APROBADO: "exito",
+  RECHAZADO: "error",
+  EN_ACREDITACION: "aviso",
+};
+
+export default function BadgeEstadoPago({ estado, vistaAdministrativa = false }: Props) {
   const config = MAPA_ESTADOS[estado] ?? ESTADO_FALLBACK;
+  const clases = vistaAdministrativa
+    ? "admin-estado"
+    : `border ${config.clases}`;
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${config.clases}`}
+      data-tono-estado={vistaAdministrativa ? TONOS_ESTADO_ADMIN[estado] : undefined}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${clases}`}
     >
-      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+      {!vistaAdministrativa && <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />}
       Pago: {config.etiqueta}
     </span>
   );

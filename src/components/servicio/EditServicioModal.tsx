@@ -10,6 +10,7 @@ import { useRetroalimentacionAccion } from "@/hooks/useRetroalimentacionAccion";
 import { useImagenesServicio } from "@/hooks/useImagenesServicio";
 import ModalBase from "@/components/ui/ModalBase";
 import BotonSubmitPending from "@/components/ui/boton-submit-pending";
+import CampoDescripcionServicio from "./CampoDescripcionServicio";
 import CampoFormulario from "./CampoFormulario";
 import SeccionImagenesServicio from "./SeccionImagenesServicio";
 
@@ -68,19 +69,14 @@ export default function EditServicioModal({
   return (
     <ModalBase
       onClose={onClose}
-      titulo={
-        <>
-          Editar Servicio:{" "}
-          <span className="font-normal text-[var(--admin-texto-muted)]">{servicio.nombre}</span>
-        </>
-      }
-      maxWidth="max-w-7xl"
-      overlayClase="bg-black/90 p-4 sm:p-6 overflow-y-auto"
-      contenedorClase="bg-[var(--admin-surface)] backdrop-blur-2xl border border-[var(--admin-border)] rounded-xl relative flex flex-col max-h-[95vh]"
-      headerClase="flex items-center justify-between p-6 border-b border-[var(--admin-border)]"
-      tituloClase="text-2xl font-bold text-[var(--admin-texto-primario)]"
+      titulo="Editar servicio"
+      subtitulo={servicio.nombre}
+      maxWidth="max-w-4xl"
+      contenedorClase="admin-card flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden"
+      headerClase="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--admin-border)] p-4 sm:px-6"
+      tituloClase="text-xl font-semibold tracking-tight text-[var(--admin-texto-primario)]"
+      subtituloClase="mt-1 text-sm text-[var(--admin-texto-muted)] [overflow-wrap:anywhere]"
     >
-      {/* Formulario envolvente para capturar la acción del botón en el header */}
       <form
         ref={formRef}
         action={async (formData) => {
@@ -98,142 +94,109 @@ export default function EditServicioModal({
 
           formAction(formData);
         }}
-        className="flex flex-col flex-1 overflow-hidden"
+        className="flex min-h-0 flex-1 flex-col"
       >
-        {/* Inputs Ocultos necesarios para la acción */}
         <input type="hidden" name="id" value={servicio.id} />
 
-        {/* --- CUERPO DEL FORMULARIO (Scrollable) --- */}
-          <div className="overflow-y-auto p-8 grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
-            {/* Columna Izquierda: INFORMACIÓN GENERAL */}
-            <div className="space-y-6">
-              <h3 className="text-xs font-semibold text-[var(--admin-texto-secundario)] uppercase tracking-wider">
-                INFORMACIÓN GENERAL
-              </h3>
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto p-4 sm:p-6 lg:grid-cols-2 lg:gap-6">
+          <section className="min-w-0 space-y-3">
+            <h3 className="text-base font-semibold">Datos del servicio</h3>
 
-              <div className="space-y-4">
-                {/* Nombre del Servicio */}
-                <CampoFormulario
-                  label="Nombre del Servicio"
-                  name="nombre"
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  placeholder="Ej: Corte Clásico y Barba"
-                  errors={state.errors?.nombre}
-                  required
-                />
+            <div className="space-y-4">
+              <CampoFormulario
+                label="Nombre del servicio"
+                name="nombre"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                placeholder="Ej. Corte clásico y barba"
+                errors={state.errors?.nombre}
+                required
+              />
 
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <label className="block text-xs font-medium text-[var(--admin-texto-secundario)]">
-                      Descripción del Servicio
-                    </label>
-                    <span className={`text-[9px] font-bold uppercase ${descripcion.length > 450 ? 'text-[var(--page-primary-tinta)]' : 'text-[var(--admin-texto-muted)]'}`}>
-                      {descripcion.length} / 500
-                    </span>
-                  </div>
-                  <textarea
-                    name="descripcion"
-                    value={descripcion}
-                    onChange={(e) => setDescripcion(e.target.value.slice(0, 500))}
-                    rows={3}
-                    className={`w-full bg-[var(--admin-surface-elevated)] backdrop-blur-2xl border ${state.errors?.descripcion ? "border-red-500" : "border-[var(--admin-border)]"} rounded-lg px-4 py-3 text-[var(--admin-texto-primario)] text-sm transition-colors duration-150 placeholder:text-[var(--admin-texto-muted)] focus:outline-none focus:border-[var(--page-primary)]/60 focus:ring-2 focus:ring-[var(--page-focus-ring)] resize-none`}
-                    placeholder="Detalla qué incluye el servicio..."
-                  />
-                  {state.errors?.descripcion && (
-                    <p className="mt-1 text-[10px] text-red-500 font-medium">{state.errors.descripcion[0]}</p>
-                  )}
-                </div>
+              <CampoDescripcionServicio descripcion={descripcion} onDescripcionChange={setDescripcion} error={state.errors?.descripcion} />
 
-                <SeccionImagenesServicio
-                  imagenes={imagenes}
-                  puedeAgregar={puedeAgregar}
-                  error={errorImagenes}
-                  isPending={isPending}
-                  onAgregar={agregarArchivo}
-                  onRemover={removerImagen}
-                  onReemplazar={reemplazarImagen}
-                />
-              </div>
+              <SeccionImagenesServicio
+                imagenes={imagenes}
+                puedeAgregar={puedeAgregar}
+                error={errorImagenes}
+                isPending={isPending}
+                onAgregar={agregarArchivo}
+                onRemover={removerImagen}
+                onReemplazar={reemplazarImagen}
+              />
             </div>
+          </section>
 
-            {/* Columna Derecha: PRICING & DETAILS */}
-            <div className="space-y-6">
-              <h3 className="text-xs font-semibold text-[var(--admin-texto-secundario)] uppercase tracking-wider">
-                PRECIOS & DETALLES
-              </h3>
+          <section className="min-w-0 space-y-3 border-t border-[var(--admin-border)] pt-4 lg:border-0 lg:pt-0">
+            <h3 className="text-base font-semibold">Precios y duración</h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Duración Estimada */}
-                <CampoFormulario
-                  label="Duración Estimada"
-                  name="duracion"
-                  type="number"
-                  value={duracion}
-                  onChange={(e) => setDuracion(Number(e.target.value))}
-                  icon={Clock}
-                  unit="MIN"
-                  errors={state.errors?.duracion}
-                  required
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <CampoFormulario
+                label="Duración estimada"
+                name="duracion"
+                type="number"
+                value={duracion}
+                onChange={(e) => setDuracion(Number(e.target.value))}
+                icon={Clock}
+                unit="min"
+                errors={state.errors?.duracion}
+                required
+              />
 
-                {/* Precio Base */}
-                <CampoFormulario
-                  label="Precio Base"
-                  name="precio"
-                  type="number"
-                  step="0.01"
-                  value={precio}
-                  onChange={(e) => setPrecio(Number(e.target.value))}
-                  icon={DollarSign}
-                  errors={state.errors?.precio}
-                  required
-                />
+              <CampoFormulario
+                label="Precio base"
+                name="precio"
+                type="number"
+                step="0.01"
+                value={precio}
+                onChange={(e) => setPrecio(Number(e.target.value))}
+                icon={DollarSign}
+                errors={state.errors?.precio}
+                required
+              />
 
-                {/* Descuento */}
-                <CampoFormulario
-                  label="Descuento"
-                  name="descuento"
-                  type="number"
-                  step="0.01"
-                  value={descuento}
-                  onChange={(e) => setDescuento(Number(e.target.value))}
-                  icon={Percent}
-                  errors={state.errors?.descuento}
-                />
+              <CampoFormulario
+                label="Descuento"
+                name="descuento"
+                type="number"
+                step="0.01"
+                value={descuento}
+                onChange={(e) => setDescuento(Number(e.target.value))}
+                icon={Percent}
+                errors={state.errors?.descuento}
+              />
 
-                {/* Seña (Down Payment) */}
-                <CampoFormulario
-                  label="Seña"
-                  name="senia"
-                  type="number"
-                  step="0.01"
-                  value={senia}
-                  onChange={(e) => setSenia(Number(e.target.value))}
-                  icon={DollarSign}
-                  errors={state.errors?.senia}
-                />
-              </div>
+              <CampoFormulario
+                label="Seña"
+                name="senia"
+                type="number"
+                step="0.01"
+                value={senia}
+                onChange={(e) => setSenia(Number(e.target.value))}
+                icon={DollarSign}
+                errors={state.errors?.senia}
+              />
             </div>
-          </div>
+          </section>
+        </div>
 
-          <div className="flex justify-end px-6 py-4 gap-4 border-t border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] w-full">
+        <div className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-4 sm:px-6">
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-3 hover:cursor-pointer rounded-lg font-bold text-xs uppercase tracking-wider text-[var(--admin-texto-primario)] hover:bg-white/5 transition-colors duration-150"
+            className="admin-control"
           >
             Cancelar
           </button>
           <BotonSubmitPending
             pendiente={isPending}
-            texto="Actualizar"
-            textoMientrasCarga="Actualizando..."
+            texto="Guardar cambios"
+            textoMientrasCarga="Guardando…"
             mostrarSpinner={false}
-            claseAdicional="font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg"
+            claseAdicional="admin-accion h-auto"
           />
         </div>
-        </form>
+      </form>
     </ModalBase>
   );
 }

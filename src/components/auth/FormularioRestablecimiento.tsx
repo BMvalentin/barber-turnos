@@ -1,11 +1,11 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { CLASE_CAMPO, CLASE_ENVIO, CLASE_ERROR, CLASE_ETIQUETA, CLASE_ICONO_CAMPO, CLASE_VER_PASSWORD } from "@/components/auth/estilos-formulario";
 import { useRouter } from "next/navigation";
-import { Lock, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { Lock, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { restablecerPassword } from "@/actions/usuarios/restablecer-password.actions";
-import { CLASES_BOTON_MARCA } from "@/lib/constants";
 import type { ActionState } from "@/types/action-state";
 
 type Props = {
@@ -33,20 +33,16 @@ export default function FormularioRestablecimiento({ token }: Props) {
     }
   }, [state, router]);
 
-  useEffect(() => {
-    if (state.error) toast.error("Error", { description: state.error });
-  }, [state]);
-
   return (
     <form action={action} className="space-y-5">
       <input type="hidden" name="token" value={token} />
 
-      <div className="space-y-2">
-        <label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-[var(--page-primary-tinta)] ml-1">
+      <div className="space-y-1.5">
+        <label htmlFor="password" className={CLASE_ETIQUETA}>
           Nueva contraseña
         </label>
-        <div className="relative group">
-          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--admin-texto-muted)] group-focus-within:text-[var(--page-primary-tinta)] transition-colors" />
+        <div className="relative">
+          <Lock aria-hidden="true" className={CLASE_ICONO_CAMPO} />
           <input
             id="password"
             name="password"
@@ -57,12 +53,12 @@ export default function FormularioRestablecimiento({ token }: Props) {
             autoComplete="new-password"
             value={password}
             onChange={(evento) => setPassword(evento.target.value)}
-            className="w-full bg-[var(--admin-surface-elevated)] border border-[var(--admin-border)] rounded-xl py-3.5 pl-12 pr-12 text-[var(--admin-texto-primario)] outline-none focus:border-[var(--admin-border-fuerte)] focus:bg-[var(--admin-item)] focus:ring-1 focus:ring-[var(--page-focus-ring)] transition-all placeholder:text-[var(--admin-texto-muted)] font-medium"
+            className={`${CLASE_CAMPO} pr-12`}
           />
           <button
             type="button"
             onClick={() => setVerPassword((valor) => !valor)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--admin-texto-muted)] hover:text-[var(--page-primary-tinta)] transition-colors"
+            className={CLASE_VER_PASSWORD}
             aria-label={verPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
           >
             {verPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -70,12 +66,12 @@ export default function FormularioRestablecimiento({ token }: Props) {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <label htmlFor="confirmPassword" className="text-xs font-black uppercase tracking-widest text-[var(--page-primary-tinta)] ml-1">
+      <div className="space-y-1.5">
+        <label htmlFor="confirmPassword" className={CLASE_ETIQUETA}>
           Confirmar contraseña
         </label>
-        <div className="relative group">
-          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--admin-texto-muted)] group-focus-within:text-[var(--page-primary-tinta)] transition-colors" />
+        <div className="relative">
+          <Lock aria-hidden="true" className={CLASE_ICONO_CAMPO} />
           <input
             id="confirmPassword"
             name="confirmPassword"
@@ -86,30 +82,27 @@ export default function FormularioRestablecimiento({ token }: Props) {
             autoComplete="new-password"
             value={confirmPassword}
             onChange={(evento) => setConfirmPassword(evento.target.value)}
-            className="w-full bg-[var(--admin-surface-elevated)] border border-[var(--admin-border)] rounded-xl py-3.5 pl-12 pr-12 text-[var(--admin-texto-primario)] outline-none focus:border-[var(--admin-border-fuerte)] focus:bg-[var(--admin-item)] focus:ring-1 focus:ring-[var(--page-focus-ring)] transition-all placeholder:text-[var(--admin-texto-muted)] font-medium"
+            className={`${CLASE_CAMPO} pr-12`}
           />
           <button
             type="button"
             onClick={() => setVerConfirmPassword((valor) => !valor)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--admin-texto-muted)] hover:text-[var(--page-primary-tinta)] transition-colors"
-            aria-label={verConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            className={CLASE_VER_PASSWORD}
+            aria-label={verConfirmPassword ? "Ocultar confirmación de contraseña" : "Mostrar confirmación de contraseña"}
           >
             {verConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
+      {state.error && <p role="alert" className={CLASE_ERROR}>{state.error}</p>}
+
       <button
         type="submit"
-        disabled={isPending}
-        className={`w-full mt-2 ${CLASES_BOTON_MARCA} font-black py-4 rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-sm active:scale- disabled:opacity-50`}
+        disabled={isPending || state.success}
+        className={CLASE_ENVIO}
       >
-        {isPending ? "GUARDANDO..." : (
-          <>
-            <ShieldCheck className="w-5 h-5" />
-            ACTUALIZAR CONTRASEÑA
-          </>
-        )}
+        {isPending || state.success ? "Guardando..." : "Actualizar contraseña"}
       </button>
     </form>
   );

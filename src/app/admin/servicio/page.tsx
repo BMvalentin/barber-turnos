@@ -1,4 +1,5 @@
 import ServicioCatalogoCliente from "@/components/servicio/ServicioCatalogoCliente";
+import { obtenerServiciosConBarberos } from "@/lib/consultas/obtener-servicios-con-barberos";
 import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { redirect } from "next/navigation";
 
@@ -7,28 +8,26 @@ export default async function ServiciosPage() {
   if (!contexto) redirect("/dashboard");
 
   const puedeGestionar = contexto.rol === "ADMIN";
-  const alcanceCache = `${contexto.session.user.id}|${contexto.rol}`;
+  const servicios = await obtenerServiciosConBarberos().catch(() => null);
 
   return (
-    <div className="space-y-8">
-      {/* HEADER */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight md:text-[28px] text-[var(--admin-texto-primario)]">
-          Gestión de Servicios
-        </h1>
-        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-          Creá, editá y organizá los servicios de tu barbería.
-        </p>
-      </div>
+    <div className="admin-pagina">
+      <header className="admin-encabezado">
+        <div>
+          <h1>Servicios</h1>
+          <p>
+            {puedeGestionar
+              ? "Organizá el catálogo, los precios y la duración de cada servicio."
+              : "Consultá el catálogo, los precios y la duración de cada servicio."}
+          </p>
+        </div>
+      </header>
 
-      {/* Lista de servicios - Abajo */}
-      <div>
-        <ServicioCatalogoCliente
-          key={alcanceCache}
-          puedeGestionar={puedeGestionar}
-          alcanceCache={alcanceCache}
-        />
-      </div>
+      <ServicioCatalogoCliente
+        key={`${contexto.session.user.id}|${contexto.rol}`}
+        puedeGestionar={puedeGestionar}
+        servicios={servicios}
+      />
     </div>
   );
 }

@@ -3,54 +3,69 @@ import TurnoManager from "@/components/turno/gestion/TurnoManager";
 import { obtenerDatosReserva } from "@/lib/consultas/obtener-datos-reserva";
 import { obtenerBarberosFiltroTurnos } from "@/lib/consultas/obtener-barberos-filtro-turnos";
 import { requerirPanel } from "@/lib/seguridad/requerir-admin";
-import { serializarServiciosReserva } from "@/lib/serializar-servicios-reserva";
+import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 import { obtenerDatosTransferencia } from "@/lib/pagos/obtener-datos-transferencia";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import { redirect } from "next/navigation";
 
-async function getTurnoData(barberoId: string | null, incluirUsuarios: boolean) {
-  const { servicios, barberos: todosBarberos, usuarios: todosUsuarios, relaciones: todasRelaciones, config } = await obtenerDatosReserva(incluirUsuarios);
-  const barberos = barberoId ? todosBarberos.filter((barbero) => barbero.id === barberoId) : todosBarberos;
-  const relaciones = barberoId ? todasRelaciones.filter((relacion) => relacion.barberoId === barberoId) : todasRelaciones;
-  const usuarios = incluirUsuarios ? todosUsuarios : [];
-  const serviciosVisibles = barberoId
-    ? servicios.filter((servicio) => relaciones.some((relacion) => relacion.servicioId === servicio.id))
-    : servicios;
-  const barberosFiltro = !barberoId
-    ? await obtenerBarberosFiltroTurnos()
-    : barberos;
+async function obtenerCatalogoAgenda(soloBarbero: string | undefined) {
+  if (soloBarbero === undefined) {
+    const [catalogo, barberosFiltro] = await Promise.all([
+      obtenerDatosReserva(),
+      obtenerBarberosFiltroTurnos(),
+    ]);
+    return { ...catalogo, barberosFiltro };
+  }
 
-  return { servicios: serializarServiciosReserva(serviciosVisibles), barberos, barberosFiltro, usuarios, relaciones, config };
+  const catalogo = await obtenerDatosReserva();
+  const barberos = catalogo.barberos.filter((barbero) => barbero.id === soloBarbero);
+  const relaciones = catalogo.relaciones.filter((relacion) => relacion.barberoId === soloBarbero);
+  const serviciosAsignados = new Set(relaciones.map((relacion) => relacion.servicioId));
+  return {
+    servicios: catalogo.servicios.filter((servicio) => serviciosAsignados.has(servicio.id)),
+    barberos,
+    barberosFiltro: barberos,
+    relaciones,
+  };
 }
 
-export default async function AdminTurnoPage() {
-  const contexto = await requerirPanel();
+export default async function AdminTurnoPage({ searchParams }: {
+  searchParams: Promise<{ agenda?: string | string[] }>;
+}) {
+  const [contexto, { agenda }] = await Promise.all([requerirPanel(), searchParams]);
   if (!contexto) redirect("/dashboard");
   const session = contexto.session;
   const esEmpleado = contexto.rol === "EMPLEADO";
-  const barberoIdInicial = contexto.barberoId ?? "";
+  const agendaInicial = agenda === "personal" || (agenda === "equipo" && !esEmpleado) ? agenda : undefined;
   const fechaInicial = obtenerFechaSola(new Date());
-  const datosTurno = await getTurnoData(esEmpleado ? contexto.barberoId : null, false);
-  const { servicios, barberos, barberosFiltro, usuarios, relaciones, config } = datosTurno;
+  const [{ servicios, barberos, barberosFiltro, relaciones }, config] = await Promise.all([
+    obtenerCatalogoAgenda(esEmpleado ? contexto.barberoId ?? "" : undefined),
+    obtenerConfigCacheada(),
+  ]);
+  const perfilPropio = !esEmpleado && agendaInicial === "personal"
+    ? barberos.find(({ id }) => id === contexto.barberoId)
+    : undefined;
+  const barberoIdInicial = esEmpleado
+    ? contexto.barberoId ?? ""
+    : perfilPropio?.id ?? "";
+  const opcionesBarberos = perfilPropio
+    ? [perfilPropio, ...barberosFiltro.filter(({ id }) => id !== perfilPropio.id)]
+    : barberosFiltro;
 
   return (
-    <div className="h-full min-h-0">
-      <TurnoManager
-        turnosIniciales={[]}
-        cargarTurnosAlMontar
-        session={session}
-        initialServicios={servicios}
-        initialBarberos={barberos}
-        barberosFiltro={barberosFiltro}
-        initialUsuarios={usuarios}
-        initialRelaciones={relaciones}
-        mostrarFiltroBarbero={!esEmpleado}
-        barberoIdInicial={barberoIdInicial}
-        fechaInicial={fechaInicial}
-        vistaAgendaCompleta
-        whatsappPhone={config?.whatsapp || ""}
-        datosTransferencia={obtenerDatosTransferencia(config)}
-      />
-    </div>
+    <TurnoManager
+      key={`${session.user.id}|${contexto.rol}|${contexto.barberoId ?? ""}|${agendaInicial ?? ""}`}
+      session={session}
+      initialServicios={servicios}
+      initialBarberos={barberos}
+      barberosFiltro={opcionesBarberos}
+      initialRelaciones={relaciones}
+      mostrarFiltroBarbero={!esEmpleado}
+      barberoIdInicial={barberoIdInicial}
+      agendaInicial={agendaInicial}
+      fechaInicial={fechaInicial}
+      whatsappPhone={config?.whatsapp || ""}
+      datosTransferencia={obtenerDatosTransferencia(config)}
+    />
   );
 }

@@ -14,7 +14,7 @@ export default async function HorariosLaboralesPage() {
   if (esEmpleado && !barberoId) redirect("/admin/barbero/perfil");
 
   return (
-    <div className="space-y-8">
+    <div className="admin-pagina">
       <Breadcrumb
         items={esEmpleado
           ? [
@@ -49,11 +49,12 @@ async function ContenidoHorarios({
 }) {
   const [diasLaborales, barberos] = await Promise.all([
     getDiasLaborales(),
-    obtenerBarberosParaHorarios(barberoId, !esEmpleado),
+    obtenerBarberosParaHorarios(barberoId),
   ]);
 
   return (
     <HorariosLaboralesClient
+      key={barberos.map(({ id }) => id).sort().join("|")}
       diasLaborales={diasLaborales}
       barberos={barberos}
       barberoIdInicial={barberoIdInicial}
@@ -64,13 +65,14 @@ async function ContenidoHorarios({
 
 function CargaHorarios() {
   return (
-    <div className="space-y-6 animate-pulse">
+    <div role="status" className="space-y-5 motion-safe:animate-pulse">
+      <span className="sr-only">Cargando horarios</span>
       <div className="space-y-2">
-        <div className="h-6 w-56 rounded-md bg-white/5" />
-        <div className="h-4 w-72 rounded-md bg-white/5" />
+        <div className="h-6 w-56 max-w-full rounded-md bg-[var(--admin-surface-elevated)]" />
+        <div className="h-4 w-72 max-w-full rounded-md bg-[var(--admin-surface-elevated)]" />
       </div>
-      <div className="h-24 w-full rounded-xl border border-white/5 bg-white/5" />
-      <div className="h-72 w-full rounded-xl border border-white/5 bg-white/5" />
+      <div className="admin-card h-24" />
+      <div className="admin-card h-72" />
     </div>
   );
 }

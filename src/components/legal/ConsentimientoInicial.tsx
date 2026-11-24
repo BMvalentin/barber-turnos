@@ -1,16 +1,25 @@
 "use client";
 
 import { aceptarConsentimientoInicial } from "@/actions/legal/aceptar-consentimiento.actions";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useConsentimientoLegal } from "@/contextos/ContextoConsentimientoLegal";
+import { ChevronDown, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import estilos from "./ConsentimientoInicial.module.css";
+
+const CLASE_ACCION =
+  `control-publico ${estilos.accion} inline-flex min-h-11 items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold`;
+const CLASE_PRINCIPAL =
+  `${estilos.principal} bg-[var(--page-primary)] px-4 text-[var(--page-primary-foreground)]`;
+const CLASE_ENLACE =
+  `control-publico ${estilos.enlace} rounded-sm font-semibold text-[var(--page-primary-tinta)] underline decoration-1 underline-offset-3`;
 
 export default function ConsentimientoInicial() {
   const pathname = usePathname();
   const router = useRouter();
   const { aceptado, marcarAceptado } = useConsentimientoLegal();
+  const [expandido, setExpandido] = useState(false);
   const [acepta, setAcepta] = useState(false);
   const [pendiente, setPendiente] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,84 +52,97 @@ export default function ConsentimientoInicial() {
   if (aceptado || pathname === "/legal" || pathname.startsWith("/legal/")) return null;
 
   return (
-    <DialogPrimitive.Root open modal={false}>
-      <DialogPrimitive.Portal>
-        <DialogPrimitive.Content
-          aria-describedby="consentimiento-inicial-descripcion"
-          onOpenAutoFocus={(evento) => evento.preventDefault()}
-          className="fixed bottom-4 left-3 right-3 z-[101] max-h-[75vh] cursor-default overflow-y-auto rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-3 text-[var(--admin-texto-primario)] shadow-2xl sm:bottom-6 sm:left-auto sm:right-6 sm:w-[min(92vw,22rem)]"
+    <aside
+      aria-labelledby="consentimiento-inicial-titulo"
+      data-consentimiento-inicial
+      className={`${estilos.panel} fixed z-[101] overflow-y-auto overscroll-contain rounded-2xl bg-[var(--admin-surface)] p-4 text-[var(--admin-texto-primario)] shadow-xl sm:p-5`}
+    >
+      <div className={estilos.encabezado} data-expandido={expandido}>
+        <span className={`${estilos.icono} grid size-10 place-items-center rounded-lg bg-[var(--admin-item)] text-[var(--admin-texto-secundario)]`}>
+          <ShieldCheck aria-hidden="true" className="size-5" strokeWidth={1.75} />
+        </span>
+        <h2 id="consentimiento-inicial-titulo" className={`${estilos.titulo} self-center text-xl leading-tight font-semibold`}>
+          Privacidad y cookies
+        </h2>
+        <p className={`${estilos.descripcion} mt-1 text-sm leading-normal text-[var(--admin-texto-secundario)]`}>
+          Usamos cookies esenciales para mantener tu sesión y proteger los formularios.
+        </p>
+        <button
+          type="button"
+          className={`${CLASE_ACCION} ${estilos.expansor} ${expandido
+            ? `${estilos.secundaria} w-11 text-[var(--admin-texto-secundario)]`
+            : `${CLASE_PRINCIPAL} mt-4`}`}
+          aria-expanded={expandido}
+          aria-controls="consentimiento-inicial-detalle"
+          onClick={() => setExpandido((anterior) => !anterior)}
         >
-          <DialogPrimitive.Title className="mb-1.5 text-base font-bold">
-            Privacidad y cookies
-          </DialogPrimitive.Title>
-          <DialogPrimitive.Description
-            id="consentimiento-inicial-descripcion"
-            className="mb-2 text-xs leading-relaxed text-[var(--admin-texto-secundario)]"
-          >
-            Usamos cookies esenciales para que la página funcione correctamente.
-          </DialogPrimitive.Description>
-
-          <form onSubmit={enviarAceptacion}>
-            <div className="flex cursor-default items-start gap-2 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-item)] p-2.5 text-xs leading-relaxed text-[var(--admin-texto-secundario)]">
+          <span className={expandido ? "sr-only" : undefined}>
+            {expandido ? "Ocultar detalles" : "Revisar y aceptar"}
+          </span>
+          <ChevronDown aria-hidden="true" className={expandido ? "size-4 rotate-180" : "size-4"} />
+        </button>
+      </div>
+      <div id="consentimiento-inicial-detalle" hidden={!expandido}>
+        <form onSubmit={enviarAceptacion} className="mt-4 border-t border-[var(--page-separador)] pt-4">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-2 text-sm leading-normal text-[var(--admin-texto-secundario)]">
+            <label className={`${estilos.secundaria} grid size-11 cursor-pointer place-items-center rounded-lg`}>
               <input
                 type="checkbox"
-                id="consentimiento-inicial-aceptacion"
                 aria-labelledby="consentimiento-inicial-texto"
                 name="aceptaTerminos"
                 value="on"
                 checked={acepta}
                 onChange={(evento) => setAcepta(evento.target.checked)}
                 required
-                className="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded"
-                style={{ accentColor: "var(--page-primary)" }}
+                className="control-publico size-5 cursor-pointer accent-[var(--page-focus-ring)]"
               />
-              <span id="consentimiento-inicial-texto">
-                Acepto los{" "}
-                <Link
-                  href="/legal/terminos"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="cursor-pointer font-semibold text-[var(--page-primary-tinta)] underline-offset-4 hover:underline focus-visible:underline"
-                >
-                  Términos y Condiciones
-                </Link>{" "}
-                y la{" "}
-                <Link
-                  href="/legal/privacidad"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="cursor-pointer font-semibold text-[var(--page-primary-tinta)] underline-offset-4 hover:underline focus-visible:underline"
-                >
-                  Política de Privacidad
-                </Link>
-                {" "}y entiendo el uso de cookies esenciales descrito en la{" "}
-                <Link
-                  href="/legal/cookies"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="cursor-pointer font-semibold text-[var(--page-primary-tinta)] underline-offset-4 hover:underline focus-visible:underline"
-                >
-                  Política de Cookies
-                </Link>.
-              </span>
-            </div>
+            </label>
+            <span id="consentimiento-inicial-texto">
+              Acepto los{" "}
+              <Link
+                href="/legal/terminos"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={CLASE_ENLACE}
+              >
+                Términos y Condiciones
+              </Link>{" "}
+              y la{" "}
+              <Link
+                href="/legal/privacidad"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={CLASE_ENLACE}
+              >
+                Política de Privacidad
+              </Link>. Entiendo el uso de cookies esenciales descrito en la{" "}
+              <Link
+                href="/legal/cookies"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={CLASE_ENLACE}
+              >
+                Política de Cookies
+              </Link>.
+            </span>
+          </div>
 
-            {error && (
-              <p role="alert" className="mt-3 text-sm text-red-400">
-                {error}
-              </p>
-            )}
+          {error && (
+            <p role="alert" className="mt-3 text-sm text-[var(--page-error)]">
+              {error}
+            </p>
+          )}
 
-            <button
-              type="submit"
-              disabled={!acepta || pendiente}
-              className="mt-2.5 w-full cursor-pointer rounded-lg bg-[var(--page-primary)] px-4 py-2 text-sm font-bold text-[var(--page-primary-foreground)] transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {pendiente ? "Guardando…" : "Aceptar"}
-            </button>
-          </form>
-        </DialogPrimitive.Content>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+          <button
+            type="submit"
+            disabled={!acepta}
+            aria-disabled={pendiente || undefined}
+            className={`${CLASE_ACCION} ${CLASE_PRINCIPAL} mt-4 w-full disabled:cursor-not-allowed disabled:bg-[var(--admin-item)] disabled:text-[var(--admin-texto-muted)] aria-disabled:cursor-wait`}
+          >
+            {pendiente ? "Guardando…" : "Confirmar aceptación"}
+          </button>
+        </form>
+      </div>
+    </aside>
   );
 }

@@ -45,18 +45,21 @@ export default function ServicioTabla({
         icono={<Scissors />}
         mensaje={
           sinServicios
-            ? "No hay servicios disponibles. Comienza agregando uno."
+            ? puedeGestionar
+              ? "Todavía no hay servicios. Agregá el primero con «Nuevo servicio»."
+              : "Todavía no hay servicios para consultar."
             : "No hay servicios que coincidan con los filtros aplicados."
         }
-        claseContenedor="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl p-12"
-        claseIcono="h-12 w-12 text-[var(--admin-texto-muted)] opacity-50"
+        claseContenedor="admin-card px-4 py-10"
+        claseIcono="grid size-10 place-items-center rounded-xl bg-[var(--page-primary-soft)] [&_svg]:size-5"
+        estiloIcono={{ color: "var(--admin-acento-suave-texto)" }}
         claseMensaje="text-[var(--admin-texto-muted)]"
         accion={
           hayFiltros ? (
             <button
+              type="button"
               onClick={onLimpiarFiltros}
-              className="text-[10px] font-bold uppercase tracking-wider hover:underline"
-              style={{ color: "var(--page-primary-tinta)" }}
+              className="admin-control"
             >
               Limpiar filtros
             </button>
@@ -67,15 +70,15 @@ export default function ServicioTabla({
   }
 
   return (
-    <div className="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl overflow-hidden">
-      <div className="hidden md:grid md:grid-cols-12 gap-4 p-4 border-b border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] text-[11px] font-bold text-[var(--admin-texto-secundario)] uppercase tracking-wider">
-        <div className={puedeGestionar ? "col-span-6" : "col-span-8"}>Servicio</div>
-        <div className="col-span-2 text-center">Duración</div>
-        <div className="col-span-2 text-center">Precio</div>
-        {puedeGestionar && <div className="col-span-2 text-right">Acciones</div>}
+    <div className={`lg:rounded-2xl lg:border lg:border-[var(--admin-border)] lg:bg-[var(--admin-surface)] ${puedeGestionar ? "[--servicio-columnas:minmax(0,1fr)_7ch_8rem_6.25rem]" : "[--servicio-columnas:minmax(0,1fr)_7ch_8rem]"}`}>
+      <div aria-hidden="true" className="hidden gap-4 rounded-t-2xl border-b border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-4 py-3 text-xs font-medium text-[var(--admin-texto-muted)] lg:grid lg:grid-cols-[var(--servicio-columnas)]">
+        <span>Servicio</span>
+        <span className="text-right">Duración</span>
+        <span className="text-right">Precio</span>
+        {puedeGestionar && <span className="text-right">Acciones</span>}
       </div>
 
-      <div className="divide-y divide-[var(--admin-border)]">
+      <ul className="space-y-2 lg:space-y-0">
         {servicios.map((servicio) => (
           <ServicioRow
             key={servicio.id}
@@ -85,7 +88,7 @@ export default function ServicioTabla({
             onServicioActualizado={onServicioActualizado}
           />
         ))}
-      </div>
+      </ul>
 
       <Paginacion
         paginaActual={paginaActual}

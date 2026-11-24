@@ -24,21 +24,22 @@ export default function SeccionIdentidad({
         <div className="flex items-center gap-2">
           <Building2 className="h-4 w-4 text-[var(--admin-texto-muted)]" />
           <h2 className="text-lg font-semibold tracking-tight text-[var(--admin-texto-primario)]">
-            Información general
+            Datos del negocio
           </h2>
         </div>
         <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-          Nombre, slogan y descripción que se muestran en tu sitio.
+          El nombre y la descripción se muestran en el sitio de reservas.
         </p>
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-[var(--admin-texto-secundario)]">
-            Nombre del Negocio
+          <label htmlFor="config-nombre" className="mb-1.5 block text-sm font-medium text-[var(--admin-texto-secundario)]">
+            Nombre del negocio
           </label>
           <input
             type="text"
+            id="config-nombre"
             name="name"
             value={nombre}
             onChange={manejarCambio}
@@ -46,11 +47,12 @@ export default function SeccionIdentidad({
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-[var(--admin-texto-secundario)]">
-            Slogan
+          <label htmlFor="config-eslogan" className="mb-1.5 block text-sm font-medium text-[var(--admin-texto-secundario)]">
+            Eslogan
           </label>
           <input
             type="text"
+            id="config-eslogan"
             name="slogan"
             value={slogan}
             onChange={manejarCambio}
@@ -60,10 +62,11 @@ export default function SeccionIdentidad({
       </div>
 
       <div className="mt-4">
-        <label className="mb-1.5 block text-sm font-medium text-[var(--admin-texto-secundario)]">
+        <label htmlFor="config-descripcion" className="mb-1.5 block text-sm font-medium text-[var(--admin-texto-secundario)]">
           Descripción
         </label>
         <textarea
+          id="config-descripcion"
           name="description"
           rows={3}
           value={descripcion}

@@ -1,6 +1,7 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import { useId, useRef, type CSSProperties, type ReactNode } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -20,6 +21,9 @@ type ModalBaseProps = {
   subtituloClase?: string;
   estiloHeader?: CSSProperties;
   animado?: boolean;
+  apariencia?: "publica";
+  etiquetaDialogo?: string;
+  onCloseAutoFocus?: (evento: Event) => void;
 };
 
 /* Overlay por defecto: los consumidores pueden sobreescribir la opacidad
@@ -46,8 +50,61 @@ export default function ModalBase({
   subtituloClase = "text-sm text-[var(--admin-texto-muted)]",
   estiloHeader,
   animado = false,
+  apariencia,
+  etiquetaDialogo,
+  onCloseAutoFocus,
 }: ModalBaseProps) {
   const mostrarHeader = Boolean(header || titulo || subtitulo || onClose);
+  const focoPrevio = useRef<HTMLElement | null>(null);
+  const descripcionId = useId();
+
+  if (apariencia === "publica") {
+    return (
+      <Dialog.Root open onOpenChange={(abierto) => { if (!abierto) onClose?.(); }}>
+        <Dialog.Portal>
+          <Dialog.Overlay className={cn("velo-modal-publico fixed inset-0 z-[110] bg-black/60", overlayClase)} />
+          <Dialog.Content
+            aria-describedby={subtitulo && !header ? descripcionId : undefined}
+            className={cn(
+              "modal-publico entrada-modal-publico fixed top-1/2 left-1/2 z-[111] max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] -translate-1/2 overflow-y-auto overscroll-contain sm:max-h-[calc(100dvh-3rem)] sm:w-[calc(100%-3rem)]",
+              maxWidth,
+              contenedorClase ?? "p-4 sm:p-6",
+            )}
+            onPointerDownOutside={(evento) => evento.preventDefault()}
+            onEscapeKeyDown={(evento) => { if (!onClose) evento.preventDefault(); }}
+            onOpenAutoFocus={() => {
+              focoPrevio.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+            }}
+            onCloseAutoFocus={(evento) => {
+              onCloseAutoFocus?.(evento);
+              if (!evento.defaultPrevented && focoPrevio.current?.isConnected) {
+                evento.preventDefault();
+                focoPrevio.current.focus({ preventScroll: true });
+              }
+            }}
+          >
+            {header || !titulo ? (
+              <Dialog.Title asChild><span className="sr-only">{etiquetaDialogo ?? "Diálogo"}</span></Dialog.Title>
+            ) : null}
+            {header ?? (mostrarHeader && (
+              <div className={headerClase} style={estiloHeader}>
+                <div className="min-w-0">
+                  {titulo && <Dialog.Title className={tituloClase}>{titulo}</Dialog.Title>}
+                  {subtitulo && <Dialog.Description id={descripcionId} className={subtituloClase}>{subtitulo}</Dialog.Description>}
+                </div>
+                {onClose && (
+                  <Dialog.Close aria-label="Cerrar" className="grid size-11 shrink-0 place-items-center rounded-md text-[var(--admin-texto-secundario)] transition-colors hover:bg-[var(--admin-item)] hover:text-[var(--admin-texto-primario)]">
+                    <X className="size-5" aria-hidden="true" />
+                  </Dialog.Close>
+                )}
+              </div>
+            ))}
+            {children}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+    );
+  }
 
   return (
     <motion.div
@@ -83,8 +140,8 @@ export default function ModalBase({
               {subtitulo && <p className={subtituloClase}>{subtitulo}</p>}
             </div>
             {onClose && (
-              <button type="button" onClick={onClose} className={CLASES_BOTON_CERRAR}>
-                <X className="h-4 w-4" />
+              <button type="button" onClick={onClose} aria-label="Cerrar" className={CLASES_BOTON_CERRAR}>
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             )}
           </div>

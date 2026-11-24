@@ -19,6 +19,11 @@ type PaginaTurnosUsuario = {
   totalPaginas: number;
 };
 
+type ResumenTurnosUsuario = {
+  historial: PaginaTurnosUsuario;
+  proximos: TurnoListado[];
+};
+
 const SELECCION_TURNO_USUARIO = {
   id: true,
   userId: true,
@@ -57,20 +62,56 @@ function filtroTurnosProximos(userId: string, ahora: Date): Prisma.turnoWhereInp
   };
 }
 
-export async function getUserTurnosProximos(userId: string): Promise<ActionState<TurnoListado[]>> {
-  try {
-    const sesionAutorizada = await requerirPropietarioOAdmin(userId);
-    if (!sesionAutorizada) return { success: false, error: "No autorizado" };
+async function consultarHistorialTurnos(
+  userId: string,
+  paginaActual: number,
+  ahora: Date,
+): Promise<PaginaTurnosUsuario> {
+  const filtro: Prisma.turnoWhereInput = {
+    userId,
+    estadoPago: { in: [...ESTADOS_PAGO_VISIBLES_USUARIO] },
+    NOT: filtroTurnosProximos(userId, ahora),
+  };
 
-    const turnos = await prisma.turno.findMany({
-      where: filtroTurnosProximos(userId, new Date()),
-      orderBy: { horarioReservado: "asc" },
+  const [turnos, total] = await Promise.all([
+    prisma.turno.findMany({
+      where: filtro,
+      orderBy: { horarioReservado: "desc" },
       select: SELECCION_TURNO_USUARIO,
-    });
+      skip: (paginaActual - 1) * TAMANIO_PAGINA,
+      take: TAMANIO_PAGINA,
+    }),
+    prisma.turno.count({ where: filtro }),
+  ]);
 
-    return { success: true, data: serializarTurnos(turnos) };
+  return {
+    turnos: serializarTurnos(turnos),
+    paginaActual,
+    totalPaginas: Math.max(1, Math.ceil(total / TAMANIO_PAGINA)),
+  };
+}
+
+export async function getResumenTurnosUsuario(userId: string): Promise<ActionState<ResumenTurnosUsuario>> {
+  if (typeof userId !== "string" || userId.length < 1 || userId.length > 191) {
+    return { success: false, error: "Usuario inválido" };
+  }
+
+  try {
+    if (!(await requerirPropietarioOAdmin(userId))) return { success: false, error: "No autorizado" };
+
+    const ahora = new Date();
+    const [historial, proximos] = await Promise.all([
+      consultarHistorialTurnos(userId, 1, ahora),
+      prisma.turno.findMany({
+        where: filtroTurnosProximos(userId, ahora),
+        orderBy: { horarioReservado: "asc" },
+        select: SELECCION_TURNO_USUARIO,
+      }),
+    ]);
+
+    return { success: true, data: { historial, proximos: serializarTurnos(proximos) } };
   } catch {
-    return { success: false, error: "No se pudieron cargar los próximos turnos" };
+    return { success: false, error: "No se pudieron cargar los turnos" };
   }
 }
 
@@ -86,36 +127,9 @@ export async function getUserTurnos(
     const paginaActual = Number.isInteger(paginaSolicitada) && paginaSolicitada > 0
       ? paginaSolicitada
       : 1;
-    const ahora = new Date();
-    const filtro: Prisma.turnoWhereInput = {
-      userId,
-      estadoPago: { in: [...ESTADOS_PAGO_VISIBLES_USUARIO] },
-      NOT: filtroTurnosProximos(userId, ahora),
-    };
-
-    const [turnosRaw, total] = await Promise.all([
-      prisma.turno.findMany({
-        where: filtro,
-        orderBy: { horarioReservado: "desc" },
-        select: SELECCION_TURNO_USUARIO,
-        skip: (paginaActual - 1) * TAMANIO_PAGINA,
-        take: TAMANIO_PAGINA,
-      }),
-      prisma.turno.count({ where: filtro }),
-    ]);
-
-    const turnos = serializarTurnos(turnosRaw);
-
-    return {
-      success: true,
-      data: {
-        turnos,
-        paginaActual,
-        totalPaginas: Math.max(1, Math.ceil(total / TAMANIO_PAGINA)),
-      },
-    };
-  } catch (error) {
-    console.error("Error fetching user turnos:", error);
+    const data = await consultarHistorialTurnos(userId, paginaActual, new Date());
+    return { success: true, data };
+  } catch {
     return { success: false, error: "No se pudieron cargar los turnos" };
   }
 }

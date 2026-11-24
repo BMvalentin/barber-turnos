@@ -57,6 +57,9 @@ export async function actualizarTurnoEnTransaccion(
           include: INCLUDE_TURNO_CON_DETALLE,
         });
         if (!turnoAnterior) throw new Error("TURNO_INEXISTENTE");
+        if (turnoAnterior.estado === ESTADOS_TURNO[2]) {
+          throw new Error("TURNO_COMPLETADO_NO_EDITABLE");
+        }
 
         const debeValidarReserva = esEstadoActivo(parametros.estado);
         const servicio = debeValidarReserva
@@ -141,6 +144,9 @@ export async function actualizarTurnoEnTransaccion(
 
     return { ok: true, ...resultado };
   } catch (error) {
+    if (error instanceof Error && error.message === "TURNO_COMPLETADO_NO_EDITABLE") {
+      return { ok: false, error: "No se pueden editar turnos completados" };
+    }
     const mensaje = interpretarErrorTurno(error);
     if (mensaje) return { ok: false, error: mensaje };
     if (error instanceof Error && error.message === "CANCELACION_NO_DISPONIBLE") {

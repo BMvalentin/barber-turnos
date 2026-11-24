@@ -14,7 +14,7 @@ export default async function FeriadosYCierresPage() {
   ]);
 
   return (
-    <div className="space-y-8">
+    <div className="admin-pagina">
       <Breadcrumb
         items={[
           { etiqueta: "Configuración", href: "/admin/config" },
@@ -22,14 +22,12 @@ export default async function FeriadosYCierresPage() {
           { etiqueta: "Feriados y excepciones" },
         ]}
       />
-      <section>
-        <h1 className="text-2xl font-semibold tracking-tight text-[var(--admin-texto-primario)] md:text-[28px]">
-          Feriados y cierres
-        </h1>
-        <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-          Definí los días o rangos en los que la barbería o un profesional no atienden.
-        </p>
-      </section>
+      <header className="admin-encabezado">
+        <div>
+          <h1>Feriados y cierres</h1>
+          <p>Bloqueá turnos cuando la barbería o alguien del equipo no atienda.</p>
+        </div>
+      </header>
       <FeriadosYCierresCliente excepciones={excepciones} barberos={barberos} />
     </div>
   );

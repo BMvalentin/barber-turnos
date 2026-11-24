@@ -29,15 +29,13 @@ export default function SeccionImagenesServicio({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className="block text-xs font-medium text-[var(--admin-texto-secundario)]">
-          Imágenes del Servicio
-        </label>
+        <p className="text-sm font-medium text-[var(--admin-texto-secundario)]">Imágenes del servicio</p>
         <span className="text-xs font-medium text-[var(--admin-texto-muted)]">
           {total}/3
         </span>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {imagenes.map((slot) => (
           <div key={slot.id} className="relative">
             <SelectorImagenConRecorte
@@ -76,7 +74,7 @@ export default function SeccionImagenesServicio({
             alConfirmar={onAgregar}
             proporcion={1}
             deshabilitado={isPending}
-            className={`relative flex h-28 flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-2 transition ${
+            className={`relative flex h-28 min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--admin-border-fuerte)] px-1 py-2 transition ${
               isPending ? "pointer-events-none opacity-50" : "cursor-pointer hover:opacity-80"
             }`}
           >
@@ -96,7 +94,7 @@ export default function SeccionImagenesServicio({
         )}
       </div>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p role="alert" className="text-sm text-[var(--admin-error)]">{error}</p>}
 
       <p className="text-xs text-[var(--admin-texto-muted)]">
         Podés subir hasta 3 imágenes. Hacé clic sobre una para reemplazarla.

@@ -8,9 +8,10 @@ import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { actualizarTurnoEnTransaccion } from "@/lib/turnos/actualizar-turno-en-transaccion";
 import { serializarTurnoConDetalle } from "@/lib/serializar-turno-con-detalle";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
+import { esConflictoHorario } from "@/lib/interpretar-error-turno";
 import { ESTADOS_PAGO, ESTADOS_PAGO_MANUALES, ESTADOS_TURNO, MINIMO_ANTICIPACION_MS } from "@/lib/constants";
 import type { ActionState } from "@/types/action-state";
-import type { TurnoConDetalle } from "@/types/turno";
+import type { EstadoFormularioTurno } from "@/types/turno";
 import type { turno_estado } from "../../../generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
@@ -27,9 +28,9 @@ function esEstadoPago(valor: unknown): valor is (typeof ESTADOS_PAGO)[number] {
 }
 
 export async function actualizarTurno(
-  prevState: ActionState<TurnoConDetalle>,
+  prevState: EstadoFormularioTurno,
   formData: FormData,
-): Promise<ActionState<TurnoConDetalle>> {
+): Promise<EstadoFormularioTurno> {
   try {
     const id = formData.get("id");
     if (typeof id !== "string" || !id) {
@@ -50,6 +51,9 @@ export async function actualizarTurno(
       },
     });
     if (!turnoActual) return { success: false, error: "Turno no encontrado" };
+    if (turnoActual.estado === ESTADOS_TURNO[2]) {
+      return { success: false, error: "No se pueden editar turnos completados" };
+    }
 
     const servicioId = formData.get("servicioId") || turnoActual.servicioId;
     const barberoId = formData.get("barberoId") || turnoActual.barberoId;
@@ -101,7 +105,13 @@ export async function actualizarTurno(
       estadoPago,
       idUsuarioActual: sesion.user.id,
     });
-    if (!resultado.ok) return { success: false, error: resultado.error };
+    if (!resultado.ok) {
+      return {
+        success: false,
+        error: resultado.error,
+        ...(esConflictoHorario(resultado.error) && { horarioNoDisponible: { barberoId, horario: horario.toISOString() } }),
+      };
+    }
 
     revalidarCacheTurno(
       resultado.turnoAnterior.barberoId,
@@ -117,7 +127,7 @@ export async function actualizarTurno(
       if (resultado.turnoAnterior.estado !== ESTADOS_TURNO[3]) {
         await enviarEmailCancelacionTurnoSeguro(resultado.turno, "ADMINISTRADOR");
       }
-    } else {
+    } else if (resultado.turno.estado !== "COMPLETADO") {
       enviarEmailTurnoSeguro(resultado.turno, "ACTUALIZADO");
     }
     if (resultado.turno.estado === ESTADOS_TURNO[1] && resultado.turnoAnterior.estado !== ESTADOS_TURNO[1]) {

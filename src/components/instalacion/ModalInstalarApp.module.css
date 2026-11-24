@@ -1,0 +1,37 @@
+.panel {
+  --instalacion-margen-inferior: max(0.75rem, env(safe-area-inset-bottom));
+  right: max(0.75rem, env(safe-area-inset-right));
+  bottom: var(--instalacion-margen-inferior);
+  left: max(0.75rem, env(safe-area-inset-left));
+  max-height: calc(100dvh - max(0.75rem, env(safe-area-inset-top)) - var(--instalacion-margen-inferior));
+}
+
+.panel[data-en-admin] {
+  --instalacion-margen-inferior: var(--admin-espacio-barra-movil, 5.25rem);
+}
+
+@media (min-width: 40rem) {
+  .panel {
+    left: auto;
+    width: min(24rem, calc(100% - 1.5rem));
+  }
+}
+
+@media (min-width: 48rem) and (hover: hover) and (pointer: fine) {
+  .panel[data-en-admin] {
+    --instalacion-margen-inferior: max(0.75rem, env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .panel {
+    animation: entrada 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+}
+
+@keyframes entrada {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

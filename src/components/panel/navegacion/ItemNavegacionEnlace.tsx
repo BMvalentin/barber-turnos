@@ -42,19 +42,14 @@ export default function ItemNavegacionEnlace({
         onFocus={mostrar}
         onBlur={ocultar}
         className={`
-          group flex items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-[background-color,color,transform] duration-200 ease-out motion-reduce:transition-none
-          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)]
-          ${colapsado ? "admin-escritorio:justify-center admin-escritorio:px-0 admin-escritorio:hover:scale-105" : "hover:-translate-y-px"}
+          flex min-h-11 items-center gap-3 rounded-[10px] px-3 py-2 text-sm font-medium transition-colors duration-150
+          ${colapsado ? "admin-escritorio:justify-center admin-escritorio:px-0" : ""}
           ${esActivo
-            ? "bg-[var(--page-primary-15)] text-[var(--admin-texto-primario)]"
-            : "text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-border)] hover:text-[var(--admin-texto-primario)]"}
+            ? "bg-[var(--page-primary-soft)] text-[var(--page-primary-tinta)]"
+            : "text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-item)] hover:text-[var(--admin-texto-primario)]"}
         `}
       >
-        <Icono
-          className={`h-4 w-4 shrink-0 transition-transform duration-200 ease-out motion-reduce:transition-none group-hover:scale-110 ${
-            esActivo ? "text-[var(--page-primary-tinta)]" : ""
-          }`}
-        />
+        <Icono className="size-[17px] shrink-0" aria-hidden="true" />
         <span className={colapsado ? "admin-escritorio:hidden" : ""}>{item.titulo}</span>
       </Link>
       {sugerencia}

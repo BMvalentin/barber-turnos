@@ -1,0 +1,212 @@
+body:has(.admin-shell) {
+  --admin-espacio-barra-movil: calc(5.25rem + env(safe-area-inset-bottom));
+}
+
+body:has(.admin-shell) :is(h1, h2, h3) {
+  font-family: inherit;
+}
+
+body:has(.admin-shell) :focus-visible {
+  outline: 2px solid var(--page-focus-ring);
+  outline-offset: 2px;
+}
+
+body:has(.admin-shell) ::selection {
+  background: var(--admin-acento-suave);
+  color: var(--admin-acento-suave-texto);
+}
+
+.admin-shell main {
+  scrollbar-color: var(--admin-border-fuerte) transparent;
+}
+
+.admin-tema-sol { display: var(--admin-mostrar-sol); }
+.admin-tema-luna { display: var(--admin-mostrar-luna); }
+
+body:has(.admin-shell) [data-sonner-toaster][data-sonner-theme] {
+  --success-bg: var(--admin-exito-suave);
+  --success-border: var(--admin-border);
+  --success-text: var(--admin-exito);
+  --error-bg: var(--admin-error-suave);
+  --error-border: var(--admin-border);
+  --error-text: var(--admin-error);
+  --warning-bg: var(--admin-aviso-suave);
+  --warning-border: var(--admin-border);
+  --warning-text: var(--admin-aviso);
+  --info-bg: var(--admin-info-suave);
+  --info-border: var(--admin-border);
+  --info-text: var(--admin-info);
+}
+
+body:has(.admin-shell) [data-sonner-toaster] [data-description] {
+  color: var(--admin-texto-secundario);
+}
+
+@media (hover: none), (pointer: coarse), (width < 768px) {
+  body:has(.admin-shell) [data-sonner-toaster][data-y-position="bottom"] {
+    bottom: var(--admin-espacio-barra-movil);
+  }
+
+  body:has(.admin-shell) :where(
+    input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="hidden"], [type="file"]),
+    select,
+    textarea
+  ) {
+    font-size: max(1rem, 16px);
+  }
+}
+
+@layer components {
+  .admin-pagina {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(1rem, 2vw, 1.5rem);
+    align-content: start;
+  }
+
+  .admin-encabezado {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 0.875rem 1rem;
+    padding-block: 0.25rem 0.125rem;
+  }
+
+  .admin-encabezado h1 {
+    font-size: 1.75rem;
+    font-weight: 650;
+    line-height: 1.17;
+    letter-spacing: -0.035em;
+  }
+
+  .admin-encabezado p {
+    margin-top: 0.375rem;
+    max-width: 64ch;
+    color: var(--admin-texto-muted);
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  @media (min-width: 768px) {
+    .admin-encabezado h1 { font-size: 2.125rem; }
+  }
+
+  .admin-card {
+    min-width: 0;
+    border: 1px solid var(--admin-border);
+    border-radius: 1rem;
+    background: var(--admin-surface);
+  }
+
+  :is(.admin-control, .admin-accion) {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid transparent;
+    border-radius: 0.6875rem;
+    padding-inline: 0.875rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: center;
+    transition: background-color 150ms ease, transform 130ms var(--admin-ease-out);
+  }
+
+  .admin-control {
+    border-color: var(--admin-border);
+    background: var(--admin-surface);
+    color: var(--admin-texto-primario);
+  }
+
+  .admin-accion {
+    background: var(--page-primary);
+    color: var(--page-primary-foreground);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .admin-control:where(:not(:disabled)):hover { background: var(--admin-item-hover); }
+    .admin-accion:where(:not(:disabled)):hover { background: var(--page-primary-hover); }
+  }
+
+  :is(.admin-control, .admin-accion):active:where(:not(:disabled)) { transform: scale(0.97); }
+  :is(.admin-control, .admin-accion):disabled { opacity: 0.6; }
+
+  .admin-distintivo {
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+    align-items: center;
+    gap: 0.375rem;
+    border-radius: 999px;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+}
+
+.admin-barra-movil {
+  bottom: calc(0.625rem + env(safe-area-inset-bottom));
+  background: var(--admin-surface);
+}
+
+[data-tono-estado="aviso"] { --admin-color-estado: var(--admin-indicador-aviso); }
+[data-tono-estado="exito"] { --admin-color-estado: var(--admin-indicador-exito); }
+[data-tono-estado="error"] { --admin-color-estado: var(--admin-indicador-error); }
+[data-tono-estado="info"] { --admin-color-estado: var(--admin-indicador-info); }
+
+.admin-estado {
+  background: color-mix(in srgb, var(--admin-color-estado, var(--admin-indicador-neutro)) 10%, var(--admin-surface));
+  color: var(--admin-texto-primario);
+}
+
+.admin-estado::before {
+  width: 0.375rem;
+  height: 0.375rem;
+  flex: none;
+  border-radius: 50%;
+  background: var(--admin-color-estado, var(--admin-indicador-neutro));
+  content: "";
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .admin-barra-movil {
+    background: color-mix(in srgb, var(--admin-surface) 88%, transparent);
+    -webkit-backdrop-filter: blur(16px) saturate(130%);
+    backdrop-filter: blur(16px) saturate(130%);
+  }
+}
+
+.admin-menu-panel {
+  animation: admin-menu-entrada 260ms var(--admin-ease-drawer) both;
+}
+
+.admin-menu-panel[data-state="closed"] {
+  animation-name: admin-menu-salida;
+  animation-duration: 200ms;
+}
+
+.admin-menu-fondo {
+  animation: admin-menu-velar 200ms ease both;
+}
+
+.admin-menu-fondo[data-state="closed"] {
+  animation-name: admin-menu-desvelar;
+}
+
+/* La traslación de entrada/salida se combina con el arrastre de Motion. */
+@keyframes admin-menu-entrada { from { translate: 0 100%; } }
+@keyframes admin-menu-salida { to { translate: 0 100%; } }
+@keyframes admin-menu-velar { from { opacity: 0; } }
+@keyframes admin-menu-desvelar { to { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.admin-control, .admin-accion):active:where(:not(:disabled)) { transform: none; }
+  .admin-menu-panel { animation-name: admin-menu-velar; animation-duration: 150ms; }
+  .admin-menu-panel[data-state="closed"] { animation-name: admin-menu-desvelar; animation-duration: 150ms; }
+}

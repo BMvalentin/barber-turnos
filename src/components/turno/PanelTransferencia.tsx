@@ -8,6 +8,7 @@ import type { TipoPago } from "@/types/mercadopago";
 import { formatearFecha } from "@/lib/utils/formatear-fecha";
 import { formatearHora } from "@/lib/utils/formatear-hora";
 import { formatearMoneda } from "@/lib/utils/formatear-moneda";
+import { cn } from "@/lib/utils/cn";
 
 type Props = {
   turnoCreado: TurnoCreado;
@@ -15,6 +16,7 @@ type Props = {
   datosTransferencia: DatosTransferencia;
   whatsappPhone: string;
   onVolver: () => void;
+  vistaAdministrativa?: boolean;
 };
 
 export default function PanelTransferencia({
@@ -23,8 +25,10 @@ export default function PanelTransferencia({
   datosTransferencia,
   whatsappPhone,
   onVolver,
+  vistaAdministrativa = false,
 }: Props) {
   const [copiado, setCopiado] = useState<string | null>(null);
+  const [errorCopia, setErrorCopia] = useState(false);
   const monto = tipoPago === "TOTAL" ? turnoCreado.precioCongelado : turnoCreado.seniaCongelada;
   const numeroLimpio = whatsappPhone.replace(/\D/g, "");
   const mensaje = [
@@ -45,9 +49,11 @@ export default function PanelTransferencia({
 
   const copiar = async (nombre: string, valor: string) => {
     if (!valor) return;
+    setErrorCopia(false);
     try {
       await navigator.clipboard.writeText(valor);
     } catch {
+      setErrorCopia(true);
       return;
     }
     setCopiado(nombre);
@@ -58,13 +64,17 @@ export default function PanelTransferencia({
     <div className="flex items-center justify-between gap-3 border-b border-[var(--admin-border)] py-3 last:border-0">
       <div className="min-w-0">
         <p className="text-xs uppercase tracking-wider text-[var(--admin-texto-muted)]">{etiqueta}</p>
-        <p className="mt-1 break-words text-sm font-semibold text-[var(--admin-texto-primario)]">{valor || "No configurado"}</p>
+        <p className="mt-1 text-sm font-semibold text-[var(--admin-texto-primario)] [overflow-wrap:anywhere]">{valor || "No configurado"}</p>
       </div>
       {valor && (clave === "alias" || clave === "cbu") && (
         <button
           type="button"
           onClick={() => void copiar(clave, valor)}
-          className="flex shrink-0 items-center gap-1 rounded-lg border border-[var(--admin-border)] px-2.5 py-1.5 text-xs text-[var(--admin-texto-secundario)] transition hover:bg-[var(--admin-item-hover)]"
+          aria-label={copiado === clave ? `${etiqueta} copiado` : `Copiar ${etiqueta}`}
+          className={cn(
+            "flex shrink-0 items-center gap-1 rounded-lg border border-[var(--admin-border)] px-2.5 py-1.5 text-xs text-[var(--admin-texto-secundario)] transition-colors hover:bg-[var(--admin-item-hover)]",
+            !vistaAdministrativa && "min-h-11 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--page-focus-ring)]",
+          )}
         >
           {copiado === clave ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
           {copiado === clave ? "Copiado" : "Copiar"}
@@ -78,18 +88,26 @@ export default function PanelTransferencia({
       <button
         type="button"
         onClick={onVolver}
-        className="flex items-center gap-2 text-sm text-[var(--admin-texto-secundario)] transition hover:text-[var(--admin-texto-primario)]"
+        className={cn(
+          "flex items-center gap-2 rounded-md text-left text-sm text-[var(--admin-texto-secundario)] transition-colors hover:text-[var(--admin-texto-primario)]",
+          !vistaAdministrativa && "min-h-11 px-2 font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--page-focus-ring)]",
+        )}
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
         Cambiar método de pago
       </button>
 
-      <div className="rounded-xl border border-[var(--page-primary)]/30 bg-[var(--page-primary-15)] p-4">
+      <div className={cn(
+        "border p-4",
+        vistaAdministrativa
+          ? "rounded-xl border-[var(--page-primary)]/30 bg-[var(--page-primary-15)]"
+          : "rounded-lg border-[var(--admin-border)] bg-[var(--tema-primario-suave)]",
+      )}>
         <div className="flex items-start gap-3">
-          <Landmark className="mt-0.5 h-5 w-5 shrink-0 text-[var(--admin-texto-primario)]" />
+          <Landmark className={cn("mt-0.5 size-5 shrink-0", vistaAdministrativa ? "text-[var(--admin-texto-primario)]" : "text-[var(--tema-primario-suave-texto)]")} aria-hidden="true" />
           <div>
-            <p className="font-semibold text-[var(--admin-texto-primario)]">Datos para transferir</p>
-            <p className="mt-1 text-sm text-[var(--admin-texto-secundario)]">
+            <p className={cn("font-semibold", vistaAdministrativa ? "text-[var(--admin-texto-primario)]" : "text-[var(--tema-primario-suave-texto)]")}>Datos para transferir</p>
+            <p className={cn("mt-1 text-sm", vistaAdministrativa ? "text-[var(--admin-texto-secundario)]" : "text-[var(--tema-primario-suave-texto)]")}>
               Transferí exactamente <strong>${formatearMoneda(monto)}</strong> y luego adjuntá el comprobante en WhatsApp.
             </p>
           </div>
@@ -104,18 +122,25 @@ export default function PanelTransferencia({
         {dato("CBU", datosTransferencia.transferenciaCbu, "cbu")}
       </div>
 
+      {errorCopia && <p role="status" className="text-sm text-[var(--admin-texto-secundario)]">No se pudo copiar. Podés seleccionar y copiar el dato manualmente.</p>}
+
       {urlWhatsApp ? (
         <a
           href={urlWhatsApp}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 py-3.5 text-sm font-black uppercase tracking-wider text-white transition hover:bg-green-500"
+          className={cn(
+            "flex w-full items-center justify-center gap-2 px-3 py-3.5 text-center text-sm text-white transition-colors",
+            vistaAdministrativa
+              ? "rounded-xl bg-green-600 font-black uppercase tracking-wider hover:bg-green-500"
+              : "min-h-11 rounded-lg bg-green-800 font-semibold hover:bg-green-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--page-focus-ring)]",
+          )}
         >
-          <MessageCircle className="h-5 w-5" />
+          <MessageCircle className="size-5 shrink-0" aria-hidden="true" />
           Mandar comprobante a WhatsApp
         </a>
       ) : (
-        <p className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-[var(--admin-texto-secundario)]" role="alert">
+        <p className="rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-3 text-sm text-[var(--admin-texto-primario)] [overflow-wrap:anywhere]" role="alert">
           El WhatsApp de contacto todavía no está configurado. Avisá al comercio por otro medio y conservá este número de turno: {turnoCreado.id}.
         </p>
       )}

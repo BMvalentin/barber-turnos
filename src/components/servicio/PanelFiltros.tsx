@@ -1,126 +1,52 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Filter, SlidersHorizontal, X } from "lucide-react";
-import { ESTILO_FONDO_MARCA } from "@/lib/constants";
+import { useId, useState } from "react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import CamposFiltros from "./CamposFiltros";
 import type { FilterState } from "@/hooks/useFiltrosServicios";
 
 type PanelFiltrosProps = {
   filtros: FilterState;
-  onCambiarFiltro: <K extends keyof FilterState>(
-    key: K,
-    value: FilterState[K],
-  ) => void;
-  onLimpiarFiltros: () => void;
+  onCambiarFiltro: <K extends keyof FilterState>(key: K, value: FilterState[K]) => void;
   filtrosActivos: number;
-  totalResultados: number;
-  totalServicios: number;
 };
 
-export default function PanelFiltros({
-  filtros,
-  onCambiarFiltro,
-  onLimpiarFiltros,
-  filtrosActivos,
-  totalResultados,
-  totalServicios,
-}: PanelFiltrosProps) {
+export default function PanelFiltros({ filtros, onCambiarFiltro, filtrosActivos }: PanelFiltrosProps) {
   const [mostrarPanel, setMostrarPanel] = useState(false);
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (
-        panelRef.current &&
-        !panelRef.current.contains(e.target as Node)
-      ) {
-        setMostrarPanel(false);
-      }
-    }
-    if (mostrarPanel) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [mostrarPanel]);
+  const idPanel = useId();
+  const cantidadFiltros = filtrosActivos - Number(Boolean(filtros.search.trim()));
 
   return (
-    <div className="relative" ref={panelRef}>
-      <button
-        onClick={() => setMostrarPanel((v) => !v)}
-        style={{
-          borderColor:
-            mostrarPanel || filtrosActivos > 0
-              ? "var(--page-primary)"
-              : "var(--admin-border)",
-          color: "var(--admin-texto-primario)",
-          backgroundColor:
-            mostrarPanel || filtrosActivos > 0
-              ? "var(--page-primary-15)"
-              : "var(--admin-surface-elevated)",
-        }}
-        className="flex items-center gap-2 px-4 py-2 border text-[10px] font-bold uppercase tracking-wider rounded transition-colors duration-150 hover:bg-[var(--admin-item-hover)]"
-      >
-        <SlidersHorizontal className="w-4 h-4" />
-        Filtrar
-        {filtrosActivos > 0 && (
-          <span
-            className="text-[var(--page-primary-foreground)] text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none"
-            style={ESTILO_FONDO_MARCA}
-          >
-            {filtrosActivos}
-          </span>
-        )}
-      </button>
-
-      {mostrarPanel && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 sm:hidden"
-            onClick={() => setMostrarPanel(false)}
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <label className="relative min-w-0 flex-1 sm:max-w-md">
+          <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--admin-texto-muted)]" />
+          <input
+            type="search"
+            value={filtros.search}
+            onChange={(evento) => onCambiarFiltro("search", evento.target.value)}
+            placeholder="Buscar servicio"
+            aria-label="Buscar por nombre o descripción"
+            className="min-h-11 w-full rounded-xl border border-[var(--admin-border-fuerte)] bg-[var(--admin-surface)] pl-9 pr-2 text-base placeholder:text-[var(--admin-texto-muted)] sm:text-sm"
           />
-          <div className="fixed inset-x-0 bottom-0 z-50 h-[85dvh] bg-[var(--admin-surface-elevated)] border-t border-[var(--admin-border)] rounded-t-3xl shadow-2xl flex flex-col sm:absolute sm:right-0 sm:top-full sm:bottom-auto sm:inset-x-auto sm:mt-2 sm:w-80 sm:h-auto sm:rounded-xl sm:border sm:border-[var(--admin-border)] sm:overflow-hidden">
-            <div className="shrink-0">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--admin-border)]">
-                <div className="flex items-center gap-2">
-                  <Filter
-                    className="w-4 h-4"
-                    style={{ color: "var(--page-primary-tinta)" }}
-                  />
-                  <span className="text-xs font-bold text-[var(--admin-texto-primario)] uppercase tracking-wider">
-                    Filtros
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  {filtrosActivos > 0 && (
-                    <button
-                      onClick={onLimpiarFiltros}
-                      className="text-[10px] font-bold text-[var(--admin-texto-muted)] uppercase tracking-wider transition-colors duration-150"
-                      style={{ color: "var(--page-primary-tinta)" }}
-                    >
-                      Limpiar
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setMostrarPanel(false)}
-                    className="text-[var(--admin-texto-muted)] hover:text-[var(--admin-texto-primario)] transition-colors duration-150"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <CamposFiltros filtros={filtros} onCambiarFiltro={onCambiarFiltro} />
-
-            <div className="shrink-0 px-5 py-4 border-t border-[var(--admin-border)] bg-[var(--admin-surface)]">
-              <p className="text-[10px] text-[var(--admin-texto-muted)] text-center">
-                {totalResultados} de {totalServicios} servicios encontrados
-              </p>
-            </div>
-          </div>
-        </>
-      )}
+        </label>
+        <button
+          type="button"
+          aria-expanded={mostrarPanel}
+          aria-controls={idPanel}
+          onClick={() => setMostrarPanel((actual) => !actual)}
+          className="admin-control shrink-0 aria-expanded:bg-[var(--page-primary-soft)] aria-expanded:text-[var(--admin-acento-suave-texto)]"
+        >
+          <SlidersHorizontal aria-hidden="true" className="size-4" />
+          Filtros
+          {cantidadFiltros > 0 && (
+            <span className="rounded-full bg-[var(--page-primary-soft)] px-1.5 text-xs text-[var(--admin-acento-suave-texto)]">{cantidadFiltros}</span>
+          )}
+        </button>
+      </div>
+      <div id={idPanel} hidden={!mostrarPanel}>
+        <CamposFiltros filtros={filtros} onCambiarFiltro={onCambiarFiltro} />
+      </div>
     </div>
   );
 }

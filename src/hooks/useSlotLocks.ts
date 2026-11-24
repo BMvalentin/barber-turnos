@@ -146,5 +146,5 @@ export function useSlotLocks({
     [slotsBlockeados]
   );
 
-  return { slotsBlockeados, lockSlot, unlockSlot, isSlotBloqueado };
+  return { slotsBlockeados, lockSlot, unlockSlot, isSlotBloqueado, refrescarLocks: fetchLocks };
 }

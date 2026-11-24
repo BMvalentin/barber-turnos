@@ -63,24 +63,7 @@ export async function listarUsuarios(
       } : {}),
     };
 
-    const [grupos, totalResultados] = await Promise.all([
-      incluirContadores ? prisma.user.groupBy({
-        by: ["role"],
-        where: { esInvitado: false },
-        _count: { _all: true },
-      }) : Promise.resolve(null),
-      prisma.user.count({ where }),
-    ]);
-
-    const cantidades = grupos ? {
-      usuarios: grupos.find((grupo) => grupo.role === "USER")?._count._all ?? 0,
-      empleados: grupos.find((grupo) => grupo.role === "EMPLEADO")?._count._all ?? 0,
-      administradores: grupos.find((grupo) => grupo.role === "ADMIN")?._count._all ?? 0,
-    } : null;
-    const totalPaginas = Math.max(1, Math.ceil(totalResultados / TAMANO_PAGINA));
-    const paginaActual = Math.min(pagina, totalPaginas);
-
-    const usuarios = await prisma.user.findMany({
+    const consultarPagina = (numeroPagina: number) => prisma.user.findMany({
       where,
       select: {
         id: true,
@@ -92,9 +75,33 @@ export async function listarUsuarios(
         _count: { select: { turno: true } },
       },
       orderBy: [{ role: "asc" }, { email: "asc" }, { id: "asc" }],
-      skip: (paginaActual - 1) * TAMANO_PAGINA,
+      skip: (numeroPagina - 1) * TAMANO_PAGINA,
       take: TAMANO_PAGINA,
     });
+
+    const [grupos, totalFiltrado, primeraPagina] = await Promise.all([
+      incluirContadores ? prisma.user.groupBy({
+        by: ["role"],
+        where: { esInvitado: false },
+        _count: { _all: true },
+      }) : null,
+      incluirContadores && !busqueda ? null : prisma.user.count({ where }),
+      pagina === 1 ? consultarPagina(1) : null,
+    ]);
+
+    const cantidades = grupos ? {
+      usuarios: grupos.find((grupo) => grupo.role === "USER")?._count._all ?? 0,
+      empleados: grupos.find((grupo) => grupo.role === "EMPLEADO")?._count._all ?? 0,
+      administradores: grupos.find((grupo) => grupo.role === "ADMIN")?._count._all ?? 0,
+    } : null;
+    const contadores = cantidades && {
+      ...cantidades,
+      todos: cantidades.usuarios + cantidades.empleados + cantidades.administradores,
+    };
+    const totalResultados = totalFiltrado ?? contadores?.[lista] ?? 0;
+    const totalPaginas = Math.max(1, Math.ceil(totalResultados / TAMANO_PAGINA));
+    const paginaActual = Math.min(pagina, totalPaginas);
+    const usuarios = primeraPagina ?? await consultarPagina(paginaActual);
 
     return {
       success: true,
@@ -103,10 +110,7 @@ export async function listarUsuarios(
           ...usuario,
           cantidadTurnos: _count.turno,
         })),
-        contadores: cantidades && {
-          ...cantidades,
-          todos: cantidades.usuarios + cantidades.empleados + cantidades.administradores,
-        },
+        contadores,
         pagina: paginaActual,
         totalPaginas,
         totalResultados,

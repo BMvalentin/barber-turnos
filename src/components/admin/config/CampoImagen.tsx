@@ -37,8 +37,8 @@ export default function CampoImagen({
   quitarImagen,
 }: CampoImagenProps) {
   return (
-    <div>
-      <label className="mb-1.5 block text-sm font-medium text-[var(--admin-texto-secundario)]">
+    <div className="min-w-0 rounded-xl border border-[var(--admin-border)] p-4">
+      <label htmlFor={`imagen-${campo}`} className="mb-2 block text-sm font-semibold text-[var(--admin-texto-primario)]">
         {etiqueta}
       </label>
 
@@ -54,6 +54,7 @@ export default function CampoImagen({
 
       <input
         type="text"
+        id={`imagen-${campo}`}
         name={campo}
         value={valor}
         onChange={manejarTexto}
@@ -71,12 +72,12 @@ export default function CampoImagen({
           <img
             src={valor}
             alt={`Vista previa de ${etiqueta}`}
-            className={`${claseVistaPrevia} rounded bg-white/10 p-1`}
+            className={`${claseVistaPrevia} rounded bg-[var(--admin-surface-elevated)] p-1`}
           />
           <button
             type="button"
             onClick={() => quitarImagen(campo)}
-            className="block text-xs text-red-400 transition-colors hover:text-red-300"
+            className="admin-control min-h-11 px-3 text-xs"
           >
             Quitar imagen
           </button>

@@ -37,7 +37,7 @@ const obtenerServiciosAdminCacheados = unstable_cache(
     }));
   },
   ["admin-servicios-listado-v1"],
-  { tags: ["servicios"], revalidate: 300 },
+  { tags: ["servicios"], revalidate: 3600 },
 );
 
 /** Devuelve solo los campos que usa la tabla de administración. */

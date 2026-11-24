@@ -1,20 +1,15 @@
-import { motion } from "framer-motion";
+import FondoRegistro from "@/components/auth/FondoRegistro";
 
 interface AuthProps {
-    children: React.ReactNode;
+  children: React.ReactNode;
+  imagenFondo?: string;
 }
 
-export default function AuthLayout({ children }: AuthProps) {
+export default function AuthLayout({ children, imagenFondo }: AuthProps) {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#0a0a0a] relative overflow-hidden">
-      <motion.div 
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="z-10 w-full"
-      >
-        {children}
-      </motion.div>
-    </div>
+    <main className="relative isolate flex min-h-svh w-full items-center justify-center bg-[var(--page-bg)] px-4 pt-20 pb-4 text-[var(--page-bg-foreground)] sm:pt-24 sm:pb-8">
+      <FondoRegistro imagen={imagenFondo} />
+      {children}
+    </main>
   );
 }

@@ -29,7 +29,8 @@ export function useDatosFormularioTurno({
   initialUsuarios,
   initialRelaciones,
   turnoInicial,
-}: ParametrosDatosTurno) {
+  puedeGestionarTurnos,
+}: ParametrosDatosTurno & { puedeGestionarTurnos: boolean }) {
   const datosContexto = useDatosReserva();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -47,7 +48,7 @@ export function useDatosFormularioTurno({
   );
   const [selectedUserId, setSelectedUserId] = useState(
     turnoInicial?.user?.id ||
-      (session?.user?.role === "USER" ? session?.user?.id ?? "" : ""),
+      (!puedeGestionarTurnos ? session?.user?.id ?? "" : ""),
   );
   const [clienteNombre, setClienteNombre] = useState("");
   const [clienteApellido, setClienteApellido] = useState("");

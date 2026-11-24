@@ -1,5 +1,3 @@
-"use client";
-
 import { FormularioFeriadoYCierre } from "./FormularioFeriadoYCierre";
 import { ListaFeriadosYCierres } from "./ListaFeriadosYCierres";
 import type { BarberoParaSelector } from "@/types/barbero";
@@ -15,35 +13,24 @@ export function FeriadosYCierresCliente({
   barberos,
 }: FeriadosYCierresClienteProps) {
   return (
-    <section className="overflow-hidden rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)]">
-      <div className="border-b border-[var(--admin-border)] px-4 py-5 sm:px-6">
-        <div className="flex flex-col justify-between gap-1 sm:flex-row sm:items-center">
-          <div>
-            <h2 className="text-base font-semibold text-[var(--admin-texto-primario)]">
-              Agregar cierre
-            </h2>
-            <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-              Podés aplicarlo a toda la barbería o a una persona en particular.
-            </p>
-          </div>
-        </div>
+    <div className="grid min-w-0 gap-4 lg:gap-6">
+      <section className="admin-card p-4 sm:p-6" aria-labelledby="titulo-agregar-cierre">
+        <h2 id="titulo-agregar-cierre" className="text-base font-semibold text-[var(--admin-texto-primario)]">
+          Agregar cierre
+        </h2>
         <FormularioFeriadoYCierre barberos={barberos} />
-      </div>
-      <div className="px-4 py-5 sm:px-6">
-        <div className="mb-4 flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-base font-semibold text-[var(--admin-texto-primario)]">
-              Próximos y registrados
-            </h2>
-            <p className="mt-1 text-sm text-[var(--admin-texto-muted)]">
-              {excepciones.length === 1
-                ? "1 cierre configurado"
-                : `${excepciones.length} cierres configurados`}
-            </p>
-          </div>
+      </section>
+      <section className="admin-card" aria-labelledby="titulo-cierres">
+        <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[var(--admin-border)] p-4 sm:px-6">
+          <h2 id="titulo-cierres" className="text-base font-semibold text-[var(--admin-texto-primario)]">
+            Cierres registrados
+          </h2>
+          <span className="text-sm tabular-nums text-[var(--admin-texto-muted)]">
+            {excepciones.length} {excepciones.length === 1 ? "cierre" : "cierres"}
+          </span>
         </div>
         <ListaFeriadosYCierres excepciones={excepciones} />
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }

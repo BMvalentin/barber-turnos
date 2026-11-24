@@ -1,6 +1,7 @@
 /* La fuente Outfit se define con next/font/google en el layout raíz
    (variable --font-outfit) y se aplica en <body> y en los títulos h1-h3. */
 @import "tailwindcss";
+@import "./admin/panel.css";
 
 @custom-variant admin-escritorio (@media (min-width: 768px) and (hover: hover) and (pointer: fine));
 
@@ -29,6 +30,7 @@
   --tema-borde-suave: #636364;
   --tema-borde-fuerte: #888889;
   --tema-foco: #d97706;
+  --tema-error: #ff9ca5;
   --tema-primario: #d97706;
   --tema-primario-hover: #bf6905;
   --tema-primario-activo: #ad5f05;
@@ -79,6 +81,8 @@
   --page-primary-soft: var(--tema-primario-suave);
   --page-primary-muted: var(--tema-primario-suave);
   --page-focus-ring: var(--tema-foco);
+  --page-error: var(--tema-error);
+  --page-separador: color-mix(in srgb, var(--tema-texto-principal) 14%, transparent);
 
   /* Variantes alfa derivadas (color-mix) usadas como ${primaryColor}XX antes */
   --page-primary-15: color-mix(in srgb, var(--page-primary) 15%, transparent);
@@ -115,14 +119,17 @@
 
   /* Custom tokens */
   --shadow-elevated: 0 20px 60px -20px hsl(210 25% 10% / 0.25);
+  --fuente-panel: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 /* =========================
    BASE STYLES
 ========================= */
 
-* {
-  border-color: var(--border);
+@layer base {
+  * {
+    border-color: var(--border);
+  }
 }
 
 html {
@@ -161,6 +168,78 @@ button:not(:disabled),
   }
 }
 
+.control-publico:focus-visible,
+.modal-publico :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--page-focus-ring);
+  outline-offset: 2px;
+}
+
+.boton-foto {
+  border-color: var(--page-primary-sobre-oscuro);
+  background-color: var(--page-primary);
+  color: var(--page-primary-foreground);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .boton-foto:hover { background-color: var(--page-primary-hover); }
+}
+
+.boton-foto:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 3px;
+}
+
+.entrada-inicio {
+  animation: aparecer-inicio 250ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+
+@keyframes aparecer-inicio {
+  from { opacity: 0.7; translate: 0 6px; }
+}
+
+.modal-publico {
+  border-radius: 0.75rem;
+  background: var(--admin-surface);
+  color: var(--admin-texto-primario);
+  box-shadow: 0 20px 52px -20px rgb(0 0 0 / 55%);
+  scrollbar-gutter: stable;
+}
+
+.marco-reserva {
+  border: 1px solid var(--page-separador);
+  border-radius: 0.75rem;
+  background: var(--admin-surface);
+  box-shadow: var(--shadow-elevated);
+  font-family: var(--fuente-panel);
+  scrollbar-gutter: auto;
+}
+
+.marco-reserva :is(h1, h2, h3) {
+  font-family: inherit;
+}
+
+.entrada-modal-publico {
+  animation: aparecer-modal-publico 200ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+
+.velo-modal-publico {
+  animation: aparecer-velo-publico 180ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+
+@keyframes aparecer-modal-publico {
+  from { opacity: 0; scale: 0.98; }
+}
+
+@keyframes aparecer-velo-publico {
+  from { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .entrada-inicio { animation: none; }
+  .entrada-modal-publico { animation-name: aparecer-velo-publico; }
+}
+
 /* Scrollbar minimalista */
 ::-webkit-scrollbar {
   width: 5px;
@@ -170,24 +249,12 @@ button:not(:disabled),
   border-radius: 10px;
 }
 
-@keyframes deslizar-barberia {
-  to {
-    background-position: 0 5rem;
-  }
-}
-
 .barra-barberia {
   background: repeating-linear-gradient(
     -45deg,
     var(--page-primary) 0 1rem,
     var(--page-bg-foreground) 1rem 2rem
   );
-  background-size: 100% 5rem;
-  animation: deslizar-barberia 4s linear infinite;
-}
-
-.numero-error {
-  text-shadow: 0 0 42px var(--page-primary-30);
 }
 
 body:has([data-pagina-no-encontrada]) footer {
@@ -202,8 +269,102 @@ body:has([data-pagina-no-encontrada])::-webkit-scrollbar {
   display: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .barra-barberia {
-    animation: none;
+/* Los portales de los selectores y los diálogos también heredan el tema del panel. */
+body:has(.admin-shell) {
+  --admin-background: #f5f5f7;
+  --admin-surface: #fff;
+  --admin-surface-elevated: #f7f7fa;
+  --admin-item: #f1f1f5;
+  --admin-item-hover: #e9e9ef;
+  --admin-border: #e2e2e9;
+  --admin-border-fuerte: #8c8c98;
+  --admin-texto-primario: #19191f;
+  --admin-texto-secundario: #484853;
+  --admin-texto-muted: #656571;
+  --admin-error: #a82a37;
+  --admin-exito: #206345;
+  --admin-aviso: #805007;
+  --admin-info: #285c99;
+  --admin-indicador-aviso: #b77916;
+  --admin-indicador-exito: #22865f;
+  --admin-indicador-error: #ce5363;
+  --admin-indicador-info: #4381c0;
+  --admin-indicador-neutro: #787885;
+  --admin-acento: #c4490d;
+  --admin-acento-hover: #a93b0a;
+  --admin-acento-sobre: #fff;
+  --admin-acento-tinta: #a73c0a;
+  --admin-acento-suave: #fff0e6;
+  --admin-acento-suave-texto: var(--admin-acento-tinta);
+  --admin-error-suave: color-mix(in srgb, var(--admin-error) 9%, var(--admin-surface));
+  --admin-exito-suave: color-mix(in srgb, var(--admin-exito) 10%, var(--admin-surface));
+  --admin-aviso-suave: color-mix(in srgb, var(--admin-aviso) 10%, var(--admin-surface));
+  --admin-info-suave: color-mix(in srgb, var(--admin-info) 9%, var(--admin-surface));
+  --admin-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --admin-ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --page-primary: var(--admin-acento);
+  --page-primary-hover: var(--admin-acento-hover);
+  --page-primary-foreground: var(--admin-acento-sobre);
+  --page-primary-tinta: var(--admin-acento-tinta);
+  --page-primary-sobre-oscuro: #ff9c68;
+  --page-primary-soft: var(--admin-acento-suave);
+  --page-primary-muted: var(--admin-acento-suave);
+  --page-focus-ring: var(--admin-acento-tinta);
+  --page-separador: var(--admin-border);
+  --page-bg: var(--admin-background);
+  --page-bg-foreground: var(--admin-texto-primario);
+  --page-bg-tinta: var(--admin-texto-primario);
+  --background: var(--admin-background);
+  --foreground: var(--admin-texto-primario);
+  --primary: var(--page-primary);
+  --primary-foreground: var(--page-primary-foreground);
+  --border: var(--admin-border);
+  --page-primary-15: color-mix(in srgb, var(--page-primary) 15%, transparent);
+  --page-primary-20: color-mix(in srgb, var(--page-primary) 20%, transparent);
+  --page-primary-30: color-mix(in srgb, var(--page-primary) 30%, transparent);
+  --page-primary-40: color-mix(in srgb, var(--page-primary) 40%, transparent);
+  --page-primary-50: color-mix(in srgb, var(--page-primary) 50%, transparent);
+  --page-primary-60: color-mix(in srgb, var(--page-primary) 60%, transparent);
+  --page-primary-70: color-mix(in srgb, var(--page-primary) 70%, transparent);
+  --page-primary-80: color-mix(in srgb, var(--page-primary) 80%, transparent);
+  --admin-mostrar-sol: none;
+  --admin-mostrar-luna: inline-flex;
+  color-scheme: light;
+  accent-color: var(--admin-acento);
+  caret-color: var(--admin-acento-tinta);
+  font-family: var(--fuente-panel);
+}
+
+@custom-variant admin-tema-oscuro {
+  &:where(body:has(.admin-shell[data-admin-tema="oscuro"])) { @slot; }
+  @media (prefers-color-scheme: dark) {
+    &:where(body:has(.admin-shell[data-admin-tema="sistema"])) { @slot; }
+  }
+}
+
+body:has(.admin-shell) {
+  @variant admin-tema-oscuro {
+    --admin-background: #141418;
+    --admin-surface: #1d1d23;
+    --admin-surface-elevated: #24242c;
+    --admin-item: #2a2a33;
+    --admin-item-hover: #343440;
+    --admin-border: #33333e;
+    --admin-border-fuerte: #6f6f7d;
+    --admin-texto-primario: #f6f6f8;
+    --admin-texto-secundario: #cccbd5;
+    --admin-texto-muted: #a4a3b2;
+    --admin-error: #ff9ca5;
+    --admin-exito: #91dfb5;
+    --admin-aviso: #f5cb85;
+    --admin-info: #9bc8ff;
+    --admin-acento: #ff965e;
+    --admin-acento-hover: #ffac80;
+    --admin-acento-sobre: #231207;
+    --admin-acento-tinta: #ffa471;
+    --admin-acento-suave: #39271f;
+    --admin-mostrar-sol: inline-flex;
+    --admin-mostrar-luna: none;
+    color-scheme: dark;
   }
 }
