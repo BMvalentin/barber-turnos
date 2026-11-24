@@ -38,5 +38,6 @@ export const filtroBarberoReservable = {
 } satisfies Prisma.barberoWhereInput;
 
 export const filtroBarberoParaAgenda = {
-  OR: [filtroBarberoReservable, { turnos: { some: {} } }],
+  ...filtroBarberoReservable,
+  usuario: { role: "EMPLEADO" },
 } satisfies Prisma.barberoWhereInput;

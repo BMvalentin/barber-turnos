@@ -46,19 +46,15 @@ describe("catálogos de barberos", () => {
     }));
   });
 
-  it("mantiene el historial en la agenda aunque el barbero ya no acepte reservas", async () => {
+  it("el desplegable de turnos solo ofrece empleados activos con servicios activos", async () => {
     await obtenerBarberosFiltroTurnos();
 
     expect(mocks.barbero).toHaveBeenCalledWith(expect.objectContaining({
       where: {
-        OR: [
-          {
-            estado: true,
-            usuarioId: { not: null },
-            servicios: { some: { servicio: { estado: true } } },
-          },
-          { turnos: { some: {} } },
-        ],
+        estado: true,
+        usuarioId: { not: null },
+        servicios: { some: { servicio: { estado: true } } },
+        usuario: { role: "EMPLEADO" },
       },
     }));
   });

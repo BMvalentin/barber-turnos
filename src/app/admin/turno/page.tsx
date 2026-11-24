@@ -9,12 +9,15 @@ import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import { redirect } from "next/navigation";
 
 async function obtenerCatalogoAgenda(soloBarbero: string | undefined) {
-  const [catalogo, barberosFiltro] = await Promise.all([
-    obtenerDatosReserva(),
-    soloBarbero === undefined ? obtenerBarberosFiltroTurnos() : null,
-  ]);
-  if (soloBarbero === undefined) return { ...catalogo, barberosFiltro: barberosFiltro ?? catalogo.barberos };
+  if (soloBarbero === undefined) {
+    const [catalogo, barberosFiltro] = await Promise.all([
+      obtenerDatosReserva(),
+      obtenerBarberosFiltroTurnos(),
+    ]);
+    return { ...catalogo, barberosFiltro };
+  }
 
+  const catalogo = await obtenerDatosReserva();
   const barberos = catalogo.barberos.filter((barbero) => barbero.id === soloBarbero);
   const relaciones = catalogo.relaciones.filter((relacion) => relacion.barberoId === soloBarbero);
   const serviciosAsignados = new Set(relaciones.map((relacion) => relacion.servicioId));
@@ -39,9 +42,15 @@ export default async function AdminTurnoPage({ searchParams }: {
     obtenerCatalogoAgenda(esEmpleado ? contexto.barberoId ?? "" : undefined),
     obtenerConfigCacheada(),
   ]);
+  const perfilPropio = !esEmpleado && agendaInicial === "personal"
+    ? barberos.find(({ id }) => id === contexto.barberoId)
+    : undefined;
   const barberoIdInicial = esEmpleado
     ? contexto.barberoId ?? ""
-    : barberosFiltro.find(({ id }) => id === contexto.barberoId)?.id ?? "";
+    : perfilPropio?.id ?? "";
+  const opcionesBarberos = perfilPropio
+    ? [perfilPropio, ...barberosFiltro.filter(({ id }) => id !== perfilPropio.id)]
+    : barberosFiltro;
 
   return (
     <TurnoManager
@@ -49,7 +58,7 @@ export default async function AdminTurnoPage({ searchParams }: {
       session={session}
       initialServicios={servicios}
       initialBarberos={barberos}
-      barberosFiltro={barberosFiltro}
+      barberosFiltro={opcionesBarberos}
       initialRelaciones={relaciones}
       mostrarFiltroBarbero={!esEmpleado}
       barberoIdInicial={barberoIdInicial}
