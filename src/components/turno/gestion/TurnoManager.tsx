@@ -9,6 +9,7 @@ import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import { esAdmin } from "@/lib/seguridad/es-admin";
 import { nombreVisibleBarbero } from "@/lib/barberos/nombre-profesional";
 import { invalidarDisponibilidadLocal } from "@/lib/turnos/disponibilidad-cliente";
+import { obtenerAmbitoBaseDatosLocal } from "@/lib/ambito-base-datos-cliente";
 import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
 import type { ParcheTurnoCache } from "@/lib/admin/turnos-cache-local";
 import type { BarberoData, RelacionData, ServicioData, TurnoConDetalle, TurnoListado, UsuarioData } from "@/types/turno";
@@ -119,7 +120,7 @@ export default function TurnoManager({
   ], [barberosFiltro, barberoIdInicial]);
   const [paginaActual, setPaginaActual] = useState(1);
   const clavePreferenciaBarbero = mostrarFiltroBarbero && session?.user?.id
-    ? `mayoraz-admin-turno-barbero-v1:${session.user.id}`
+    ? `mayoraz-admin-turno-barbero-v2:${obtenerAmbitoBaseDatosLocal()}:${session.user.id}`
     : null;
   const clavePreferenciaInicial = agendaInicial ? null : clavePreferenciaBarbero;
   const [preferenciaBarberoLista, setPreferenciaBarberoLista] = useState(

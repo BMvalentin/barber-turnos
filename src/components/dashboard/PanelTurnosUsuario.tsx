@@ -8,6 +8,7 @@ import CargadorModalGestionTurno from "@/components/turno/reserva/CargadorModalG
 import DatosReservaProveedor from "@/contextos/DatosReservaProveedor";
 import CalendarioMensualTurnos from "@/components/turno/gestion/CalendarioMensualTurnos";
 import TurnoList from "@/components/turno/gestion/TurnoList";
+import { obtenerAmbitoBaseDatosLocal } from "@/lib/ambito-base-datos-cliente";
 import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
 import { cn } from "@/lib/utils/cn";
 import type { ParcheTurnoCache } from "@/lib/admin/turnos-cache-local";
@@ -75,8 +76,10 @@ export default function PanelTurnosUsuario({
   const turnosDelDia = turnosProximos.filter((turno) => obtenerFechaSola(turno.horarioReservado) === fecha);
 
   const refrescarTurnos = useCallback(async (idUsuario: string) => {
+    const ambitoAlConsultar = obtenerAmbitoBaseDatosLocal();
     try {
       const resultado = await getResumenTurnosUsuario(idUsuario);
+      if (ambitoAlConsultar !== obtenerAmbitoBaseDatosLocal()) return;
       if (!resultado.success || !resultado.data) return;
 
       const { historial, proximos } = resultado.data;
@@ -96,8 +99,10 @@ export default function PanelTurnosUsuario({
 
     establecerCargandoMas(true);
     establecerErrorCargaMas(false);
+    const ambitoAlConsultar = obtenerAmbitoBaseDatosLocal();
     try {
       const resultado = await getUserTurnos(idUsuario, paginaActual + 1);
+      if (ambitoAlConsultar !== obtenerAmbitoBaseDatosLocal()) return;
       if (!resultado.success || !resultado.data) {
         establecerErrorCargaMas(true);
         return;

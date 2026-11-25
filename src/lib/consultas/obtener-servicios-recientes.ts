@@ -1,9 +1,9 @@
-import { unstable_cache } from "next/cache";
+import { cachearConsulta } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import { listarUrlImagenesServicio } from "@/lib/servicio-imagenes/listar-url";
 import type { ServicioCarrusel } from "@/types/servicio";
 
-export const obtenerServiciosRecientes = unstable_cache(
+export const obtenerServiciosRecientes = cachearConsulta(
   async (): Promise<ServicioCarrusel[]> => {
     const registros = await prisma.servicio.findMany({
       where: { estado: true },

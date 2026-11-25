@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { cachearConsulta } from "@/lib/cache";
 import { obtenerConfiguracionMP } from "@/lib/mercadopago/obtener-config";
 
 type ConfiguracionMercadoPago = NonNullable<Awaited<ReturnType<typeof obtenerConfiguracionMP>>>;
@@ -29,7 +29,7 @@ export async function obtenerNombreCuentaMP(
     : configuracionInicial;
   if (!configuracion?.conectado || !configuracion.mpUserId) return null;
 
-  const obtenerNombreCacheado = unstable_cache(
+  const obtenerNombreCacheado = cachearConsulta(
     async (): Promise<string | null> => {
       try {
         const respuesta = await fetch("https://api.mercadopago.com/users/me", {

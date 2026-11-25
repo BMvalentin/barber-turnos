@@ -1,8 +1,8 @@
 import { cache } from "react";
-import { unstable_cache } from "next/cache";
+import { cachearConsulta } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 
-const leerConfiguracion = unstable_cache(
+const leerConfiguracion = cachearConsulta(
   async () => prisma.pageConfig.findUnique({ where: { id: 1 } }),
   ["page-config-v2"],
   { tags: ["page-config"], revalidate: 3600 },

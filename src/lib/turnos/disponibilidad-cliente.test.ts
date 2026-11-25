@@ -11,11 +11,14 @@ const pedir = vi.fn<(ruta: string) => Promise<Response>>();
 const mes = "2026-11";
 const fecha = "2026-11-30";
 const capacidad = { [fecha]: [[Date.parse("2026-11-30T18:00:00Z"), 30]] };
+const dataset = { ambitoBaseDatos: "base-a" };
 
 beforeEach(() => {
   vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-11-23T18:00:00Z"));
   pedir.mockReset();
   almacen.clear();
+  dataset.ambitoBaseDatos = "base-a";
+  vi.stubGlobal("document", { documentElement: { dataset } });
   vi.stubGlobal("fetch", pedir);
   vi.stubGlobal("window", {
     localStorage: {
@@ -82,6 +85,22 @@ describe("precarga y caché de disponibilidad", () => {
     await expect(precarga).resolves.toMatchObject({ capacidad: {} });
     await expect(consultarDisponibilidadMensual(mes, "uno")).resolves.toMatchObject({ capacidad: {} });
     expect(pedir.mock.calls[1][0]).toContain("actualizar=1");
+  });
+
+  it("consulta la base nueva aunque coincidan el mes y el ID del barbero", async () => {
+    pedir.mockResolvedValueOnce(Response.json([{ barberoId: "uno", capacidad }]));
+    pedir.mockResolvedValueOnce(Response.json([{ barberoId: "uno", capacidad: {} }]));
+    await expect(consultarDisponibilidadMensual(mes, "uno")).resolves.toMatchObject({ capacidad });
+    const claveAnterior = claveDisponibilidad(mes, "uno");
+
+    dataset.ambitoBaseDatos = "base-b";
+    invalidarDisponibilidadLocal("uno", fecha);
+    const claveActual = claveDisponibilidad(mes, "uno");
+    await expect(consultarDisponibilidadMensual(mes, "uno")).resolves.toMatchObject({ capacidad: {} });
+    expect(pedir).toHaveBeenCalledTimes(2);
+    expect(claveActual).not.toBe(claveAnterior);
+    expect(almacen.has(claveAnterior)).toBe(true);
+    expect(almacen.has(claveActual)).toBe(true);
   });
 
   it("reintenta después de un fallo y mantiene la agenda de edición fuera de localStorage", async () => {

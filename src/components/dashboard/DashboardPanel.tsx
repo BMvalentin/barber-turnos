@@ -11,6 +11,7 @@ import ModalTelefonoObligatorio from "@/components/dashboard/ModalTelefonoObliga
 import PanelTurnosUsuario from "@/components/dashboard/PanelTurnosUsuario";
 import AvisosDeTurnos from "@/components/notificaciones/AvisosDeTurnos";
 import { Skeleton } from "@/components/ui/skeleton";
+import { obtenerAmbitoBaseDatosLocal } from "@/lib/ambito-base-datos-cliente";
 import { precargarDisponibilidadInicial } from "@/lib/turnos/disponibilidad-cliente";
 import {
   guardarTurnosUsuarioCacheLocal,
@@ -102,6 +103,7 @@ export default function DashboardPanel({
     if (cargaTurnosEnCurso.current) return;
     cargaTurnosEnCurso.current = true;
     setErrorTurnos(false);
+    const ambitoAlConsultar = obtenerAmbitoBaseDatosLocal();
     try {
       const actualizar = actualizarAlEntrarPendiente.current;
       const cache = actualizar ? null : leerTurnosUsuarioCacheLocal(usuario.id);
@@ -111,6 +113,7 @@ export default function DashboardPanel({
       }
 
       const resultado = await getResumenTurnosUsuario(usuario.id);
+      if (ambitoAlConsultar !== obtenerAmbitoBaseDatosLocal()) return;
       if (resultado.success && resultado.data) {
         const datosActualizados = actualizar ? null : leerTurnosUsuarioCacheLocal(usuario.id);
         if (!datosActualizados) guardarTurnosUsuarioCacheLocal(usuario.id, resultado.data);

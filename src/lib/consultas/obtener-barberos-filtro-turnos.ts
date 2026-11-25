@@ -1,8 +1,8 @@
-import { unstable_cache } from "next/cache";
+import { cachearConsulta } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import { filtroBarberoParaAgenda } from "@/lib/barberos/filtros-perfiles";
 
-const obtenerBarberosFiltroTurnosCacheados = unstable_cache(
+const obtenerBarberosFiltroTurnosCacheados = cachearConsulta(
   async () => prisma.barbero.findMany({
     where: filtroBarberoParaAgenda,
     select: { id: true, nombre: true, srcImage: true, estado: true },

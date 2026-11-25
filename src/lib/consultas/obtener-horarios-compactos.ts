@@ -1,9 +1,9 @@
-import { unstable_cache } from "next/cache";
+import { cachearConsulta } from "@/lib/cache";
 import { DIAS_SEMANA, REVERSE_MAPA_DIA_SEMANA_DB } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import type { RangoHorario } from "@/types/horarios";
 
-export const obtenerHorariosCompactos = unstable_cache(
+export const obtenerHorariosCompactos = cachearConsulta(
   async () => {
     const diasLaborales = await prisma.dia_laboral.findMany({
       where: { estado: true },

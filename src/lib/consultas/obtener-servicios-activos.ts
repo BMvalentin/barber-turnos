@@ -1,7 +1,7 @@
-import { unstable_cache } from "next/cache";
+import { cachearConsulta } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 
-export const obtenerServiciosActivos = unstable_cache(
+export const obtenerServiciosActivos = cachearConsulta(
   async () => prisma.servicio.findMany({
     where: { estado: true },
     select: { id: true, nombre: true },

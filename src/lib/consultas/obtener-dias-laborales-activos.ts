@@ -1,7 +1,7 @@
-import { unstable_cache } from "next/cache";
+import { cachearConsulta } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 
-const obtenerDiasLaboralesActivosCacheados = unstable_cache(
+const obtenerDiasLaboralesActivosCacheados = cachearConsulta(
   async () => prisma.dia_laboral.findMany({
     where: { estado: true },
     include: {

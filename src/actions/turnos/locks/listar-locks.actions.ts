@@ -1,6 +1,6 @@
 "use server";
 
-import { unstable_cache } from "next/cache";
+import { cachearConsulta } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { obtenerRangoDelDia } from "@/lib/utils/obtener-rango-del-dia";
@@ -21,7 +21,7 @@ export async function listarLocksDelDia(
 
     // La caché guarda el set COMPLETO (con userIds); el filtrado por usuario
     // autenticado ocurre FUERA del fetcher cacheado.
-    const obtenerLocksCacheados = unstable_cache(
+    const obtenerLocksCacheados = cachearConsulta(
       async () => {
         const locks = await prisma.slotLock.findMany({
           where: {

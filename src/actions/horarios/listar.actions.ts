@@ -1,6 +1,6 @@
 "use server";
 
-import { unstable_cache } from "next/cache";
+import { cachearConsulta } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import { MAPA_DIA_SEMANA_DB, REVERSE_MAPA_DIA_SEMANA_DB } from "@/lib/constants";
 import { obtenerDiasLaborales } from "@/lib/consultas/obtener-dias-laborales";
@@ -8,7 +8,7 @@ import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 
 import type { dias_laborales } from "../../../generated/prisma/client";
 
-const obtenerDiasLaboralesConfiguracionCacheados = unstable_cache(
+const obtenerDiasLaboralesConfiguracionCacheados = cachearConsulta(
   async () => {
     const diasEnDb = await obtenerDiasLaborales();
 

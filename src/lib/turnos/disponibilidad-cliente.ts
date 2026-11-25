@@ -1,9 +1,11 @@
 import { addMonths, format, parseISO } from "date-fns";
 import { z } from "zod";
+import { obtenerAmbitoBaseDatosLocal } from "@/lib/ambito-base-datos-cliente";
 import { MAX_BARBEROS_POR_CONSULTA, VIGENCIA_CACHE_TURNOS_MS } from "@/lib/turnos/capacidad-horaria";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 
-const PREFIJO_CACHE = "mayoraz-disponibilidad-v1:";
+const PREFIJO_CACHE = "mayoraz-disponibilidad-v2:";
+const PREFIJO_CACHE_ANTERIOR = "mayoraz-disponibilidad-v1:";
 const esquemaCapacidad = z.record(
   z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   z.array(z.tuple([z.number().int().min(0).max(8.64e15), z.number().positive()])),
@@ -25,7 +27,7 @@ function esVigente(venceEn: number, ahora = Date.now()) {
 }
 
 export function claveDisponibilidad(mes: string, barberoId: string, exclusion?: ExclusionDisponibilidad) {
-  const clave = `${PREFIJO_CACHE}${mes}:${encodeURIComponent(barberoId)}`;
+  const clave = `${PREFIJO_CACHE}${obtenerAmbitoBaseDatosLocal()}:${mes}:${encodeURIComponent(barberoId)}`;
   return exclusion ? `${clave}:${encodeURIComponent(exclusion.turnoId)}:${encodeURIComponent(exclusion.usuarioId)}` : clave;
 }
 
@@ -40,6 +42,10 @@ function limpiarVencidas() {
     const almacen = window.localStorage;
     for (let indice = almacen.length - 1; indice >= 0; indice -= 1) {
       const clave = almacen.key(indice);
+      if (clave?.startsWith(PREFIJO_CACHE_ANTERIOR)) {
+        almacen.removeItem(clave);
+        continue;
+      }
       if (!clave?.startsWith(PREFIJO_CACHE)) continue;
       try {
         const valor: unknown = JSON.parse(almacen.getItem(clave) ?? "null");
