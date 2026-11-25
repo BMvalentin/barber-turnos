@@ -3,6 +3,7 @@ import { confirmarTurnoPorPago } from "./confirmar-turno-por-pago";
 
 const dependencias = vi.hoisted(() => ({
   after: vi.fn<(tarea: () => unknown) => void>(),
+  enviarEmails: vi.fn(),
   enviarPush: vi.fn(),
   buscarTurno: vi.fn(),
   confirmarTurno: vi.fn(),
@@ -12,7 +13,7 @@ vi.mock("next/server", () => ({ after: dependencias.after }));
 vi.mock("@/lib/prisma", () => ({
   prisma: { turno: { findUnique: dependencias.buscarTurno, updateMany: dependencias.confirmarTurno } },
 }));
-vi.mock("@/lib/email/enviar-emails-turno-confirmado", () => ({ enviarEmailsTurnoConfirmado: vi.fn() }));
+vi.mock("@/lib/email/enviar-emails-turno-confirmado", () => ({ enviarEmailsTurnoConfirmado: dependencias.enviarEmails }));
 vi.mock("@/lib/revalidar/revalidar-cache-turno", () => ({ revalidarCacheTurno: vi.fn() }));
 vi.mock("@/lib/notificaciones/enviar-aviso-push-turno", () => ({ enviarAvisoPushTurno: dependencias.enviarPush }));
 
@@ -22,6 +23,8 @@ const turno = {
   userId: "cliente-1",
   barberoId: "barbero-1",
   estado: "PENDIENTE",
+  estadoPago: "PENDIENTE",
+  metodoPago: "MERCADO_PAGO",
   precioCongelado: 1000,
   seniaCongelada: 200,
   tipoPago: "SEÑA",
@@ -36,9 +39,9 @@ const pago = {
   estadoPago: "approved",
   paymentId: "123",
 };
-const turnoConfirmado = { ...turno, estado: "CONFIRMADO", mpPaymentId: pago.paymentId };
+const turnoConfirmado = { ...turno, estado: "CONFIRMADO", estadoPago: "SEÑADO", mpPaymentId: pago.paymentId };
 
-describe("avisos push al confirmar un pago", () => {
+describe("avisos al confirmar un pago", () => {
   beforeEach(() => vi.resetAllMocks());
 
   it("programa un único aviso después de que el pago confirma el turno", async () => {
@@ -49,11 +52,13 @@ describe("avisos push al confirmar un pago", () => {
     await expect(confirmarTurnoPorPago(pago)).resolves.toEqual({ ok: true, yaConfirmado: true, turnoId: turno.id });
     expect(dependencias.confirmarTurno).toHaveBeenCalledTimes(1);
     expect(dependencias.after).toHaveBeenCalledTimes(1);
+    expect(dependencias.enviarEmails).not.toHaveBeenCalled();
     expect(dependencias.enviarPush).not.toHaveBeenCalled();
 
     await dependencias.after.mock.lastCall?.[0]();
 
     expect(dependencias.enviarPush.mock.calls).toEqual([[turnoConfirmado, "CONFIRMADO"]]);
+    expect(dependencias.enviarEmails.mock.calls).toEqual([[turnoConfirmado]]);
   });
 
   it("omite el aviso si otro procesamiento ganó la confirmación", async () => {

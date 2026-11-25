@@ -1,52 +1,126 @@
-import RedireccionWhatsApp from "@/components/pago/RedireccionWhatsApp";
-import { CLASE_ACCION_PRINCIPAL, CLASE_ACCION_SECUNDARIA, CLASE_ICONO_ESTADO, CLASE_VISTA_PAGO } from "@/components/pago/estilos-estado-pago";
-import type { PropiedadesVistaEstadoPago } from "@/components/pago/tipos-estado-pago";
-import { AlertTriangle, ArrowRight, Calendar, CheckCircle2, Clock, RefreshCw, XCircle } from "lucide-react";
+import { ArrowRight, Calendar, CheckCircle2, Clock, RefreshCw, XCircle } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { consultarPagoRetorno } from "@/lib/mercadopago/consultar-pago-retorno";
+import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
+import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
+import AvisoEstadoPago from "./AvisoEstadoPago";
+import RedireccionWhatsApp from "./RedireccionWhatsApp";
+import { CLASE_ACCION_PRINCIPAL, CLASE_ACCION_SECUNDARIA, CLASE_ICONO_ESTADO, CLASE_VISTA_PAGO } from "./estilos-estado-pago";
 
-export default function VistaEstadoPago({ estado, turnoId, paymentId, datosTurnoConfirmado, whatsappPhone, verificadoCorrectamente }: PropiedadesVistaEstadoPago) {
-  const esPagoAprobado = estado === "approved";
-  const mostrarExito = esPagoAprobado && verificadoCorrectamente;
-  const mostrarFallo = estado === "rejected" || estado === "null" || (esPagoAprobado && !verificadoCorrectamente);
-  const mostrarPendiente = estado === "pending" || estado === "in_process";
-  const estadoDesconocido = !mostrarExito && !mostrarPendiente && !mostrarFallo;
-  const esPagoTotal = datosTurnoConfirmado?.tipoPago === "TOTAL";
+interface PropiedadesVistaEstadoPago {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
 
-  return <main className={CLASE_VISTA_PAGO}>
-    <div className="w-full max-w-md space-y-5 text-center">
-      {mostrarExito && <>
-        <div className="flex justify-center"><div className={`${CLASE_ICONO_ESTADO} bg-emerald-100 text-emerald-800`}><CheckCircle2 aria-hidden="true" className="size-8" /></div></div>
-        <div><h1 className="mb-2 text-balance text-2xl font-black tracking-tight sm:text-3xl">{esPagoTotal ? "¡Pago total!" : "¡Seña pagada!"}</h1><p className="text-[var(--admin-texto-secundario)]">Tu turno quedó confirmado. Te esperamos.</p></div>
-      </>}
-      {mostrarPendiente && <>
-        <div className="flex justify-center"><div className={`${CLASE_ICONO_ESTADO} bg-amber-100 text-amber-800`}><Clock aria-hidden="true" className="size-8" /></div></div>
-        <div><h1 className="mb-2 text-balance text-2xl font-black tracking-tight sm:text-3xl">Pago pendiente</h1><p className="text-[var(--admin-texto-secundario)]">Tu pago está siendo procesado. Te notificaremos cuando se acredite. El turno quedará confirmado automáticamente.</p></div>
-      </>}
-      {mostrarFallo && <>
-        <div className="flex justify-center"><div className={`${CLASE_ICONO_ESTADO} bg-red-100 text-red-800`}><XCircle aria-hidden="true" className="size-8" /></div></div>
-        <div><h1 className="mb-2 text-balance text-2xl font-black tracking-tight sm:text-3xl">Pago fallido</h1><p className="text-[var(--admin-texto-secundario)]">No se pudo procesar el pago. Revisá tus turnos para ver si podés intentarlo de nuevo.</p></div>
-      </>}
-      {estadoDesconocido && <>
-        <div className="flex justify-center"><div className={`${CLASE_ICONO_ESTADO} bg-[var(--admin-item)] text-[var(--admin-texto-primario)]`}><AlertTriangle aria-hidden="true" className="size-8" /></div></div>
-        <div><h1 className="mb-2 text-balance text-2xl font-black tracking-tight sm:text-3xl">Estado desconocido</h1><p className="text-[var(--admin-texto-secundario)]">No pudimos determinar el estado de tu pago. Revisá tus turnos.</p></div>
-      </>}
+const ESTADOS = {
+  confirmado: {
+    descripcion: "Tu turno quedó confirmado. Te esperamos.",
+    icono: CheckCircle2,
+    color: "bg-emerald-100 text-emerald-800",
+  },
+  pendiente: {
+    titulo: "Pago pendiente",
+    descripcion: "Tu pago está siendo procesado. Te notificaremos cuando se confirme el turno.",
+    icono: Clock,
+    color: "bg-amber-100 text-amber-800",
+  },
+  fallido: {
+    titulo: "Pago no acreditado",
+    descripcion: "Revisá el estado de la reserva en tus turnos.",
+    icono: XCircle,
+    color: "bg-red-100 text-red-800",
+  },
+  revision: {
+    titulo: "Pago en revisión",
+    descripcion: "Todavía estamos esperando la confirmación del pago. Podés actualizar el estado en unos instantes.",
+    icono: Clock,
+    color: "bg-[var(--admin-item)] text-[var(--admin-texto-primario)]",
+  },
+};
 
-      {mostrarExito && paymentId && <div className="bg-[var(--admin-surface)] rounded-lg p-4 text-left space-y-2">
-        <p className="text-xs text-[var(--admin-texto-muted)] uppercase tracking-widest font-bold">Comprobante</p>
-        <p className="text-sm text-[var(--admin-texto-primario)]"><span className="text-[var(--admin-texto-muted)]">ID de pago:</span>{" "}<span className="wrap-anywhere font-mono text-[var(--admin-texto-primario)]">{paymentId}</span></p>
-        <p className="text-sm text-[var(--admin-texto-primario)]"><span className="text-[var(--admin-texto-muted)]">Turno:</span>{" "}<span className="font-mono">{turnoId.slice(0, 8)}...</span></p>
-      </div>}
-      {mostrarPendiente && paymentId && <div className="bg-[var(--admin-surface)] rounded-lg p-4 text-left">
-        <p className="text-xs text-[var(--admin-texto-muted)] uppercase tracking-widest font-bold mb-1">Referencia</p><p className="wrap-anywhere font-mono text-sm text-[var(--admin-texto-primario)]">{paymentId}</p>
-      </div>}
-      {mostrarExito && datosTurnoConfirmado && whatsappPhone && <RedireccionWhatsApp numeroWhatsApp={whatsappPhone} clienteNombre={datosTurnoConfirmado.user.name} servicioNombre={datosTurnoConfirmado.servicio.nombre} barberoNombre={datosTurnoConfirmado.barbero.nombre} horarioReservado={datosTurnoConfirmado.horarioReservado} precioTotal={datosTurnoConfirmado.precioCongelado} señaPagada={datosTurnoConfirmado.seniaCongelada} saldoPendiente={datosTurnoConfirmado.precioCongelado - datosTurnoConfirmado.seniaCongelada} tipoPago={datosTurnoConfirmado.tipoPago} estadoPago={datosTurnoConfirmado.estadoPago} />}
+function esIdPago(valor: string | string[] | undefined): valor is string {
+  return typeof valor === "string" && /^\d{1,32}$/.test(valor);
+}
 
-      <div className="flex flex-col gap-3">
-        {mostrarExito && <><Link href="/dashboard?tab=turnos" className={CLASE_ACCION_PRINCIPAL}><Calendar aria-hidden="true" className="size-5" />Ver mis turnos</Link><Link href="/" className={CLASE_ACCION_SECUNDARIA}>Volver al inicio<ArrowRight aria-hidden="true" className="size-4" /></Link></>}
-        {mostrarPendiente && <Link href="/dashboard?tab=turnos" className={CLASE_ACCION_PRINCIPAL}>Ver mis turnos<ArrowRight aria-hidden="true" className="size-5" /></Link>}
-        {mostrarFallo && <><Link href="/dashboard?tab=turnos" className={CLASE_ACCION_PRINCIPAL}><RefreshCw aria-hidden="true" className="size-5" />Ir a mis turnos</Link><Link href="/" className={CLASE_ACCION_SECUNDARIA}>Volver al inicio<ArrowRight aria-hidden="true" className="size-4" /></Link></>}
-        {estadoDesconocido && <Link href="/dashboard?tab=turnos" className={CLASE_ACCION_SECUNDARIA}>Ver mis turnos<ArrowRight aria-hidden="true" className="size-4" /></Link>}
+export default async function VistaEstadoPago({ searchParams }: PropiedadesVistaEstadoPago) {
+  const session = await requerirSesion();
+  if (!session?.user) redirect("/login");
+
+  const { turnoId, payment_id, collection_id } = await searchParams;
+  if (typeof turnoId !== "string" || !/^[\w-]{1,191}$/.test(turnoId)) return <AvisoEstadoPago />;
+  const paymentId = esIdPago(payment_id) ? payment_id : esIdPago(collection_id) ? collection_id : undefined;
+  const estado = await consultarPagoRetorno(turnoId, paymentId);
+  if (!estado) return <AvisoEstadoPago />;
+
+  const datos = estado.tipo === "confirmado" ? estado.datos : null;
+  const titulo = estado.tipo === "confirmado"
+    ? estado.datos.tipoPago === "TOTAL" ? "¡Pago total!" : "¡Seña pagada!"
+    : ESTADOS[estado.tipo].titulo;
+  const { descripcion, color, icono: Icono } = ESTADOS[estado.tipo];
+  const whatsapp = datos ? (await obtenerConfigCacheada())?.whatsapp : null;
+  const enlaceActualizacion = new URLSearchParams({ turnoId });
+  if (paymentId) enlaceActualizacion.set("payment_id", paymentId);
+
+  return (
+    <main className={CLASE_VISTA_PAGO}>
+      <div className="w-full max-w-md space-y-5 text-center">
+        <div className="flex justify-center">
+          <div className={`${CLASE_ICONO_ESTADO} ${color}`}>
+            <Icono aria-hidden="true" className="size-8" />
+          </div>
+        </div>
+        <div>
+          <h1 className="mb-2 text-balance text-2xl font-black tracking-tight sm:text-3xl">{titulo}</h1>
+          <p className="text-[var(--admin-texto-secundario)]">{descripcion}</p>
+        </div>
+
+        {datos && (
+          <div className="space-y-2 rounded-lg bg-[var(--admin-surface)] p-4 text-left">
+            <p className="text-xs font-bold uppercase tracking-widest text-[var(--admin-texto-muted)]">Comprobante</p>
+            <p className="text-sm text-[var(--admin-texto-secundario)]">
+              <span className="text-[var(--admin-texto-muted)]">ID de pago:</span>{" "}
+              <span className="wrap-anywhere font-mono text-[var(--admin-texto-primario)]">{datos.mpPaymentId}</span>
+            </p>
+            <p className="text-sm text-[var(--admin-texto-secundario)]">
+              <span className="text-[var(--admin-texto-muted)]">Turno:</span>{" "}
+              <span className="font-mono">{turnoId.slice(0, 8)}...</span>
+            </p>
+          </div>
+        )}
+
+        {datos && whatsapp && (
+          <RedireccionWhatsApp
+            numeroWhatsApp={whatsapp}
+            clienteNombre={datos.user?.name ?? null}
+            servicioNombre={datos.servicio?.nombre ?? "Servicio"}
+            barberoNombre={datos.barbero?.nombre ?? "Barbero"}
+            horarioReservado={datos.horarioReservado}
+            precioTotal={Number(datos.precioCongelado)}
+            señaPagada={Number(datos.seniaCongelada)}
+            saldoPendiente={Number(datos.precioCongelado) - Number(datos.seniaCongelada)}
+            tipoPago={datos.tipoPago}
+            estadoPago={datos.estadoPago}
+          />
+        )}
+
+        <div className="flex flex-col gap-3">
+          <Link href="/dashboard?tab=turnos" className={CLASE_ACCION_PRINCIPAL}>
+            <Calendar aria-hidden="true" className="size-5" />
+            Ver mis turnos
+          </Link>
+          {estado.tipo === "revision" || estado.tipo === "pendiente" ? (
+            <a href={`?${enlaceActualizacion}`} className={CLASE_ACCION_SECUNDARIA}>
+              <RefreshCw aria-hidden="true" className="size-4" />
+              Actualizar estado
+            </a>
+          ) : (
+            <Link href="/" className={CLASE_ACCION_SECUNDARIA}>
+              Volver al inicio
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
+          )}
+        </div>
       </div>
-    </div>
-  </main>;
+    </main>
+  );
 }

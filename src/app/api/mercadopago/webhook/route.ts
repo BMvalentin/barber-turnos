@@ -1,7 +1,6 @@
 // app/api/mercadopago/webhook/route.ts
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { Payment } from "mercadopago";
 import { obtenerClienteMP } from "@/lib/mercadopago/obtener-cliente";
@@ -13,7 +12,7 @@ import { z } from "zod";
 
 export const runtime = "nodejs";
 
-const esquemaIdPago = z.union([z.string().regex(/^\d+$/), z.number().int().positive()]);
+const esquemaIdPago = z.union([z.string().regex(/^\d{1,32}$/), z.number().int().positive()]);
 const esquemaNotificacion = z.object({
   type: z.string().optional(),
   topic: z.string().optional(),
@@ -45,14 +44,12 @@ function firmaValida(req: NextRequest, paymentId: string): boolean {
 
   const ts = partes.get("ts") ?? "";
   const v1 = partes.get("v1") ?? "";
-  if (!ts || !v1) return false;
+  if (!/^(?:\d{10}|\d{13})$/.test(ts) || !v1) return false;
 
-  // Protección contra replay: rechazar timestamps fuera de una ventana de 5 minutos.
-  // Un ts inválido produce NaN, y NaN no supera ningún límite, por eso se
-  // rechaza explícitamente con Number.isNaN antes de comparar el skew.
-  const tsMs = Number(ts) * 1000;
+  // Normalizar segundos o milisegundos solo para comprobar la ventana de cinco minutos.
+  const tsMs = ts.length === 13 ? Number(ts) : Number(ts) * 1000;
   const skewMs = Math.abs(Date.now() - tsMs);
-  if (Number.isNaN(tsMs) || skewMs > 5 * 60 * 1000) {
+  if (skewMs > 5 * 60 * 1000) {
     return false;
   }
 
@@ -120,12 +117,30 @@ export async function POST(req: NextRequest) {
 
     const turnoId = paymentData.external_reference;
 
-    if (!turnoId) {
-      return NextResponse.json({ error: "No turnoId" }, { status: 400 });
+    if (typeof turnoId !== "string" || !/^[\w-]{1,191}$/.test(turnoId)) {
+      return NextResponse.json({ error: "Referencia de turno inválida" }, { status: 400 });
+    }
+
+    if (paymentData.status === "approved") {
+      const resultado = await confirmarTurnoPorPago({
+        turnoId,
+        estadoPago: paymentData.status,
+        referencia: turnoId,
+        montoPago: Number(paymentData.transaction_amount ?? 0),
+        paymentId: idPago,
+        tipoPago: typeof paymentData.metadata?.tipoPago === "string" ? paymentData.metadata.tipoPago : undefined,
+      });
+      if (!resultado.ok) {
+        const mensaje = resultado.error === "El monto del pago no es válido"
+          ? "Monto no coincide con la seña/total"
+          : "No se pudo confirmar el pago";
+        return NextResponse.json({ error: mensaje }, { status: 400 });
+      }
+      return NextResponse.json({ received: true });
     }
 
     const turno = await prisma.turno.findUnique({
-      where: { id: String(turnoId) },
+      where: { id: turnoId },
       select: { id: true, userId: true, barberoId: true, horarioReservado: true },
     });
 
@@ -135,33 +150,6 @@ export async function POST(req: NextRequest) {
 
     // Manejar los distintos estados de pago
     switch (paymentData.status) {
-      case "approved": {
-        // Validar el pago contra la API de MP a través del helper compartido
-        const montoAcreditado = Number(paymentData.transaction_amount ?? 0);
-        const tipoPago =
-          typeof paymentData.metadata?.tipoPago === "string" ? paymentData.metadata.tipoPago : undefined;
-        const resultado = await confirmarTurnoPorPago({
-          turnoId,
-          estadoPago: "approved",
-          referencia: String(paymentData.external_reference ?? ""),
-          montoPago: montoAcreditado,
-          paymentId: idPago,
-          tipoPago,
-        });
-
-        if (!resultado.ok) {
-          const mensaje = resultado.error === "El monto del pago no es válido"
-            ? "Monto no coincide con la seña/total"
-            : "No se pudo confirmar el pago";
-          return NextResponse.json({ error: mensaje }, { status: 400 });
-        }
-        if (!resultado.yaConfirmado) {
-          revalidatePath("/admin");
-          revalidatePath("/dashboard");
-        }
-        break;
-      }
-
       case "pending":
       case "in_process": {
         // Pago en acreditación → turno sigue PENDIENTE, guarda el paymentId y el estado
@@ -212,7 +200,6 @@ export async function POST(req: NextRequest) {
             obtenerFechaSola(turno.horarioReservado),
             turno.userId,
           );
-          revalidatePath("/dashboard");
         }
         break;
       }

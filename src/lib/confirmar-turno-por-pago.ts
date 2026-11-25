@@ -30,23 +30,12 @@ export async function confirmarTurnoPorPago(args: {
   estadoPago: string;
   referencia: string;
   montoPago: number;
-  paymentId?: string | number;
+  paymentId: string;
   tipoPago?: string;
 }): Promise<ResultadoConfirmacionPago> {
   const turno = await prisma.turno.findUnique({
     where: { id: args.turnoId },
-    select: {
-      id: true,
-      userId: true,
-      estado: true,
-      tipoPago: true,
-      precioCongelado: true,
-      seniaCongelada: true,
-      barberoId: true,
-      horarioReservado: true,
-      claveSlot: true,
-      mpPaymentId: true,
-    },
+    include: INCLUDE_TURNO_CON_DETALLE,
   });
 
   if (!turno) return { ok: false, error: "Turno no encontrado" };
@@ -65,7 +54,7 @@ export async function confirmarTurnoPorPago(args: {
 
   if (!validacion.ok) return { ok: false, error: validacion.error };
   if (validacion.yaConfirmado) {
-    if (args.paymentId && turno.mpPaymentId !== String(args.paymentId)) {
+    if (turno.mpPaymentId !== args.paymentId || turno.metodoPago !== "MERCADO_PAGO") {
       return { ok: false, error: "El pago no coincide con el turno confirmado" };
     }
     return { ok: true, yaConfirmado: true, turnoId: turno.id };
@@ -76,37 +65,45 @@ export async function confirmarTurnoPorPago(args: {
     return { ok: false, error: "El turno ya no tiene un horario reservado" };
   }
 
+  const cambios = {
+    estado: ESTADOS_TURNO[1],
+    estadoPago: validacion.nuevoEstadoPago,
+    tipoPago: validacion.tipoPagoGuardar,
+    metodoPago: "MERCADO_PAGO",
+    mpPaymentId: args.paymentId,
+  };
   const resultado = await prisma.turno.updateMany({
-    where: { id: turno.id, estado: ESTADOS_TURNO[0], claveSlot },
-    data: {
-      estado: ESTADOS_TURNO[1],
-      estadoPago: validacion.nuevoEstadoPago,
-      tipoPago: validacion.tipoPagoGuardar,
-      ...(args.paymentId ? { mpPaymentId: String(args.paymentId) } : {}),
+    where: {
+      id: turno.id,
+      estado: ESTADOS_TURNO[0],
+      claveSlot,
+      tipoPago: turno.tipoPago,
+      precioCongelado: turno.precioCongelado,
+      seniaCongelada: turno.seniaCongelada,
     },
+    data: cambios,
   });
   if (resultado.count === 0) {
     const turnoActual = await prisma.turno.findUnique({
       where: { id: turno.id },
-      select: { estado: true, mpPaymentId: true },
+      select: { estado: true, mpPaymentId: true, metodoPago: true },
     });
     if ((turnoActual?.estado === ESTADOS_TURNO[1] || turnoActual?.estado === ESTADOS_TURNO[2]) &&
-      (!args.paymentId || turnoActual.mpPaymentId === String(args.paymentId))) {
+      turnoActual.mpPaymentId === args.paymentId && turnoActual.metodoPago === "MERCADO_PAGO") {
       return { ok: true, yaConfirmado: true, turnoId: turno.id };
     }
     return { ok: false, error: "El turno ya no admite pagos" };
   }
 
-  revalidarCacheTurno(turno.barberoId, obtenerFechaSola(turno.horarioReservado), turno.userId);
-
-  const turnoConfirmado = await prisma.turno.findUnique({
-    where: { id: turno.id },
-    include: INCLUDE_TURNO_CON_DETALLE,
+  // Solo la transición que confirma la fila programa los avisos.
+  const turnoConfirmado = { ...turno, ...cambios };
+  after(async () => {
+    await Promise.allSettled([
+      enviarEmailsTurnoConfirmado(turnoConfirmado),
+      enviarAvisoPushTurno(turnoConfirmado, "CONFIRMADO"),
+    ]);
   });
-  if (turnoConfirmado) enviarEmailsTurnoConfirmado(turnoConfirmado);
-  if (turnoConfirmado?.estado === ESTADOS_TURNO[1]) {
-    after(() => enviarAvisoPushTurno(turnoConfirmado, "CONFIRMADO"));
-  }
+  revalidarCacheTurno(turno.barberoId, obtenerFechaSola(turno.horarioReservado), turno.userId);
 
   return { ok: true, turnoId: turno.id };
 }

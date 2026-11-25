@@ -67,7 +67,7 @@ export const confirmarTurno = exigirAdmin(async (turnoId: string) => {
       include: INCLUDE_TURNO_CON_DETALLE,
     });
     if (turnoConfirmado) {
-      enviarEmailsTurnoConfirmado(turnoConfirmado);
+      void enviarEmailsTurnoConfirmado(turnoConfirmado);
       if (turnoConfirmado.estado === ESTADOS_TURNO[1]) {
         after(() => enviarAvisoPushTurno(turnoConfirmado, "CONFIRMADO"));
       }
