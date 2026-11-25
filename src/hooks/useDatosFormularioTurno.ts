@@ -5,40 +5,21 @@ import type { Session } from "next-auth";
 import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
 import { useDatosReserva } from "@/hooks/useDatosReserva";
 import type {
-  BarberoData,
-  RelacionData,
-  ServicioData,
   TurnoListado,
-  UsuarioData,
 } from "@/types/turno";
 
 export type ParametrosDatosTurno = {
   session: Session | null;
-  initialServicios?: ServicioData[];
-  initialBarberos?: BarberoData[];
-  initialUsuarios?: UsuarioData[];
-  initialRelaciones?: RelacionData[];
   /* Turno a editar: si viene, el formulario arranca precargado. */
   turnoInicial?: TurnoListado | null;
 };
 
 export function useDatosFormularioTurno({
   session,
-  initialServicios,
-  initialBarberos,
-  initialUsuarios,
-  initialRelaciones,
   turnoInicial,
   puedeGestionarTurnos,
 }: ParametrosDatosTurno & { puedeGestionarTurnos: boolean }) {
-  const datosContexto = useDatosReserva();
-
-  const [isOpen, setIsOpen] = useState(false);
-
-  const servicios = initialServicios ?? datosContexto.servicios;
-  const barberos = initialBarberos ?? datosContexto.barberos;
-  const usuarios = initialUsuarios ?? datosContexto.usuarios;
-  const relaciones = initialRelaciones ?? datosContexto.relaciones;
+  const { servicios, barberos, usuarios, relaciones } = useDatosReserva();
 
   const [selectedServicioId, setSelectedServicioId] = useState(
     turnoInicial?.servicio?.id || "",
@@ -89,8 +70,6 @@ export function useDatosFormularioTurno({
   };
 
   return {
-    isOpen,
-    setIsOpen,
     servicios,
     barberos,
     usuarios,

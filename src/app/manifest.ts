@@ -1,8 +1,10 @@
 import type { MetadataRoute } from "next";
+import { connection } from "next/server";
 import { normalizarColoresTema } from "@/lib/contraste/normalizar-colores-tema";
 import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  await connection();
   const config = await obtenerConfigCacheada();
   const { fondo } = normalizarColoresTema({ fondo: config?.bgColor });
 

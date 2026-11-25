@@ -1,8 +1,10 @@
 "use server";
 
+import { after } from "next/server";
 import { enviarEmailTurnoBarberoSeguro } from "@/lib/email/enviar-email-turno-barbero-seguro";
 import { enviarEmailTurnoSeguro } from "@/lib/email/enviar-email-turno-seguro";
 import { enviarEmailCancelacionTurnoSeguro } from "@/lib/email/enviar-email-cancelacion-turno-seguro";
+import { enviarAvisoPushTurno } from "@/lib/notificaciones/enviar-aviso-push-turno";
 import { revalidarCacheTurno } from "@/lib/revalidar/revalidar-cache-turno";
 import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { actualizarTurnoEnTransaccion } from "@/lib/turnos/actualizar-turno-en-transaccion";
@@ -113,28 +115,33 @@ export async function actualizarTurno(
       };
     }
 
-    revalidarCacheTurno(
-      resultado.turnoAnterior.barberoId,
-      obtenerFechaSola(resultado.turnoAnterior.horarioReservado),
-      resultado.turnoAnterior.userId,
-    );
-    revalidarCacheTurno(
-      resultado.turno.barberoId,
-      obtenerFechaSola(resultado.turno.horarioReservado),
-      resultado.turno.userId,
-    );
-    if (resultado.turno.estado === ESTADOS_TURNO[3]) {
-      if (resultado.turnoAnterior.estado !== ESTADOS_TURNO[3]) {
-        await enviarEmailCancelacionTurnoSeguro(resultado.turno, "ADMINISTRADOR");
-      }
-    } else if (resultado.turno.estado !== "COMPLETADO") {
-      enviarEmailTurnoSeguro(resultado.turno, "ACTUALIZADO");
+    const { turno, turnoAnterior } = resultado;
+    revalidarCacheTurno(turnoAnterior.barberoId, obtenerFechaSola(turnoAnterior.horarioReservado), turnoAnterior.userId);
+    revalidarCacheTurno(turno.barberoId, obtenerFechaSola(turno.horarioReservado), turno.userId);
+
+    if (turno.estado === "CANCELADO" && turnoAnterior.estado !== "CANCELADO") {
+      after(() => enviarAvisoPushTurno(turno, "CANCELADO"));
+      await enviarEmailCancelacionTurnoSeguro(turno, "ADMINISTRADOR");
     }
-    if (resultado.turno.estado === ESTADOS_TURNO[1] && resultado.turnoAnterior.estado !== ESTADOS_TURNO[1]) {
-      enviarEmailTurnoBarberoSeguro(resultado.turno, "CONFIRMADO");
+    if (turno.estado === "PENDIENTE" || turno.estado === "CONFIRMADO") {
+      enviarEmailTurnoSeguro(turno, "ACTUALIZADO");
+      const seConfirmo = turno.estado === "CONFIRMADO" && turnoAnterior.estado !== "CONFIRMADO";
+      if (seConfirmo) enviarEmailTurnoBarberoSeguro(turno, "CONFIRMADO");
+
+      const cambiaBarbero = turno.barberoId !== turnoAnterior.barberoId;
+      const cambioEnReserva = cambiaBarbero ||
+        turno.servicioId !== turnoAnterior.servicioId ||
+        turno.horarioReservado.getTime() !== turnoAnterior.horarioReservado.getTime();
+      if (seConfirmo || cambioEnReserva) {
+        after(async () => {
+          const avisos = [enviarAvisoPushTurno(turno, seConfirmo ? "CONFIRMADO" : "ACTUALIZADO")];
+          if (cambiaBarbero) avisos.push(enviarAvisoPushTurno(turno, "NUEVO_BARBERO"));
+          await Promise.all(avisos);
+        });
+      }
     }
 
-    return { success: true, data: serializarTurnoConDetalle(resultado.turno) };
+    return { success: true, data: serializarTurnoConDetalle(turno) };
   } catch (error) {
     console.error("Error al actualizar turno:", error);
     return { success: false, error: "Error al actualizar el turno" };

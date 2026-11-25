@@ -26,6 +26,7 @@ export default function MenuAccionesTurno({
 }: Props) {
   const [abierto, setAbierto] = useState(false);
   const contenedorRef = useRef<HTMLDivElement>(null);
+  const botonMenuRef = useRef<HTMLButtonElement>(null);
 
   const cerrarMenu = () => setAbierto(false);
 
@@ -65,6 +66,7 @@ export default function MenuAccionesTurno({
   return (
     <div ref={contenedorRef} className="relative inline-block">
       <button
+        ref={botonMenuRef}
         type="button"
         aria-label="Más acciones"
         aria-expanded={abierto}
@@ -86,7 +88,6 @@ export default function MenuAccionesTurno({
         {puedeEditar && (
           <CargadorModalGestionTurno
             vistaAdministrativa={vistaAdministrativa}
-            precargarEdicion={abierto}
             session={session}
             turnoInicial={turno}
             whatsappPhone=""
@@ -99,6 +100,7 @@ export default function MenuAccionesTurno({
               </>
             }
             onTriggerClick={cerrarMenu}
+            alRestaurarFoco={() => botonMenuRef.current?.focus({ preventScroll: true })}
           />
         )}
         {puedeCancelar && (

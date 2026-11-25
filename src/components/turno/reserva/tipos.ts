@@ -176,10 +176,10 @@ export type PropsFormularioReservaTurno = {
   setEstadoTurno: (valor: (typeof ESTADOS_TURNO)[number]) => void;
 };
 
-export type PropsModalGestionTurno = ParametrosFormularioTurno & {
+export type PropsModalGestionTurno = Omit<ParametrosFormularioTurno, "alCerrar"> & {
   mostrarAvisoSeniaPendiente?: boolean;
   claseTrigger?: string;
   contenidoTrigger?: ReactNode;
   onTriggerClick?: () => void;
-  abrirAlMontar?: boolean;
+  alRestaurarFoco?: () => void;
 };

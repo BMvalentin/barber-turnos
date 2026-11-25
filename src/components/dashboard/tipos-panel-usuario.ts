@@ -1,6 +1,5 @@
 import type { FormEvent } from "react";
 import type { Session } from "next-auth";
-import type { BarberoData, RelacionData, ServicioData } from "@/types/turno";
 import type { DatosTransferencia } from "@/types/pago";
 
 export type DatosUsuarioPanel = { id: string; name?: string | null; email?: string | null; telefono?: string | null };
@@ -10,9 +9,8 @@ export type PropiedadesPanelUsuario = {
   user: DatosUsuarioPanel;
   session: Session | null;
   initialTab?: PestanaPanel;
-  initialServicios: ServicioData[];
-  initialBarberos: BarberoData[];
-  initialRelaciones: RelacionData[];
+  actualizarTurnosAlEntrar?: boolean;
+  clavePublicaPush?: string;
   datosPago: {
     whatsappPhone: string;
     datosTransferencia: DatosTransferencia;

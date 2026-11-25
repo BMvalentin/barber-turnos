@@ -1,5 +1,18 @@
-// lib/cache.ts
 import { unstable_cache } from "next/cache";
+import { obtenerAmbitoBaseDatos } from "@/lib/conexion-base-datos";
+
+export function cachearConsulta<Argumentos extends unknown[], Resultado>(
+  consultar: (...argumentos: Argumentos) => Promise<Resultado>,
+  claves: string[],
+  opciones: { tags: string[]; revalidate: number },
+) {
+  return async (...argumentos: Argumentos): Promise<Resultado> => {
+    const ambito = await obtenerAmbitoBaseDatos();
+    if (!ambito) return consultar(...argumentos);
+
+    return unstable_cache(consultar, [ambito, ...claves], opciones)(...argumentos);
+  };
+}
 
 export async function getCachedData<T>(
   keyParts: string[],
@@ -7,14 +20,5 @@ export async function getCachedData<T>(
   fetcher: () => Promise<T>,
   revalidate: number = 300
 ): Promise<T> {
-  const cachedFn = unstable_cache(
-    async () => {
-      return await fetcher();
-    },
-    keyParts,
-    { tags, revalidate }
-  );
-
-  const data = await cachedFn();
-  return data;
+  return cachearConsulta(fetcher, keyParts, { tags, revalidate })();
 }

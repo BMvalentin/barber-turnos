@@ -1,10 +1,10 @@
-import { unstable_cache } from "next/cache";
+import { cachearConsulta } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import type { Servicio } from "@/types/servicio";
 
 type ServicioCacheado = Omit<Servicio, "createdAt"> & { createdAt: string };
 
-const obtenerServiciosAdminCacheados = unstable_cache(
+const obtenerServiciosAdminCacheados = cachearConsulta(
   async (): Promise<ServicioCacheado[]> => {
     const registros = await prisma.servicio.findMany({
     where: { estado: true },

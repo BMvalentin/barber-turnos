@@ -23,7 +23,7 @@ Esta carpeta contiene los pasos a paso para obtener y configurar cada variable d
 
 | Guía | Variables que explica | Link |
 | --- | --- | --- |
-| Base de datos (XAMPP local / TiDB Cloud) | `DATABASE_URL`, `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME`, `CA` | [1-base-de-datos.md](./1-base-de-datos.md) |
+| Base de datos (XAMPP local / TiDB Cloud) | `DATABASE_URL` | [1-base-de-datos.md](./1-base-de-datos.md) |
 | Google OAuth (login con Google) | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | [2-google-oauth.md](./2-google-oauth.md) |
 | Secretos y URL de la app | `AUTH_SECRET`, `CRON_SECRET`, `AUTH_TRUST_HOST`, `NEXT_PUBLIC_APP_URL`, `VERCEL_URL`, `IS_PRODUCTION` | [3-secretos-y-url.md](./3-secretos-y-url.md) |
 | Mercado Pago (pagos y conexión) | `MP_CLIENT_ID`, `MP_CLIENT_SECRET`, `MP_AUTH_BASE_URL`, `MP_ACCESS_TOKEN`, `MP_PUBLIC_KEY` | [4-mercadopago.md](./4-mercadopago.md) |
@@ -34,9 +34,7 @@ Esta carpeta contiene los pasos a paso para obtener y configurar cada variable d
 
 | Variable | Obligatoria | Para qué sirve |
 | --- | --- | --- |
-| `DATABASE_URL` | Sí | URL que usa el CLI de Prisma (`npx prisma db push`, `generate`) |
-| `DATABASE_HOST` / `DATABASE_PORT` / `DATABASE_USER` / `DATABASE_PASSWORD` / `DATABASE_NAME` | Sí | Conexión en runtime (adaptador nativo MariaDB) |
-| `CA` | Solo TiDB Cloud | Ruta al certificado CA de la base de datos cloud |
+| `DATABASE_URL` | Sí | Conexión de la aplicación, el seed y el CLI de Prisma |
 | `AUTH_SECRET` | Sí | Firma las sesiones JWT de Auth.js |
 | `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Sí (si usás login con Google) | Credenciales OAuth de Google |
 | `AUTH_TRUST_HOST` | Sí (desarrollo) | Permite que Auth.js confíe en el host local |

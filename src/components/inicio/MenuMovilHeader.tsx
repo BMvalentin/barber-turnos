@@ -1,7 +1,7 @@
 import { DoorOpen } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { handleSignOut } from "@/actions/sesion/logout.actions";
+import { signOut } from "next-auth/react";
 import type { MenuMovilHeaderProps } from "@/components/inicio/header-tipos";
 import { esAdmin, esEmpleado } from "@/lib/seguridad/es-admin";
 
@@ -22,7 +22,7 @@ export function MenuMovilHeader({ sesion, cerrarMenu }: MenuMovilHeaderProps) {
       <div className="mt-2 border-t border-[var(--page-separador)] pt-2">
         {sesion ? <div className="flex flex-col gap-1">
           <Link href="/dashboard" onClick={cerrarMenu} className={claseEnlace}><Image src={sesion.user?.image || "/images/avatar-default.svg"} alt="" className="shrink-0 rounded-full" width={28} height={28} /><span className="min-w-0 break-words">{sesion.user?.name || "Mi perfil"}</span></Link>
-          <form action={handleSignOut}><button type="submit" className="control-publico min-h-11 w-full rounded-md px-2 text-left text-base text-[var(--page-error)] transition-colors hover:bg-[var(--admin-item)]">Cerrar sesión</button></form>
+          <form action={() => signOut({ redirectTo: "/" })}><button type="submit" className="control-publico min-h-11 w-full rounded-md px-2 text-left text-base text-[var(--page-error)] transition-colors hover:bg-[var(--admin-item)]">Cerrar sesión</button></form>
         </div> : <Link href="/login" onClick={cerrarMenu} className={claseEnlace}><DoorOpen className="size-4" aria-hidden="true" />Iniciar sesión</Link>}
       </div>
     </nav>

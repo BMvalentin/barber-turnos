@@ -12,11 +12,13 @@ describe("horarios de portada", () => {
       { dia: "Jueves", margenes: [] },
       { dia: "Martes", margenes: [{ desde: "09:00", hasta: "13:00" }] },
       { dia: "Lunes", margenes: [{ desde: "09:00", hasta: "11:00" }, { desde: "10:00", hasta: "13:00" }] },
+      { dia: "Miercoles", margenes: [{ desde: "09:00", hasta: "13:00" }, { desde: "16:00", hasta: "20:00" }] },
     ]);
 
     await expect(obtenerHorariosCompactos()).resolves.toEqual([
-      "Lunes a Martes 09:00 a 13:00",
-      "Jueves Cerrado",
+      { dias: "Lunes a Martes", rangos: [{ desde: "09:00", hasta: "13:00" }] },
+      { dias: "Miércoles", rangos: [{ desde: "09:00", hasta: "13:00" }, { desde: "16:00", hasta: "20:00" }] },
+      { dias: "Jueves", rangos: [] },
     ]);
     expect(consultarDias).toHaveBeenLastCalledWith({
       where: { estado: true },
@@ -34,7 +36,7 @@ describe("horarios de portada", () => {
   it("distingue un local cerrado de un error que debe volver a consultarse", async () => {
     consultarDias.mockResolvedValueOnce([]).mockRejectedValueOnce(new Error("sin conexión"));
 
-    await expect(obtenerHorariosCompactos()).resolves.toEqual(["Cerrado"]);
+    await expect(obtenerHorariosCompactos()).resolves.toEqual([]);
     await expect(obtenerHorariosCompactos()).rejects.toThrow("sin conexión");
   });
 });

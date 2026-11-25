@@ -85,6 +85,7 @@ model turno {
   barberoId        String
   servicioId       String
   horarioReservado DateTime
+  recordatorioPushPara DateTime?
   precioCongelado  Decimal      @db.Decimal(10, 2)
   seniaCongelada   Decimal      @db.Decimal(10, 2)
   estado           turno_estado @default(PENDIENTE)
@@ -131,6 +132,21 @@ model user {
   barbero       barbero?
   verificaciones verificacion_usuario[]
   consentimientos consentimiento_legal[]
+  suscripcionesPush suscripcion_push[]
+}
+
+model suscripcion_push {
+  id            String   @id @default(cuid())
+  userId        String
+  endpointHash  String   @unique @db.Char(64)
+  endpoint      String   @db.Text
+  clavePublica  String   @db.VarChar(87)
+  auth          String   @db.VarChar(22)
+  claveVapid    String   @db.VarChar(87)
+  actualizadoEn DateTime @updatedAt
+  user          user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, claveVapid])
 }
 
 model verificacion_usuario {

@@ -1,10 +1,10 @@
-import { unstable_cache } from "next/cache";
+import { cachearConsulta } from "@/lib/cache";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { filtroBarberoReservable, filtroHorarioBarberoActivo } from "@/lib/barberos/filtros-perfiles";
 import { obtenerCamposPendientesPerfil } from "@/lib/barberos/perfil-profesional";
 
-const obtenerPendientesCacheados = unstable_cache(
+const obtenerPendientesCacheados = cachearConsulta(
   async (barberoId: string, usuarioId: string) => {
     const perfil = await prisma.barbero.findUnique({
       where: { id: barberoId, usuarioId, estado: true },

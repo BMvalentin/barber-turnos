@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { cachearConsulta } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import type { ExcepcionLaboral } from "@/types/excepcion";
 
@@ -9,7 +9,7 @@ type ExcepcionCacheada = Omit<ExcepcionLaboral, "desde" | "hasta" | "createdAt" 
   updatedAt: string;
 };
 
-const obtenerExcepcionesCacheadas = unstable_cache(
+const obtenerExcepcionesCacheadas = cachearConsulta(
   async (): Promise<ExcepcionCacheada[]> => {
     const excepciones = await prisma.excepcion_laboral.findMany({
       where: { estado: true },
