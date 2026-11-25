@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronDown, LoaderCircle } from "lucide-react";
@@ -8,7 +8,8 @@ import { twMerge } from "tailwind-merge";
 
 type PosicionLista = {
   izquierda: number;
-  arriba: number;
+  bordeVertical: number;
+  abrirArriba: boolean;
   ancho: number;
   anchoMinimo: number;
   altoMaximo: number;
@@ -43,6 +44,19 @@ function normalizarBusqueda(texto: string): string {
   return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase();
 }
 
+function buscarOpcionSiguiente(
+  opciones: readonly OpcionDesplegable[],
+  indiceActual: number,
+  direccion: 1 | -1,
+): number {
+  let indice = indiceActual < 0 && direccion === -1 ? 0 : indiceActual;
+  for (let intento = 0; intento < opciones.length; intento += 1) {
+    indice = (indice + direccion + opciones.length) % opciones.length;
+    if (!opciones[indice].deshabilitado) return indice;
+  }
+  return -1;
+}
+
 export default function SelectorDesplegable<T extends string>({
   opciones,
   valor: valorControlado,
@@ -61,6 +75,7 @@ export default function SelectorDesplegable<T extends string>({
 }: Props<T>) {
   const [abierto, setAbierto] = useState(false);
   const [busqueda, setBusqueda] = useState("");
+  const [indiceActivo, setIndiceActivo] = useState(-1);
   const [valorInterno, setValorInterno] = useState<T | undefined>(valorInicial);
   const [posicionLista, setPosicionLista] = useState<PosicionLista | null>(null);
   const contenedorRef = useRef<HTMLDivElement>(null);
@@ -82,9 +97,23 @@ export default function SelectorDesplegable<T extends string>({
     ? indiceSeleccionado
     : opciones.findIndex((opcion) => !opcion.deshabilitado);
   const listaPosicionada = posicionLista !== null;
-  const opcionesFiltradas = buscable && busqueda.trim()
-    ? opciones.filter((opcion) => normalizarBusqueda(opcion.etiqueta).includes(normalizarBusqueda(busqueda.trim())))
+  const consulta = buscable ? normalizarBusqueda(busqueda.trim()) : "";
+  const opcionesFiltradas = consulta
+    ? opciones.filter((opcion) => normalizarBusqueda(opcion.etiqueta).includes(consulta))
     : opciones;
+  const cantidadOpciones = opcionesFiltradas.length;
+
+  const cerrarLista = useCallback(() => {
+    busquedaRef.current = "";
+    if (temporizadorBusquedaRef.current) {
+      clearTimeout(temporizadorBusquedaRef.current);
+      temporizadorBusquedaRef.current = null;
+    }
+    setBusqueda("");
+    setIndiceActivo(-1);
+    setAbierto(false);
+    setPosicionLista(null);
+  }, []);
 
   useEffect(() => {
     if (!abierto || deshabilitado) return;
@@ -95,15 +124,13 @@ export default function SelectorDesplegable<T extends string>({
         !contenedorRef.current?.contains(evento.target) &&
         !listaRef.current?.contains(evento.target)
       ) {
-        busquedaRef.current = "";
-        setAbierto(false);
-        setPosicionLista(null);
+        cerrarLista();
       }
     };
 
     document.addEventListener("pointerdown", alPresionarFuera);
     return () => document.removeEventListener("pointerdown", alPresionarFuera);
-  }, [abierto, deshabilitado]);
+  }, [abierto, cerrarLista, deshabilitado]);
 
   useEffect(() => {
     if (!abierto || deshabilitado || !listaPosicionada) return;
@@ -113,51 +140,71 @@ export default function SelectorDesplegable<T extends string>({
   }, [abierto, buscable, deshabilitado, indiceInicial, listaPosicionada]);
 
   useEffect(() => {
-    if (!abierto || deshabilitado || opciones.length === 0) return;
+    if (!buscable || !abierto || deshabilitado || !listaPosicionada || indiceActivo < 0) return;
+    opcionesRef.current[indiceActivo]?.scrollIntoView({ block: "nearest" });
+  }, [abierto, buscable, deshabilitado, indiceActivo, listaPosicionada]);
+
+  useEffect(() => {
+    if (!abierto || deshabilitado || (!buscable && cantidadOpciones === 0)) return;
+
+    const viewport = window.visualViewport;
+    const margen = 8;
+    const limiteAltura = buscable ? 192 : 288;
+    const altoDeseado = Math.min(limiteAltura, Math.max(1, cantidadOpciones) * 42 + 14);
 
     const calcularPosicion = () => {
       const rectangulo = botonRef.current?.getBoundingClientRect();
       if (!rectangulo) return;
 
-      const margen = 8;
-      const altoDeseado = Math.min(288, opciones.length * 42 + (buscable ? 64 : 12));
-      const espacioAbajo = Math.max(0, window.innerHeight - rectangulo.bottom - margen);
-      const espacioArriba = Math.max(0, rectangulo.top - margen);
+      const arribaViewport = viewport?.offsetTop ?? 0;
+      const abajoViewport = arribaViewport + (viewport?.height ?? window.innerHeight);
+      if (rectangulo.bottom <= arribaViewport || rectangulo.top >= abajoViewport) {
+        setPosicionLista(null);
+        return;
+      }
+
+      const espacioAbajo = Math.max(0, abajoViewport - rectangulo.bottom - margen);
+      const espacioArriba = Math.max(0, rectangulo.top - arribaViewport - margen);
       const abrirArriba = espacioAbajo < altoDeseado && espacioArriba > espacioAbajo;
       const espacioDisponible = abrirArriba ? espacioArriba : espacioAbajo;
-      const altoMaximo = Math.max(48, Math.min(288, espacioDisponible));
-      const altoMenu = Math.min(altoDeseado, altoMaximo);
-      const anchoViewport = Math.max(1, window.innerWidth - margen * 2);
+      const bordeIzquierdo = (viewport?.offsetLeft ?? 0) + margen;
+      const anchoViewport = Math.max(1, (viewport?.width ?? window.innerWidth) - margen * 2);
       const anchoMinimo = Math.min(230, anchoViewport);
       const ancho = Math.min(Math.max(rectangulo.width, anchoMinimo), anchoViewport);
       const izquierda = Math.min(
-        Math.max(rectangulo.left, margen),
-        window.innerWidth - ancho - margen,
+        Math.max(rectangulo.left, bordeIzquierdo),
+        bordeIzquierdo + anchoViewport - ancho,
       );
 
       setPosicionLista({
         izquierda,
-        arriba: abrirArriba ? rectangulo.top - altoMenu - margen : rectangulo.bottom + margen,
+        bordeVertical: abrirArriba ? rectangulo.top - margen : rectangulo.bottom + margen,
+        abrirArriba,
         ancho,
         anchoMinimo,
-        altoMaximo,
+        altoMaximo: Math.min(limiteAltura, espacioDisponible),
       });
     };
 
     let frame = window.requestAnimationFrame(calcularPosicion);
-    const recalcularPosicion = () => {
+    const recalcularPosicion = (evento: Event) => {
+      if (evento.target === listaRef.current) return;
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(calcularPosicion);
     };
 
     window.addEventListener("resize", recalcularPosicion);
     window.addEventListener("scroll", recalcularPosicion, true);
+    viewport?.addEventListener("resize", recalcularPosicion);
+    viewport?.addEventListener("scroll", recalcularPosicion);
     return () => {
       window.cancelAnimationFrame(frame);
       window.removeEventListener("resize", recalcularPosicion);
       window.removeEventListener("scroll", recalcularPosicion, true);
+      viewport?.removeEventListener("resize", recalcularPosicion);
+      viewport?.removeEventListener("scroll", recalcularPosicion);
     };
-  }, [abierto, buscable, busqueda, deshabilitado, opciones.length]);
+  }, [abierto, buscable, cantidadOpciones, deshabilitado]);
 
   useEffect(() => {
     if (valorControlado !== undefined) return;
@@ -173,22 +220,11 @@ export default function SelectorDesplegable<T extends string>({
     if (temporizadorBusquedaRef.current) clearTimeout(temporizadorBusquedaRef.current);
   }, []);
 
-  const limpiarBusqueda = () => {
-    busquedaRef.current = "";
-    setBusqueda("");
-    if (temporizadorBusquedaRef.current) {
-      clearTimeout(temporizadorBusquedaRef.current);
-      temporizadorBusquedaRef.current = null;
-    }
-  };
-
   const seleccionar = (opcion: OpcionDesplegable<T>) => {
     if (opcion.deshabilitado) return;
     if (valorControlado === undefined) setValorInterno(opcion.valor);
     onChange?.(opcion.valor);
-    limpiarBusqueda();
-    setAbierto(false);
-    setPosicionLista(null);
+    cerrarLista();
     if (!buscable) botonRef.current?.focus();
   };
 
@@ -198,14 +234,7 @@ export default function SelectorDesplegable<T extends string>({
 
     if (evento.key === "ArrowDown" || evento.key === "ArrowUp") {
       const direccion = evento.key === "ArrowDown" ? 1 : -1;
-      let indice = focoActual;
-      for (let intento = 0; intento < opcionesFiltradas.length; intento += 1) {
-        indice = (indice + direccion + opcionesFiltradas.length) % opcionesFiltradas.length;
-        if (!opcionesFiltradas[indice]?.deshabilitado) {
-          siguienteIndice = indice;
-          break;
-        }
-      }
+      siguienteIndice = buscarOpcionSiguiente(opcionesFiltradas, focoActual, direccion);
     } else if (evento.key === "Home") {
       siguienteIndice = opcionesFiltradas.findIndex((opcion) => !opcion.deshabilitado);
     } else if (evento.key === "End") {
@@ -246,9 +275,7 @@ export default function SelectorDesplegable<T extends string>({
     if (evento.key === "Escape") {
       evento.preventDefault();
       evento.stopPropagation();
-      limpiarBusqueda();
-      setAbierto(false);
-      setPosicionLista(null);
+      cerrarLista();
       botonRef.current?.focus();
     }
   };
@@ -256,9 +283,7 @@ export default function SelectorDesplegable<T extends string>({
   const alternarLista = () => {
     if (deshabilitado) return;
     if (abierto) {
-      limpiarBusqueda();
-      setAbierto(false);
-      setPosicionLista(null);
+      cerrarLista();
     } else {
       setAbierto(true);
     }
@@ -274,9 +299,27 @@ export default function SelectorDesplegable<T extends string>({
       }
     } else if (evento.key === "Escape" && abierto) {
       evento.preventDefault();
-      limpiarBusqueda();
-      setAbierto(false);
-      setPosicionLista(null);
+      cerrarLista();
+    }
+  };
+
+  const alPresionarTeclaBusqueda = (evento: KeyboardEvent<HTMLInputElement>) => {
+    if (evento.nativeEvent.isComposing) return;
+
+    if (evento.key === "ArrowDown" || evento.key === "ArrowUp") {
+      evento.preventDefault();
+      const direccion = evento.key === "ArrowDown" ? 1 : -1;
+      setAbierto(true);
+      setIndiceActivo(buscarOpcionSiguiente(opcionesFiltradas, indiceActivo, direccion));
+    } else if (evento.key === "Enter" && abierto) {
+      evento.preventDefault();
+      const opcion = opcionesFiltradas[indiceActivo]
+        ?? (consulta ? opcionesFiltradas.find((candidata) => !candidata.deshabilitado) : undefined);
+      if (opcion) seleccionar(opcion);
+    } else if (evento.key === "Escape" && abierto) {
+      evento.preventDefault();
+      evento.stopPropagation();
+      cerrarLista();
     }
   };
 
@@ -284,8 +327,91 @@ export default function SelectorDesplegable<T extends string>({
     ? `${opcionSeleccionada.etiqueta}${opcionSeleccionada.distintivos?.length ? `, ${opcionSeleccionada.distintivos.join(", ")}` : ""}`
     : placeholder;
 
+  const lista = abierto && !deshabilitado && posicionLista ? (
+    <ul
+      ref={listaRef}
+      data-selector-desplegable-opciones="true"
+      id={idLista}
+      role="listbox"
+      tabIndex={buscable ? -1 : undefined}
+      aria-label={etiquetaAria ?? "Opciones"}
+      onKeyDown={buscable ? undefined : manejarTecladoLista}
+      className={twMerge(
+        "fixed z-[60] overflow-y-auto rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-1.5 shadow-xl",
+        buscable && "overscroll-contain",
+      )}
+      style={{
+        boxShadow: "0 16px 40px rgb(0 0 0 / 0.24)",
+        left: posicionLista.izquierda,
+        top: posicionLista.bordeVertical,
+        transform: posicionLista.abrirArriba ? "translateY(-100%)" : undefined,
+        width: posicionLista.ancho,
+        minWidth: posicionLista.anchoMinimo,
+        maxHeight: posicionLista.altoMaximo,
+      }}
+    >
+      {opcionesFiltradas.length === 0 ? (
+        <li role="presentation" className="px-3 py-2.5 text-sm text-[var(--admin-texto-muted)]">
+          <span role="status">No se encontraron resultados.</span>
+        </li>
+      ) : opcionesFiltradas.map((opcion, indice) => {
+        const seleccionada = opcion.valor === valorActual;
+        return (
+          <li key={opcion.valor} role="presentation">
+            <button
+              ref={(elemento) => { opcionesRef.current[indice] = elemento; }}
+              id={buscable ? `${idLista}-${indice}` : undefined}
+              type="button"
+              role="option"
+              tabIndex={buscable ? -1 : undefined}
+              disabled={opcion.deshabilitado}
+              aria-selected={seleccionada}
+              aria-disabled={opcion.deshabilitado || undefined}
+              onMouseDown={buscable ? (evento) => evento.preventDefault() : undefined}
+              onClick={() => seleccionar(opcion)}
+              className={twMerge(
+                "flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] disabled:cursor-not-allowed disabled:opacity-50",
+                seleccionada
+                  ? "bg-[var(--page-primary-15)] font-medium text-[var(--admin-texto-primario)]"
+                  : "text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)]",
+                buscable && indiceActivo === indice && "ring-2 ring-inset ring-[var(--page-focus-ring)]",
+              )}
+            >
+              <span className="flex min-w-0 items-center gap-2.5">
+                {opcion.icono}
+                <span className={buscable ? "min-w-0 [overflow-wrap:anywhere]" : "min-w-0 truncate"}>
+                  {opcion.etiqueta}
+                </span>
+              </span>
+              <span className="flex shrink-0 items-center gap-2">
+                {opcion.distintivos?.map((distintivo) => (
+                  <span
+                    key={distintivo}
+                    className="rounded-full bg-[var(--admin-item)] px-2 py-0.5 text-[10px] font-medium text-[var(--admin-texto-muted)]"
+                  >
+                    {distintivo}
+                  </span>
+                ))}
+                {seleccionada && (
+                  <Check className="h-4 w-4 text-[var(--page-primary-tinta)]" aria-hidden="true" />
+                )}
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  ) : null;
+
   return (
-    <div className={twMerge("relative w-full", className)} ref={contenedorRef}>
+    <div
+      className={twMerge("relative w-full", className)}
+      ref={contenedorRef}
+      onBlur={buscable ? (evento) => {
+        const destino = evento.relatedTarget;
+        if (!evento.currentTarget.contains(destino) && !listaRef.current?.contains(destino)) cerrarLista();
+      } : undefined}
+    >
       {name && <input type="hidden" name={name} value={valorActual} disabled={deshabilitado} />}
       {buscable ? (
         <div className="relative">
@@ -294,32 +420,26 @@ export default function SelectorDesplegable<T extends string>({
             id={id}
             type="text"
             disabled={deshabilitado}
-            value={abierto ? busqueda : etiquetaSeleccionada}
+            value={abierto ? busqueda : valorActual ? etiquetaSeleccionada : ""}
             placeholder={placeholder}
-            onFocus={() => {
-              if (!abierto) {
-                setBusqueda("");
-                setAbierto(true);
-              }
-            }}
-            onClick={() => {
-              if (!abierto) {
-                setBusqueda("");
-                setAbierto(true);
-              }
-            }}
+            onFocus={() => setAbierto(true)}
+            onClick={() => setAbierto(true)}
             onChange={(evento) => {
+              if (listaRef.current) listaRef.current.scrollTop = 0;
               setBusqueda(evento.target.value);
+              setIndiceActivo(-1);
               setAbierto(true);
             }}
-            onKeyDown={alPresionarTeclaBoton}
+            onKeyDown={alPresionarTeclaBusqueda}
             role="combobox"
             aria-label={etiquetaAria ?? "Buscar cliente"}
+            aria-autocomplete="list"
             aria-haspopup="listbox"
-            aria-expanded={abierto && !deshabilitado}
+            aria-expanded={Boolean(lista)}
+            aria-activedescendant={lista && opcionesFiltradas[indiceActivo] ? `${idLista}-${indiceActivo}` : undefined}
             aria-busy={cargando || undefined}
             aria-required={obligatorio || undefined}
-            aria-controls={idLista}
+            aria-controls={lista ? idLista : undefined}
             autoComplete="off"
             className={twMerge(
               "h-10 w-full rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] px-3 pr-10 text-left text-sm text-[var(--admin-texto-primario)] transition-colors placeholder:text-[var(--admin-texto-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] disabled:cursor-not-allowed disabled:opacity-60",
@@ -374,70 +494,7 @@ export default function SelectorDesplegable<T extends string>({
         </button>
       )}
 
-      {abierto && !deshabilitado && posicionLista && typeof document !== "undefined" && createPortal((
-        <ul
-          ref={listaRef}
-          data-selector-desplegable-opciones="true"
-          id={idLista}
-          role="listbox"
-          aria-label={etiquetaAria ?? "Opciones"}
-          onKeyDown={manejarTecladoLista}
-          className="fixed z-[60] max-h-72 overflow-y-auto rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-1.5 shadow-xl"
-          style={{
-            boxShadow: "0 16px 40px rgb(0 0 0 / 0.24)",
-            left: posicionLista.izquierda,
-            top: posicionLista.arriba,
-            width: posicionLista.ancho,
-            minWidth: posicionLista.anchoMinimo,
-            maxHeight: posicionLista.altoMaximo,
-          }}
-        >
-          {opcionesFiltradas.length === 0 ? (
-            <li role="presentation" className="px-3 py-2.5 text-sm text-[var(--admin-texto-muted)]">
-              No se encontraron resultados.
-            </li>
-          ) : opcionesFiltradas.map((opcion, indice) => {
-            const seleccionada = opcion.valor === valorActual;
-            return (
-              <li key={opcion.valor} role="presentation">
-                <button
-                  ref={(elemento) => { opcionesRef.current[indice] = elemento; }}
-                  type="button"
-                  role="option"
-                  disabled={opcion.deshabilitado}
-                  aria-selected={seleccionada}
-                  aria-disabled={opcion.deshabilitado || undefined}
-                  onClick={() => seleccionar(opcion)}
-                  className={twMerge(
-                    "flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--page-focus-ring)] disabled:cursor-not-allowed disabled:opacity-50",
-                    seleccionada
-                      ? "bg-[var(--page-primary-15)] font-medium text-[var(--admin-texto-primario)]"
-                      : "text-[var(--admin-texto-secundario)] hover:bg-[var(--admin-item-hover)] hover:text-[var(--admin-texto-primario)]",
-                  )}
-                >
-                  <span className="flex min-w-0 items-center gap-2.5">
-                    {opcion.icono}
-                    <span className="min-w-0 truncate">{opcion.etiqueta}</span>
-                  </span>
-                  <span className="flex shrink-0 items-center gap-2">
-                    {opcion.distintivos?.map((distintivo) => (
-                      <span
-                        key={distintivo}
-                        className="rounded-full bg-[var(--admin-item)] px-2 py-0.5 text-[10px] font-medium text-[var(--admin-texto-muted)]"
-                      >
-                        {distintivo}
-                      </span>
-                    ))}
-                    {seleccionada && (
-                      <Check className="h-4 w-4 text-[var(--page-primary-tinta)]" aria-hidden="true" />
-                    )}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      ), document.body)}
+      {lista && createPortal(lista, document.body)}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { requerirAdmin, requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { enviarEmailTurnoSeguro } from "@/lib/email/enviar-email-turno-seguro";
 import { enviarEmailTurnoBarberoSeguro } from "@/lib/email/enviar-email-turno-barbero-seguro";
 import { enviarEmailNuevaReservaSeguro } from "@/lib/email/enviar-email-nueva-reserva-seguro";
+import { enviarAvisoPushTurno } from "@/lib/notificaciones/enviar-aviso-push-turno";
 import { serializarTurnoConDetalle } from "@/lib/serializar-turno-con-detalle";
 import { crearTurnoEnTransaccion } from "@/lib/crear-turno-transaccion";
 import { revalidarDisponibilidadTurno } from "@/lib/turnos/revalidar-disponibilidad-turno";
@@ -135,12 +136,16 @@ async function crearTurno(
         }),
       ];
       if (resultado.creado) {
-        tareas.push(enviarEmailNuevaReservaSeguro(turno));
+        tareas.push(
+          enviarEmailNuevaReservaSeguro(turno),
+          enviarAvisoPushTurno(turno, "NUEVO_BARBERO"),
+        );
       }
       if (resultado.creado && turno.estado === ESTADOS_TURNO[1]) {
         tareas.push(
           enviarEmailTurnoSeguro(turno, "CONFIRMADO"),
           enviarEmailTurnoBarberoSeguro(turno, "CONFIRMADO"),
+          enviarAvisoPushTurno(turno, "CONFIRMADO"),
         );
       } else if (resultado.creado && clienteNuevoSolicitado) {
         tareas.push(enviarEmailTurnoSeguro(turno, "CREADO"));

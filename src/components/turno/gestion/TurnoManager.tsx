@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Plus, UserRound, UsersRound } from "lucide-react";
 import CargadorModalGestionTurno from "@/components/turno/reserva/CargadorModalGestionTurno";
+import AvisosDeTurnos from "@/components/notificaciones/AvisosDeTurnos";
 import DatosReservaProveedor from "@/contextos/DatosReservaProveedor";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import { esAdmin } from "@/lib/seguridad/es-admin";
@@ -35,6 +36,7 @@ interface Props {
   barberoIdInicial?: string;
   fechaInicial: string;
   agendaInicial?: "personal" | "equipo";
+  clavePublicaPush?: string;
 }
 
 function convertirTurnoCreado(turno: TurnoConDetalle): TurnoListado {
@@ -84,6 +86,7 @@ export default function TurnoManager({
   barberoIdInicial = "",
   fechaInicial,
   agendaInicial,
+  clavePublicaPush,
 }: Props) {
   const esEmpleado = session?.user?.role === "EMPLEADO";
   const filtroInicial = agendaInicial ? "TODOS" : esAdmin(session) || esEmpleado ? "CONFIRMADO" : "PENDIENTE";
@@ -263,6 +266,8 @@ export default function TurnoManager({
             )}
           />
         </header>
+
+        {clavePublicaPush && <AvisosDeTurnos clavePublica={clavePublicaPush} agenda />}
 
         <div className="flex min-w-0 flex-col gap-2.5 xl:flex-row xl:flex-wrap xl:items-center xl:justify-between">
           {mostrarFiltroBarbero && (

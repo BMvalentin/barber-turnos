@@ -4,10 +4,11 @@ import { obtenerDestinoPostLogin } from "@/lib/seguridad/resolver-destino-post-l
 import { obtenerDatosReserva } from "@/lib/consultas/obtener-datos-reserva";
 import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 import { obtenerDatosTransferencia } from "@/lib/pagos/obtener-datos-transferencia";
+import { obtenerConfiguracionPush } from "@/lib/notificaciones/configuracion-push";
 import { redirect } from "next/navigation";
 
 type PropiedadesPaginaDashboard = {
-  searchParams: Promise<{ redireccion?: string | string[]; tab?: string | string[] }>;
+  searchParams: Promise<{ redireccion?: string | string[]; tab?: string | string[]; desde?: string | string[] }>;
 };
 
 export default async function DashboardPage({ searchParams }: PropiedadesPaginaDashboard) {
@@ -35,9 +36,11 @@ export default async function DashboardPage({ searchParams }: PropiedadesPaginaD
       user={session.user}
       session={session}
       initialTab={initialTab}
+      actualizarTurnosAlEntrar={initialTab === "turnos" && parametros.desde === "aviso"}
       initialServicios={servicios}
       initialBarberos={barberos}
       initialRelaciones={relaciones}
+      clavePublicaPush={obtenerConfiguracionPush()?.publicKey}
       datosPago={{
         whatsappPhone: config?.whatsapp ?? "",
         datosTransferencia: obtenerDatosTransferencia(config),

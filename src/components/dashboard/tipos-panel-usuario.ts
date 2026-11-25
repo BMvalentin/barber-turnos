@@ -10,9 +10,11 @@ export type PropiedadesPanelUsuario = {
   user: DatosUsuarioPanel;
   session: Session | null;
   initialTab?: PestanaPanel;
+  actualizarTurnosAlEntrar?: boolean;
   initialServicios: ServicioData[];
   initialBarberos: BarberoData[];
   initialRelaciones: RelacionData[];
+  clavePublicaPush?: string;
   datosPago: {
     whatsappPhone: string;
     datosTransferencia: DatosTransferencia;

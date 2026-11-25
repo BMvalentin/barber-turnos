@@ -9,6 +9,7 @@ import EncabezadoPanelUsuario from "@/components/dashboard/EncabezadoPanelUsuari
 import FormularioPerfilUsuario from "@/components/dashboard/FormularioPerfilUsuario";
 import ModalTelefonoObligatorio from "@/components/dashboard/ModalTelefonoObligatorio";
 import PanelTurnosUsuario from "@/components/dashboard/PanelTurnosUsuario";
+import AvisosDeTurnos from "@/components/notificaciones/AvisosDeTurnos";
 import { Skeleton } from "@/components/ui/skeleton";
 import { precargarDisponibilidadInicial } from "@/lib/turnos/disponibilidad-cliente";
 import {
@@ -77,9 +78,11 @@ export default function DashboardPanel({
   user,
   session,
   initialTab = "perfil",
+  actualizarTurnosAlEntrar = false,
   initialServicios,
   initialBarberos,
   initialRelaciones,
+  clavePublicaPush,
   datosPago,
 }: PropiedadesPanelUsuario) {
   const { update } = useSession();
@@ -89,6 +92,7 @@ export default function DashboardPanel({
   const [datosTurnos, setDatosTurnos] = useState<DatosTurnosUsuarioCache | null>(null);
   const [errorTurnos, setErrorTurnos] = useState(false);
   const cargaTurnosEnCurso = useRef(false);
+  const actualizarAlEntrarPendiente = useRef(actualizarTurnosAlEntrar);
   const [tieneTelefono, setTieneTelefono] = useState(Boolean(usuario.telefono));
   const coincidencia = usuario.telefono?.match(/^(\+\d{1,3}(?:\s\d)?)\s?(.*)$/);
   const prefijoInicial = coincidencia?.[1].trim() || "+54 9";
@@ -99,7 +103,8 @@ export default function DashboardPanel({
     cargaTurnosEnCurso.current = true;
     setErrorTurnos(false);
     try {
-      const cache = leerTurnosUsuarioCacheLocal(usuario.id);
+      const actualizar = actualizarAlEntrarPendiente.current;
+      const cache = actualizar ? null : leerTurnosUsuarioCacheLocal(usuario.id);
       if (cache) {
         setDatosTurnos(cache);
         return;
@@ -107,9 +112,10 @@ export default function DashboardPanel({
 
       const resultado = await getResumenTurnosUsuario(usuario.id);
       if (resultado.success && resultado.data) {
-        const datosActualizados = leerTurnosUsuarioCacheLocal(usuario.id);
+        const datosActualizados = actualizar ? null : leerTurnosUsuarioCacheLocal(usuario.id);
         if (!datosActualizados) guardarTurnosUsuarioCacheLocal(usuario.id, resultado.data);
         setDatosTurnos(datosActualizados ?? resultado.data);
+        actualizarAlEntrarPendiente.current = false;
       } else {
         setErrorTurnos(true);
       }
@@ -167,6 +173,11 @@ export default function DashboardPanel({
       )}
       <main className="mx-auto w-full max-w-5xl grow px-4 pb-12 pt-24 md:px-8">
         <EncabezadoPanelUsuario nombre={usuario.name} pestana={pestana} alCambiar={cambiarPestana} />
+        {pestana === "turnos" && clavePublicaPush && (
+          <div className="mb-4">
+            <AvisosDeTurnos key={user.id} clavePublica={clavePublicaPush} />
+          </div>
+        )}
         {pestana === "perfil" ? (
           <FormularioPerfilUsuario usuario={usuario} prefijoInicial={prefijoInicial} telefonoInicial={telefonoInicial} guardando={guardando} alGuardar={guardarPerfil} />
         ) : datosTurnos ? (

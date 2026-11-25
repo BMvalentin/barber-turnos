@@ -5,6 +5,7 @@ import { obtenerBarberosFiltroTurnos } from "@/lib/consultas/obtener-barberos-fi
 import { requerirPanel } from "@/lib/seguridad/requerir-admin";
 import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 import { obtenerDatosTransferencia } from "@/lib/pagos/obtener-datos-transferencia";
+import { obtenerConfiguracionPush } from "@/lib/notificaciones/configuracion-push";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import { redirect } from "next/navigation";
 
@@ -64,6 +65,7 @@ export default async function AdminTurnoPage({ searchParams }: {
       barberoIdInicial={barberoIdInicial}
       agendaInicial={agendaInicial}
       fechaInicial={fechaInicial}
+      clavePublicaPush={contexto.barberoId ? obtenerConfiguracionPush()?.publicKey : undefined}
       whatsappPhone={config?.whatsapp || ""}
       datosTransferencia={obtenerDatosTransferencia(config)}
     />

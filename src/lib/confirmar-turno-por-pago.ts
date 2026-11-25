@@ -1,7 +1,9 @@
+import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ESTADOS_TURNO } from "@/lib/constants";
 import { evaluarPagoTurno } from "@/lib/mercadopago/evaluar-pago-turno";
 import { enviarEmailsTurnoConfirmado } from "@/lib/email/enviar-emails-turno-confirmado";
+import { enviarAvisoPushTurno } from "@/lib/notificaciones/enviar-aviso-push-turno";
 import { INCLUDE_TURNO_CON_DETALLE } from "@/lib/turno-con-detalle";
 import { revalidarCacheTurno } from "@/lib/revalidar/revalidar-cache-turno";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
@@ -102,6 +104,9 @@ export async function confirmarTurnoPorPago(args: {
     include: INCLUDE_TURNO_CON_DETALLE,
   });
   if (turnoConfirmado) enviarEmailsTurnoConfirmado(turnoConfirmado);
+  if (turnoConfirmado?.estado === ESTADOS_TURNO[1]) {
+    after(() => enviarAvisoPushTurno(turnoConfirmado, "CONFIRMADO"));
+  }
 
   return { ok: true, turnoId: turno.id };
 }

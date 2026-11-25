@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { DIAS_SEMANA, REVERSE_MAPA_DIA_SEMANA_DB } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import type { RangoHorario } from "@/types/horarios";
 
 export const obtenerHorariosCompactos = unstable_cache(
   async () => {
@@ -16,49 +17,43 @@ export const obtenerHorariosCompactos = unstable_cache(
       },
     });
 
-    if (diasLaborales.length === 0) return ["Cerrado"];
-
     diasLaborales.sort((a, b) => REVERSE_MAPA_DIA_SEMANA_DB[a.dia] - REVERSE_MAPA_DIA_SEMANA_DB[b.dia]);
+    const grupos: { diaDesde: number; diaHasta: number; rangos: RangoHorario[] }[] = [];
 
-    const diasProcesados = diasLaborales.map(({ dia, margenes }) => {
+    for (const { dia, margenes } of diasLaborales) {
+      const numeroDia = REVERSE_MAPA_DIA_SEMANA_DB[dia];
       // Une franjas superpuestas o consecutivas.
-      const fusionados: { desde: string; hasta: string }[] = [];
+      const rangos: RangoHorario[] = [];
       for (const margen of margenes) {
-        const ultimo = fusionados[fusionados.length - 1];
+        const ultimo = rangos[rangos.length - 1];
         if (ultimo && margen.desde <= ultimo.hasta) {
           if (margen.hasta > ultimo.hasta) ultimo.hasta = margen.hasta;
         } else {
-          fusionados.push({ ...margen });
+          rangos.push({ ...margen });
         }
       }
 
-      return {
-        num: REVERSE_MAPA_DIA_SEMANA_DB[dia],
-        horario: fusionados.map(({ desde, hasta }) => `${desde} a ${hasta}`).join(", ") || "Cerrado",
-      };
-    });
-
-    const grupos: { desde: number; hasta: number; horario: string }[] = [];
-
-    for (const dia of diasProcesados) {
       const ultimoGrupo = grupos[grupos.length - 1];
 
-      if (ultimoGrupo && ultimoGrupo.horario === dia.horario && ultimoGrupo.hasta === dia.num - 1) {
-        ultimoGrupo.hasta = dia.num;
+      if (
+        ultimoGrupo &&
+        ultimoGrupo.diaHasta === numeroDia - 1 &&
+        ultimoGrupo.rangos.length === rangos.length &&
+        rangos.every(({ desde, hasta }, indice) =>
+          desde === ultimoGrupo.rangos[indice].desde && hasta === ultimoGrupo.rangos[indice].hasta
+        )
+      ) {
+        ultimoGrupo.diaHasta = numeroDia;
       } else {
-        grupos.push({
-          desde: dia.num,
-          hasta: dia.num,
-          horario: dia.horario,
-        });
+        grupos.push({ diaDesde: numeroDia, diaHasta: numeroDia, rangos });
       }
     }
 
-    return grupos.map(({ desde, hasta, horario }) => {
-      const dias = desde === hasta ? DIAS_SEMANA[desde] : `${DIAS_SEMANA[desde]} a ${DIAS_SEMANA[hasta]}`;
-      return `${dias} ${horario}`;
-    });
+    return grupos.map(({ diaDesde, diaHasta, rangos }) => ({
+      dias: diaDesde === diaHasta ? DIAS_SEMANA[diaDesde] : `${DIAS_SEMANA[diaDesde]} a ${DIAS_SEMANA[diaHasta]}`,
+      rangos,
+    }));
   },
-  ["horarios-compactos-publicos"],
+  ["horarios-compactos-publicos-v2"],
   { tags: ["dias-laborales"], revalidate: 3600 },
 );
