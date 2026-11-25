@@ -11,6 +11,7 @@ import { obtenerConfigCacheada } from "@/lib/obtener-config-cacheada";
 import { crearVariablesTema } from "@/lib/contraste/crear-variables-tema";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { leerIntencionConsentimiento } from "@/lib/legal/intencion-cookies";
+import { obtenerAmbitoBaseDatos } from "@/lib/conexion-base-datos";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -25,10 +26,11 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [config, session, consentimiento] = await Promise.all([
+  const [config, session, consentimiento, ambitoBaseDatos] = await Promise.all([
     obtenerConfigCacheada(),
     requerirSesion(),
     leerIntencionConsentimiento(),
+    obtenerAmbitoBaseDatos(),
   ]);
 
   const variablesTema = crearVariablesTema({
@@ -40,6 +42,7 @@ export default async function RootLayout({
   return (
     <html
       lang="es"
+      data-ambito-base-datos={ambitoBaseDatos ?? undefined}
       suppressHydrationWarning
       style={
         {
@@ -62,6 +65,7 @@ export default async function RootLayout({
           } catch {}`}
         </Script>
         <LayoutComponent
+          key={ambitoBaseDatos}
           session={session}
           config={{ name: config?.name, logo: config?.logo }}
         >

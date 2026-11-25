@@ -9,6 +9,7 @@ import { CLASES_BOTON_CERRAR } from "@/lib/constants";
 
 type ModalBaseProps = {
   children: ReactNode;
+  id?: string;
   onClose?: () => void;
   titulo?: ReactNode;
   subtitulo?: ReactNode;
@@ -22,6 +23,7 @@ type ModalBaseProps = {
   estiloHeader?: CSSProperties;
   animado?: boolean;
   apariencia?: "publica";
+  dialogoAccesible?: boolean;
   etiquetaDialogo?: string;
   onCloseAutoFocus?: (evento: Event) => void;
 };
@@ -38,6 +40,7 @@ const CONTENEDOR_PREDETERMINADO =
 
 export default function ModalBase({
   children,
+  id,
   onClose,
   titulo,
   subtitulo,
@@ -51,6 +54,7 @@ export default function ModalBase({
   estiloHeader,
   animado = false,
   apariencia,
+  dialogoAccesible = false,
   etiquetaDialogo,
   onCloseAutoFocus,
 }: ModalBaseProps) {
@@ -58,20 +62,27 @@ export default function ModalBase({
   const focoPrevio = useRef<HTMLElement | null>(null);
   const descripcionId = useId();
 
-  if (apariencia === "publica") {
+  if (apariencia === "publica" || dialogoAccesible) {
     return (
       <Dialog.Root open onOpenChange={(abierto) => { if (!abierto) onClose?.(); }}>
         <Dialog.Portal>
-          <Dialog.Overlay className={cn("velo-modal-publico fixed inset-0 z-[110] bg-black/60", overlayClase)} />
+          <Dialog.Overlay className={cn("fixed inset-0 z-[110] bg-black/60", apariencia === "publica" && "velo-modal-publico", overlayClase)} />
           <Dialog.Content
+            {...(id ? { id } : {})}
             aria-describedby={subtitulo && !header ? descripcionId : undefined}
             className={cn(
-              "modal-publico entrada-modal-publico fixed top-1/2 left-1/2 z-[111] max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] -translate-1/2 overflow-y-auto overscroll-contain sm:max-h-[calc(100dvh-3rem)] sm:w-[calc(100%-3rem)]",
+              "fixed top-1/2 left-1/2 z-[111] max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] -translate-1/2 overflow-y-auto overscroll-contain sm:max-h-[calc(100dvh-3rem)] sm:w-[calc(100%-3rem)]",
+              apariencia === "publica" && "modal-publico entrada-modal-publico",
               maxWidth,
               contenedorClase ?? "p-4 sm:p-6",
             )}
             onPointerDownOutside={(evento) => evento.preventDefault()}
-            onEscapeKeyDown={(evento) => { if (!onClose) evento.preventDefault(); }}
+            onEscapeKeyDown={(evento) => {
+              const selectorAbierto = evento.target instanceof Element && evento.target.closest(
+                "[role='combobox'][aria-expanded='true'], [data-selector-desplegable-opciones]",
+              );
+              if (!onClose || selectorAbierto) evento.preventDefault();
+            }}
             onOpenAutoFocus={() => {
               focoPrevio.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
             }}
@@ -118,6 +129,7 @@ export default function ModalBase({
         : {})}
     >
       <motion.div
+        id={id}
         className={cn(
           "relative w-full shadow-2xl shadow-black/40",
           maxWidth,

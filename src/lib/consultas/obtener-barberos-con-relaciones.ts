@@ -1,7 +1,7 @@
-import { unstable_cache } from "next/cache";
+import { cachearConsulta } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 
-const obtenerBarberosConRelacionesCacheados = unstable_cache(
+const obtenerBarberosConRelacionesCacheados = cachearConsulta(
   async (barberoId: string | null, soloEmpleados: boolean) => {
     const barberos = await prisma.barbero.findMany({
     where: barberoId ? { id: barberoId } : soloEmpleados ? { usuario: { role: "EMPLEADO" } } : undefined,

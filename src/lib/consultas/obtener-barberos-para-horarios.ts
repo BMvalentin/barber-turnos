@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { cachearConsulta } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import {
   filtrarPerfilesDelEquipo,
@@ -8,7 +8,7 @@ import {
 
 import type { BarberoParaHorarios } from "@/types/horarios";
 
-const obtenerBarberosParaHorariosCacheados = unstable_cache(
+const obtenerBarberosParaHorariosCacheados = cachearConsulta(
   async (barberoId: string | null): Promise<BarberoParaHorarios[]> => {
     const perfiles = await prisma.barbero.findMany({
       where: barberoId ? { id: barberoId } : filtroBarberoDelEquipo,

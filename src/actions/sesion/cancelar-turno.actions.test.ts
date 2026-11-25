@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => ({
   requerirSesion: vi.fn(),
   requerirAdmin: vi.fn(),
   enviarCancelacion: vi.fn(),
+  enviarPush: vi.fn(),
+  after: vi.fn<(tarea: () => unknown) => void>(),
 }));
 
 vi.mock("@/lib/prisma", () => ({
@@ -21,8 +23,10 @@ vi.mock("@/lib/seguridad/requerir-admin", () => ({ requerirAdmin: mocks.requerir
 vi.mock("@/lib/email/enviar-email-cancelacion-turno-seguro", () => ({
   enviarEmailCancelacionTurnoSeguro: mocks.enviarCancelacion,
 }));
+vi.mock("@/lib/notificaciones/enviar-aviso-push-turno", () => ({ enviarAvisoPushTurno: mocks.enviarPush }));
 vi.mock("@/lib/revalidar/revalidar-cache-turno", () => ({ revalidarCacheTurno: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("next/server", () => ({ after: mocks.after }));
 
 import { cancelTurno } from "./cancelar-turno.actions";
 
@@ -87,6 +91,8 @@ describe("cancelTurno", () => {
         expect.objectContaining({ estado: "CANCELADO" }),
         "CLIENTE",
       );
+      await mocks.after.mock.lastCall?.[0]();
+      expect(mocks.enviarPush.mock.calls).toEqual([[turnoCancelado, "CANCELADO"]]);
     },
   );
 
@@ -110,6 +116,7 @@ describe("cancelTurno", () => {
     expect(resultado.success).toBe(false);
     expect(mocks.findUniqueTx).not.toHaveBeenCalled();
     expect(mocks.enviarCancelacion).not.toHaveBeenCalled();
+    expect(mocks.after).not.toHaveBeenCalled();
   });
 
   it("rechaza una cancelación fuera de la ventana y no toca el correo", async () => {
@@ -123,6 +130,7 @@ describe("cancelTurno", () => {
     expect(resultado.success).toBe(false);
     expect(mocks.transaction).not.toHaveBeenCalled();
     expect(mocks.enviarCancelacion).not.toHaveBeenCalled();
+    expect(mocks.after).not.toHaveBeenCalled();
   });
 
   it("no permite que otro cliente cancele el turno", async () => {
@@ -134,5 +142,6 @@ describe("cancelTurno", () => {
     expect(resultado.error).toBe("No autorizado");
     expect(mocks.transaction).not.toHaveBeenCalled();
     expect(mocks.enviarCancelacion).not.toHaveBeenCalled();
+    expect(mocks.after).not.toHaveBeenCalled();
   });
 });

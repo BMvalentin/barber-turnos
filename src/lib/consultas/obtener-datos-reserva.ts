@@ -1,9 +1,9 @@
-import { unstable_cache } from "next/cache";
+import { cachearConsulta } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import { filtroBarberoActivo, filtroBarberoReservable, filtroHorarioBarberoActivo } from "@/lib/barberos/filtros-perfiles";
 import { obtenerCamposPendientesPerfil } from "@/lib/barberos/perfil-profesional";
 
-export const obtenerDatosReserva = unstable_cache(
+export const obtenerDatosReserva = cachearConsulta(
   async ({ soloPerfilesCompletos = false }: { soloPerfilesCompletos?: boolean } = {}) => {
     const [registrosServicios, barberos, relaciones] = await Promise.all([
       prisma.servicio.findMany({

@@ -8,10 +8,17 @@ const dependencias = vi.hoisted(() => ({
   buscarUsuario: vi.fn(),
   crearTurnoEnTransaccion: vi.fn(),
   serializarTurnoConDetalle: vi.fn(),
+  after: vi.fn<(tarea: () => Promise<void>) => void>(),
+  enviarPush: vi.fn(),
 }));
 
-vi.mock("next/server", () => ({ after: vi.fn() }));
-vi.mock("@/lib/prisma", () => ({ prisma: { user: { findUnique: dependencias.buscarUsuario } } }));
+vi.mock("next/server", () => ({ after: dependencias.after }));
+vi.mock("@/lib/prisma", () => ({
+  prisma: {
+    user: { findUnique: dependencias.buscarUsuario },
+    slotLock: { deleteMany: vi.fn().mockResolvedValue({ count: 1 }) },
+  },
+}));
 vi.mock("@/lib/seguridad/requerir-sesion", () => ({ requerirSesion: dependencias.requerirSesion }));
 vi.mock("@/lib/seguridad/requerir-admin", () => ({
   requerirAdmin: dependencias.requerirAdmin,
@@ -20,6 +27,7 @@ vi.mock("@/lib/seguridad/requerir-admin", () => ({
 vi.mock("@/lib/email/enviar-email-turno-seguro", () => ({ enviarEmailTurnoSeguro: vi.fn() }));
 vi.mock("@/lib/email/enviar-email-turno-barbero-seguro", () => ({ enviarEmailTurnoBarberoSeguro: vi.fn() }));
 vi.mock("@/lib/email/enviar-email-nueva-reserva-seguro", () => ({ enviarEmailNuevaReservaSeguro: vi.fn() }));
+vi.mock("@/lib/notificaciones/enviar-aviso-push-turno", () => ({ enviarAvisoPushTurno: dependencias.enviarPush }));
 vi.mock("@/lib/turnos/revalidar-disponibilidad-turno", () => ({ revalidarDisponibilidadTurno: vi.fn() }));
 vi.mock("@/lib/serializar-turno-con-detalle", () => ({ serializarTurnoConDetalle: dependencias.serializarTurnoConDetalle }));
 vi.mock("@/lib/crear-turno-transaccion", () => ({ crearTurnoEnTransaccion: dependencias.crearTurnoEnTransaccion }));
@@ -69,6 +77,7 @@ describe("reserva personal", () => {
 
     await expect(reservarTurnoPropio({}, formulario())).resolves.toMatchObject({ success: false, error: expect.stringContaining("teléfono") });
     expect(dependencias.crearTurnoEnTransaccion).not.toHaveBeenCalled();
+    expect(dependencias.after).not.toHaveBeenCalled();
   });
 
   it("mantiene la elección de cliente desde el panel con autorización", async () => {
@@ -84,5 +93,26 @@ describe("reserva personal", () => {
       userId: "otro-cliente",
       confirmarSinSeña: false,
     }));
+  });
+});
+
+describe("avisos push al reservar", () => {
+  it.each([
+    { creado: true, estado: "PENDIENTE", avisos: ["NUEVO_BARBERO"] },
+    { creado: true, estado: "CONFIRMADO", avisos: ["NUEVO_BARBERO", "CONFIRMADO"] },
+    { creado: false, estado: "CONFIRMADO", avisos: [] },
+  ])("agenda $avisos con creado=$creado y estado $estado", async ({ creado, estado, avisos }) => {
+    dependencias.requerirSesion.mockResolvedValue({ user: { id: "cuenta" } });
+    const turno = {
+      id: "turno", userId: "cuenta", barberoId: "barbero", estado,
+      horarioReservado: new Date(Date.now() + 60 * 60 * 1000),
+    };
+    dependencias.crearTurnoEnTransaccion.mockResolvedValue({ ok: true, creado, turno });
+
+    await expect(reservarTurnoPropio({}, formulario())).resolves.toMatchObject({ success: true });
+    expect(dependencias.enviarPush).not.toHaveBeenCalled();
+    await dependencias.after.mock.lastCall?.[0]();
+
+    expect(dependencias.enviarPush.mock.calls).toEqual(avisos.map((aviso) => [turno, aviso]));
   });
 });

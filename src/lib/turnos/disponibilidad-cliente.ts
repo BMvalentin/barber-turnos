@@ -1,9 +1,11 @@
 import { addMonths, format, parseISO } from "date-fns";
 import { z } from "zod";
+import { obtenerAmbitoBaseDatosLocal } from "@/lib/ambito-base-datos-cliente";
 import { MAX_BARBEROS_POR_CONSULTA, VIGENCIA_CACHE_TURNOS_MS } from "@/lib/turnos/capacidad-horaria";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 
-const PREFIJO_CACHE = "mayoraz-disponibilidad-v1:";
+const PREFIJO_CACHE = "mayoraz-disponibilidad-v2:";
+const PREFIJO_CACHE_ANTERIOR = "mayoraz-disponibilidad-v1:";
 const esquemaCapacidad = z.record(
   z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   z.array(z.tuple([z.number().int().min(0).max(8.64e15), z.number().positive()])),
@@ -25,7 +27,7 @@ function esVigente(venceEn: number, ahora = Date.now()) {
 }
 
 export function claveDisponibilidad(mes: string, barberoId: string, exclusion?: ExclusionDisponibilidad) {
-  const clave = `${PREFIJO_CACHE}${mes}:${encodeURIComponent(barberoId)}`;
+  const clave = `${PREFIJO_CACHE}${obtenerAmbitoBaseDatosLocal()}:${mes}:${encodeURIComponent(barberoId)}`;
   return exclusion ? `${clave}:${encodeURIComponent(exclusion.turnoId)}:${encodeURIComponent(exclusion.usuarioId)}` : clave;
 }
 
@@ -40,6 +42,10 @@ function limpiarVencidas() {
     const almacen = window.localStorage;
     for (let indice = almacen.length - 1; indice >= 0; indice -= 1) {
       const clave = almacen.key(indice);
+      if (clave?.startsWith(PREFIJO_CACHE_ANTERIOR)) {
+        almacen.removeItem(clave);
+        continue;
+      }
       if (!clave?.startsWith(PREFIJO_CACHE)) continue;
       try {
         const valor: unknown = JSON.parse(almacen.getItem(clave) ?? "null");
@@ -120,21 +126,36 @@ function iniciarConsultas(mes: string, barberos: string[], exclusion?: Exclusion
   }
 }
 
-export function precargarDisponibilidadMensual(mes: string, barberos: readonly string[]) {
+export async function precargarDisponibilidadMensual(mes: string, barberos: readonly string[]) {
   limpiarVencidas();
-  const faltantes = [...new Set(barberos)].filter((id) => {
+  const ids = [...new Set(barberos)];
+  const faltantes = ids.filter((id) => {
     const clave = claveDisponibilidad(mes, id);
     return !pendientes.has(clave) && !leerEntrada(clave);
   });
   for (let indice = 0; indice < faltantes.length; indice += MAX_BARBEROS_POR_CONSULTA) {
     iniciarConsultas(mes, faltantes.slice(indice, indice + MAX_BARBEROS_POR_CONSULTA));
   }
+  const agendas = await Promise.all(ids.map((id) => {
+    const clave = claveDisponibilidad(mes, id);
+    return pendientes.get(clave) ?? leerEntrada(clave);
+  }));
+  return agendas.every(Boolean);
 }
 
-export function precargarDisponibilidadInicial(barberos: readonly string[]) {
-  const hoy = parseISO(obtenerFechaSola(new Date()));
-  precargarDisponibilidadMensual(format(hoy, "yyyy-MM"), barberos);
-  precargarDisponibilidadMensual(format(addMonths(hoy, 1), "yyyy-MM"), barberos);
+export async function precargarDisponibilidadInicial(
+  barberos: readonly string[],
+  fecha: Date = new Date(),
+  exclusion?: ExclusionDisponibilidad & { barberoId: string },
+) {
+  const inicio = parseISO(obtenerFechaSola(fecha));
+  const mes = format(inicio, "yyyy-MM");
+  const [actual, siguiente, agendaEditable] = await Promise.all([
+    precargarDisponibilidadMensual(mes, exclusion ? barberos.filter((id) => id !== exclusion.barberoId) : barberos),
+    precargarDisponibilidadMensual(format(addMonths(inicio, 1), "yyyy-MM"), barberos),
+    exclusion ? consultarDisponibilidadMensual(mes, exclusion.barberoId, exclusion) : true,
+  ]);
+  return actual && siguiente && Boolean(agendaEditable);
 }
 
 export function consultarDisponibilidadMensual(mes: string, barberoId: string, exclusion?: ExclusionDisponibilidad, actualizar = false) {

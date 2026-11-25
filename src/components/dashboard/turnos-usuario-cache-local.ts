@@ -1,13 +1,14 @@
 "use client";
 
 import { z } from "zod";
+import { obtenerAmbitoBaseDatosLocal } from "@/lib/ambito-base-datos-cliente";
 import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
 import { VIGENCIA_CACHE_TURNOS_MS } from "@/lib/turnos/capacidad-horaria";
 import type { ParcheTurnoCache } from "@/lib/admin/turnos-cache-local";
 import type { TurnoListado } from "@/types/turno";
 
-const PREFIJO_CACHE = "mayoraz-usuario-turnos-v2:";
-const PREFIJO_CACHE_ANTERIOR = "mayoraz-usuario-turnos-v1:";
+const PREFIJO_CACHE = "mayoraz-usuario-turnos-v3:";
+const PREFIJOS_ANTERIORES = ["mayoraz-usuario-turnos-v1:", "mayoraz-usuario-turnos-v2:"];
 const MAX_TURNOS_CACHEADOS = 500;
 
 const esquemaUsuario = z.object({
@@ -52,7 +53,7 @@ const esquemaDatos = z.object({
 });
 
 const esquemaCache = z.object({
-  version: z.literal(2),
+  version: z.literal(3),
   usuarioId: z.string(),
   venceEn: z.number().int(),
   datos: esquemaDatos,
@@ -70,13 +71,15 @@ export type DatosTurnosUsuarioCache = {
 type CacheTurnosUsuario = z.infer<typeof esquemaCache>;
 
 function obtenerClave(usuarioId: string): string {
-  return `${PREFIJO_CACHE}${encodeURIComponent(usuarioId)}`;
+  return `${PREFIJO_CACHE}${obtenerAmbitoBaseDatosLocal()}:${encodeURIComponent(usuarioId)}`;
 }
 
 function limpiarCacheAnterior(): void {
   for (let indice = window.localStorage.length - 1; indice >= 0; indice -= 1) {
     const clave = window.localStorage.key(indice);
-    if (clave?.startsWith(PREFIJO_CACHE_ANTERIOR)) window.localStorage.removeItem(clave);
+    if (clave && PREFIJOS_ANTERIORES.some((prefijo) => clave.startsWith(prefijo))) {
+      window.localStorage.removeItem(clave);
+    }
   }
 }
 
@@ -165,7 +168,7 @@ export function guardarTurnosUsuarioCacheLocal(
       proximos: datos.proximos.slice(0, MAX_TURNOS_CACHEADOS),
     };
     const resultado = esquemaCache.safeParse({
-      version: 2,
+      version: 3,
       usuarioId,
       venceEn: Date.now() + VIGENCIA_CACHE_TURNOS_MS,
       datos: {
@@ -219,8 +222,8 @@ export function limpiarTurnosUsuarioCacheLocal(): void {
     for (let indice = window.localStorage.length - 1; indice >= 0; indice -= 1) {
       const clave = window.localStorage.key(indice);
       if (
-        clave?.startsWith(PREFIJO_CACHE) ||
-        clave?.startsWith(PREFIJO_CACHE_ANTERIOR)
+        clave &&
+        [PREFIJO_CACHE, ...PREFIJOS_ANTERIORES].some((prefijo) => clave.startsWith(prefijo))
       ) {
         window.localStorage.removeItem(clave);
       }

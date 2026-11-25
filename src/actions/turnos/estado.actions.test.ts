@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
   enviarCancelacion: vi.fn(),
   enviarTurno: vi.fn(),
   enviarBarbero: vi.fn(),
+  enviarPush: vi.fn(),
+  after: vi.fn<(tarea: () => unknown) => void>(),
   serializar: vi.fn(),
 }));
 
@@ -20,6 +22,8 @@ vi.mock("@/lib/email/enviar-email-cancelacion-turno-seguro", () => ({
 }));
 vi.mock("@/lib/email/enviar-email-turno-seguro", () => ({ enviarEmailTurnoSeguro: mocks.enviarTurno }));
 vi.mock("@/lib/email/enviar-email-turno-barbero-seguro", () => ({ enviarEmailTurnoBarberoSeguro: mocks.enviarBarbero }));
+vi.mock("@/lib/notificaciones/enviar-aviso-push-turno", () => ({ enviarAvisoPushTurno: mocks.enviarPush }));
+vi.mock("next/server", () => ({ after: mocks.after }));
 vi.mock("@/lib/revalidar/revalidar-cache-turno", () => ({ revalidarCacheTurno: vi.fn() }));
 vi.mock("@/lib/serializar-turno-con-detalle", () => ({ serializarTurnoConDetalle: mocks.serializar }));
 
@@ -73,6 +77,8 @@ describe("actualizarTurno: cancelación administrativa", () => {
     expect(resultado.success).toBe(true);
     expect(mocks.enviarCancelacion).toHaveBeenCalledWith(turnoCancelado, "ADMINISTRADOR");
     expect(mocks.enviarTurno).not.toHaveBeenCalled();
+    await mocks.after.mock.lastCall?.[0]();
+    expect(mocks.enviarPush.mock.calls).toEqual([[turnoCancelado, "CANCELADO"]]);
   });
 
   it("no reenvía el evento si el turno ya estaba cancelado", async () => {
@@ -85,6 +91,7 @@ describe("actualizarTurno: cancelación administrativa", () => {
     await actualizarTurno({}, formularioCancelacion());
 
     expect(mocks.enviarCancelacion).not.toHaveBeenCalled();
+    expect(mocks.after).not.toHaveBeenCalled();
   });
 
   it("no envía avisos cuando la transición es rechazada", async () => {
@@ -94,6 +101,7 @@ describe("actualizarTurno: cancelación administrativa", () => {
 
     expect(resultado.success).toBe(false);
     expect(mocks.enviarCancelacion).not.toHaveBeenCalled();
+    expect(mocks.after).not.toHaveBeenCalled();
   });
 
   it("identifica la agenda que debe refrescarse si al reprogramar se ocupó el horario", async () => {
@@ -131,5 +139,31 @@ describe("actualizarTurno: turnos completados", () => {
     expect(mocks.enviarTurno).not.toHaveBeenCalled();
     expect(mocks.enviarBarbero).not.toHaveBeenCalled();
     expect(mocks.enviarCancelacion).not.toHaveBeenCalled();
+    expect(mocks.after).not.toHaveBeenCalled();
+  });
+});
+
+describe("actualizarTurno: avisos push con un turno activo", () => {
+  afterEach(() => vi.clearAllMocks());
+
+  it.each([
+    { resuelto: {}, avisos: [] },
+    { resuelto: { estadoPago: "SEÑADO" }, avisos: [] },
+    { resuelto: { servicioId: "servicio-2" }, avisos: ["ACTUALIZADO"] },
+    { resuelto: { barberoId: "barbero-2" }, avisos: ["ACTUALIZADO", "NUEVO_BARBERO"] },
+    { resuelto: { estado: "CONFIRMADO", barberoId: "barbero-2" }, avisos: ["CONFIRMADO", "NUEVO_BARBERO"] },
+  ])("envía $avisos según el cambio persistido $resuelto", async ({ resuelto, avisos }) => {
+    const turnoAnterior = { ...turnoCancelado, ...turno };
+    const actualizado = { ...turnoAnterior, ...resuelto };
+    mocks.findUnique.mockResolvedValue(turnoAnterior);
+    mocks.requerirAdmin.mockResolvedValue({ user: { id: "admin-1" } });
+    mocks.actualizarEnTransaccion.mockResolvedValue({ ok: true, turno: actualizado, turnoAnterior });
+    const formulario = new FormData();
+    formulario.set("id", actualizado.id);
+
+    await expect(actualizarTurno({}, formulario)).resolves.toMatchObject({ success: true });
+    await mocks.after.mock.lastCall?.[0]();
+
+    expect(mocks.enviarPush.mock.calls).toEqual(avisos.map((aviso) => [actualizado, aviso]));
   });
 });

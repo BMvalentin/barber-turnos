@@ -13,11 +13,17 @@ interface UseSlotLocksOptions {
   sessionId: string;
   userId: string;
   activo?: boolean;
+  consultarDia?: boolean;
 }
 
 interface SlotLockEntry {
   slot: string;
 }
+
+type SeleccionBloqueo = { slot: string; estado: "pendiente" | "adquirido" | "inactivo" };
+
+const INTERVALO_CONSULTA_MS = 10_000;
+const INTERVALO_RENOVACION_MS = 60_000;
 
 /**
  * Hook de bloqueo de slots con server actions y caché.
@@ -27,124 +33,130 @@ export function useSlotLocks({
   fecha,
   sessionId,
   activo = true,
+  consultarDia = true,
 }: UseSlotLocksOptions) {
   const [slotsBlockeados, setSlotsBlockeados] = useState<SlotLockEntry[]>([]);
-
-  const slotActivoRef = useRef<string | null>(null);
-  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const solicitudLocksRef = useRef(0);
+  const seleccionRef = useRef<SeleccionBloqueo | null>(null);
+  const renovacionEnCursoRef = useRef(false);
+  const consultaEnCursoRef = useRef<Promise<unknown> | null>(null);
+  const refrescarLocksRef = useRef<(() => void) | null>(null);
 
   const fechaStr = fecha ? format(fecha, "yyyy-MM-dd") : null;
 
-  // ── GET: leer locks de otros usuarios ────────────────────────────────
-  const fetchLocks = useCallback(async () => {
-    if (!barberoId || !fechaStr) return;
-    const idSolicitud = ++solicitudLocksRef.current;
-    try {
-      const resultado = await listarLocksDelDia(barberoId, fechaStr);
-      if (
-        idSolicitud === solicitudLocksRef.current &&
-        resultado.success &&
-        Array.isArray(resultado.data)
-      ) {
+  useEffect(() => {
+    setSlotsBlockeados([]);
+    if (!activo || !consultarDia || !barberoId || !fechaStr) return;
+
+    let vigente = true;
+    let consultando = false;
+    let actualizacionSolicitada = false;
+    let proximaConsulta = 0;
+    let temporizador: ReturnType<typeof setTimeout> | undefined;
+
+    const pestanaOculta = () => document.visibilityState === "hidden";
+
+    async function consultar(id: string, dia: string) {
+      if (consultando || pestanaOculta()) return;
+      consultando = true;
+      clearTimeout(temporizador);
+
+      // Al cambiar de fecha, se espera a que termine la última consulta antes de pedir otra.
+      await consultaEnCursoRef.current;
+      if (!vigente || pestanaOculta()) {
+        consultando = false;
+        return;
+      }
+
+      actualizacionSolicitada = false;
+      const consulta = listarLocksDelDia(id, dia).catch(() => null);
+      consultaEnCursoRef.current = consulta;
+      const resultado = await consulta;
+      consultaEnCursoRef.current = null;
+      consultando = false;
+      if (!vigente) return;
+
+      if (resultado?.success && Array.isArray(resultado.data)) {
         setSlotsBlockeados(resultado.data.map((slot) => ({ slot })));
       }
-    } catch {
-      // Silencioso
+      proximaConsulta = actualizacionSolicitada ? 0 : Date.now() + INTERVALO_CONSULTA_MS;
+      programarConsulta();
     }
-  }, [barberoId, fechaStr]);
 
-  // ── POST: crear / actualizar lock via action ─────────────────
-  const crearLockAction = useCallback(
-    async (slot: string) => {
-      if (!barberoId) return;
-      try {
-        await crearLockSlot(barberoId, slot, sessionId);
-      } catch {
-        // Silencioso
+    const refrescar = () => { void consultar(barberoId, fechaStr); };
+
+    function programarConsulta() {
+      clearTimeout(temporizador);
+      if (vigente && !consultando && !pestanaOculta()) {
+        temporizador = setTimeout(refrescar, Math.max(0, proximaConsulta - Date.now()));
       }
-    },
-    [barberoId, sessionId]
-  );
-
-  // ── DELETE: eliminar lock via action ──────────────────────────
-  const eliminarLockAction = useCallback(async () => {
-    try {
-      await eliminarLockSlot(sessionId);
-    } catch {
-      // Silencioso
     }
+
+    refrescarLocksRef.current = () => {
+      // Una consulta anterior al conflicto puede devolver datos desactualizados.
+      actualizacionSolicitada = true;
+      proximaConsulta = 0;
+      programarConsulta();
+    };
+    programarConsulta();
+    document.addEventListener("visibilitychange", programarConsulta);
+    return () => {
+      vigente = false;
+      refrescarLocksRef.current = null;
+      clearTimeout(temporizador);
+      document.removeEventListener("visibilitychange", programarConsulta);
+    };
+  }, [activo, barberoId, consultarDia, fechaStr]);
+
+  const refrescarLocks = useCallback(() => {
+    refrescarLocksRef.current?.();
+  }, []);
+
+  const unlockSlot = useCallback(() => {
+    if (!seleccionRef.current) return;
+    seleccionRef.current = null;
+    void eliminarLockSlot(sessionId).catch(() => {});
   }, [sessionId]);
 
-  // ── Efecto principal: polling + heartbeat ────────────────────
   useEffect(() => {
-    if (!activo || !barberoId || !fechaStr) {
-      solicitudLocksRef.current += 1;
-      setSlotsBlockeados([]);
-      return;
-    }
+    if (!activo || !barberoId || !fechaStr) return;
 
-    let polling: ReturnType<typeof setInterval> | null = null;
-
-    const detenerPolling = () => {
-      if (!polling) return;
-      clearInterval(polling);
-      polling = null;
-    };
-
-    const iniciarPolling = () => {
-      if (polling || document.visibilityState === "hidden") return;
-      void fetchLocks();
-      polling = setInterval(fetchLocks, 10_000);
-    };
-
-    const manejarVisibilidad = () => {
-      if (document.visibilityState === "hidden") detenerPolling();
-      else iniciarPolling();
-    };
-
-    heartbeatRef.current = setInterval(async () => {
-      if (!slotActivoRef.current) return;
+    const renovacion = setInterval(async () => {
+      const seleccion = seleccionRef.current;
+      if (seleccion?.estado !== "adquirido" || renovacionEnCursoRef.current) return;
+      renovacionEnCursoRef.current = true;
       try {
-        await renovarLockSlot(sessionId);
+        const resultado = await renovarLockSlot(sessionId);
+        if (resultado.renovado === false) seleccion.estado = "inactivo";
       } catch {
-        // Silencioso
+        // Se vuelve a intentar en el próximo intervalo si el lock sigue vigente.
+      } finally {
+        renovacionEnCursoRef.current = false;
       }
-    }, 60_000);
-
-    iniciarPolling();
-    document.addEventListener("visibilitychange", manejarVisibilidad);
+    }, INTERVALO_RENOVACION_MS);
 
     return () => {
-      solicitudLocksRef.current += 1;
-      detenerPolling();
-      document.removeEventListener("visibilitychange", manejarVisibilidad);
-      if (heartbeatRef.current) clearInterval(heartbeatRef.current);
-      if (slotActivoRef.current) {
-        slotActivoRef.current = null;
-        eliminarLockSlot(sessionId).catch(() => {});
-      }
+      clearInterval(renovacion);
+      unlockSlot();
     };
-  }, [fetchLocks, sessionId, activo, barberoId, fechaStr]);
+  }, [activo, barberoId, fechaStr, sessionId, unlockSlot]);
 
   const lockSlot = useCallback(
     (slot: string) => {
-      slotActivoRef.current = slot;
-      crearLockAction(slot);
+      const previa = seleccionRef.current;
+      if (!barberoId || (previa?.slot === slot && previa.estado !== "inactivo")) return;
+      const seleccion: SeleccionBloqueo = { slot, estado: "pendiente" };
+      seleccionRef.current = seleccion;
+      void crearLockSlot(barberoId, slot, sessionId)
+        .then((resultado) => { seleccion.estado = resultado.success ? "adquirido" : "inactivo"; })
+        .catch(() => { seleccion.estado = "inactivo"; });
     },
-    [crearLockAction]
+    [barberoId, sessionId]
   );
-
-  const unlockSlot = useCallback(() => {
-    if (!slotActivoRef.current) return;
-    slotActivoRef.current = null;
-    eliminarLockAction();
-  }, [eliminarLockAction]);
 
   const isSlotBloqueado = useCallback(
     (slot: string) => slotsBlockeados.some((l) => l.slot === slot),
     [slotsBlockeados]
   );
 
-  return { slotsBlockeados, lockSlot, unlockSlot, isSlotBloqueado, refrescarLocks: fetchLocks };
+  return { slotsBlockeados, lockSlot, unlockSlot, isSlotBloqueado, refrescarLocks };
 }

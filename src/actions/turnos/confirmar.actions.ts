@@ -2,9 +2,11 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { after } from "next/server";
 import { exigirAdmin } from "@/lib/seguridad/exigir-admin";
 import { ESTADOS_TURNO, ESTADOS_PAGO } from "@/lib/constants";
 import { enviarEmailsTurnoConfirmado } from "@/lib/email/enviar-emails-turno-confirmado";
+import { enviarAvisoPushTurno } from "@/lib/notificaciones/enviar-aviso-push-turno";
 import { INCLUDE_TURNO_CON_DETALLE } from "@/lib/turno-con-detalle";
 
 export const confirmarTurno = exigirAdmin(async (turnoId: string) => {
@@ -65,7 +67,10 @@ export const confirmarTurno = exigirAdmin(async (turnoId: string) => {
       include: INCLUDE_TURNO_CON_DETALLE,
     });
     if (turnoConfirmado) {
-      enviarEmailsTurnoConfirmado(turnoConfirmado);
+      void enviarEmailsTurnoConfirmado(turnoConfirmado);
+      if (turnoConfirmado.estado === ESTADOS_TURNO[1]) {
+        after(() => enviarAvisoPushTurno(turnoConfirmado, "CONFIRMADO"));
+      }
     }
 
     revalidateTag("turnos-global");

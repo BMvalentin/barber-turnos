@@ -2,7 +2,9 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { enviarEmailCancelacionTurnoSeguro } from "@/lib/email/enviar-email-cancelacion-turno-seguro";
+import { enviarAvisoPushTurno } from "@/lib/notificaciones/enviar-aviso-push-turno";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
 import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
@@ -74,6 +76,7 @@ export async function cancelTurno(turnoId: string): Promise<ActionState> {
       };
     }
 
+    after(() => enviarAvisoPushTurno(turnoActualizado, "CANCELADO"));
     await enviarEmailCancelacionTurnoSeguro(
       turnoActualizado,
       sesionAdmin ? "ADMINISTRADOR" : "CLIENTE",

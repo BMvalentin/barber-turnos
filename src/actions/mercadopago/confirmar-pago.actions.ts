@@ -1,7 +1,6 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
 import { Payment } from "mercadopago";
 import { obtenerClienteMP } from "@/lib/mercadopago/obtener-cliente";
 import { requerirSesion } from "@/lib/seguridad/requerir-sesion";
@@ -83,11 +82,6 @@ export async function confirmarPagoTurno(
     });
 
     if (!resultado.ok) return { success: false, error: resultado.error };
-
-    if (!resultado.yaConfirmado) {
-      revalidatePath("/dashboard");
-      revalidatePath("/admin");
-    }
 
     const turnoActualizado = await prisma.turno.findUnique({
       where: { id: turnoId },

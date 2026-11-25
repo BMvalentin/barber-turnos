@@ -42,15 +42,8 @@ Crea un archivo llamado `.env` en la raíz del proyecto y copia el siguiente con
 > **Nota:** Es importante usar `127.0.0.1` en lugar de `localhost` para evitar problemas de conexión en Windows/Node.js.
 
 ```env
-# Conexión a Base de Datos (URL Completa para Prisma)
+# Conexión a la base de datos para la aplicación y Prisma
 DATABASE_URL="mysql://root@127.0.0.1:3306/db_barber"
-
-# Variables para el Adaptador Nativo (Requerido en Prisma 7)
-DATABASE_USER="root"
-DATABASE_PASSWORD=""
-DATABASE_NAME="db_barber"
-DATABASE_HOST="127.0.0.1"
-DATABASE_PORT=3306
 
 # Configuración de Auth.js
 # Genera un secreto seguro en terminal: openssl rand -base64 32
@@ -159,7 +152,7 @@ src/
 
 ## 🐛 Solución de Problemas Comunes
 
-- **Error de conexión (Timeout / active=0):** Asegúrate de que `DATABASE_HOST` sea `127.0.0.1` en el `.env`.
+- Si aparece un timeout con XAMPP, verificá que el servidor de `DATABASE_URL` sea `127.0.0.1`.
 - **Error "Configuration" al loguearse:** Falta la tabla `Account` en la DB (`npx prisma db push`) o las credenciales de Google están mal.
 - **Error de rutas Prisma:** Si moviste carpetas, borra `node_modules` `.next` `package-lock.json` y ejecuta `npm install` y `npx prisma generate` de nuevo.
 - **Si modificas la estructura de la DB:** borra `node_modules` `.next` `package-lock.json` y ejecuta `npm install`, `npx prisma db pull` y `npx prisma generate`

@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/expirar-turnos",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/recordar-turnos",
+      "schedule": "0 12 * * *"
     }
   ]
 }

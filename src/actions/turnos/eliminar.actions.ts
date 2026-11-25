@@ -1,8 +1,10 @@
 "use server";
 
+import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requerirAdmin } from "@/lib/seguridad/requerir-admin";
 import { enviarEmailCancelacionTurnoSeguro } from "@/lib/email/enviar-email-cancelacion-turno-seguro";
+import { enviarAvisoPushTurno } from "@/lib/notificaciones/enviar-aviso-push-turno";
 import { revalidarCacheTurno } from "@/lib/revalidar/revalidar-cache-turno";
 import { obtenerTurnoConDetalle } from "@/lib/consultas/obtener-turno-con-detalle";
 import { ESTADOS_TURNO } from "@/lib/constants";
@@ -21,7 +23,11 @@ export async function deleteTurno(prevState: ActionState, formData: FormData) {
 
     if (!turnoToDelete) return { success: false, error: "Turno no encontrado" };
 
-    await prisma.turno.delete({ where: { id } });
+    const turnoEliminado = await prisma.turno.delete({ where: { id } });
+
+    if (turnoEliminado.estado === "PENDIENTE" || turnoEliminado.estado === "CONFIRMADO") {
+      after(() => enviarAvisoPushTurno(turnoEliminado, "CANCELADO"));
+    }
 
     const fecha = obtenerFechaSola(turnoToDelete.horarioReservado);
     revalidarCacheTurno(turnoToDelete.barberoId, fecha, turnoToDelete.userId);

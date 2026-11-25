@@ -3,6 +3,7 @@ import type { RolUsuario } from "@/types/usuario";
 
 declare module "next-auth" {
   interface Session {
+    venceEn?: number;
     user: {
       id: string;
       role: RolUsuario;

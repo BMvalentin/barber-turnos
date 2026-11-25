@@ -1,4 +1,5 @@
 import type { NextAuthConfig } from "next-auth";
+import { obtenerAmbitoBaseDatos } from "@/lib/conexion-base-datos";
 import { ROLES_USUARIO, type RolUsuario } from "@/types/usuario";
 
 function esRolUsuario(valor: unknown): valor is RolUsuario {
@@ -10,12 +11,18 @@ export const authConfig = {
   providers: [],
   callbacks: {
     async jwt({ token, user, trigger }) {
-      if (user){
+      const ambito = await obtenerAmbitoBaseDatos();
+      if (!ambito) return null;
+
+      if (user) {
+        token.ambitoBaseDatos = ambito;
         token.id = user.id;
         token.role = user.role;
         token.telefono = user.telefono;
         token.image = user.image;
-      } 
+      }
+      if (token.ambitoBaseDatos !== ambito) return null;
+
       // El payload de useSession().update() viene del cliente: se recargan los
       // datos del perfil desde la BD en lugar de incorporarlos al JWT.
       if (
@@ -38,6 +45,9 @@ export const authConfig = {
       return token;
     },
     session({ session, token }) {
+      // Los renders de servidor no renuevan la cookie aunque Auth.js calcule otro `expires`.
+      if (typeof token.exp === "number") session.venceEn = token.exp * 1000;
+
       if (session.user){
         session.user.id = typeof token.id === "string" ? token.id : "";
         session.user.role = esRolUsuario(token.role) ? token.role : "USER";

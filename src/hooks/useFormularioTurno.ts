@@ -20,6 +20,7 @@ import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 
 export type ParametrosFormularioTurno = ParametrosDatosTurno & {
   vistaAdministrativa?: boolean;
+  alCerrar: () => void;
   whatsappPhone: string;
   onTurnoActualizado?: (id: string, parche: ParcheTurnoCache) => void;
   datosTransferencia?: DatosTransferencia;
@@ -36,10 +37,7 @@ const estadoInicial = ActionStateInicial;
  */
 export function useFormularioTurno({
   session,
-  initialServicios,
-  initialBarberos,
-  initialUsuarios,
-  initialRelaciones,
+  alCerrar,
   whatsappPhone,
   onTurnoActualizado,
   turnoInicial,
@@ -51,10 +49,6 @@ export function useFormularioTurno({
 
   const datos = useDatosFormularioTurno({
     session,
-    initialServicios,
-    initialBarberos,
-    initialUsuarios,
-    initialRelaciones,
     turnoInicial: esEdicion ? turnoInicial : undefined,
     puedeGestionarTurnos,
   });
@@ -64,7 +58,6 @@ export function useFormularioTurno({
     barberos,
     selectedServicioId,
     selectedBarberoId,
-    setIsOpen,
     setSelectedServicioId,
     setSelectedBarberoId,
     setSelectedUserId,
@@ -108,7 +101,7 @@ export function useFormularioTurno({
         },
       };
       onTurnoActualizado?.(state.data.id, parche);
-      setIsOpen(false);
+      alCerrar();
       toast.success("Turno actualizado correctamente");
       return;
     }
@@ -127,7 +120,7 @@ export function useFormularioTurno({
       barberoNombre: nombreBarbero,
     };
 
-    setIsOpen(false);
+    alCerrar();
     formRef.current?.reset();
     setSelectedServicioId("");
     setSelectedBarberoId("");
@@ -165,7 +158,7 @@ export function useFormularioTurno({
     barberos,
     selectedServicioId,
     selectedBarberoId,
-    setIsOpen,
+    alCerrar,
     setSelectedServicioId,
     setSelectedBarberoId,
     setSelectedUserId,

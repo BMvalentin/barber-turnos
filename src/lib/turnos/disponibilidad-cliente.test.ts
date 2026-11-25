@@ -3,6 +3,7 @@ import {
   claveDisponibilidad,
   consultarDisponibilidadMensual,
   invalidarDisponibilidadLocal,
+  precargarDisponibilidadInicial,
   precargarDisponibilidadMensual,
 } from "./disponibilidad-cliente";
 
@@ -11,11 +12,14 @@ const pedir = vi.fn<(ruta: string) => Promise<Response>>();
 const mes = "2026-11";
 const fecha = "2026-11-30";
 const capacidad = { [fecha]: [[Date.parse("2026-11-30T18:00:00Z"), 30]] };
+const dataset = { ambitoBaseDatos: "base-a" };
 
 beforeEach(() => {
   vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-11-23T18:00:00Z"));
   pedir.mockReset();
   almacen.clear();
+  dataset.ambitoBaseDatos = "base-a";
+  vi.stubGlobal("document", { documentElement: { dataset } });
   vi.stubGlobal("fetch", pedir);
   vi.stubGlobal("window", {
     localStorage: {
@@ -84,6 +88,22 @@ describe("precarga y caché de disponibilidad", () => {
     expect(pedir.mock.calls[1][0]).toContain("actualizar=1");
   });
 
+  it("consulta la base nueva aunque coincidan el mes y el ID del barbero", async () => {
+    pedir.mockResolvedValueOnce(Response.json([{ barberoId: "uno", capacidad }]));
+    pedir.mockResolvedValueOnce(Response.json([{ barberoId: "uno", capacidad: {} }]));
+    await expect(consultarDisponibilidadMensual(mes, "uno")).resolves.toMatchObject({ capacidad });
+    const claveAnterior = claveDisponibilidad(mes, "uno");
+
+    dataset.ambitoBaseDatos = "base-b";
+    invalidarDisponibilidadLocal("uno", fecha);
+    const claveActual = claveDisponibilidad(mes, "uno");
+    await expect(consultarDisponibilidadMensual(mes, "uno")).resolves.toMatchObject({ capacidad: {} });
+    expect(pedir).toHaveBeenCalledTimes(2);
+    expect(claveActual).not.toBe(claveAnterior);
+    expect(almacen.has(claveAnterior)).toBe(true);
+    expect(almacen.has(claveActual)).toBe(true);
+  });
+
   it("reintenta después de un fallo y mantiene la agenda de edición fuera de localStorage", async () => {
     const exclusion = { turnoId: "turno", usuarioId: "administrador" };
     pedir.mockResolvedValueOnce(new Response(null, { status: 503 }));
@@ -93,5 +113,35 @@ describe("precarga y caché de disponibilidad", () => {
     await expect(consultarDisponibilidadMensual(mes, "uno", exclusion)).resolves.toMatchObject({ capacidad });
     expect(pedir.mock.calls[1][0]).toContain("turnoIdAExcluir=turno");
     expect(almacen.size).toBe(0);
+  });
+
+  it("espera las agendas de ambos meses y usa solo la variante con exclusión para el barbero original", async () => {
+    const siguiente = "2026-12";
+    let responderSiguiente: (respuesta: Response) => void = () => {};
+    pedir.mockImplementation((ruta) => {
+      const parametros = new URL(ruta, "http://localhost").searchParams;
+      const agendas = parametros.getAll("barberoId").map((barberoId) => ({ barberoId, capacidad: {} }));
+      return parametros.get("mes") === siguiente
+        ? new Promise((resolver) => { responderSiguiente = resolver; })
+        : Promise.resolve(Response.json(agendas));
+    });
+
+    const completa = vi.fn();
+    const carga = precargarDisponibilidadInicial(
+      ["uno", "dos"],
+      new Date("2026-11-30T17:00:00Z"),
+      { barberoId: "uno", turnoId: "turno", usuarioId: "administrador" },
+    ).then(completa);
+    await Promise.resolve();
+    expect(completa).not.toHaveBeenCalled();
+    expect(pedir.mock.calls.map(([ruta]) => ruta.split("?")[1])).toEqual([
+      "mes=2026-11&barberoId=dos",
+      "mes=2026-12&barberoId=uno&barberoId=dos",
+      "mes=2026-11&barberoId=uno&turnoIdAExcluir=turno",
+    ]);
+
+    responderSiguiente(Response.json([{ barberoId: "uno", capacidad: {} }, { barberoId: "dos", capacidad: {} }]));
+    await carga;
+    expect(completa).toHaveBeenCalledWith(true);
   });
 });

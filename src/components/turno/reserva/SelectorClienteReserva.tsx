@@ -17,7 +17,6 @@ export default function SelectorClienteReserva({
 }: PropsSelectorClienteReserva) {
   const claseCampo = "w-full rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface)] px-3 py-2.5 text-sm text-[var(--admin-texto-primario)] focus:outline-none focus:ring-2 focus:ring-[var(--page-focus-ring)]";
   const opciones = useMemo<OpcionDesplegable<string>[]>(() => [
-    { valor: "", etiqueta: "Seleccionar cliente..." },
     ...(!esEdicion ? [{ valor: "nuevo", etiqueta: "+ Nuevo cliente" }] : []),
     ...usuarios.map((usuario) => ({
       valor: usuario.id,
@@ -42,7 +41,7 @@ export default function SelectorClienteReserva({
         obligatorio
         buscable
         placeholder="Seleccionar cliente..."
-        claseBoton={claseCampo}
+        claseBoton={`${claseCampo} pr-10`}
       />
       {!esEdicion && selectedUserId === "nuevo" && (
         <div className="mt-2 grid gap-3">

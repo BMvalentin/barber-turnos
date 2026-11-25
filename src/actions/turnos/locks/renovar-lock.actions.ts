@@ -6,7 +6,7 @@ import { TTL_LOCK_SLOT_MS } from "@/lib/constants";
 
 export async function renovarLockSlot(
   sessionId: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; renovado?: boolean; error?: string }> {
   try {
     const sesion = await requerirSesion();
     if (!sesion) return { success: false, error: "No autorizado" };
@@ -17,12 +17,12 @@ export async function renovarLockSlot(
 
     // Renovar no cambia el conjunto de slots: no revalida caché
     const ahora = new Date();
-    await prisma.slotLock.updateMany({
+    const { count } = await prisma.slotLock.updateMany({
       where: { sessionId, userId: sesion.user.id, expiresAt: { gt: ahora } },
       data: { expiresAt: new Date(ahora.getTime() + TTL_LOCK_SLOT_MS) },
     });
 
-    return { success: true };
+    return { success: true, renovado: count > 0 };
   } catch {
     return { success: false, error: "Error interno" };
   }

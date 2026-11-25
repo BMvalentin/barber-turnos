@@ -13,12 +13,11 @@ export default function DatosReservaProveedor({
   barberos,
   usuarios,
   relaciones,
-  whatsappPhone,
   children,
 }: PropsProveedorDatosReserva) {
   return (
     <ContextoDatosReserva.Provider
-      value={{ servicios, barberos, usuarios, relaciones, whatsappPhone }}
+      value={{ servicios, barberos, usuarios, relaciones }}
     >
       {children}
     </ContextoDatosReserva.Provider>
