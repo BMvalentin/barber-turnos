@@ -7,6 +7,7 @@ import { Check, ChevronDown, LoaderCircle } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 
 type PosicionLista = {
+  contenedor: HTMLElement | null;
   izquierda: number;
   bordeVertical: number;
   abrirArriba: boolean;
@@ -153,11 +154,16 @@ export default function SelectorDesplegable<T extends string>({
     const altoDeseado = Math.min(limiteAltura, Math.max(1, cantidadOpciones) * 42 + 14);
 
     const calcularPosicion = () => {
-      const rectangulo = botonRef.current?.getBoundingClientRect();
-      if (!rectangulo) return;
+      const boton = botonRef.current;
+      if (!boton) return;
+      const rectangulo = boton.getBoundingClientRect();
+      const contenedor = boton.closest<HTMLElement>("[role='dialog']");
+      const bordeDialogo = contenedor?.getBoundingClientRect();
 
-      const arribaViewport = viewport?.offsetTop ?? 0;
-      const abajoViewport = arribaViewport + (viewport?.height ?? window.innerHeight);
+      const inicioViewport = viewport?.offsetTop ?? 0;
+      const arribaViewport = Math.max(inicioViewport, bordeDialogo?.top ?? inicioViewport);
+      const finViewport = inicioViewport + (viewport?.height ?? window.innerHeight);
+      const abajoViewport = Math.min(finViewport, bordeDialogo?.bottom ?? finViewport);
       if (rectangulo.bottom <= arribaViewport || rectangulo.top >= abajoViewport) {
         setPosicionLista(null);
         return;
@@ -167,8 +173,11 @@ export default function SelectorDesplegable<T extends string>({
       const espacioArriba = Math.max(0, rectangulo.top - arribaViewport - margen);
       const abrirArriba = espacioAbajo < altoDeseado && espacioArriba > espacioAbajo;
       const espacioDisponible = abrirArriba ? espacioArriba : espacioAbajo;
-      const bordeIzquierdo = (viewport?.offsetLeft ?? 0) + margen;
-      const anchoViewport = Math.max(1, (viewport?.width ?? window.innerWidth) - margen * 2);
+      const inicioHorizontal = viewport?.offsetLeft ?? 0;
+      const finHorizontal = inicioHorizontal + (viewport?.width ?? window.innerWidth);
+      const bordeIzquierdo = Math.max(inicioHorizontal, bordeDialogo?.left ?? inicioHorizontal) + margen;
+      const bordeDerecho = Math.min(finHorizontal, bordeDialogo?.right ?? finHorizontal) - margen;
+      const anchoViewport = Math.max(1, bordeDerecho - bordeIzquierdo);
       const anchoMinimo = Math.min(230, anchoViewport);
       const ancho = Math.min(Math.max(rectangulo.width, anchoMinimo), anchoViewport);
       const izquierda = Math.min(
@@ -176,9 +185,12 @@ export default function SelectorDesplegable<T extends string>({
         bordeIzquierdo + anchoViewport - ancho,
       );
 
+      const origenIzquierdo = (bordeDialogo?.left ?? 0) + (contenedor?.clientLeft ?? 0) - (contenedor?.scrollLeft ?? 0);
+      const origenSuperior = (bordeDialogo?.top ?? 0) + (contenedor?.clientTop ?? 0) - (contenedor?.scrollTop ?? 0);
       setPosicionLista({
-        izquierda,
-        bordeVertical: abrirArriba ? rectangulo.top - margen : rectangulo.bottom + margen,
+        contenedor,
+        izquierda: izquierda - origenIzquierdo,
+        bordeVertical: (abrirArriba ? rectangulo.top - margen : rectangulo.bottom + margen) - origenSuperior,
         abrirArriba,
         ancho,
         anchoMinimo,
@@ -337,7 +349,8 @@ export default function SelectorDesplegable<T extends string>({
       aria-label={etiquetaAria ?? "Opciones"}
       onKeyDown={buscable ? undefined : manejarTecladoLista}
       className={twMerge(
-        "fixed z-[60] overflow-y-auto rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-1.5 shadow-xl",
+        "z-[60] overflow-y-auto rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-elevated)] p-1.5 shadow-xl",
+        posicionLista.contenedor ? "absolute" : "fixed",
         buscable && "overscroll-contain",
       )}
       style={{
@@ -494,7 +507,7 @@ export default function SelectorDesplegable<T extends string>({
         </button>
       )}
 
-      {lista && createPortal(lista, document.body)}
+      {lista && createPortal(lista, posicionLista?.contenedor ?? document.body)}
     </div>
   );
 }

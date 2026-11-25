@@ -5,7 +5,6 @@ import type { Session } from "next-auth";
 import { CalendarPlus } from "lucide-react";
 import { getResumenTurnosUsuario, getUserTurnos } from "@/actions/sesion/listar-turnos-usuario.actions";
 import CargadorModalGestionTurno from "@/components/turno/reserva/CargadorModalGestionTurno";
-import DatosReservaProveedor from "@/contextos/DatosReservaProveedor";
 import CalendarioMensualTurnos from "@/components/turno/gestion/CalendarioMensualTurnos";
 import TurnoList from "@/components/turno/gestion/TurnoList";
 import { obtenerAmbitoBaseDatosLocal } from "@/lib/ambito-base-datos-cliente";
@@ -18,7 +17,7 @@ import {
   actualizarTurnoUsuarioCacheLocal,
   guardarTurnosUsuarioCacheLocal,
 } from "@/components/dashboard/turnos-usuario-cache-local";
-import type { BarberoData, RelacionData, ServicioData, TurnoListado } from "@/types/turno";
+import type { TurnoListado } from "@/types/turno";
 import type { DatosTransferencia } from "@/types/pago";
 
 type Propiedades = {
@@ -27,9 +26,6 @@ type Propiedades = {
   paginaInicial: number;
   totalPaginasInicial: number;
   session: Session | null;
-  initialServicios: ServicioData[];
-  initialBarberos: BarberoData[];
-  initialRelaciones: RelacionData[];
   whatsappPhone: string;
   datosTransferencia: DatosTransferencia;
   mostrarAvisoSeniaPendiente: boolean;
@@ -45,9 +41,6 @@ export default function PanelTurnosUsuario({
   paginaInicial,
   totalPaginasInicial,
   session,
-  initialServicios,
-  initialBarberos,
-  initialRelaciones,
   whatsappPhone,
   datosTransferencia,
   mostrarAvisoSeniaPendiente,
@@ -207,27 +200,15 @@ export default function PanelTurnosUsuario({
             Historial
           </button>
         </div>
-        <DatosReservaProveedor
-          servicios={initialServicios}
-          barberos={initialBarberos}
-          usuarios={[]}
-          relaciones={initialRelaciones}
+        <CargadorModalGestionTurno
+          session={session}
           whatsappPhone={whatsappPhone}
-        >
-          <CargadorModalGestionTurno
-            session={session}
-            initialServicios={initialServicios}
-            initialBarberos={initialBarberos}
-            initialUsuarios={[]}
-            initialRelaciones={initialRelaciones}
-            whatsappPhone={whatsappPhone}
-            datosTransferencia={datosTransferencia}
-            mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
-            onTurnoCreado={actualizarTurnosTrasCrear}
-            claseTrigger="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--admin-border-fuerte)] bg-[var(--page-primary)] px-4 py-2 text-sm font-semibold text-[var(--page-primary-foreground)] transition-colors duration-150 hover:bg-[var(--page-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--page-focus-ring)] disabled:cursor-wait"
-            contenidoTrigger={<><CalendarPlus className="h-4 w-4" aria-hidden="true" />Pedir un turno</>}
-          />
-        </DatosReservaProveedor>
+          datosTransferencia={datosTransferencia}
+          mostrarAvisoSeniaPendiente={mostrarAvisoSeniaPendiente}
+          onTurnoCreado={actualizarTurnosTrasCrear}
+          claseTrigger="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--admin-border-fuerte)] bg-[var(--page-primary)] px-4 py-2 text-sm font-semibold text-[var(--page-primary-foreground)] transition-colors duration-150 hover:bg-[var(--page-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--page-focus-ring)]"
+          contenidoTrigger={<><CalendarPlus className="h-4 w-4" aria-hidden="true" />Pedir un turno</>}
+        />
       </div>
 
       {apartado === "proximos" ? (

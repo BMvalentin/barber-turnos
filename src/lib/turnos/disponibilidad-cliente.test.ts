@@ -3,6 +3,7 @@ import {
   claveDisponibilidad,
   consultarDisponibilidadMensual,
   invalidarDisponibilidadLocal,
+  precargarDisponibilidadInicial,
   precargarDisponibilidadMensual,
 } from "./disponibilidad-cliente";
 
@@ -112,5 +113,35 @@ describe("precarga y caché de disponibilidad", () => {
     await expect(consultarDisponibilidadMensual(mes, "uno", exclusion)).resolves.toMatchObject({ capacidad });
     expect(pedir.mock.calls[1][0]).toContain("turnoIdAExcluir=turno");
     expect(almacen.size).toBe(0);
+  });
+
+  it("espera las agendas de ambos meses y usa solo la variante con exclusión para el barbero original", async () => {
+    const siguiente = "2026-12";
+    let responderSiguiente: (respuesta: Response) => void = () => {};
+    pedir.mockImplementation((ruta) => {
+      const parametros = new URL(ruta, "http://localhost").searchParams;
+      const agendas = parametros.getAll("barberoId").map((barberoId) => ({ barberoId, capacidad: {} }));
+      return parametros.get("mes") === siguiente
+        ? new Promise((resolver) => { responderSiguiente = resolver; })
+        : Promise.resolve(Response.json(agendas));
+    });
+
+    const completa = vi.fn();
+    const carga = precargarDisponibilidadInicial(
+      ["uno", "dos"],
+      new Date("2026-11-30T17:00:00Z"),
+      { barberoId: "uno", turnoId: "turno", usuarioId: "administrador" },
+    ).then(completa);
+    await Promise.resolve();
+    expect(completa).not.toHaveBeenCalled();
+    expect(pedir.mock.calls.map(([ruta]) => ruta.split("?")[1])).toEqual([
+      "mes=2026-11&barberoId=dos",
+      "mes=2026-12&barberoId=uno&barberoId=dos",
+      "mes=2026-11&barberoId=uno&turnoIdAExcluir=turno",
+    ]);
+
+    responderSiguiente(Response.json([{ barberoId: "uno", capacidad: {} }, { barberoId: "dos", capacidad: {} }]));
+    await carga;
+    expect(completa).toHaveBeenCalledWith(true);
   });
 });

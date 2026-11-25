@@ -100,9 +100,10 @@ export function useDisponibilidadHorarios({ duracion, barberoId, barberos, turno
 
   useEffect(() => {
     if (!activo) return;
-    precargarDisponibilidadMensual(mesVisibleStr, barberos);
-    precargarDisponibilidadMensual(format(addMonths(parseISO(`${mesVisibleStr}-01`), 1), "yyyy-MM"), barberos);
-  }, [activo, barberos, mesVisibleStr]);
+    const barberosSinExclusion = barberos.filter((id) => !obtenerExclusion(mesVisibleStr, id));
+    void precargarDisponibilidadMensual(mesVisibleStr, barberosSinExclusion);
+    void precargarDisponibilidadMensual(format(addMonths(parseISO(`${mesVisibleStr}-01`), 1), "yyyy-MM"), barberos);
+  }, [activo, barberos, mesVisibleStr, obtenerExclusion]);
 
   useEffect(() => {
     if (!activo || !barberoId) return;

@@ -79,9 +79,6 @@ export default function DashboardPanel({
   session,
   initialTab = "perfil",
   actualizarTurnosAlEntrar = false,
-  initialServicios,
-  initialBarberos,
-  initialRelaciones,
   clavePublicaPush,
   datosPago,
 }: PropiedadesPanelUsuario) {
@@ -185,9 +182,6 @@ export default function DashboardPanel({
             paginaInicial={datosTurnos.historial.paginaActual}
             totalPaginasInicial={datosTurnos.historial.totalPaginas}
             session={session}
-            initialServicios={initialServicios}
-            initialBarberos={initialBarberos}
-            initialRelaciones={initialRelaciones}
             {...datosPago}
           />
         ) : errorTurnos ? (

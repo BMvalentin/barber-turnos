@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Plus, UserRound, UsersRound } from "lucide-react";
 import CargadorModalGestionTurno from "@/components/turno/reserva/CargadorModalGestionTurno";
 import AvisosDeTurnos from "@/components/notificaciones/AvisosDeTurnos";
-import DatosReservaProveedor from "@/contextos/DatosReservaProveedor";
 import { obtenerFechaSola } from "@/lib/utils/obtener-fecha-sola";
 import { esAdmin } from "@/lib/seguridad/es-admin";
 import { nombreVisibleBarbero } from "@/lib/barberos/nombre-profesional";
@@ -12,7 +11,7 @@ import { invalidarDisponibilidadLocal } from "@/lib/turnos/disponibilidad-client
 import { obtenerAmbitoBaseDatosLocal } from "@/lib/ambito-base-datos-cliente";
 import { ESTADOS_PAGO, ESTADOS_TURNO } from "@/lib/constants";
 import type { ParcheTurnoCache } from "@/lib/admin/turnos-cache-local";
-import type { BarberoData, RelacionData, ServicioData, TurnoConDetalle, TurnoListado, UsuarioData } from "@/types/turno";
+import type { BarberoData, TurnoConDetalle, TurnoListado } from "@/types/turno";
 import type { DatosTransferencia } from "@/types/pago";
 import type { Session } from "next-auth";
 import AgendaDiariaTurnos from "./AgendaDiariaTurnos";
@@ -26,11 +25,7 @@ const TAMANO_PAGINA_LOCAL = 10;
 
 interface Props {
   session: Session | null;
-  initialServicios?: ServicioData[];
-  initialBarberos?: BarberoData[];
-  barberosFiltro?: BarberoData[];
-  initialUsuarios?: UsuarioData[];
-  initialRelaciones?: RelacionData[];
+  barberosFiltro: BarberoData[];
   whatsappPhone: string;
   datosTransferencia?: DatosTransferencia;
   mostrarFiltroBarbero?: boolean;
@@ -76,11 +71,7 @@ function convertirTurnoCreado(turno: TurnoConDetalle): TurnoListado {
 
 export default function TurnoManager({
   session,
-  initialServicios = [],
-  initialBarberos = [],
-  barberosFiltro = initialBarberos,
-  initialUsuarios = [],
-  initialRelaciones = [],
+  barberosFiltro,
   whatsappPhone,
   datosTransferencia,
   mostrarFiltroBarbero = false,
@@ -230,13 +221,6 @@ export default function TurnoManager({
   const agendaSinDatos = agenda.error && agenda.turnos.length === 0;
 
   return (
-    <DatosReservaProveedor
-      servicios={initialServicios}
-      barberos={initialBarberos}
-      usuarios={initialUsuarios}
-      relaciones={initialRelaciones}
-      whatsappPhone={whatsappPhone}
-    >
       <div className="admin-pagina">
         <header className="admin-encabezado max-sm:grid max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:items-start max-sm:gap-2">
           <div>
@@ -250,10 +234,6 @@ export default function TurnoManager({
           <CargadorModalGestionTurno
             vistaAdministrativa
             session={session}
-            initialServicios={initialServicios}
-            initialBarberos={initialBarberos}
-            initialUsuarios={initialUsuarios}
-            initialRelaciones={initialRelaciones}
             onTurnoActualizado={actualizarTurnoLocal}
             whatsappPhone={whatsappPhone}
             datosTransferencia={datosTransferencia}
@@ -331,6 +311,5 @@ export default function TurnoManager({
           />
         </AgendaDiariaTurnos>
       </div>
-    </DatosReservaProveedor>
   );
 }

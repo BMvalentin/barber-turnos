@@ -1,27 +1,15 @@
 "use client";
 
 import { createContext } from "react";
-import type {
-  BarberoData,
-  RelacionData,
-  ServicioData,
-  UsuarioData,
-} from "@/types/turno";
+import type { DatosCatalogoTurno } from "@/types/turno";
 
-export type DatosReserva = {
-  servicios: ServicioData[];
-  barberos: BarberoData[];
-  usuarios: UsuarioData[];
-  relaciones: RelacionData[];
-  whatsappPhone: string;
-};
+export type DatosReserva = DatosCatalogoTurno;
 
 export const DATOS_RESERVA_VACIOS: DatosReserva = {
   servicios: [],
   barberos: [],
   usuarios: [],
   relaciones: [],
-  whatsappPhone: "",
 };
 
 export const ContextoDatosReserva = createContext<DatosReserva>(

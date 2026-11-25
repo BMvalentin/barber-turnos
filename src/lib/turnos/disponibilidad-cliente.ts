@@ -126,21 +126,36 @@ function iniciarConsultas(mes: string, barberos: string[], exclusion?: Exclusion
   }
 }
 
-export function precargarDisponibilidadMensual(mes: string, barberos: readonly string[]) {
+export async function precargarDisponibilidadMensual(mes: string, barberos: readonly string[]) {
   limpiarVencidas();
-  const faltantes = [...new Set(barberos)].filter((id) => {
+  const ids = [...new Set(barberos)];
+  const faltantes = ids.filter((id) => {
     const clave = claveDisponibilidad(mes, id);
     return !pendientes.has(clave) && !leerEntrada(clave);
   });
   for (let indice = 0; indice < faltantes.length; indice += MAX_BARBEROS_POR_CONSULTA) {
     iniciarConsultas(mes, faltantes.slice(indice, indice + MAX_BARBEROS_POR_CONSULTA));
   }
+  const agendas = await Promise.all(ids.map((id) => {
+    const clave = claveDisponibilidad(mes, id);
+    return pendientes.get(clave) ?? leerEntrada(clave);
+  }));
+  return agendas.every(Boolean);
 }
 
-export function precargarDisponibilidadInicial(barberos: readonly string[]) {
-  const hoy = parseISO(obtenerFechaSola(new Date()));
-  precargarDisponibilidadMensual(format(hoy, "yyyy-MM"), barberos);
-  precargarDisponibilidadMensual(format(addMonths(hoy, 1), "yyyy-MM"), barberos);
+export async function precargarDisponibilidadInicial(
+  barberos: readonly string[],
+  fecha: Date = new Date(),
+  exclusion?: ExclusionDisponibilidad & { barberoId: string },
+) {
+  const inicio = parseISO(obtenerFechaSola(fecha));
+  const mes = format(inicio, "yyyy-MM");
+  const [actual, siguiente, agendaEditable] = await Promise.all([
+    precargarDisponibilidadMensual(mes, exclusion ? barberos.filter((id) => id !== exclusion.barberoId) : barberos),
+    precargarDisponibilidadMensual(format(addMonths(inicio, 1), "yyyy-MM"), barberos),
+    exclusion ? consultarDisponibilidadMensual(mes, exclusion.barberoId, exclusion) : true,
+  ]);
+  return actual && siguiente && Boolean(agendaEditable);
 }
 
 export function consultarDisponibilidadMensual(mes: string, barberoId: string, exclusion?: ExclusionDisponibilidad, actualizar = false) {

@@ -43,6 +43,13 @@ export type RelacionData = {
   servicioId: string;
 };
 
+export type DatosCatalogoTurno = {
+  servicios: ServicioData[];
+  barberos: BarberoData[];
+  relaciones: RelacionData[];
+  usuarios: UsuarioData[];
+};
+
 export type TurnoCreado = {
   id: string;
   precioCongelado: number;
