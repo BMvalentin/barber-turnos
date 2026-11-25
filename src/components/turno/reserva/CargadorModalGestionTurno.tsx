@@ -40,14 +40,12 @@ function cargarModuloModal() {
   return promesaModulo;
 }
 
-export default function CargadorModalGestionTurno(
-  { precargarEdicion = false, ...props }: PropsModalGestionTurno & { precargarEdicion?: boolean },
-) {
+export default function CargadorModalGestionTurno(props: PropsModalGestionTurno) {
   const [Modal, setModal] = useState<ComponenteModal | null>(null);
   const [usuarios, setUsuarios] = useState<UsuarioData[]>(props.initialUsuarios ?? []);
   const [cargando, setCargando] = useState(false);
   const montadoRef = useRef(true);
-  const { turnoInicial } = props;
+  const { turnoInicial, vistaAdministrativa } = props;
   const esEdicion = Boolean(turnoInicial);
   const datosReserva = useDatosReserva();
   const barberos = props.initialBarberos ?? datosReserva.barberos;
@@ -64,27 +62,23 @@ export default function CargadorModalGestionTurno(
   }, []);
 
   useEffect(() => {
-    if (!usuarioId) return;
-    if (!esEdicion) {
-      precargarDisponibilidadInicial(barberos.map(({ id }) => id));
-      void cargarModuloModal().catch(() => {});
-    } else if (precargarEdicion && barberoInicialId && turnoId && mesInicial) {
-      void consultarDisponibilidadMensual(mesInicial, barberoInicialId, { turnoId, usuarioId });
-      void cargarModuloModal().catch(() => {});
-    }
-  }, [barberoInicialId, barberos, esEdicion, mesInicial, precargarEdicion, turnoId, usuarioId]);
+    if (!usuarioId || esEdicion) return;
+    if (vistaAdministrativa) precargarDisponibilidadInicial(barberos.map(({ id }) => id));
+    void cargarModuloModal().catch(() => {});
+  }, [barberos, esEdicion, usuarioId, vistaAdministrativa]);
 
   const precargar = () => {
     void cargarModuloModal().catch(() => {});
-    if (usuarioId && barberoInicialId && turnoId && mesInicial) {
-      void consultarDisponibilidadMensual(mesInicial, barberoInicialId, { turnoId, usuarioId });
-    } else if (usuarioId && !esEdicion) {
+    if (usuarioId && !esEdicion && vistaAdministrativa) {
       precargarDisponibilidadInicial(barberos.map(({ id }) => id));
     }
   };
 
   const abrir = async () => {
     precargar();
+    if (usuarioId && barberoInicialId && turnoId && mesInicial) {
+      void consultarDisponibilidadMensual(mesInicial, barberoInicialId, { turnoId, usuarioId });
+    }
     props.onTriggerClick?.();
     setCargando(true);
     try {

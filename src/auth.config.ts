@@ -45,6 +45,9 @@ export const authConfig = {
       return token;
     },
     session({ session, token }) {
+      // Los renders de servidor no renuevan la cookie aunque Auth.js calcule otro `expires`.
+      if (typeof token.exp === "number") session.venceEn = token.exp * 1000;
+
       if (session.user){
         session.user.id = typeof token.id === "string" ? token.id : "";
         session.user.role = esRolUsuario(token.role) ? token.role : "USER";

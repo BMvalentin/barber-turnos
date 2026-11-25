@@ -73,13 +73,14 @@ export function useDisponibilidadHorarios({ duracion, barberoId, barberos, turno
 
   const barberoAnteriorRef = useRef(barberoId);
 
-  // Locks en tiempo real (polling REST)
+  // Se consultan los bloqueos cuando el día seleccionado está a la vista.
   const { isSlotBloqueado, lockSlot, unlockSlot, refrescarLocks } = useSlotLocks({
     barberoId: barberoId ?? "",
     fecha,
     sessionId,
     userId,
     activo,
+    consultarDia: fechaDelMesVisible && hayServicio,
   });
 
   // Ref para usar siempre la última referencia de unlockSlot

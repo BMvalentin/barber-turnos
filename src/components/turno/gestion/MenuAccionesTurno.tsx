@@ -86,7 +86,6 @@ export default function MenuAccionesTurno({
         {puedeEditar && (
           <CargadorModalGestionTurno
             vistaAdministrativa={vistaAdministrativa}
-            precargarEdicion={abierto}
             session={session}
             turnoInicial={turno}
             whatsappPhone=""

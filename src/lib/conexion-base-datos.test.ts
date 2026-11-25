@@ -34,10 +34,10 @@ function recargarConBase(base: string, contrasena = "prueba", usuario = "usuario
   vi.resetModules();
 }
 
-async function leerSesion(configuracion: NextAuthConfig, token: JWT): Promise<unknown> {
+async function leerSesion(configuracion: NextAuthConfig, token: JWT, maxAge?: number): Promise<unknown> {
   const secret = "secreto-sintetico-para-pruebas";
   const salt = "authjs.session-token";
-  const cookie = await encode({ token, secret, salt });
+  const cookie = await encode({ token, secret, salt, maxAge });
   const request = new Request("http://localhost/api/auth/session", {
     headers: { cookie: `${salt}=${cookie}` },
   });
@@ -46,6 +46,7 @@ async function leerSesion(configuracion: NextAuthConfig, token: JWT): Promise<un
     secret,
     basePath: "/api/auth",
     trustHost: true,
+    logger: { error: vi.fn() },
   });
   return respuesta.json();
 }
@@ -122,6 +123,24 @@ describe("cambio de base de datos", () => {
     recargarConBase("base_b");
     const { authConfig: configNuevaBase } = await import("@/auth.config");
     await expect(leerSesion(configNuevaBase, token)).resolves.toBeNull();
+  });
+
+  it("informa el vencimiento del JWT recibido y rechaza una cookie vencida", async () => {
+    recargarConBase("base_a");
+    const { authConfig } = await import("@/auth.config");
+    const user = { id: "cuenta", role: "USER" as const, telefono: null };
+    const token = await authConfig.callbacks.jwt({ token: {}, user, account: null, trigger: "signIn" });
+    if (!token) throw new Error("No se emitió la sesión de prueba");
+
+    const desde = Math.floor(Date.now() / 1000) * 1000;
+    const sesion = await leerSesion(authConfig, token, 60);
+    const hasta = Math.floor(Date.now() / 1000) * 1000;
+
+    expect(sesion).toMatchObject({ venceEn: expect.any(Number) });
+    if (typeof sesion !== "object" || !sesion || !("venceEn" in sesion)) throw new Error("Falta el vencimiento");
+    expect(sesion.venceEn).toBeGreaterThanOrEqual(desde + 60_000);
+    expect(sesion.venceEn).toBeLessThanOrEqual(hasta + 60_000);
+    await expect(leerSesion(authConfig, token, -60)).resolves.toBeNull();
   });
 
   it("aísla los turnos guardados en el navegador aunque coincida el ID del usuario", async () => {

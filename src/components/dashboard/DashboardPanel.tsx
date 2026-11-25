@@ -12,7 +12,6 @@ import PanelTurnosUsuario from "@/components/dashboard/PanelTurnosUsuario";
 import AvisosDeTurnos from "@/components/notificaciones/AvisosDeTurnos";
 import { Skeleton } from "@/components/ui/skeleton";
 import { obtenerAmbitoBaseDatosLocal } from "@/lib/ambito-base-datos-cliente";
-import { precargarDisponibilidadInicial } from "@/lib/turnos/disponibilidad-cliente";
 import {
   guardarTurnosUsuarioCacheLocal,
   leerTurnosUsuarioCacheLocal,
@@ -131,12 +130,8 @@ export default function DashboardPanel({
 
   useEffect(() => {
     setPestana(initialTab);
-    void cargarTurnos();
+    if (initialTab === "turnos") void cargarTurnos();
   }, [cargarTurnos, initialTab]);
-
-  useEffect(() => {
-    precargarDisponibilidadInicial(initialBarberos.map(({ id }) => id));
-  }, [initialBarberos]);
 
   const cambiarPestana = (siguiente: PestanaPanel) => {
     if (siguiente === "turnos" && pestana !== siguiente) void cargarTurnos();
